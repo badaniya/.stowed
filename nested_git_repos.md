@@ -2,7 +2,7 @@
 
 ## How Nested Git Repositories Are Configured - For Reference ONLY
 ### 1) tmux
-```console
+```bash
 # TPM - TMUX Plugin Manager
 cd $HOME/.stowed
 git remote add tpm https://github.com/tmux-plugins/tpm
@@ -24,15 +24,15 @@ git subtree add --prefix=tmux/.tmux/plugins/tmux catppuccin main --squash
 ```
 
 ### 2) zsh
-```console
+```bash
 # Oh My ZSH Repo
 cd $HOME/.stowed
 git remote add oh-my-zsh https://github.com/badaniya/.oh-my-zsh
-git subtree add --prefix=zsh/.oh-my-zsh oh-my-zsh master
+git subtree add --prefix=zsh/.oh-my-zsh oh-my-zsh master --squash
 
 # How to Pull in Oh My ZSH Updates
-git fetch oh-my-zsh
-git subtree pull --prefix=zsh/.oh-my-zsh oh-my-zsh master
+git subtree pull --prefix=zsh/.oh-my-zsh oh-my-zsh master --squash
+git subtree push --prefix=zsh/.oh-my-zsh oh-my-zsh master
 
 # ZSH Plugins
 git remote add zsh-syntax-highlighting https://github.com/zsh-users/zsh-syntax-highlighting
@@ -48,7 +48,7 @@ git subtree add --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-vi-mode zsh-vi-mode m
 ```
 
 ### 3) nvim
-```console
+```bash
 # NVIM Repo
 cd $HOME/.stowed
 git remote add nvim https://github.com/badaniya/nvim
@@ -56,7 +56,7 @@ git subtree add --prefix=nvim/.config/nvim nvim master
 ```
 
 ### 4) vim
-```console
+```bash
 # VIM Repo
 cd $HOME/.stowed
 git remote add ferret https://github.com/wincent/ferret.git
@@ -76,7 +76,7 @@ git subtree add --prefix=vim/.vim/plugged/vim-gitgutter vim-gitgutter main --squ
 ```
 
 ### 5) fzf
-```console
+```bash
 cd $HOME/.stowed
 git remote add fzf https://github.com/junegunn/fzf.git
 git subtree add --prefix=fzf/.fzf fzf master --squash
