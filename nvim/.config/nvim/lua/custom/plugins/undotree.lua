@@ -9,4 +9,6 @@ return {
       vim.g.undotree_DiffpaneHeight = 20
     end,
   },
+  -- Set Undotree mapping
+  vim.keymap.set('n', '<leader>u', ':UndotreeToggle <CR>', { desc = 'Open [U]ndotree' }),
 }

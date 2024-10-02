@@ -85,15 +85,9 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 vim.keymap.set('n', '[q', ':cprev <CR>', { desc = 'Go to previous [Q]uickfix list entry' })
 vim.keymap.set('n', ']q', ':cnext <CR>', { desc = 'Go to next [Q]uickfix list entry' })
 
--- Set terminal mappingq
-vim.keymap.set('n', '<leader>z', ':split | set nonumber | set norelativenumber | resize 20 | terminal <CR> i', { desc = 'Open [Z]SH terminal' })
-vim.keymap.set('n', '<leader>v', ':vsplit | set nonumber | set norelativenumber | terminal <CR> i', { desc = 'Open ZSH terminal [V]ertically' })
-
--- Set DB UI mapping
-vim.keymap.set('n', '<leader>db', ':DBUIToggle <CR>', { desc = 'Open [D]atabase UI for SQL queries' })
-
--- Set Undotree mapping
-vim.keymap.set('n', '<leader>u', ':UndotreeToggle <CR>', { desc = 'Open [U]ndotree' })
+-- Set terminal mapping - NOTE: Using tmux windows instead.
+-- vim.keymap.set('n', '<leader>z', ':split | set nonumber | set norelativenumber | resize 20 | terminal <CR> i', { desc = 'Open [Z]SH terminal' })
+-- vim.keymap.set('n', '<leader>v', ':vsplit | set nonumber | set norelativenumber | terminal <CR> i', { desc = 'Open ZSH terminal [V]ertically' })
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
@@ -101,7 +95,7 @@ vim.keymap.set('n', '<leader>u', ':UndotreeToggle <CR>', { desc = 'Open [U]ndotr
 --
 -- NOTE: This won't work in all terminal emulators/tmux/etc. Try your own mapping
 -- or just use <C-\><C-n> to exit terminal mode
-vim.keymap.set('n', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
+-- vim.keymap.set('n', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
 -- TIP: Disable arrow keys in normal mode
 -- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
@@ -778,13 +772,13 @@ require('lazy').setup({
     end,
   },
 
-  { 'catppuccin/nvim', name = 'catppuccin', priority = 1000 },
   { -- You can easily change to a different colorscheme.
     -- Change the name of the colorscheme plugin below, and then
     -- change the command in the config to whatever the name of that colorscheme is.
     --
     -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-    'folke/tokyonight.nvim',
+    'catppuccin/nvim',
+    name = 'catppuccin',
     priority = 1000, -- Make sure to load this before all the other start plugins.
     init = function()
       -- Load the colorscheme here.
