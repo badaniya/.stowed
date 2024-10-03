@@ -30,6 +30,7 @@ return {
   config = function()
     local dap = require 'dap'
     local dapui = require 'dapui'
+    local dapgo = require 'dap-go'
 
     -- Dap listeners
     dap.listeners.after.event_initialized['dapui_config'] = dapui.open
@@ -78,13 +79,13 @@ return {
     require('nvim-dap-virtual-text').setup {}
 
     -- Install golang specific config
-    require('dap-go').setup {
+    dapgo.setup {
       delve = {
         -- On Windows delve must be run attached or it crashes.
         -- See https://github.com/leoluz/nvim-dap-go/blob/main/README.md#configuring
         detached = vim.fn.has 'win32' == 0,
         --args = {},
-        build_flags = '-tags=ci_jenkins',
+        --build_flags = '-tags=ci_jenkins',
         --cwd = nil,
       },
     }
@@ -93,6 +94,7 @@ return {
     vim.keymap.set('n', '<F2>', dap.step_into, { desc = 'Debug: Step Into' })
     vim.keymap.set('n', '<F3>', dap.step_over, { desc = 'Debug: Step Over' })
     vim.keymap.set('n', '<F4>', dap.step_out, { desc = 'Debug: Step Out' })
+    vim.keymap.set('n', '<F7>', dapgo.debug_test, { desc = 'Debug: Toggle Breakpoint' })
     vim.keymap.set('n', '<F8>', dap.toggle_breakpoint, { desc = 'Debug: Toggle Breakpoint' })
     vim.keymap.set('n', '<F9>', function()
       dap.set_breakpoint(vim.fn.input 'Breakpoint condition: ')
