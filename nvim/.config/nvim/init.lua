@@ -85,6 +85,9 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 vim.keymap.set('n', '[q', ':cprev <CR>', { desc = 'Go to previous [Q]uickfix list entry' })
 vim.keymap.set('n', ']q', ':cnext <CR>', { desc = 'Go to next [Q]uickfix list entry' })
 
+-- Buffer keymaps
+vim.keymap.set('n', '<leader>b', '', { desc = '[B]uffer' })
+
 -- Set terminal mapping - NOTE: Using tmux windows instead.
 -- vim.keymap.set('n', '<leader>z', ':split | set nonumber | set norelativenumber | resize 20 | terminal <CR> i', { desc = 'Open [Z]SH terminal' })
 -- vim.keymap.set('n', '<leader>v', ':vsplit | set nonumber | set norelativenumber | terminal <CR> i', { desc = 'Open ZSH terminal [V]ertically' })
