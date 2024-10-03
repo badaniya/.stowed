@@ -233,5 +233,7 @@ tmux kill-server
 <F3> : Step Over
 <F4> : Step Out
 <F5> : Start/Continue
+<F6> : Debug Nearest Test
+<F7> : Restart Last Debug Session
 <F8> : Toggle Breakpoint
 ```
