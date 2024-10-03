@@ -7,7 +7,7 @@ return {
     },
   },
 
-  vim.keymap.set('n', '<leader>v', '', { desc = '[V]im-Test ...' }),
+  vim.keymap.set('n', '<leader>v', '', { desc = '[V]im-Test' }),
   vim.keymap.set('n', '<leader>vn', ':TestNearest<CR>', { desc = 'Vim-Test Run [N]earest' }),
   vim.keymap.set('n', '<leader>vf', ':TestFile<CR>', { desc = 'Vim-Test Run [F]ile' }),
   vim.keymap.set('n', '<leader>vs', ':TestSuite<CR>', { desc = 'Vim-Test Run [S]uite' }),

@@ -423,7 +423,7 @@ require('lazy').setup({
           end
 
           -- Start of LSP: [G]oto menu.
-          map('<leader>g', '', '[G]oto ...')
+          map('<leader>g', '', '[G]oto')
 
           -- Jump to the definition of the word under your cursor.
           --  This is where a variable was first declared, or where a function is defined, etc.

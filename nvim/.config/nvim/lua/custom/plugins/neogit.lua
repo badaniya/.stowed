@@ -13,6 +13,6 @@ return {
     config = true,
   },
 
-  vim.keymap.set('n', '<leader>n', '', { desc = '[N]eo ...' }),
+  vim.keymap.set('n', '<leader>n', '', { desc = '[N]eo' }),
   vim.keymap.set('n', '<leader>ng', ':Neogit<CR>', { desc = '[N]eo[g]it' }),
 }

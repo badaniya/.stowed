@@ -33,7 +33,7 @@ return {
     {
       '<leader>nt',
       '',
-      desc = '[N]eo[t]est ...',
+      desc = '[N]eo[t]est',
     },
     {
       '<leader>ntf',
