@@ -59,6 +59,18 @@ return {
       --},
     }
 
+    -- Install golang specific config
+    dapgo.setup {
+      delve = {
+        -- On Windows delve must be run attached or it crashes.
+        -- See https://github.com/leoluz/nvim-dap-go/blob/main/README.md#configuring
+        detached = vim.fn.has 'win32' == 0,
+        --args = {},
+        --build_flags = '-tags=ci_jenkins',
+        --cwd = nil,
+      },
+    }
+
     require('mason-nvim-dap').setup {
       -- Makes a best effort to setup the various debuggers with
       -- reasonable debug configurations
@@ -78,23 +90,14 @@ return {
 
     require('nvim-dap-virtual-text').setup {}
 
-    -- Install golang specific config
-    dapgo.setup {
-      delve = {
-        -- On Windows delve must be run attached or it crashes.
-        -- See https://github.com/leoluz/nvim-dap-go/blob/main/README.md#configuring
-        detached = vim.fn.has 'win32' == 0,
-        --args = {},
-        --build_flags = '-tags=ci_jenkins',
-        --cwd = nil,
-      },
-    }
     -- Basic debugging keymaps, feel free to change to your liking!
     vim.keymap.set('n', '<F5>', dap.continue, { desc = 'Debug: Start/Continue' })
     vim.keymap.set('n', '<F2>', dap.step_into, { desc = 'Debug: Step Into' })
     vim.keymap.set('n', '<F3>', dap.step_over, { desc = 'Debug: Step Over' })
     vim.keymap.set('n', '<F4>', dap.step_out, { desc = 'Debug: Step Out' })
-    vim.keymap.set('n', '<F7>', dapgo.debug_test, { desc = 'Debug: Toggle Breakpoint' })
+    vim.keymap.set('n', '<F6>', function()
+      dapgo.debug_test()
+    end, { desc = 'Debug: Last Test' })
     vim.keymap.set('n', '<F8>', dap.toggle_breakpoint, { desc = 'Debug: Toggle Breakpoint' })
     vim.keymap.set('n', '<F9>', function()
       dap.set_breakpoint(vim.fn.input 'Breakpoint condition: ')
