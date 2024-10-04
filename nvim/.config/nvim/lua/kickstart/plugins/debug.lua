@@ -111,8 +111,8 @@ return {
     vim.keymap.set('n', '<F12>', dap.disconnect, { desc = 'Debug: Disconnect' })
 
     -- Pretty up the debug breakpoints
-    vim.fn.sign_define('DapBreakpoint', { text = '🔴', texthl = 'DapBreakpoint', linehl = '', numhl = '' })
-    vim.fn.sign_define('DapBreakpointCondition', { text = '🟡', texthl = 'DapBreakpointCondition', linehl = '', numhl = '' })
-    vim.fn.sign_define('DapStopped', { text = '', texthl = 'DapStopped', linehl = 'DapStopped', numhl = 'DapStopped' })
+    vim.fn.sign_define('DapBreakpoint', { text = '🔴', texthl = 'DapBreakpoint', linehl = '', numhl = 'DapBreakpoint' })
+    vim.fn.sign_define('DapBreakpointCondition', { text = '🟡', texthl = 'DapBreakpointCondition', linehl = '', numhl = 'DapBreakpointCondition' })
+    vim.fn.sign_define('DapStopped', { text = '', texthl = '', linehl = '', numhl = 'DapStopped' })
   end,
 }
