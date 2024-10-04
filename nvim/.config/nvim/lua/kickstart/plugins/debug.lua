@@ -13,9 +13,10 @@ return {
   dependencies = {
     -- Creates a beautiful debugger UI
     'rcarriga/nvim-dap-ui',
-
-    -- Required dependency for nvim-dap-ui
-    'nvim-neotest/nvim-nio',
+    dependencies = {
+      -- Required dependency for nvim-dap-ui
+      'nvim-neotest/nvim-nio',
+    },
 
     -- Installs the debug adapters for you
     'williamboman/mason.nvim',
@@ -30,12 +31,9 @@ return {
   config = function()
     local dap = require 'dap'
     local dapui = require 'dapui'
-    local dapgo = require 'dap-go'
-
-    -- Dap listeners
-    dap.listeners.after.event_initialized['dapui_config'] = dapui.open
-    dap.listeners.before.event_terminated['dapui_config'] = dapui.close
-    dap.listeners.before.event_exited['dapui_config'] = dapui.close
+    local dap_go = require 'dap-go'
+    local mason_nvim_dap = require 'mason-nvim-dap'
+    local nvim_dap_virtual_text = require 'nvim-dap-virtual-text'
 
     -- Dap UI setup
     -- For more information, see |:help nvim-dap-ui|
@@ -59,19 +57,24 @@ return {
       --},
     }
 
+    -- Dap listeners
+    dap.listeners.after.event_initialized['dapui_config'] = dapui.open
+    dap.listeners.before.event_terminated['dapui_config'] = dapui.close
+    dap.listeners.before.event_exited['dapui_config'] = dapui.close
+
     -- Install golang specific config
-    dapgo.setup {
+    dap_go.setup {
       delve = {
         -- On Windows delve must be run attached or it crashes.
         -- See https://github.com/leoluz/nvim-dap-go/blob/main/README.md#configuring
         detached = vim.fn.has 'win32' == 0,
-        --args = {},
-        --build_flags = '-tags=ci_jenkins',
-        --cwd = nil,
+        args = {},
+        build_flags = '-tags=ci_jenkins',
+        cwd = nil,
       },
     }
 
-    require('mason-nvim-dap').setup {
+    mason_nvim_dap.setup {
       -- Makes a best effort to setup the various debuggers with
       -- reasonable debug configurations
       automatic_installation = true,
@@ -88,16 +91,19 @@ return {
       },
     }
 
-    require('nvim-dap-virtual-text').setup {}
+    nvim_dap_virtual_text.setup {}
 
     -- Basic debugging keymaps, feel free to change to your liking!
-    vim.keymap.set('n', '<F5>', dap.continue, { desc = 'Debug: Start/Continue' })
     vim.keymap.set('n', '<F2>', dap.step_into, { desc = 'Debug: Step Into' })
     vim.keymap.set('n', '<F3>', dap.step_over, { desc = 'Debug: Step Over' })
     vim.keymap.set('n', '<F4>', dap.step_out, { desc = 'Debug: Step Out' })
+    vim.keymap.set('n', '<F5>', dap.continue, { desc = 'Debug: Start/Continue' })
+    -- For Debugging a test!
     vim.keymap.set('n', '<F6>', function()
-      dapgo.debug_test()
-    end, { desc = 'Debug: Last Test' })
+      dap_go.debug_test()
+    end, { desc = 'Debug: Nearest Test' })
+    -- Toggle to see last session result. Without this, you can't see session output in case of unhandled exception.
+    vim.keymap.set('n', '<F7>', dapui.toggle, { desc = 'Debug: See last session result.' })
     vim.keymap.set('n', '<F8>', dap.toggle_breakpoint, { desc = 'Debug: Toggle Breakpoint' })
     vim.keymap.set('n', '<F9>', function()
       dap.set_breakpoint(vim.fn.input 'Breakpoint condition: ')
@@ -106,8 +112,5 @@ return {
     -- Pretty up the debug breakpoints
     vim.fn.sign_define('DapBreakpoint', { text = '🔴', texthl = '', linehl = '', numhl = '' })
     vim.fn.sign_define('DapStopped', { text = '', texthl = '', linehl = '', numhl = '' })
-
-    -- Toggle to see last session result. Without this, you can't see session output in case of unhandled exception.
-    vim.keymap.set('n', '<F7>', dapui.toggle, { desc = 'Debug: See last session result.' })
   end,
 }
