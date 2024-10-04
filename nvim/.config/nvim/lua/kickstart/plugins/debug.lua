@@ -108,7 +108,7 @@ return {
     vim.keymap.set('n', '<F9>', function()
       dap.set_breakpoint(vim.fn.input 'Breakpoint condition: ')
     end, { desc = 'Debug: Set Breakpoint' })
-    vim.keymap.set('n', '<F12>', dap.close, { desc = 'Debug: Close' })
+    vim.keymap.set('n', '<F12>', dap.disconnect, { desc = 'Debug: Disconnect' })
 
     -- Pretty up the debug breakpoints
     vim.fn.sign_define('DapBreakpoint', { text = '🔴', texthl = '', linehl = '', numhl = '' })
