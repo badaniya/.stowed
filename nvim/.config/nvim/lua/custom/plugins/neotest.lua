@@ -11,7 +11,14 @@ return {
     require('neotest').setup {
       adapters = {
         require 'neotest-golang' { -- Registration
-          go_test_args = { '-v', '-timeout=0', '-count=1', '-tags=ci_jenkins' }, -- -v: verbose, -timeout 0: infinite timeout, -count 1: non-cached run always, -tags ci_jenkins: run against CI setup.
+          go_test_args = {
+            '-v', -- -v: verbose
+            '-timeout=0', -- -timeout 0: infinite timeout
+            '-count=1', -- -count 1: non-cached run always
+            '-tags=ci_jenkins', -- -tags ci_jenkins: run against CI setup
+            '-coverprofile=' .. vim.fn.getcwd() .. '/coverage.out', -- -coverprofile ./coverage.out generates a code coverage report
+            '-coverpkg=./...',
+          },
           go_list_args = { '-tags=ci_jenkins' },
           dap_go_opts = {
             delve = {
@@ -50,11 +57,11 @@ return {
       desc = 'Neotest Run All [T]est Files',
     },
     {
-      '<leader>ntr',
+      '<leader>ntn',
       function()
         require('neotest').run.run()
       end,
-      desc = 'Neotest [R]un Nearest',
+      desc = 'Neotest Run [N]earest',
     },
     {
       '<leader>nts',
