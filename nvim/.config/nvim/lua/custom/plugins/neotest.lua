@@ -17,7 +17,7 @@ return {
             '-count=1', -- -count 1: non-cached run always
             '-tags=ci_jenkins', -- -tags ci_jenkins: run against CI setup
             '-coverprofile=' .. vim.fn.getcwd() .. '/coverage.out', -- -coverprofile ./coverage.out generates a code coverage report
-            '-coverpkg=./...',
+            '-coverpkg=all',
           },
           go_list_args = { '-tags=ci_jenkins' },
           dap_go_opts = {
@@ -34,6 +34,9 @@ return {
         },
       },
     }
+
+    -- set debug level after having called require("neotest").setup()
+    require('neotest.logging'):set_level(vim.log.levels.DEBUG)
   end,
 
   keys = {
