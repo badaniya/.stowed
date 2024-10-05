@@ -36,7 +36,7 @@ return {
     }
 
     -- set debug level after having called require("neotest").setup()
-    require('neotest.logging'):set_level(vim.log.levels.DEBUG)
+    -- require('neotest.logging'):set_level(vim.log.levels.DEBUG)
   end,
 
   keys = {
