@@ -26,5 +26,5 @@ return {
     },
   },
 
-  vim.keymap.set('n', '<leader>tt', ':Twilight<CR>', { desc = '[T]oggle [T]wilight' }),
+  vim.keymap.set('n', '<leader>w', ':Twilight<CR>', { desc = 'T[w]ilight' }),
 }
