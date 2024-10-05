@@ -16,9 +16,10 @@ return {
     end
 
     -- Map key bindings
-    vim.keymap.set('n', '<leader>do', function()
+    vim.keymap.set('n', '<leader>V', '', { desc = 'Diff[V]iew' })
+    vim.keymap.set('n', '<leader>VO', function()
       vim.cmd('DiffviewOpen ' .. upstream_branch_name())
-    end, { noremap = true, silent = true, desc = '[D]iffview [O]pen' })
-    vim.keymap.set('n', '<leader>dc', ':DiffviewClose<CR>', { desc = '[D]iffview [C]lose' })
+    end, { noremap = true, silent = true, desc = 'Diff[V]iew [O]pen' })
+    vim.keymap.set('n', '<leader>VC', ':DiffviewClose<CR>', { desc = 'Diff[V]iew [C]lose' })
   end,
 }
