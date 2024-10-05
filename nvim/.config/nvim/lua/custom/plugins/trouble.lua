@@ -20,12 +20,12 @@ return {
     },
     {
       '<leader>ts',
-      '<cmd>Trouble symbols toggle focus=false<cr>',
+      '<cmd>Trouble symbols toggle focus=false win.position=right win.size=.25<cr>',
       desc = '[T]rouble [S]ymbols',
     },
     {
       '<leader>tl',
-      '<cmd>Trouble lsp toggle focus=false win.position=right<cr>',
+      '<cmd>Trouble lsp toggle focus=false win.position=right win.size=.25<cr>',
       desc = '[T]rouble [L]SP Definitions / references / ...',
     },
     {

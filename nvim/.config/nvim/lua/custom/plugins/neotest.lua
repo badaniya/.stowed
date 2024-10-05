@@ -41,65 +41,65 @@ return {
 
   keys = {
     {
-      '<leader>nt',
+      '<leader>n',
       '',
-      desc = '[N]eo[t]est',
+      desc = '[N]eotest',
     },
     {
-      '<leader>ntf',
+      '<leader>nf',
       function()
         require('neotest').run.run(vim.fn.expand '%')
       end,
-      desc = 'Neotest Run [F]ile',
+      desc = '[N]eotest Run [F]ile',
     },
     {
-      '<leader>ntt',
+      '<leader>nt',
       function()
         require('neotest').run.run(vim.loop.cwd())
       end,
-      desc = 'Neotest Run All [T]est Files',
+      desc = '[N]eotest Run All [T]est Files',
     },
     {
-      '<leader>ntn',
+      '<leader>nn',
       function()
         require('neotest').run.run()
       end,
-      desc = 'Neotest Run [N]earest',
+      desc = '[N]eotest Run [N]earest',
     },
     {
-      '<leader>nts',
+      '<leader>ns',
       function()
         require('neotest').summary.toggle()
       end,
-      desc = 'Neotest Toggle [S]ummary',
+      desc = '[N]eotest Toggle [S]ummary',
     },
     {
-      '<leader>nto',
+      '<leader>no',
       function()
         require('neotest').output.open { enter = true, auto_close = true }
       end,
-      desc = 'Neotest Show [O]utput',
+      desc = '[N]eotest Show [O]utput',
     },
     {
-      '<leader>ntp',
+      '<leader>np',
       function()
         require('neotest').output_panel.toggle()
       end,
-      desc = 'Neotest Toggle Output [P]anel',
+      desc = '[N]eotest Toggle Output [P]anel',
     },
     {
-      '<leader>nte',
+      '<leader>ne',
       function()
         require('neotest').run.stop()
       end,
-      desc = 'Neotest [E]xit',
+      desc = '[N]eotest [E]xit',
     },
     {
-      '<leader>ntd',
+      '<leader>nd',
       function()
         require('dap-go').debug_test()
       end,
-      desc = 'Neotest [D]ebug Nearest Test',
+      desc = '[N]eotest [D]ebug Nearest Test',
     },
   },
 }
