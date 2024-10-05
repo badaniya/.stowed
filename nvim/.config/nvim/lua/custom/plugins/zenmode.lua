@@ -83,5 +83,5 @@ return {
     },
   },
 
-  vim.keymap.set('n', '<leader>z', ':ZenMode<CR>', { desc = '[Z]enMode' }),
+  vim.keymap.set('n', '<leader>Z', ':ZenMode<CR>', { desc = '[Z]enMode' }),
 }
