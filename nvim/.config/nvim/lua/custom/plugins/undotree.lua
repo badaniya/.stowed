@@ -10,5 +10,5 @@ return {
     end,
   },
   -- Set Undotree mapping
-  vim.keymap.set('n', '<leader>u', ':UndotreeToggle <CR>', { desc = 'Open [U]ndotree' }),
+  vim.keymap.set('n', '<leader>U', ':UndotreeToggle <CR>', { desc = '[U]ndotree' }),
 }

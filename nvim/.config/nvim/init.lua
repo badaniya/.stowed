@@ -239,13 +239,15 @@ require('lazy').setup({
         { '<leader>c_', hidden = true },
         { '<leader>d', group = '[D]ocument' },
         { '<leader>d_', hidden = true },
-        { '<leader>h', group = 'Git [H]unk', mode = 'v' },
-        { '<leader>h_', hidden = true },
+        { '<leader>g', group = '[G]it Hunk', mode = 'v' },
+        { '<leader>g_', hidden = true },
+        { '<leader>l', group = '[L]SP' },
+        { '<leader>l_', hidden = true },
         { '<leader>r', group = '[R]ename' },
         { '<leader>r_', hidden = true },
         { '<leader>s', group = '[S]earch' },
         { '<leader>s_', hidden = true },
-        { '<leader>t', group = '[T]oggle' },
+        { '<leader>t', group = '[T]rouble' },
         { '<leader>t_', hidden = true },
         { '<leader>w', group = '[W]orkspace' },
         { '<leader>w_', hidden = true },
@@ -428,6 +430,9 @@ require('lazy').setup({
 
           -- Start of LSP: [G]oto menu.
           map('<leader>l', '', '[L]SP')
+
+          -- LSP Toggle menu.
+          map('<leader>lt', '', '[L]SP [T]oggle')
 
           -- Jump to the definition of the word under your cursor.
           --  This is where a variable was first declared, or where a function is defined, etc.
