@@ -5,9 +5,18 @@ return {
     event = { 'BufReadPre', 'BufNewFile' },
     config = function()
       local lint = require 'lint'
-      lint.linters_by_ft = {
-        markdown = { 'markdownlint' },
-      }
+      --lint.linters_by_ft = {
+      --  markdown = { 'markdownlint' },
+      --}
+      lint.linters_by_ft = lint.linters_by_ft or {}
+      lint.linters_by_ft['markdown'] = { 'markdownlint' }
+      lint.linters_by_ft['dockerfile'] = { 'hadolint' }
+      lint.linters_by_ft['awk'] = { 'awk' }
+      lint.linters_by_ft['go'] = { 'golangcilint' }
+      lint.linters_by_ft['lua'] = { 'luacheck' }
+      lint.linters_by_ft['nix'] = { 'nix' }
+      lint.linters_by_ft['bash'] = { 'shellcheck' }
+      lint.linters_by_ft['yaml'] = { 'yq' }
 
       -- To allow other plugins to add linters to require('lint').linters_by_ft,
       -- instead set linters_by_ft like this:

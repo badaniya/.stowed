@@ -553,9 +553,12 @@ require('lazy').setup({
           settings = {
             gopls = {
               analyses = {
+                -- Most of govet is exposed through gopls analyses
+                -- This is already the default but kept here as an example.
                 unusedparames = true,
               },
               staticcheck = true,
+              vulncheck = 'Imports',
               gofumpt = true,
             },
           },
