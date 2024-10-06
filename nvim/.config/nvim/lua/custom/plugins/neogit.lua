@@ -10,7 +10,12 @@ return {
       --'ibhagwan/fzf-lua', -- optional
       --'echasnovski/mini.pick', -- optional
     },
-    config = true,
+    config = function()
+      local neogit = require 'neogit'
+      neogit.setup {
+        graph_style = 'unicode',
+      }
+    end,
   },
 
   vim.keymap.set('n', '<leader>G', ':Neogit<CR>', { desc = 'Neo[G]it' }),
