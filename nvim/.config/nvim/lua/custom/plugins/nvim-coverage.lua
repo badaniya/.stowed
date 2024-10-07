@@ -76,4 +76,8 @@ return {
   config = function(_, opts)
     require('coverage').setup(opts)
   end,
+
+  vim.keymap.set('n', '<leader>cc', ':Coverage<CR>', { desc = '[C]ode [C]overage' }),
+  vim.keymap.set('n', '<leader>cs', ':CoverageSummary<CR>', { desc = '[C]ode [S]ummary' }),
+  vim.keymap.set('n', '<leader>ce', ':CoverageClear<CR>', { desc = '[C]ode Cl[e]ar' }),
 }
