@@ -12,11 +12,13 @@ return {
       },
     },
     commands = true, -- create commands
-    load_coverlge_cb = function(ftype)
+    load_coverage_cb = function(ftype)
       local config = require 'coverage.config'
       local project_dir = 'GoDCApp/NVO'
-      local file = io.open(config.opts.lang.go.coverage_file, 'r')
       local fileContent = {}
+
+      local file = io.open(config.opts.lang.go.coverage_file, 'r')
+      vim.notify('Loading coverage file ' .. config.opts.lang.go.coverage_file .. ' ...')
 
       if not (file == nil) then
         for line in file:lines() do
@@ -28,13 +30,15 @@ return {
         io.close(file)
       end
 
-      file = io.open(config.opts.lang.go.coverage_file, 'w')
+      if not (next(fileContent) == nil) then
+        file = io.open(config.opts.lang.go.coverage_file, 'w')
 
-      if not (file == nil) then
-        for _, value in ipairs(fileContent) do
-          file:write(value .. '\n')
+        if not (file == nil) then
+          for _, value in ipairs(fileContent) do
+            file:write(value .. '\n')
+          end
+          io.close(file)
         end
-        io.close(file)
       end
 
       -- notify that the coverage file has been loaded

@@ -17,6 +17,7 @@ return {
             '-count=1', -- -count 1: non-cached run always
             '-tags=ci_jenkins', -- -tags ci_jenkins: run against CI setup
             '-coverprofile=' .. vim.fn.getcwd() .. '/coverage.out', -- -coverprofile ./coverage.out generates a code coverage report
+            '-covermode=atomic',
             '-coverpkg=all',
           },
           go_list_args = { '-tags=ci_jenkins' },
