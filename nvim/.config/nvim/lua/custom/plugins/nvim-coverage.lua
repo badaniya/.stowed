@@ -20,10 +20,11 @@ return {
       if ftype == 'go' then
         local config = require 'coverage.config'
         local project_dir = 'GoDCApp/NVO'
+        local coverage_mode = 'mode:'
+        local is_modified = false
         local fileContent = {}
 
         vim.notify('Loading coverage file ' .. config.opts.lang.go.coverage_file .. ' ...')
-
         local file = io.open(config.opts.lang.go.coverage_file, 'r')
 
         if not (file == nil) then
@@ -32,12 +33,16 @@ return {
               -- Match all GoDCApp/NVO paths
               local name = string.gsub(line, '.*' .. project_dir .. '(.*)', '%1')
               table.insert(fileContent, name)
+              is_modified = true
+            elseif string.match(line, '^' .. coverage_mode) then
+              -- Match the coverage mode: <atomic | set | count>
+              table.insert(fileContent, line)
             end
           end
           io.close(file)
         end
 
-        if not (fileContent == nil) then
+        if is_modified then
           file = io.open(config.opts.lang.go.coverage_file, 'w')
 
           if not (file == nil) then
