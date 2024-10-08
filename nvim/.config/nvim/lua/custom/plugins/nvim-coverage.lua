@@ -24,7 +24,6 @@ return {
         local is_modified = false
         local fileContent = {}
 
-        vim.notify('Loading coverage file ' .. config.opts.lang.go.coverage_file .. ' ...')
         local file = io.open(config.opts.lang.go.coverage_file, 'r')
 
         if not (file == nil) then
@@ -51,11 +50,14 @@ return {
             end
             io.close(file)
           end
+        else
+          -- notify only when the file has been fully processed
+          vim.notify('Loaded coverage file ' .. config.opts.lang.go.coverage_file)
         end
+      else
+        -- notify that the coverage file has been loaded
+        vim.notify('Loaded ' .. ftype .. ' coverage')
       end
-
-      -- notify that the coverage file has been loaded
-      vim.notify('Loaded ' .. ftype .. ' coverage')
     end,
     highlights = {
       -- customize highlight groups created by the plugin
