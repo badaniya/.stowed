@@ -4,32 +4,39 @@ This repository is used to store all dot-config files for various shells and edi
 [How Nested Git Repositories Are Configured - For Reference ONLY](nested_git_repos.md):  A reference on how this .stowed repository was created with the various nested git repositories for the shell and editor plugins.
 
 **Stowed Terminal Tools:**
+
 - tmux
 - fzf
 - starship
 
 **Stowed Shells:**
+
 - bash
 - zsh
 
 **Stowed Editors:**
+
 - nvim
 - vim
 - emacs
 
 ## How To Use GNU Stow
+
 ### 1) Install GNU Stow
+
 ```bash
 # Install Stow
 sudo apt install -y stow
 ```
 
 ### 2) Clone This Repo on a New Linux Host
+
 ```bash
 git clone https://github.com/badaniya/.stowed $HOME/.stowed
 ```
 
 ### 3) Run Stow Command to Establish Symlinks to the Repository
+
 ```bash
 # Create Symlinks to Repo
 stow -d $HOME/.stowed tmux fzf starship bash zsh nvim vim emacs
@@ -44,13 +51,16 @@ rm -rf $HOME/.bash*; rm -rf $HOME/.zsh*; rm -rf $HOME/.oh-my-zsh; rm -rf $HOME/.
 ```
 
 ## Follow-up Package Installation for Shell/Editor Tools
+
 ### 1) Tmux
+
 ```bash
 # tmux: Ubuntu package version
 sudo apt install -y tmux
 ```
 
 ### 2) Zsh
+
 ```bash
 # zsh: Ubuntu package version
 sudo apt install -y zsh
@@ -60,12 +70,14 @@ sudo apt install fonts-powerline
 ```
 
 ### 3) Starship
+
 ```bash
 # starship: Shell script installer
 curl -sS https://starship.rs/install.sh | sh
 ```
 
 ### 4) Neovim
+
 ```bash
 # neovim: Latest version
 curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux64.tar.gz
@@ -82,7 +94,9 @@ fc-cache -fv
 ```
 
 ### 4.1) Neovim Plugin Dependencies
+
 #### Database UI Plugin
+
 ```bash
 # DB UI - postgres/mysql (vim-dadbod and vim-dadbod-ui)
 sudo apt install -y postgresql-client
@@ -90,11 +104,13 @@ sudo apt install -y mariadb-client
 ```
 
 ### 5) Vim
+
 ```bash
 sudo apt install -y vim
 ```
 
 ### 6) Emacs
+
 ```bash
 sudo apt-add-repository -y ppa:kelleyk/emacs
 sudo apt update -y
@@ -102,7 +118,9 @@ sudo apt install -y emacs28
 ```
 
 ## Linux Development Environment Setup
+
 ### 1) Golang
+
 ```bash
 # golang:
 golang_version="1.22.1"
@@ -128,6 +146,7 @@ go install gotest.tools/gotestsum@latest
 ```
 
 ## How to Use These Stowed Shell/Editor Tools
+
 ```bash
 # 1) Start a new tmux session
 tmux [new -s <session-name> [-c <start-directory>]]
@@ -137,6 +156,7 @@ nvim
 ```
 
 ## General Tmux Session Commands
+
 ```bash
 # 1) List existing tmux sessions
 tmux ls
@@ -155,6 +175,7 @@ tmux kill-server
 ```
 
 ## Tmux Key Bindings
+
 ```text
 # General Tmux Bindings (<C> is the Ctrl key)
 <C-b> $ : Rename the tmux session name
@@ -199,6 +220,7 @@ tmux kill-server
 ```
 
 ## Nvim Key Bindings
+
 ```text
 # General Nvim Bindings
 <space> : Main leader key for all menus

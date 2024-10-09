@@ -1,7 +1,9 @@
 [Go Back to the Main README](README.md)
 
 ## How Nested Git Repositories Are Configured - For Reference ONLY
+
 ### 1) tmux
+
 ```bash
 # TPM - TMUX Plugin Manager
 cd $HOME/.stowed
@@ -26,6 +28,7 @@ git subtree add --prefix=tmux/.tmux/plugins/tmux catppuccin main --squash
 ```
 
 ### 2) zsh
+
 ```bash
 # Oh My ZSH Repo
 cd $HOME/.stowed
@@ -37,6 +40,7 @@ git subtree pull --prefix=zsh/.oh-my-zsh oh-my-zsh master --squash
 git subtree push --prefix=zsh/.oh-my-zsh oh-my-zsh master
 
 # ZSH Plugins
+
 git remote add zsh-syntax-highlighting-catppuccin https://github.com/catppuccin/zsh-syntax-highlighting
 git remote add last-working-dir-tmux https://github.com/badaniya/last-working-dir-tmux
 git remote add zsh-vi-mode https://github.com/jeffreytse/zsh-vi-mode
@@ -52,6 +56,7 @@ git subtree add --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-vi-mode zsh-vi-mode m
 ```
 
 ### 3) nvim
+
 ```bash
 # NVIM Repo
 cd $HOME/.stowed
@@ -60,6 +65,7 @@ git subtree add --prefix=nvim/.config/nvim nvim master
 ```
 
 ### 4) vim
+
 ```bash
 # VIM Repo
 cd $HOME/.stowed
@@ -80,6 +86,7 @@ git subtree add --prefix=vim/.vim/plugged/vim-gitgutter vim-gitgutter main --squ
 ```
 
 ### 5) fzf
+
 ```bash
 cd $HOME/.stowed
 git remote add fzf https://github.com/junegunn/fzf.git
