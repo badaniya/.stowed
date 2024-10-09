@@ -24,9 +24,6 @@ return {
       markdown = {
         'markdownlint-cli2',
       },
-      lua = {
-        'luacheck',
-      },
     }
 
     vim.api.nvim_create_autocmd({ 'BufEnter', 'BufWritePost', 'InsertLeave' }, {
