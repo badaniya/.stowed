@@ -21,56 +21,56 @@ return {
       --  none:     does nothing
       preset = 'none',
       -- Capture groups that get pulled from markdown
-      markdown_query = [[
-        (section) @section
+      --markdown_query = [[
+      --  (section) @section
 
-        (atx_heading [
-            (atx_h1_marker)
-            (atx_h2_marker)
-            (atx_h3_marker)
-            (atx_h4_marker)
-            (atx_h5_marker)
-            (atx_h6_marker)
-        ] @heading)
-        (setext_heading) @heading
+      --  (atx_heading [
+      --      (atx_h1_marker)
+      --      (atx_h2_marker)
+      --      (atx_h3_marker)
+      --      (atx_h4_marker)
+      --      (atx_h5_marker)
+      --      (atx_h6_marker)
+      --  ] @heading)
+      --  (setext_heading) @heading
 
-        (thematic_break) @dash
+      --  (thematic_break) @dash
 
-        (fenced_code_block) @code
+      --  (fenced_code_block) @code
 
-        [
-            (list_marker_plus)
-            (list_marker_minus)
-            (list_marker_star)
-        ] @list_marker
+      --  [
+      --      (list_marker_plus)
+      --      (list_marker_minus)
+      --      (list_marker_star)
+      --  ] @list_marker
 
-        (task_list_marker_unchecked) @checkbox_unchecked
-        (task_list_marker_checked) @checkbox_checked
+      --  (task_list_marker_unchecked) @checkbox_unchecked
+      --  (task_list_marker_checked) @checkbox_checked
 
-        (block_quote) @quote
+      --  (block_quote) @quote
 
-        (pipe_table) @table
-    ]],
-      -- Capture groups that get pulled from quote nodes
-      markdown_quote_query = [[
-        [
-            (block_quote_marker)
-            (block_continuation)
-        ] @quote_marker
-    ]],
-      -- Capture groups that get pulled from inline markdown
-      inline_query = [[
-        (code_span) @code
+      --  (pipe_table) @table
+      --]],
+      ---- Capture groups that get pulled from quote nodes
+      --markdown_quote_query = [[
+      --  [
+      --      (block_quote_marker)
+      --      (block_continuation)
+      --  ] @quote_marker
+      --]],
+      ---- Capture groups that get pulled from inline markdown
+      --inline_query = [[
+      --  (code_span) @code
 
-        (shortcut_link) @shortcut
+      --  (shortcut_link) @shortcut
 
-        [
-            (image)
-            (email_autolink)
-            (inline_link)
-            (full_reference_link)
-        ] @link
-    ]],
+      --  [
+      --      (image)
+      --      (email_autolink)
+      --      (inline_link)
+      --      (full_reference_link)
+      --  ] @link
+      --]],
       -- The level of logs to write to file: vim.fn.stdpath('state') .. '/render-markdown.log'
       -- Only intended to be used for plugin development / debugging
       log_level = 'error',
