@@ -123,7 +123,7 @@ sudo apt install -y emacs28
 
 ```bash
 # golang:
-golang_version="1.22.1"
+golang_version="1.22.7"
 wget https://go.dev/dl/go"$golang_version".linux-amd64.tar.gz
 sudo tar -xvf go"$golang_version".linux-amd64.tar.gz
 sudo rm -rf /usr/local/go && sudo mv go /usr/local
