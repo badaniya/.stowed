@@ -616,6 +616,7 @@ require('lazy').setup({
         'golangci-lint',
         'hadolint',
         'jsonlint',
+        'luacheck',
         'markdownlint-cli2',
         'nilaway',
         'revive',

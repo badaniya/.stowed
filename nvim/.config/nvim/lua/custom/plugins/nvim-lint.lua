@@ -4,14 +4,34 @@ return {
   config = function()
     local lint = require 'lint'
     lint.linters_by_ft = {
-      go = {
-        'golangcilint',
+      bash = {
+        'shellcheck',
+        'shellharden',
       },
-      nix = { 'nix' },
-      lua = { 'luacheck' },
+      dockerfile = {
+        'hadolint',
+      },
+      go = {
+        'gitleaks',
+        'golangci-lint',
+        'nilaway',
+        'revive',
+        'staticcheck',
+        'trivy',
+      },
+      json = {
+        'jsonlint',
+      },
+      markdown = {
+        'markdownlint-cli2',
+      },
+      lua = {
+        'luacheck',
+        'stylua', -- Used to format Lua code
+      },
     }
 
-    vim.api.nvim_create_autocmd({ 'InsertLeave', 'BufWritePost' }, {
+    vim.api.nvim_create_autocmd({ 'BufEnter', 'BufWritePost', 'InsertLeave' }, {
       callback = function()
         -- try_lint without arguments runs the linters defined in `linters_by_ft`
         -- for the current filetype
