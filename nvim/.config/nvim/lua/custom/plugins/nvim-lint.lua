@@ -12,7 +12,6 @@ return {
         'hadolint',
       },
       go = {
-        'gitleaks',
         'golangci-lint',
         'nilaway',
         'revive',
@@ -27,7 +26,6 @@ return {
       },
       lua = {
         'luacheck',
-        'stylua', -- Used to format Lua code
       },
     }
 
