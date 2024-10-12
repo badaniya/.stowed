@@ -986,8 +986,11 @@ require('lazy').setup({
           enable = true,
           set_jumps = true, -- whether to set jumps in the jumplist
           goto_next_start = {
-            [']f'] = '@function.outer',
+            [']m'] = '@function.outer',
             [']]'] = { query = '@class.outer', desc = 'Next class start' },
+            [']al'] = '@assignment.lhs',
+            [']ar'] = '@assignment.rhs',
+            [']f'] = '@call.outer',
             [']i'] = '@conditional.outer',
             [']o'] = '@loop.outer',
             --
@@ -1000,22 +1003,31 @@ require('lazy').setup({
             [']z'] = { query = '@fold', query_group = 'folds', desc = 'Next fold' },
           },
           goto_next_end = {
-            [']F'] = '@function.outer',
+            [']M'] = '@function.outer',
             [']['] = '@class.outer',
+            [']Al'] = '@assignment.lhs',
+            [']Ar'] = '@assignment.rhs',
+            [']F'] = '@call.outer',
             [']I'] = '@conditional.outer',
             [']O'] = '@loop.outer',
           },
           goto_previous_start = {
-            ['[f'] = '@function.outer',
+            ['[m'] = '@function.outer',
             ['[['] = '@class.outer',
+            ['[al'] = '@assignment.lhs',
+            ['[ar'] = '@assignment.rhs',
+            ['[f'] = '@call.outer',
             ['[i'] = '@conditional.outer',
             ['[o'] = '@loop.outer',
             ['[s'] = { query = '@scope', query_group = 'locals', desc = 'Prev scope' },
             ['[z'] = { query = '@fold', query_group = 'folds', desc = 'Prev fold' },
           },
           goto_previous_end = {
-            ['[F'] = '@function.outer',
+            ['[M'] = '@function.outer',
             ['[]'] = '@class.outer',
+            ['[Al'] = '@assignment.lhs',
+            ['[Ar'] = '@assignment.rhs',
+            ['[F'] = '@call.outer',
             ['[I'] = '@conditional.outer',
             ['[O'] = '@loop.outer',
           },
@@ -1036,6 +1048,17 @@ require('lazy').setup({
       --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
       --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
       --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+
+      local ts_repeat_move = require 'nvim-treesitter.textobjects.repeatable_move'
+
+      -- Repeat movement with ; and ,
+      -- ensure ; goes forward and , goes backward regardless of the last direction
+      -- vim.keymap.set({ 'n', 'x', 'o' }, ';', ts_repeat_move.repeat_last_move_next)
+      -- vim.keymap.set({ 'n', 'x', 'o' }, ',', ts_repeat_move.repeat_last_move_previous)
+
+      -- vim way: ; goes to the direction you were moving.
+      vim.keymap.set({ 'n', 'x', 'o' }, ';', ts_repeat_move.repeat_last_move)
+      vim.keymap.set({ 'n', 'x', 'o' }, ',', ts_repeat_move.repeat_last_move_opposite)
     end,
   },
 
