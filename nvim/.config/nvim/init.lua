@@ -925,10 +925,9 @@ require('lazy').setup({
       incremental_selection = {
         enable = true,
         keymaps = {
-          init_selection = '<leader>cs',
-          node_incremental = '<leader>ci',
-          scope_incremental = '<leader>cc',
-          node_decremental = '<leader>cd',
+          init_selection = '<C-a>',
+          node_incremental = '<C-a>',
+          node_decremental = '<C-s>',
         },
       },
       -- Yank, Delete, Change sections of code, Swap parameters, and Move to differnt sections of code
