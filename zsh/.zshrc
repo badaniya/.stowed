@@ -165,7 +165,7 @@ fi
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 # Zoxide Support
-eval "$(zoxide init zsh)"
+[ -f ~/.local/bin/zoxide ] && eval "$(zoxide init zsh)"
 
 # Starship Shell
 eval "$(starship init zsh)"
