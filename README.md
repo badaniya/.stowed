@@ -7,6 +7,7 @@ This repository is used to store all dot-config files for various shells and edi
 
 - tmux
 - fzf
+- zoxide
 - starship
 
 **Stowed Shells:**
@@ -69,14 +70,21 @@ sudo apt install -y zsh
 sudo apt install fonts-powerline
 ```
 
-### 3) Starship
+### 3) Zoxide
+
+```bash
+# zoxide: Shell script installer
+curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh
+```
+
+### 4) Starship
 
 ```bash
 # starship: Shell script installer
 curl -sS https://starship.rs/install.sh | sh
 ```
 
-### 4) Neovim
+### 5) Neovim
 
 ```bash
 # neovim: Latest version
@@ -93,7 +101,7 @@ unzip -od ~/.local/share/fonts/ JetBrainsMono.zip
 fc-cache -fv
 ```
 
-### 4.1) Neovim Plugin Dependencies
+### 5.1) Neovim Plugin Dependencies
 
 #### Database UI Plugin
 
@@ -103,13 +111,13 @@ sudo apt install -y postgresql-client
 sudo apt install -y mariadb-client 
 ```
 
-### 5) Vim
+### 6) Vim
 
 ```bash
 sudo apt install -y vim
 ```
 
-### 6) Emacs
+### 7) Emacs
 
 ```bash
 sudo apt-add-repository -y ppa:kelleyk/emacs
