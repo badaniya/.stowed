@@ -268,4 +268,6 @@ tmux kill-server
 <F6> : Debug Nearest Test
 <F7> : Restart Last Debug Session
 <F8> : Toggle Breakpoint
+<F9> : Toggle Conditional Breakpoint
+<F12> : Stop Debugger
 ```
