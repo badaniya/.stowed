@@ -252,8 +252,9 @@ tmux kill-server
 # Nvim Code Navigation
 <C-]> | <C-left-mouse-click>: Go to Definition
 <C-t> | <C-right-mouse-click> : Pop back up the stack
-<leader> gr : Goto References
-<leader> gI : Goto Implementations
+<leader> ld : LSP Definitions
+<leader> lr : LSP References
+<leader> li : LSP Implementations
 
 # Nvim Telescope
 <leader> sg : ripgrep search in project workspace
