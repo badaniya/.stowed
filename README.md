@@ -40,15 +40,15 @@ git clone https://github.com/badaniya/.stowed $HOME/.stowed
 
 ```bash
 # Create Symlinks to Repo
-stow -d $HOME/.stowed tmux fzf starship bash zsh nvim vim emacs
+stow -d $HOME/.stowed stow tmux fzf starship bash zsh nvim vim emacs
 
 # To Force Symlink Creation (NOTE: May miss some hidden files or symlinks)
-stow -d $HOME/.stowed --adopt tmux fzf starship bash zsh nvim vim emacs
+stow -d $HOME/.stowed --adopt stow tmux fzf starship bash zsh nvim vim emacs
 cd $HOME/.stowed
 git reset --hard HEAD
 
 # Sure-file Way to Ensure Stow Symlink Creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
-rm -rf $HOME/.bash*; rm -rf $HOME/.zsh*; rm -rf $HOME/.oh-my-zsh; rm -rf $HOME/.config/nvim; rm -rf $HOME/.vim*; rm -rf $HOME/.emacs*; stow -d $HOME/.stowed tmux fzf starship bash zsh nvim vim emacs
+rm -rf $HOME/.bash*; rm -rf $HOME/.zsh*; rm -rf $HOME/.oh-my-zsh; rm -rf $HOME/.config/nvim; rm -rf $HOME/.vim*; rm -rf $HOME/.emacs*; stow -d $HOME/.stowed stow tmux fzf starship bash zsh nvim vim emacs
 ```
 
 ## Follow-up Package Installation for Shell/Editor Tools
