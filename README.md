@@ -203,7 +203,7 @@ tmux kill-server
 <C-k> : Move to the pane above
 <C-l> : Move to the pane on the right
 <C-b> q # : Selects the pane number to switch to
-<C-b> p # : Opens a floating pane
+<C-b> p : Toggles a floating pane
 
 # Tmux Pane Zoom-in/Zoom-out
 <C-b> z : Toggles the current pane to zoom-in or zoom-out
