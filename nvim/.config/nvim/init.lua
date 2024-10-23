@@ -910,7 +910,25 @@ require('lazy').setup({
       },
     },
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'go', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'regex', 'sql', 'toml', 'vim', 'vimdoc', 'yaml' },
+      ensure_installed = {
+        'bash',
+        'c',
+        'diff',
+        'git_rebase',
+        'gitcommit',
+        'go',
+        'html',
+        'lua',
+        'luadoc',
+        'markdown',
+        'markdown_inline',
+        'regex',
+        'sql',
+        'toml',
+        'vim',
+        'vimdoc',
+        'yaml',
+      },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
