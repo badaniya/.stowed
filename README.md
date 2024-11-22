@@ -70,21 +70,28 @@ sudo apt install -y zsh
 sudo apt install fonts-powerline
 ```
 
-### 3) Zoxide
+### 3) Fzf
+
+```bash
+# fzf: Ubuntu package version
+sudo apt install -y fzf
+```
+
+### 4) Zoxide
 
 ```bash
 # zoxide: Shell script installer
 curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh
 ```
 
-### 4) Starship
+### 5) Starship
 
 ```bash
 # starship: Shell script installer
 curl -sS https://starship.rs/install.sh | sh
 ```
 
-### 5) Neovim
+### 6) Neovim
 
 ```bash
 # neovim: Latest version
@@ -101,7 +108,7 @@ unzip -od ~/.local/share/fonts/ JetBrainsMono.zip
 fc-cache -fv
 ```
 
-### 5.1) Neovim Plugin Dependencies
+### 6.1) Neovim Plugin Dependencies
 
 #### Database UI Plugin
 
@@ -111,13 +118,13 @@ sudo apt install -y postgresql-client
 sudo apt install -y mariadb-client 
 ```
 
-### 6) Vim
+### 7) Vim
 
 ```bash
 sudo apt install -y vim
 ```
 
-### 7) Emacs
+### 8) Emacs
 
 ```bash
 sudo apt-add-repository -y ppa:kelleyk/emacs
