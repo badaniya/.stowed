@@ -32,7 +32,7 @@ git subtree add --prefix=tmux/.tmux/plugins/tmux catppuccin main --squash
 ```bash
 # Oh My ZSH Repo
 cd $HOME/.stowed
-git remote add oh-my-zsh https://github.com/badaniya/.oh-my-zsh
+git remote add oh-my-zsh https://github.com/ohmyzsh/ohmyzsh
 git subtree add --prefix=zsh/.oh-my-zsh oh-my-zsh master --squash
 
 # How to Pull in Oh My ZSH Updates
