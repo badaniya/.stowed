@@ -112,7 +112,8 @@ return {
 
     -- Pretty up the debug breakpoints
     vim.fn.sign_define('DapBreakpoint', { text = '🔴', texthl = '', linehl = '', numhl = 'DapBreakpoint' })
-    vim.fn.sign_define('DapBreakpointCondition', { text = '🟡', texthl = '', linehl = '', numhl = 'DapBreakpointCondition' })
+    vim.fn.sign_define('DapBreakpointCondition',
+      { text = '🟡', texthl = '', linehl = '', numhl = 'DapBreakpointCondition' })
     vim.fn.sign_define('DapStopped', { text = '', texthl = '', linehl = '', numhl = 'DapStopped' })
   end,
 }

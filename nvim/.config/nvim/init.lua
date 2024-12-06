@@ -28,6 +28,15 @@ vim.opt.showmode = false
 --  Remove this option if you want your OS clipboard to remain independent.
 --  See `:help 'clipboard'`
 vim.opt.clipboard = 'unnamedplus'
+--  Use clip.exe for WSL environments
+if vim.fn.has('wsl') == 1 then
+  vim.api.nvim_create_autocmd('TextYankPost', {
+    group = vim.api.nvim_create_augroup('Yank', { clear = true }),
+    callback = function()
+      vim.fn.system('clip.exe', vim.fn.getreg('"'))
+    end,
+  })
+end
 
 -- Enable break indent
 vim.opt.breakindent = true
