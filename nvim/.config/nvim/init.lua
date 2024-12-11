@@ -29,25 +29,25 @@ vim.opt.showmode = false
 --  See `:help 'clipboard'`
 vim.opt.clipboard = 'unnamedplus'
 --  Use clip.exe for WSL environments
-if vim.fn.has('wsl') == 1 then
-  if vim.fn.executable("wl-copy") == 0 then
-    print("wl-clipboard not found, clipboard integration won't work")
+if vim.fn.has 'wsl' == 1 then
+  if vim.fn.executable 'wl-copy' == 0 then
+    print "wl-clipboard not found, clipboard integration won't work"
   else
     vim.g.clipboard = {
-      name = "wl-clipboard (wsl)",
+      name = 'wl-clipboard (wsl)',
       copy = {
-        ["+"] = 'wl-copy --foreground --type text/plain',
-        ["*"] = 'wl-copy --foreground --primary --type text/plain',
+        ['+'] = 'wl-copy --foreground --type text/plain',
+        ['*'] = 'wl-copy --foreground --primary --type text/plain',
       },
       paste = {
-        ["+"] = (function()
+        ['+'] = function()
           return vim.fn.systemlist('wl-paste --no-newline|sed -e "s/\r$//"', { '' }, 1) -- '1' keeps empty lines
-        end),
-        ["*"] = (function()
+        end,
+        ['*'] = function()
           return vim.fn.systemlist('wl-paste --primary --no-newline|sed -e "s/\r$//"', { '' }, 1)
-        end),
+        end,
       },
-      cache_enabled = true
+      cache_enabled = true,
     }
   end
 end
@@ -206,7 +206,7 @@ require('lazy').setup({
   --    require('Comment').setup({})
 
   -- "gc" to comment visual regions/lines
-  { 'numToStr/Comment.nvim',    opts = {} },
+  { 'numToStr/Comment.nvim', opts = {} },
 
   -- Here is a more advanced example where we pass configuration
   -- options to `gitsigns.nvim`. This is equivalent to the following Lua:
@@ -249,7 +249,7 @@ require('lazy').setup({
   -- after the plugin has been loaded:
   --  config = function() ... end
 
-  {                     -- Useful plugin to show you pending keybinds.
+  { -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
     event = 'VimEnter', -- Sets the loading event to 'VimEnter'
     config = function() -- This is the function that runs, AFTER loading
@@ -258,21 +258,21 @@ require('lazy').setup({
       -- Document existing key chains
       local wk = require 'which-key'
       wk.add {
-        { '<leader>c',  group = '[C]ode' },
+        { '<leader>c', group = '[C]ode' },
         { '<leader>c_', hidden = true },
-        { '<leader>d',  group = '[D]ocument' },
+        { '<leader>d', group = '[D]ocument' },
         { '<leader>d_', hidden = true },
-        { '<leader>g',  group = '[G]it Hunk', mode = 'v' },
+        { '<leader>g', group = '[G]it Hunk', mode = 'v' },
         { '<leader>g_', hidden = true },
-        { '<leader>l',  group = '[L]SP' },
+        { '<leader>l', group = '[L]SP' },
         { '<leader>l_', hidden = true },
-        { '<leader>r',  group = '[R]ename' },
+        { '<leader>r', group = '[R]ename' },
         { '<leader>r_', hidden = true },
-        { '<leader>s',  group = '[S]earch' },
+        { '<leader>s', group = '[S]earch' },
         { '<leader>s_', hidden = true },
-        { '<leader>t',  group = '[T]rouble' },
+        { '<leader>t', group = '[T]rouble' },
         { '<leader>t_', hidden = true },
-        { '<leader>w',  group = '[W]orkspace' },
+        { '<leader>w', group = '[W]orkspace' },
         { '<leader>w_', hidden = true },
       }
     end,
@@ -307,7 +307,7 @@ require('lazy').setup({
       { 'nvim-telescope/telescope-ui-select.nvim' },
 
       -- Useful for getting pretty icons, but requires a Nerd Font.
-      { 'nvim-tree/nvim-web-devicons',            enabled = vim.g.have_nerd_font },
+      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
     },
     config = function()
       -- Telescope is a fuzzy finder that comes with a lot of different things that
@@ -402,7 +402,7 @@ require('lazy').setup({
 
       -- Useful status updates for LSP.
       -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
-      { 'j-hui/fidget.nvim',       opts = {} },
+      { 'j-hui/fidget.nvim', opts = {} },
 
       -- Using folke's lazydev instead of neodev (neodev is deprecated)
       -- `neodev` configures Lua LSP for your Neovim config, runtime and plugins
@@ -890,14 +890,14 @@ require('lazy').setup({
             local macro = check_macro_recording()
 
             return MiniStatusline.combine_groups {
-              { hl = mode_hl,                 strings = { mode } },
+              { hl = mode_hl, strings = { mode } },
               { hl = 'MiniStatuslineDevinfo', strings = { git, diff, diagnostics } },
               '%<', -- Mark general truncate point
               { hl = 'MiniStatuslineFilename', strings = { filename } },
               '%=', -- End left alignment
               { hl = 'MiniStatuslineFilename', strings = { macro } },
               { hl = 'MiniStatuslineFileinfo', strings = { fileinfo } },
-              { hl = mode_hl,                  strings = { search, location } },
+              { hl = mode_hl, strings = { search, location } },
             }
           end,
         },
@@ -999,7 +999,7 @@ require('lazy').setup({
           -- mapping query_strings to modes.
           selection_modes = {
             ['@parameter.outer'] = 'v', -- charwise
-            ['@function.outer'] = 'V',  -- linewise
+            ['@function.outer'] = 'V', -- linewise
             ['@class.outer'] = '<c-v>', -- blockwise
           },
           -- If you set this to `true` (default is `false`) then any textobject is
