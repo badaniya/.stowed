@@ -206,7 +206,7 @@ require('lazy').setup({
   --    require('Comment').setup({})
 
   -- "gc" to comment visual regions/lines
-  { 'numToStr/Comment.nvim', opts = {} },
+  { 'numToStr/Comment.nvim',    opts = {} },
 
   -- Here is a more advanced example where we pass configuration
   -- options to `gitsigns.nvim`. This is equivalent to the following Lua:
@@ -249,7 +249,7 @@ require('lazy').setup({
   -- after the plugin has been loaded:
   --  config = function() ... end
 
-  { -- Useful plugin to show you pending keybinds.
+  {                     -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
     event = 'VimEnter', -- Sets the loading event to 'VimEnter'
     config = function() -- This is the function that runs, AFTER loading
@@ -258,21 +258,21 @@ require('lazy').setup({
       -- Document existing key chains
       local wk = require 'which-key'
       wk.add {
-        { '<leader>c', group = '[C]ode' },
+        { '<leader>c',  group = '[C]ode' },
         { '<leader>c_', hidden = true },
-        { '<leader>d', group = '[D]ocument' },
+        { '<leader>d',  group = '[D]ocument' },
         { '<leader>d_', hidden = true },
-        { '<leader>g', group = '[G]it Hunk', mode = 'v' },
+        { '<leader>g',  group = '[G]it Hunk', mode = 'v' },
         { '<leader>g_', hidden = true },
-        { '<leader>l', group = '[L]SP' },
+        { '<leader>l',  group = '[L]SP' },
         { '<leader>l_', hidden = true },
-        { '<leader>r', group = '[R]ename' },
+        { '<leader>r',  group = '[R]ename' },
         { '<leader>r_', hidden = true },
-        { '<leader>s', group = '[S]earch' },
+        { '<leader>s',  group = '[S]earch' },
         { '<leader>s_', hidden = true },
-        { '<leader>t', group = '[T]rouble' },
+        { '<leader>t',  group = '[T]rouble' },
         { '<leader>t_', hidden = true },
-        { '<leader>w', group = '[W]orkspace' },
+        { '<leader>w',  group = '[W]orkspace' },
         { '<leader>w_', hidden = true },
       }
     end,
@@ -307,7 +307,7 @@ require('lazy').setup({
       { 'nvim-telescope/telescope-ui-select.nvim' },
 
       -- Useful for getting pretty icons, but requires a Nerd Font.
-      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
+      { 'nvim-tree/nvim-web-devicons',            enabled = vim.g.have_nerd_font },
     },
     config = function()
       -- Telescope is a fuzzy finder that comes with a lot of different things that
@@ -402,7 +402,7 @@ require('lazy').setup({
 
       -- Useful status updates for LSP.
       -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
-      { 'j-hui/fidget.nvim', opts = {} },
+      { 'j-hui/fidget.nvim',       opts = {} },
 
       -- Using folke's lazydev instead of neodev (neodev is deprecated)
       -- `neodev` configures Lua LSP for your Neovim config, runtime and plugins
@@ -741,6 +741,7 @@ require('lazy').setup({
     config = function()
       -- See `:help cmp`
       local cmp = require 'cmp'
+      local lspkind = require 'lspkind'
       local luasnip = require 'luasnip'
       luasnip.config.setup {}
 
@@ -808,6 +809,41 @@ require('lazy').setup({
           { name = 'nvim_lsp' },
           { name = 'luasnip' },
           { name = 'path' },
+          -- Copilot Source
+          { name = 'copilot' },
+        },
+        formatting = {
+          format = lspkind.cmp_format({
+            mode = "symbol_text",
+            menu = ({
+              nvim_lsp = "[LSP]",
+              ultisnips = "[US]",
+              nvim_lua = "[Lua]",
+              path = "[Path]",
+              buffer = "[Buffer]",
+              emoji = "[Emoji]",
+              omni = "[Omni]",
+              copilot = "[LLM]",
+            }),
+          }),
+        },
+        sorting = {
+          priority_weight = 2,
+          comparators = {
+            require("copilot_cmp.comparators").prioritize,
+
+            -- Below is the default comparitor list and order for nvim-cmp
+            cmp.config.compare.offset,
+            -- cmp.config.compare.scopes, --this is commented in nvim-cmp too
+            cmp.config.compare.exact,
+            cmp.config.compare.score,
+            cmp.config.compare.recently_used,
+            cmp.config.compare.locality,
+            cmp.config.compare.kind,
+            cmp.config.compare.sort_text,
+            cmp.config.compare.length,
+            cmp.config.compare.order,
+          },
         },
       }
 
@@ -890,14 +926,14 @@ require('lazy').setup({
             local macro = check_macro_recording()
 
             return MiniStatusline.combine_groups {
-              { hl = mode_hl, strings = { mode } },
+              { hl = mode_hl,                 strings = { mode } },
               { hl = 'MiniStatuslineDevinfo', strings = { git, diff, diagnostics } },
               '%<', -- Mark general truncate point
               { hl = 'MiniStatuslineFilename', strings = { filename } },
               '%=', -- End left alignment
               { hl = 'MiniStatuslineFilename', strings = { macro } },
               { hl = 'MiniStatuslineFileinfo', strings = { fileinfo } },
-              { hl = mode_hl, strings = { search, location } },
+              { hl = mode_hl,                  strings = { search, location } },
             }
           end,
         },
@@ -999,7 +1035,7 @@ require('lazy').setup({
           -- mapping query_strings to modes.
           selection_modes = {
             ['@parameter.outer'] = 'v', -- charwise
-            ['@function.outer'] = 'V', -- linewise
+            ['@function.outer'] = 'V',  -- linewise
             ['@class.outer'] = '<c-v>', -- blockwise
           },
           -- If you set this to `true` (default is `false`) then any textobject is
