@@ -168,4 +168,7 @@ return {
       --},
     }
   end,
+
+  vim.api.nvim_set_keymap('n', '<leader>gc', "<cmd>CopilotChat<CR>",
+    { desc = '[G]it [C]opilot', silent = true, noremap = true }),
 }
