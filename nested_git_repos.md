@@ -10,7 +10,7 @@ git remote -v
 
 # GIT subtree - Update existing changes subtrees
 git subtree pull --prefix=<prefix path> <remote name> <branch name> --squash
-git subtree push --prefix=<prefix path> <remote name> <branch name>
+git push origin main
 ```
 
 ### 1) tmux
@@ -48,7 +48,6 @@ git subtree add --prefix=zsh/.oh-my-zsh oh-my-zsh master --squash
 
 # How to Pull in Oh My ZSH Updates
 git subtree pull --prefix=zsh/.oh-my-zsh oh-my-zsh master --squash
-git subtree push --prefix=zsh/.oh-my-zsh oh-my-zsh master
 
 # ZSH Plugins
 git remote add zsh-syntax-highlighting https://github.com/zsh-users/zsh-syntax-highlighting
@@ -68,11 +67,6 @@ git subtree pull --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-autosuggestions zsh-
 git subtree pull --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting/catppuccin zsh-syntax-highlighting-catppuccin main --squash
 git subtree pull --prefix=zsh/.oh-my-zsh/custom/plugins/last-working-dir-tmux last-working-dir-tmux master --squash
 git subtree pull --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-vi-mode zsh-vi-mode master --squash
-git subtree push --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting zsh-syntax-highlighting master
-git subtree push --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-autosuggestions zsh-autosuggestions master
-git subtree push --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting/catppuccin zsh-syntax-highlighting-catppuccin main
-git subtree push --prefix=zsh/.oh-my-zsh/custom/plugins/last-working-dir-tmux last-working-dir-tmux master
-git subtree push --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-vi-mode zsh-vi-mode master
 ```
 
 ### 3) nvim
