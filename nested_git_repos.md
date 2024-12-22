@@ -2,6 +2,17 @@
 
 ## How Nested Git Repositories Are Configured - For Reference ONLY
 
+### General Remote and Subtree Maintenance
+
+```bash
+# GIT remote - List existing remote additions with subtree prefixes
+git remote -v
+
+# GIT subtree - Update existing changes subtrees
+git subtree pull --prefix=<prefix path> <remote name> <branch name> --squash
+git subtree push --prefix=<prefix path> <remote name> <branch name>
+```
+
 ### 1) tmux
 
 ```bash
