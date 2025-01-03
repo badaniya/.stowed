@@ -1,11 +1,22 @@
+# Theme and Color Config
 theme = catppuccin-mocha
 foreground = ddddfd
 background = 202020
 
 # Transparency
-background-opacity = 0.9
-background-blur-radius = 20
+background-opacity = 0.85
+#mac-only background-blur-radius = 20
 
 # Terminal window size
-window-height=330
-window-width=199
+#window-height=330
+#window-width=183
+
+# Font Config
+font-family = "JetBrainsMono Nerd Font Mono"
+font-size = 13.0
+
+# Keybinds
+keybind = f11=toggle_fullscreen
+keybind = f12=toggle_window_decorations
+keybind = ctrl+c=copy_to_clipboard
+keybind = ctrl+v=paste_from_clipboard
