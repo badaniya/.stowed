@@ -5,3 +5,7 @@ background = 202020
 # Transparency
 background-opacity = 0.9
 background-blur-radius = 20
+
+# Terminal window size
+window-height=330
+window-width=199
