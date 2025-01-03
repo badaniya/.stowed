@@ -1,0 +1,7 @@
+theme = catppuccin-mocha
+foreground = ddddfd
+background = 202020
+
+# Transparency
+background-opacity = 0.9
+background-blur-radius = 20
