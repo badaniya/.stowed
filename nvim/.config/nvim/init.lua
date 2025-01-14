@@ -619,6 +619,8 @@ require('lazy').setup({
         sqls = {},
         -- Typescript LSP
         ts_ls = {},
+        -- Typos LSP
+        typos_lsp = {},
         -- TOML LSP
         taplo = {},
         -- openapi YAML LSP
@@ -637,17 +639,43 @@ require('lazy').setup({
       -- for you, so that they are available from within Neovim.
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
+        'bash-language-server',
+        'clangd',
+        'css-lsp',
+        'delve',
         'gitleaks',
+        'go-debug-adapter',
+        'gofumpt',
+        'goimports-reviser',
         'golangci-lint',
+        'golangci-lint-langserver',
+        'gopls',
+        'graphql-language-service-cli',
         'hadolint',
+        'helm-ls',
+        'html-lsp',
+        'jq-lsp',
         'jsonlint',
+        'lua-language-server',
+        'luacheck',
         'markdownlint-cli2',
+        'marksman',
+        'nil',
         'nilaway',
+        'prettier',
+        'pyright',
         'revive',
         'shellcheck',
         'shellharden',
+        'spectral-language-server',
+        'sqls',
         'staticcheck',
+        'stylua',
+        'taplo',
         'trivy',
+        'typescript-language-server',
+        'typos-lsp',
+        'vacuum',
         'vale',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
