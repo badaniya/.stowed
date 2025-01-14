@@ -659,7 +659,7 @@ require('lazy').setup({
         'lua-language-server',
         'markdownlint-cli2',
         'marksman',
-        'nil_ls',
+        'nil',
         'nilaway',
         'prettier',
         'pyright',
