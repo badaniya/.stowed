@@ -570,7 +570,9 @@ require('lazy').setup({
         -- gRPC protobufs LSP
         --bufls = {},
         -- C/C++ LSP
-        clangd = {},
+        clangd = {
+          filetypes = { 'c', 'cpp', 'objc', 'objcpp' },
+        },
         -- go LSP
         gopls = {
           settings = {

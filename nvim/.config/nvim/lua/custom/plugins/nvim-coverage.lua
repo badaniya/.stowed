@@ -15,7 +15,7 @@ return {
     load_coverage_cb = function(ftype)
       -- The `go` coverage.out file contain the prefixed github repo path
       -- but needs the relative replacement path to reference the local code.
-      -- The coverage file paths neeed to be converted from github paths to
+      -- The coverage file paths need to be converted from github paths to
       -- local replacement paths.
       if ftype == 'go' then
         local config = require 'coverage.config'
