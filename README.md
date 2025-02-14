@@ -74,9 +74,6 @@ sudo apt install -y tmux
 ```bash
 # zsh: Ubuntu package version
 sudo apt install -y zsh
-
-# powerline: Terminal fonts for zsh bullet-train theme
-sudo apt install fonts-powerline
 ```
 
 ### 3) Fzf
@@ -104,9 +101,9 @@ curl -sS https://starship.rs/install.sh | sh
 
 ```bash
 # neovim: Latest version
-curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux64.tar.gz
+curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
 sudo rm -rf /opt/nvim
-sudo tar -C /opt -xzf nvim-linux64.tar.gz
+sudo tar -C /opt -xzf nvim-linux-x86_64.tar.gz
 
 # ripgrep: For NeoVIM search
 sudo apt install -y ripgrep
