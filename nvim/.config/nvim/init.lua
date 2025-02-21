@@ -862,7 +862,7 @@ require('lazy').setup({
           comparators = {
             require('copilot_cmp.comparators').prioritize,
 
-            -- Below is the default comparitor list and order for nvim-cmp
+            -- Below is the default comparator list and order for nvim-cmp
             cmp.config.compare.offset,
             -- cmp.config.compare.scopes, --this is commented in nvim-cmp too
             cmp.config.compare.exact,
@@ -1037,7 +1037,7 @@ require('lazy').setup({
           node_decremental = '<C-s>',
         },
       },
-      -- Yank, Delete, Change sections of code, Swap parameters, and Move to differnt sections of code
+      -- Yank, Delete, Change sections of code, Swap parameters, and Move to different sections of code
       textobjects = {
         select = {
           enable = true,
@@ -1100,6 +1100,9 @@ require('lazy').setup({
             [']g'] = '@call.inner',
             [']i'] = '@conditional.outer',
             [']o'] = '@loop.outer',
+            [']p'] = '@parameter.inner',
+            [']b'] = '@block.inner',
+            [']t'] = '@statement.outer',
             --
             -- You can use regex matching (i.e. lua pattern) and/or pass a list in a "query" key to group multiple queries.
             -- ["]o"] = { query = { "@loop.inner", "@loop.outer" } }
@@ -1118,6 +1121,9 @@ require('lazy').setup({
             [']G'] = '@call.inner',
             [']I'] = '@conditional.outer',
             [']O'] = '@loop.outer',
+            [']P'] = '@parameter.inner',
+            [']B'] = '@block.inner',
+            [']T'] = '@statement.outer',
           },
           goto_previous_start = {
             ['[m'] = '@function.outer',
@@ -1128,6 +1134,9 @@ require('lazy').setup({
             ['[g'] = '@call.inner',
             ['[i'] = '@conditional.outer',
             ['[o'] = '@loop.outer',
+            ['[p'] = '@parameter.inner',
+            ['[b'] = '@block.inner',
+            ['[t'] = '@statement.outer',
             --['[s'] = { query = '@scope', query_group = 'locals', desc = 'Prev scope' },
             --['[z'] = { query = '@fold', query_group = 'folds', desc = 'Prev fold' },
           },
@@ -1140,6 +1149,8 @@ require('lazy').setup({
             ['[G'] = '@call.inner',
             ['[I'] = '@conditional.outer',
             ['[O'] = '@loop.outer',
+            ['[B'] = '@block.inner',
+            ['[T'] = '@statement.outer',
           },
         },
       },
