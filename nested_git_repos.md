@@ -55,6 +55,7 @@ git remote add zsh-autosuggestions https://github.com/zsh-users/zsh-autosuggesti
 git remote add zsh-syntax-highlighting-catppuccin https://github.com/catppuccin/zsh-syntax-highlighting
 git remote add last-working-dir-tmux https://github.com/badaniya/last-working-dir-tmux
 git remote add zsh-vi-mode https://github.com/jeffreytse/zsh-vi-mode
+git remote add forgit main https://github.com/wfxr/forgit
 git subtree add --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting zsh-syntax-highlighting master --squash
 git subtree add --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-autosuggestions zsh-autosuggestions master --squash
 git subtree add --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting/catppuccin zsh-syntax-highlighting-catppuccin main --squash
