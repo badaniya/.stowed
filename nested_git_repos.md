@@ -60,6 +60,7 @@ git subtree add --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-autosuggestions zsh-a
 git subtree add --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting/catppuccin zsh-syntax-highlighting-catppuccin main --squash
 git subtree add --prefix=zsh/.oh-my-zsh/custom/plugins/last-working-dir-tmux last-working-dir-tmux master --squash
 git subtree add --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-vi-mode zsh-vi-mode master --squash
+git subtree add --prefix=zsh/.oh-my-zsh/custom/plugins/forgit forgit main --squash
 
 # How to Pull in Oh My ZSH Plugin Updates
 git subtree pull --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting zsh-syntax-highlighting master --squash
@@ -67,6 +68,7 @@ git subtree pull --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-autosuggestions zsh-
 git subtree pull --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting/catppuccin zsh-syntax-highlighting-catppuccin main --squash
 git subtree pull --prefix=zsh/.oh-my-zsh/custom/plugins/last-working-dir-tmux last-working-dir-tmux master --squash
 git subtree pull --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-vi-mode zsh-vi-mode master --squash
+git subtree pull --prefix=zsh/.oh-my-zsh/custom/plugins/forgit forgit main --squash
 ```
 
 ### 3) nvim
