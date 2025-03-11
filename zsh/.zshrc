@@ -172,6 +172,9 @@ fi
 # Fuzzy Finder Support
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
+# Forgit Support
+[ -f $ZSH/custom/plugins/forgit/forgit.plugin.zsh ] && source $ZSH/custom/plugins/forgit/forgit.plugin.zsh
+
 # Zoxide Support
 [ -f ~/.local/bin/zoxide ] && eval "$(zoxide init zsh)"
 
