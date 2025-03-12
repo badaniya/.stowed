@@ -2,7 +2,7 @@
 	path = ~/.config/delta/themes/catppuccin.gitconfig
 
 [core]
-    pager = delta
+    pager = delta --width ${FZF_PREVIEW_COLUMNS:-$COLUMNS}
 
 [interactive]
     diffFilter = delta --color-only
@@ -12,6 +12,8 @@
     dark = true                  # or light = true, or omit for auto-detection
     side-by-side = true          # side by side diffs
     features = catppuccin-mocha  # syntax color theme
+    hyperlinks = true            # enable hyperlinks in diff
+    mouse = true
 
 [merge]
     conflictstyle = zdiff3
