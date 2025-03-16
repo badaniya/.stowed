@@ -288,7 +288,8 @@ require('lazy').setup({
   { -- Fuzzy Finder (files, lsp, etc)
     'nvim-telescope/telescope.nvim',
     event = 'VimEnter',
-    branch = '0.1.x',
+    -- branch = '0.1.x',
+    branch = 'master',
     dependencies = {
       'nvim-lua/plenary.nvim',
       { -- If encountering errors, see telescope-fzf-native README for installation instructions
@@ -331,13 +332,21 @@ require('lazy').setup({
 
       -- [[ Configure Telescope ]]
       -- See `:help telescope` and `:help telescope.setup()`
+      -- local actions = require 'telescope.actions'
+
       require('telescope').setup {
         -- You can put your default mappings / updates / etc. in here
         --  All the info you're looking for is in `:help telescope.setup()`
         --
         -- defaults = {
         --   mappings = {
-        --     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
+        --     i = {
+        --       ['<c-enter>'] = 'to_fuzzy_refine',
+        --       ['<C-u>'] = actions.preview_scrolling_up,
+        --       ['<C-d>'] = actions.preview_scrolling_down,
+        --       ['<C-f>'] = actions.preview_scrolling_left,
+        --       ['<C-k>'] = actions.preview_scrolling_right,
+        --     },
         --   },
         -- },
         -- pickers = {}
