@@ -8,6 +8,7 @@ SS_PATH="$HOME/ss_team"
 DOMAIN_NAME="extremenetworks.com"
 BASE_SRC="$HOME/workspace/slxos"
 MASTER_GODCAPP_SRC="$HOME/workspace/badaniya/master/GoDCApp"
+MASTER_PLATFORMSERVICES_SRC="$HOME/workspace/badaniya/master/PlatformServices"
 
 CLEARTOOL=/usr/atria/bin/cleartool
 
@@ -118,6 +119,64 @@ function remove_godcapp_worktree()
 function list_godcapp_worktree()
 {
     pushd "$MASTER_GODCAPP_SRC" > /dev/null
+
+    git worktree list
+
+    popd > /dev/null 2>&1
+}
+
+function add_platformservices_worktree()
+{
+    local USAGE="add_platformservices_worktree <Private Branch Name - ex: NVO-12345> <Source Branch>"
+
+    if [[ $# -lt 2 || $# -ge 3 || "$1" =~ (^-h$|^--help$) ]]; then
+        echo "$USAGE"
+        return 1
+    fi
+
+    local PLATFORMSERVICES_BRANCH="$1"
+    local PLATFORMSERVICES_SOURCE_BRANCH="$2"
+    local PLATFORMSERVICES_NAME="PlatformServices"
+    local RELATIVE_WORKTREE_PATH="../../$PLATFORMSERVICES_BRANCH/$PLATFORMSERVICES_NAME"
+
+    pushd "$MASTER_PLATFORMSERVICES_SRC" > /dev/null
+
+    git pull && \
+    git checkout "$PLATFORMSERVICES_SOURCE_BRANCH" && \
+    git pull && \
+    git worktree add -b "$USER/$PLATFORMSERVICES_BRANCH" "$RELATIVE_WORKTREE_PATH" && \
+    git checkout main && \
+    cd "$RELATIVE_WORKTREE_PATH" && \
+    git branch --set-upstream-to=origin/"$PLATFORMSERVICES_SOURCE_BRANCH"
+    #go_work
+}
+
+function remove_platformservices_worktree()
+{
+    local USAGE="remove_platformservices_worktree <Private Branch Name - ex: NVO-12345>"
+
+    if [[ $# -lt 1 || $# -ge 2 || "$1" =~ (^-h$|^--help$) ]]; then
+        echo "$USAGE"
+        return 1
+    fi
+
+    local PLATFORMSERVICES_BRANCH="$1"
+    local PLATFORMSERVICES_NAME="PlatformServices"
+    local RELATIVE_WORKTREE_PATH="../../$PLATFORMSERVICES_BRANCH/$PLATFORMSERVICES_NAME"
+
+    pushd "$MASTER_PLATFORMSERVICES_SRC" > /dev/null
+
+    sudo git worktree remove --force "$MASTER_PLATFORMSERVICES_SRC/$RELATIVE_WORKTREE_PATH" && \
+    git branch -D "$USER/$PLATFORMSERVICES_BRANCH"
+
+    popd > /dev/null 2>&1
+
+    sudo rm -rf $(dirname "$MASTER_PLATFORMSERVICES_SRC/$RELATIVE_WORKTREE_PATH")
+}
+
+function list_platformservices_worktree()
+{
+    pushd "$MASTER_PLATFORMSERVICES_SRC" > /dev/null
 
     git worktree list
 
