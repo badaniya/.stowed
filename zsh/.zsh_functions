@@ -86,7 +86,7 @@ function add_godcapp_worktree()
     git pull && \
     git checkout "$GODCAPP_SOURCE_BRANCH" && \
     git pull && \
-    git worktree add -b "$USER/$GODCAPP_BRANCH" "$RELATIVE_WORKTREE_PATH" && \
+    git worktree add -b "$USER/$GODCAPP_NAME/$GODCAPP_BRANCH" "$RELATIVE_WORKTREE_PATH" && \
     git checkout master && \
     cd "$RELATIVE_WORKTREE_PATH" && \
     git branch --set-upstream-to=origin/"$GODCAPP_SOURCE_BRANCH"
@@ -105,15 +105,18 @@ function remove_godcapp_worktree()
     local GODCAPP_BRANCH="$1"
     local GODCAPP_NAME="GoDCApp"
     local RELATIVE_WORKTREE_PATH="../../$GODCAPP_BRANCH/$GODCAPP_NAME"
+    local WORKTREE_PARENT_DIR=$(dirname "$MASTER_GODCAPP_SRC/$RELATIVE_WORKTREE_PATH")
 
     pushd "$MASTER_GODCAPP_SRC" > /dev/null
 
     sudo git worktree remove --force "$MASTER_GODCAPP_SRC/$RELATIVE_WORKTREE_PATH" && \
-    git branch -D "$USER/$GODCAPP_BRANCH"
+    git branch -D "$USER/$GODCAPP_NAME/$GODCAPP_BRANCH"
 
     popd > /dev/null 2>&1
 
-    sudo rm -rf $(dirname "$MASTER_GODCAPP_SRC/$RELATIVE_WORKTREE_PATH")
+    if [[ $(ls -1 $WORKTREE_PARENT_DIR | wc -l) -eq 0 ]]; then
+        echo sudo rm -rf "$WORKTREE_PARENT_DIR"
+    fi
 }
 
 function list_godcapp_worktree()
@@ -144,7 +147,7 @@ function add_platformservices_worktree()
     git pull && \
     git checkout "$PLATFORMSERVICES_SOURCE_BRANCH" && \
     git pull && \
-    git worktree add -b "$USER/$PLATFORMSERVICES_BRANCH" "$RELATIVE_WORKTREE_PATH" && \
+    git worktree add -b "$USER/$PLATFORMSERVICES_NAME/$PLATFORMSERVICES_BRANCH" "$RELATIVE_WORKTREE_PATH" && \
     git checkout main && \
     cd "$RELATIVE_WORKTREE_PATH" && \
     git branch --set-upstream-to=origin/"$PLATFORMSERVICES_SOURCE_BRANCH"
@@ -163,15 +166,18 @@ function remove_platformservices_worktree()
     local PLATFORMSERVICES_BRANCH="$1"
     local PLATFORMSERVICES_NAME="PlatformServices"
     local RELATIVE_WORKTREE_PATH="../../$PLATFORMSERVICES_BRANCH/$PLATFORMSERVICES_NAME"
+    local WORKTREE_PARENT_DIR=$(dirname "$MASTER_PLATFORMSERVICES_SRC/$RELATIVE_WORKTREE_PATH")
 
     pushd "$MASTER_PLATFORMSERVICES_SRC" > /dev/null
 
     sudo git worktree remove --force "$MASTER_PLATFORMSERVICES_SRC/$RELATIVE_WORKTREE_PATH" && \
-    git branch -D "$USER/$PLATFORMSERVICES_BRANCH"
+    git branch -D "$USER/$PLATFORMSERVICES_NAME/$PLATFORMSERVICES_BRANCH"
 
     popd > /dev/null 2>&1
 
-    sudo rm -rf $(dirname "$MASTER_PLATFORMSERVICES_SRC/$RELATIVE_WORKTREE_PATH")
+    if [[ $(ls -1 $WORKTREE_PARENT_DIR | wc -l) -eq 0 ]]; then
+        sudo rm -rf "$WORKTREE_PARENT_DIR"
+    fi
 }
 
 function list_platformservices_worktree()
