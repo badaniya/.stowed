@@ -1,314 +1,564 @@
-# .stowed
-This repository is used to store all dot-config files for various shells and editors.  This repository can be cloned to a new linux machine which can be setup quickly with GNU `stow`. This will bring back all custom shell and editor configurations or easily sync custom configuration between linux machines.
+<p align="center"><img src="https://ohmyzsh.s3.amazonaws.com/omz-ansi-github.png" alt="Oh My Zsh"></p>
 
-[How Nested Git Repositories Are Configured - For Reference ONLY](nested_git_repos.md):  A reference on how this .stowed repository was created with the various nested git repositories for the shell and editor plugins.
+Oh My Zsh is an open source, community-driven framework for managing your [zsh](https://www.zsh.org/)
+configuration.
 
-**Stowed Terminal Tools:**
+Sounds boring. Let's try again.
 
-- ghostty
-- tmux
-- fzf
-- zoxide
-- bat
-- delta
-- starship
+**Oh My Zsh will not make you a 10x developer...but you may feel like one.**
 
-**Stowed Shells:**
+Once installed, your terminal shell will become the talk of the town _or your money back!_ With each keystroke
+in your command prompt, you'll take advantage of the hundreds of powerful plugins and beautiful themes.
+Strangers will come up to you in cafés and ask you, _"that is amazing! are you some sort of genius?"_
 
-- bash
-- zsh
+Finally, you'll begin to get the sort of attention that you have always felt you deserved. ...or maybe you'll
+use the time that you're saving to start flossing more often. 😬
 
-**Stowed Editors:**
+To learn more, visit [ohmyz.sh](https://ohmyz.sh), follow [@ohmyzsh](https://x.com/ohmyzsh) on X (formerly
+Twitter), and join us on [Discord](https://discord.gg/ohmyzsh).
 
-- nvim
-- vim
-- emacs
+[![CI](https://github.com/ohmyzsh/ohmyzsh/workflows/CI/badge.svg)](https://github.com/ohmyzsh/ohmyzsh/actions?query=workflow%3ACI)
+[![X (formerly Twitter) Follow](https://img.shields.io/twitter/follow/ohmyzsh?label=%40ohmyzsh&logo=x&style=flat)](https://twitter.com/intent/follow?screen_name=ohmyzsh)
+[![Mastodon Follow](https://img.shields.io/mastodon/follow/111169632522566717?label=%40ohmyzsh&domain=https%3A%2F%2Fmstdn.social&logo=mastodon&style=flat)](https://mstdn.social/@ohmyzsh)
+[![Discord server](https://img.shields.io/discord/642496866407284746)](https://discord.gg/ohmyzsh)
+[![Gitpod ready](https://img.shields.io/badge/Gitpod-ready-blue?logo=gitpod)](https://gitpod.io/#https://github.com/ohmyzsh/ohmyzsh)
 
-## How To Use GNU Stow
+<details>
+<summary>Table of Contents</summary>
 
-### 1) Install GNU Stow
+- [Getting Started](#getting-started)
+  - [Operating System Compatibility](#operating-system-compatibility)
+  - [Prerequisites](#prerequisites)
+  - [Basic Installation](#basic-installation)
+    - [Manual Inspection](#manual-inspection)
+- [Using Oh My Zsh](#using-oh-my-zsh)
+  - [Plugins](#plugins)
+    - [Enabling Plugins](#enabling-plugins)
+    - [Using Plugins](#using-plugins)
+  - [Themes](#themes)
+    - [Selecting A Theme](#selecting-a-theme)
+  - [FAQ](#faq)
+- [Advanced Topics](#advanced-topics)
+  - [Advanced Installation](#advanced-installation)
+    - [Custom Directory](#custom-directory)
+    - [Unattended Install](#unattended-install)
+    - [Installing From A Forked Repository](#installing-from-a-forked-repository)
+    - [Manual Installation](#manual-installation)
+  - [Installation Problems](#installation-problems)
+  - [Custom Plugins And Themes](#custom-plugins-and-themes)
+  - [Enable GNU ls In macOS And freeBSD Systems](#enable-gnu-ls-in-macos-and-freebsd-systems)
+  - [Skip Aliases](#skip-aliases)
+  - [Async git prompt](#async-git-prompt)
+- [Getting Updates](#getting-updates)
+  - [Updates Verbosity](#updates-verbosity)
+  - [Manual Updates](#manual-updates)
+- [Uninstalling Oh My Zsh](#uninstalling-oh-my-zsh)
+- [How Do I Contribute To Oh My Zsh?](#how-do-i-contribute-to-oh-my-zsh)
+  - [Do Not Send Us Themes](#do-not-send-us-themes)
+- [Contributors](#contributors)
+- [Follow Us](#follow-us)
+- [Merchandise](#merchandise)
+- [License](#license)
+- [About Planet Argon](#about-planet-argon)
 
-```bash
-# Install Stow
-sudo apt install -y stow
+</details>
+
+## Getting Started
+
+### Operating System Compatibility
+
+| O/S            | Status |
+| :------------- | :----: |
+| Android        |   ✅   |
+| freeBSD        |   ✅   |
+| LCARS          |   🛸   |
+| Linux          |   ✅   |
+| macOS          |   ✅   |
+| OS/2 Warp      |   ❌   |
+| Windows (WSL2) |   ✅   |
+
+### Prerequisites
+
+- [Zsh](https://www.zsh.org) should be installed (v4.3.9 or more recent is fine but we prefer 5.0.8 and
+  newer). If not pre-installed (run `zsh --version` to confirm), check the following wiki instructions here:
+  [Installing ZSH](https://github.com/ohmyzsh/ohmyzsh/wiki/Installing-ZSH)
+- `curl` or `wget` should be installed
+- `git` should be installed (recommended v2.4.11 or higher)
+
+### Basic Installation
+
+Oh My Zsh is installed by running one of the following commands in your terminal. You can install this via the
+command-line with either `curl`, `wget` or another similar tool.
+
+| Method    | Command                                                                                           |
+| :-------- | :------------------------------------------------------------------------------------------------ |
+| **curl**  | `sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"` |
+| **wget**  | `sh -c "$(wget -O- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"`   |
+| **fetch** | `sh -c "$(fetch -o - https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"` |
+
+Alternatively, the installer is also mirrored outside GitHub. Using this URL instead may be required if you're
+in a country like China or India (for certain ISPs), that blocks `raw.githubusercontent.com`:
+
+| Method    | Command                                           |
+| :-------- | :------------------------------------------------ |
+| **curl**  | `sh -c "$(curl -fsSL https://install.ohmyz.sh/)"` |
+| **wget**  | `sh -c "$(wget -O- https://install.ohmyz.sh/)"`   |
+| **fetch** | `sh -c "$(fetch -o - https://install.ohmyz.sh/)"` |
+
+_Note that any previous `.zshrc` will be renamed to `.zshrc.pre-oh-my-zsh`. After installation, you can move
+the configuration you want to preserve into the new `.zshrc`._
+
+#### Manual Inspection
+
+It's a good idea to inspect the install script from projects you don't yet know. You can do that by
+downloading the install script first, looking through it so everything looks normal, then running it:
+
+```sh
+wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+sh install.sh
 ```
 
-### 2) Clone This Repo on a New Linux Host
+If the above URL times out or otherwise fails, you may have to substitute the URL for
+`https://install.ohmyz.sh` to be able to get the script.
 
-```bash
-git clone https://github.com/badaniya/.stowed $HOME/.stowed
+## Using Oh My Zsh
+
+### Plugins
+
+Oh My Zsh comes with a shitload of plugins for you to take advantage of. You can take a look in the
+[plugins](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins) directory and/or the
+[wiki](https://github.com/ohmyzsh/ohmyzsh/wiki/Plugins) to see what's currently available.
+
+#### Enabling Plugins
+
+Once you spot a plugin (or several) that you'd like to use with Oh My Zsh, you'll need to enable them in the
+`.zshrc` file. You'll find the zshrc file in your `$HOME` directory. Open it with your favorite text editor
+and you'll see a spot to list all the plugins you want to load.
+
+```sh
+vi ~/.zshrc
 ```
 
-### 3) Run Stow Command to Establish Symlinks to the Repository
+For example, this might begin to look like this:
 
-```bash
-# Create Symlinks to Repo
-stow -d $HOME/.stowed stow ghostty tmux fzf bat delta starship bash zsh nvim vim emacs
-
-# To Force Symlink Creation (NOTE: May miss some hidden files or symlinks)
-stow -d $HOME/.stowed --adopt ghostty stow tmux fzf bat delta starship bash zsh nvim vim emacs
-cd $HOME/.stowed
-git reset --hard HEAD
-
-# Sure-file Way to Ensure Stow Symlink Creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
-rm -rf $HOME/.config/ghostty; rm -rf $HOME/.bash*; rm -rf $HOME/.zsh*; rm -rf $HOME/.oh-my-zsh; rm -rf $HOME/.config/nvim; rm -rf $HOME/.vim*; rm -rf $HOME/.emacs*; stow -d $HOME/.stowed stow ghostty tmux fzf bat delta starship bash zsh nvim vim emacs
+```sh
+plugins=(
+  git
+  bundler
+  dotenv
+  macos
+  rake
+  rbenv
+  ruby
+)
 ```
 
-## Follow-up Package Installation for Shell/Editor Tools
+_Note that the plugins are separated by whitespace (spaces, tabs, new lines...). **Do not** use commas between
+them or it will break._
 
-### 0) Ghostty
+#### Using Plugins
 
-```bash
-# ghostty: Ubuntu debian version
-wget https://github.com/mkasberg/ghostty-ubuntu/releases/download/1.0.1-0-ppa1/ghostty_1.0.1-0.ppa1_amd64_24.04.deb
-sudo dpgk -i ghostty_1.0.1-0.ppa1_amd64_24.04.deb
+Each built-in plugin includes a **README**, documenting it. This README should show the aliases (if the plugin
+adds any) and extra goodies that are included in that particular plugin.
+
+### Themes
+
+We'll admit it. Early in the Oh My Zsh world, we may have gotten a bit too theme happy. We have over one
+hundred and fifty themes now bundled. Most of them have
+[screenshots](https://github.com/ohmyzsh/ohmyzsh/wiki/Themes) on the wiki (We are working on updating this!).
+Check them out!
+
+#### Selecting A Theme
+
+_Robby's theme is the default one. It's not the fanciest one. It's not the simplest one. It's just the right
+one (for him)._
+
+Once you find a theme that you'd like to use, you will need to edit the `~/.zshrc` file. You'll see an
+environment variable (all caps) in there that looks like:
+
+```sh
+ZSH_THEME="robbyrussell"
 ```
 
-### 1) Tmux
+To use a different theme, simply change the value to match the name of your desired theme. For example:
 
-```bash
-# tmux: Ubuntu package version
-sudo apt install -y tmux
+```sh
+ZSH_THEME="agnoster" # (this is one of the fancy ones)
+# see https://github.com/ohmyzsh/ohmyzsh/wiki/Themes#agnoster
 ```
 
-### 2) Zsh
+<!-- prettier-ignore-start -->
+> [!NOTE]
+> You will many times see screenshots for a zsh theme, and try it out, and find that it doesn't look the same for you.
+>
+> This is because many themes require installing a [Powerline Font](https://github.com/powerline/fonts) or a
+> [Nerd Font](https://github.com/ryanoasis/nerd-fonts) in order to render properly. Without them, these themes
+> will render weird prompt symbols. Check out
+> [the FAQ](https://github.com/ohmyzsh/ohmyzsh/wiki/FAQ#i-have-a-weird-character-in-my-prompt) for more
+> information.
+>
+> Also, beware that themes only control what your prompt looks like. This is, the text you see before or after
+> your cursor, where you'll type your commands. Themes don't control things such as the colors of your
+> terminal window (known as _color scheme_) or the font of your terminal. These are settings that you can
+> change in your terminal emulator. For more information, see
+> [what is a zsh theme](https://github.com/ohmyzsh/ohmyzsh/wiki/FAQ#what-is-a-zsh-theme).
+<!-- prettier-ignore-end -->
 
-```bash
-# zsh: Ubuntu package version
-sudo apt install -y zsh
+Open up a new terminal window and your prompt should look something like this:
+
+![Agnoster theme](https://cloud.githubusercontent.com/assets/2618447/6316862/70f58fb6-ba03-11e4-82c9-c083bf9a6574.png)
+
+In case you did not find a suitable theme for your needs, please have a look at the wiki for
+[more of them](https://github.com/ohmyzsh/ohmyzsh/wiki/External-themes).
+
+If you're feeling feisty, you can let the computer select one randomly for you each time you open a new
+terminal window.
+
+```sh
+ZSH_THEME="random" # (...please let it be pie... please be some pie..)
 ```
 
-### 3) Fzf
+And if you want to pick random theme from a list of your favorite themes:
 
-```bash
-# fzf: Ubuntu package version
-sudo apt install -y fzf
+```sh
+ZSH_THEME_RANDOM_CANDIDATES=(
+  "robbyrussell"
+  "agnoster"
+)
 ```
 
-### 4) Zoxide
+If you only know which themes you don't like, you can add them similarly to an ignored list:
 
-```bash
-# zoxide: Shell script installer
-curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh
+```sh
+ZSH_THEME_RANDOM_IGNORED=(pygmalion tjkirch_mod)
 ```
 
-### 5) Bat
+### FAQ
 
-```bash
-# bat: Ubuntu package version
-sudo apt install bat
-mkdir -p ~/.local/bin
-ln -s /usr/bin/batcat ~/.local/bin/bat
-bat cache --build
+If you have some more questions or issues, you might find a solution in our
+[FAQ](https://github.com/ohmyzsh/ohmyzsh/wiki/FAQ).
+
+## Advanced Topics
+
+If you're the type that likes to get their hands dirty, these sections might resonate.
+
+### Advanced Installation
+
+Some users may want to manually install Oh My Zsh, or change the default path or other settings that the
+installer accepts (these settings are also documented at the top of the install script).
+
+#### Custom Directory
+
+The default location is `~/.oh-my-zsh` (hidden in your home directory, you can access it with
+`cd ~/.oh-my-zsh`)
+
+If you'd like to change the install directory with the `ZSH` environment variable, either by running
+`export ZSH=/your/path` before installing, or by setting it before the end of the install pipeline like this:
+
+```sh
+ZSH="$HOME/.dotfiles/oh-my-zsh" sh install.sh
 ```
 
-### 6) Delta
+#### Unattended Install
 
-```bash
-# delta: git diff colorized
-wget https://github.com/dandavison/delta/releases/download/0.18.2/git-delta_0.18.2_amd64.deb
-sudo dpkg -i git-delta_0.18.2_amd64.deb
-git config --global include.path '~/.config/delta/delta.gitconfig'
+If you're running the Oh My Zsh install script as part of an automated install, you can pass the
+`--unattended` flag to the `install.sh` script. This will have the effect of not trying to change the default
+shell, and it also won't run `zsh` when the installation has finished.
+
+```sh
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 ```
 
-### 7) Starship
+If you're in China, India, or another country that blocks `raw.githubusercontent.com`, you may have to
+substitute the URL for `https://install.ohmyz.sh` for it to install.
 
-```bash
-# starship: Shell script installer
-curl -sS https://starship.rs/install.sh | sh
+#### Installing From A Forked Repository
+
+The install script also accepts these variables to allow the installation of a different repository:
+
+- `REPO` (default: `ohmyzsh/ohmyzsh`): this takes the form of `owner/repository`. If you set this variable,
+  the installer will look for a repository at `https://github.com/{owner}/{repository}`.
+
+- `REMOTE` (default: `https://github.com/${REPO}.git`): this is the full URL of the git repository clone. You
+  can use this setting if you want to install from a fork that is not on GitHub (GitLab, Bitbucket...) or if
+  you want to clone with SSH instead of HTTPS (`git@github.com:user/project.git`).
+
+  _NOTE: it's incompatible with setting the `REPO` variable. This setting will take precedence._
+
+- `BRANCH` (default: `master`): you can use this setting if you want to change the default branch to be
+  checked out when cloning the repository. This might be useful for testing a Pull Request, or if you want to
+  use a branch other than `master`.
+
+For example:
+
+```sh
+REPO=apjanke/oh-my-zsh BRANCH=edge sh install.sh
 ```
 
-### 6) Neovim
+#### Manual Installation
 
-```bash
-# neovim: Latest version
-curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
-sudo rm -rf /opt/nvim
-sudo tar -C /opt -xzf nvim-linux-x86_64.tar.gz
+##### 1. Clone The Repository <!-- omit in toc -->
 
-# ripgrep: For NeoVIM search
-sudo apt install -y ripgrep
-
-# nerdfont: Terminal fonts for nvim theme
-wget https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/JetBrainsMono.zip
-unzip -od ~/.local/share/fonts/ JetBrainsMono.zip
-fc-cache -fv
+```sh
+git clone https://github.com/ohmyzsh/ohmyzsh.git ~/.oh-my-zsh
 ```
 
-### 6.1) Neovim Plugin Dependencies
+##### 2. _Optionally_, Backup Your Existing `~/.zshrc` File <!-- omit in toc -->
 
-#### Database UI Plugin
-
-```bash
-# DB UI - postgres/mysql (vim-dadbod and vim-dadbod-ui)
-sudo apt install -y postgresql-client
-sudo apt install -y mariadb-client 
+```sh
+cp ~/.zshrc ~/.zshrc.orig
 ```
 
-### 7) Vim
+##### 3. Create A New Zsh Configuration File <!-- omit in toc -->
 
-```bash
-sudo apt install -y vim
+You can create a new zsh config file by copying the template that we have included for you.
+
+```sh
+cp ~/.oh-my-zsh/templates/zshrc.zsh-template ~/.zshrc
 ```
 
-### 8) Emacs
+##### 4. Change Your Default Shell <!-- omit in toc -->
 
-```bash
-sudo apt-add-repository -y ppa:kelleyk/emacs
-sudo apt update -y
-sudo apt install -y emacs28
+```sh
+chsh -s $(which zsh)
 ```
 
-## Linux Development Environment Setup
+You must log out from your user session and log back in to see this change.
 
-### 1) Golang
+##### 5. Initialize Your New Zsh Configuration <!-- omit in toc -->
 
-```bash
-# golang:
-golang_version="1.22.7"
-wget https://go.dev/dl/go"$golang_version".linux-amd64.tar.gz
-sudo tar -xvf go"$golang_version".linux-amd64.tar.gz
-sudo rm -rf /usr/local/go && sudo mv go /usr/local
+Once you open up a new terminal window, it should load zsh with Oh My Zsh's configuration.
 
-# gopls:
-go install golang.org/x/tools/gopls@latest
+### Installation Problems
 
-# dlv:
-go install github.com/go-delve/delve/cmd/dlv@latest
+If you have any hiccups installing, here are a few common fixes.
 
-# golangci-lint:
-curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sudo sh -s -- -b /usr/bin v1.55.2
+- You _might_ need to modify your `PATH` in `~/.zshrc` if you're not able to find some commands after
+  switching to `oh-my-zsh`.
+- If you installed manually or changed the install location, check the `ZSH` environment variable in
+  `~/.zshrc`.
 
-# gosec:
-cd ~/.go
-curl -sSfL https://raw.githubusercontent.com/securego/gosec/master/install.sh | sh -s v2.18.1
+### Custom Plugins And Themes
 
-# gotestsum:
-go install gotest.tools/gotestsum@latest
+If you want to override any of the default behaviors, just add a new file (ending in `.zsh`) in the `custom/`
+directory.
+
+If you have many functions that go well together, you can put them as a `XYZ.plugin.zsh` file in the
+`custom/plugins/` directory and then enable this plugin.
+
+If you would like to override the functionality of a plugin distributed with Oh My Zsh, create a plugin of the
+same name in the `custom/plugins/` directory and it will be loaded instead of the one in `plugins/`.
+
+### Enable GNU ls In macOS And freeBSD Systems
+
+<a name="enable-gnu-ls"></a>
+
+The default behaviour in Oh My Zsh is to use BSD `ls` in macOS and FreeBSD systems. If GNU `ls` is installed
+(as `gls` command), you can choose to use it instead. To do it, you can use zstyle-based config before
+sourcing `oh-my-zsh.sh`:
+
+```zsh
+zstyle ':omz:lib:theme-and-appearance' gnu-ls yes
 ```
 
-## How to Use These Stowed Shell/Editor Tools
+_Note: this is not compatible with `DISABLE_LS_COLORS=true`_
 
-```bash
-# 1) Start a new tmux session
-tmux [new -s <session-name> [-c <start-directory>]]
+### Skip Aliases
 
-# 2) Start nvim from within tmux to maintain session persistence across remote shell logins
-nvim
+<a name="remove-directories-aliases"></a>
+
+If you want to skip default Oh My Zsh aliases (those defined in `lib/*` files) or plugin aliases, you can use
+the settings below in your `~/.zshrc` file, **before Oh My Zsh is loaded**. Note that there are many different
+ways to skip aliases, depending on your needs.
+
+```sh
+# Skip all aliases, in lib files and enabled plugins
+zstyle ':omz:*' aliases no
+
+# Skip all aliases in lib files
+zstyle ':omz:lib:*' aliases no
+# Skip only aliases defined in the directories.zsh lib file
+zstyle ':omz:lib:directories' aliases no
+
+# Skip all plugin aliases
+zstyle ':omz:plugins:*' aliases no
+# Skip only the aliases from the git plugin
+zstyle ':omz:plugins:git' aliases no
 ```
 
-## General Tmux Session Commands
+You can combine these in other ways taking into account that more specific scopes take precedence:
 
-```bash
-# 1) List existing tmux sessions
-tmux ls
-
-# 2) Detach from a tmux session
-tmux detach
-
-# 3) Attach to a tmux session
-tmux attach -t <# | session-name>
-
-# 4) Delete a tmux session
-tmux kill-session -t <# | session-name>
-
-# 5) Delete all tmux sessions
-tmux kill-server
+```sh
+# Skip all plugin aliases, except for the git plugin
+zstyle ':omz:plugins:*' aliases no
+zstyle ':omz:plugins:git' aliases yes
 ```
 
-## Tmux Key Bindings
+A previous version of this feature was using the setting below, which has been removed:
 
-```text
-# General Tmux Bindings (<C> is the Ctrl key)
-<C-b> $ : Rename the tmux session name
-<C-b> c : Creates a new tmux window
-<C-b> " : Creates a new tmux pane horizontally split below
-<C-b> % : Creates a new tmux pane vertically split on the right
-<C-b> x : Exits current tmux pane or window (user prompted)
-<C-b> q : Displays tmux pane numbers
-<C-b> # : Switch to the tmux window number
-
-# Tmux Sessions Switching
-<C-b> s : Displays a tmux sessions menu to switch between tmux sessions
-
-# Tmux Pane Switching
-<C-h> : Move to the pane on the left
-<C-j> : Move to the pane below
-<C-k> : Move to the pane above
-<C-l> : Move to the pane on the right
-<C-b> q # : Selects the pane number to switch to
-<C-b> p : Toggles a floating pane
-
-# Tmux Pane Zoom-in/Zoom-out
-<C-b> z : Toggles the current pane to zoom-in or zoom-out
-
-# Tmux Pan Resizing (keyboard)
-<C-b> <C-arrow-keys> : Fine grained resizing
-<C-b> <M-arrow-keys> : Coarse grained resizing
-
-# Newer Tmux 3.2 Copy/Paste (mouse)
-<left-mouse-click> : copy
-<middle-mouse-click> : paste
-
-# Older Tmux 3.0a Copy/Paste (mouse)
-<C-S-left-mouse-click> : copy
-<C-S-middle-mouse-click> : paste 
-
-# Tmux Copy/Paste vi-copy-mode (keyboard)
-<C-b> [ : Enters copy-mode
-<space> : Starts the selection (use vi motions to expand the selection)
-<enter> : Stores the selection
-<C-b> ] : Pastes the selection
+```sh
+zstyle ':omz:directories' aliases no
 ```
 
-## Nvim Key Bindings
+Instead, you can now use the following:
 
-```text
-# General Nvim Bindings
-<space> : Main leader key for all menus
-<\> : Toggle NeoTree - Directory Browser
-<*> : Bring up search for the highlighted text object
-<q-/> : Bring up search history
-<q-:> : Bring up command history
-<C-v> : Block-Visual editing mode (<C-q> for WSL2)
-
-# Nvim Search Bindings
-<C-r-w> : Paste highlighted text object in search mode
-
-# Nvim Window Switching (<C> is the Ctrl key)
-<C-h> : Move to the window on the left
-<C-j> : Move to the window below
-<C-k> : Move to the window above
-<C-l> : Move to the window on the right
-
-# Nvim Tab Switching (<M> is the Alt key)
-<M-#> : Switch to the file tab #
-<M-,> : Switch to the file tab on the left
-<M-.> : Switch to the file tab on the right
-<M-<> : Move the current file tab position to the left
-<M->> : Move the current file tab position to the right 
-<M-c> : Close out the current file tab
-<M-p> : Toggle pinning the current file tab
-
-# Nvim Code Navigation
-<C-]> | <C-left-mouse-click>: Go to Definition
-<C-t> | <C-right-mouse-click> : Pop back up the stack
-<leader> ld : LSP Definitions
-<leader> lr : LSP References
-<leader> li : LSP Implementations
-
-# Nvim Telescope
-<leader> sg : ripgrep search in project workspace
-<C-q> : Add telescope search results to the quickfix list
-
-# Nvim Debug
-<F2> : Step Into
-<F3> : Step Over
-<F4> : Step Out
-<F5> : Start/Continue
-<F6> : Debug Nearest Test
-<F7> : Restart Last Debug Session
-<F8> : Toggle Breakpoint
-<F9> : Toggle Conditional Breakpoint
-<F12> : Stop Debugger
+```sh
+zstyle ':omz:lib:directories' aliases no
 ```
+
+#### Notice <!-- omit in toc -->
+
+> This feature is currently in a testing phase and it may be subject to change in the future. It is also not
+> currently compatible with plugin managers such as zpm or zinit, which don't source the init script
+> (`oh-my-zsh.sh`) where this feature is implemented in.
+
+> It is also not currently aware of "aliases" that are defined as functions. Example of such are `gccd`,
+> `ggf`, or `ggl` functions from the git plugin.
+
+### Async git prompt
+
+Async prompt functions are an experimental feature (included on April 3, 2024) that allows Oh My Zsh to render
+prompt information asynchronously. This can improve prompt rendering performance, but it might not work well
+with some setups. We hope that's not an issue, but if you're seeing problems with this new feature, you can
+turn it off by setting the following in your .zshrc file, before Oh My Zsh is sourced:
+
+```sh
+zstyle ':omz:alpha:lib:git' async-prompt no
+```
+
+If your problem is that the git prompt just stopped appearing, you can try to force it setting the following
+configuration before `oh-my-zsh.sh` is sourced. If it still does not work, please open an issue with your
+case.
+
+```sh
+zstyle ':omz:alpha:lib:git' async-prompt force
+```
+
+## Getting Updates
+
+By default, you will be prompted to check for updates every 2 weeks. You can choose other update modes by
+adding a line to your `~/.zshrc` file, **before Oh My Zsh is loaded**:
+
+1. Automatic update without confirmation prompt:
+
+   ```sh
+   zstyle ':omz:update' mode auto
+   ```
+
+2. Just offer a reminder every few days, if there are updates available:
+
+   ```sh
+   zstyle ':omz:update' mode reminder
+   ```
+
+3. To disable automatic updates entirely:
+
+   ```sh
+   zstyle ':omz:update' mode disabled
+   ```
+
+NOTE: you can control how often Oh My Zsh checks for updates with the following setting:
+
+```sh
+# This will check for updates every 7 days
+zstyle ':omz:update' frequency 7
+# This will check for updates every time you open the terminal (not recommended)
+zstyle ':omz:update' frequency 0
+```
+
+### Updates Verbosity
+
+You can also limit the update verbosity with the following settings:
+
+```sh
+zstyle ':omz:update' verbose default # default update prompt
+
+zstyle ':omz:update' verbose minimal # only few lines
+
+zstyle ':omz:update' verbose silent # only errors
+```
+
+### Manual Updates
+
+If you'd like to update at any point in time (maybe someone just released a new plugin and you don't want to
+wait a week?) you just need to run:
+
+```sh
+omz update
+```
+
+> [!NOTE]
+> If you want to automate this process in a script, you should call directly the `upgrade` script, like this:
+>
+> ```sh
+> $ZSH/tools/upgrade.sh
+> ```
+>
+> See more options in the [FAQ: How do I update Oh My Zsh?](https://github.com/ohmyzsh/ohmyzsh/wiki/FAQ#how-do-i-update-oh-my-zsh).
+>
+> **USE OF `omz update --unattended` HAS BEEN REMOVED, AS IT HAS SIDE EFFECTS**.
+
+Magic! 🎉
+
+## Uninstalling Oh My Zsh
+
+Oh My Zsh isn't for everyone. We'll miss you, but we want to make this an easy breakup.
+
+If you want to uninstall `oh-my-zsh`, just run `uninstall_oh_my_zsh` from the command-line. It will remove
+itself and revert your previous `bash` or `zsh` configuration.
+
+## How Do I Contribute To Oh My Zsh?
+
+Before you participate in our delightful community, please read the [code of conduct](CODE_OF_CONDUCT.md).
+
+I'm far from being a [Zsh](https://www.zsh.org/) expert and suspect there are many ways to improve – if you
+have ideas on how to make the configuration easier to maintain (and faster), don't hesitate to fork and send
+pull requests!
+
+We also need people to test out pull requests. So take a look through
+[the open issues](https://github.com/ohmyzsh/ohmyzsh/issues) and help where you can.
+
+See [Contributing](CONTRIBUTING.md) for more details.
+
+### Do Not Send Us Themes
+
+We have (more than) enough themes for the time being. Please add your theme to the
+[external themes](https://github.com/ohmyzsh/ohmyzsh/wiki/External-themes) wiki page.
+
+## Contributors
+
+Oh My Zsh has a vibrant community of happy users and delightful contributors. Without all the time and help
+from our contributors, it wouldn't be so awesome.
+
+Thank you so much!
+
+<a href="https://github.com/ohmyzsh/ohmyzsh/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=ohmyzsh/ohmyzsh" width="100%"/>
+</a>
+
+## Follow Us
+
+We're on social media:
+
+- [@ohmyzsh](https://x.com/ohmyzsh) on X (formerly Twitter). You should follow it.
+- [Facebook](https://www.facebook.com/Oh-My-Zsh-296616263819290/) poke us.
+- [Instagram](https://www.instagram.com/_ohmyzsh/) tag us in your post showing Oh My Zsh!
+- [Discord](https://discord.gg/ohmyzsh) to chat with us!
+
+## Merchandise
+
+We have
+[stickers, shirts, and coffee mugs available](https://shop.planetargon.com/collections/oh-my-zsh?utm_source=github)
+for you to show off your love of Oh My Zsh. Again, you will become the talk of the town!
+
+## License
+
+Oh My Zsh is released under the [MIT license](LICENSE.txt).
+
+## About Planet Argon
+
+![Planet Argon](https://pa-github-assets.s3.amazonaws.com/PARGON_logo_digital_COL-small.jpg)
+
+Oh My Zsh was started by the team at [Planet Argon](https://www.planetargon.com/?utm_source=github), a
+[Ruby on Rails development agency](https://www.planetargon.com/services/ruby-on-rails-development?utm_source=github).
+Check out our [other open source projects](https://www.planetargon.com/open-source?utm_source=github).

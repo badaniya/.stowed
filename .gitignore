@@ -1,6 +1,15 @@
-Session.vim
-session/
-transient/
-.cache/
-.lsp-session-v1
-projectile-bookmarks.eld
+# custom files
+custom/
+
+# temp files directories
+cache/
+log/
+*.swp
+.DS_Store
+
+# editor configs
+.vscode
+.idea
+
+# zcompile cached files
+*.zwc
