@@ -7,8 +7,7 @@ FWDL_HOST="$LINUX_HOST2"
 SS_PATH="$HOME/ss_team"
 DOMAIN_NAME="extremenetworks.com"
 BASE_SRC="$HOME/workspace/slxos"
-MASTER_GODCAPP_SRC="$HOME/workspace/badaniya/master/GoDCApp"
-MASTER_PLATFORMSERVICES_SRC="$HOME/workspace/badaniya/master/PlatformServices"
+MASTER_REPO_SRC="$HOME/workspace/badaniya/master"
 
 CLEARTOOL=/usr/atria/bin/cleartool
 
@@ -67,50 +66,50 @@ function git_clone()
     git clone "https://$GIT_USER:$PASS@$NON_HTTPS_URL" $@
 }
 
-function add_godcapp_worktree()
+function add_worktree()
 {
-    local USAGE="add_godcapp_worktree <Private Branch Name - ex: EFA-12345> <Source Branch>"
+    local USAGE="add_worktree <Repo Name - ex: GoDCApp | PlatformServices | PlatformCommonModels> <Private Branch Name - ex: EFA-12345> <Source Branch>"
+
+    if [[ $# -lt 3 || $# -ge 4 || "$1" =~ (^-h$|^--help$) ]]; then
+        echo "$USAGE"
+        return 1
+    fi
+
+    local REPO_NAME="$1"
+    local GIT_BRANCH="$2"
+    local GIT_SOURCE_BRANCH="$3"
+    local RELATIVE_WORKTREE_PATH="../../$GIT_BRANCH/$REPO_NAME"
+
+    pushd "$MASTER_REPO_SRC/$REPO_NAME" > /dev/null
+
+    git pull && \
+    git checkout "$GIT_SOURCE_BRANCH" && \
+    git pull && \
+    git worktree add -b "$USER/$REPO_NAME/$GIT_BRANCH" "$RELATIVE_WORKTREE_PATH" && \
+    git checkout master && \
+    cd "$RELATIVE_WORKTREE_PATH" && \
+    git branch --set-upstream-to=origin/"$GIT_SOURCE_BRANCH"
+    #go_work
+}
+
+function remove_worktree()
+{
+    local USAGE="remove_worktree <Repo Name - ex: GoDCApp | PlatformServices | PlatformCommonModels> <Private Branch Name - ex: EFA-12345>"
 
     if [[ $# -lt 2 || $# -ge 3 || "$1" =~ (^-h$|^--help$) ]]; then
         echo "$USAGE"
         return 1
     fi
 
-    local GODCAPP_BRANCH="$1"
-    local GODCAPP_SOURCE_BRANCH="$2"
-    local GODCAPP_NAME="GoDCApp"
-    local RELATIVE_WORKTREE_PATH="../../$GODCAPP_BRANCH/$GODCAPP_NAME"
+    local REPO_NAME="$1"
+    local GIT_BRANCH="$2"
+    local RELATIVE_WORKTREE_PATH="../../$GIT_BRANCH/$REPO_NAME"
+    local WORKTREE_PARENT_DIR=$(dirname "$MASTER_REPO_SRC/$RELATIVE_WORKTREE_PATH")
 
-    pushd "$MASTER_GODCAPP_SRC" > /dev/null
+    pushd "$MASTER_REPO_SRC/$REPO_NAME" > /dev/null
 
-    git pull && \
-    git checkout "$GODCAPP_SOURCE_BRANCH" && \
-    git pull && \
-    git worktree add -b "$USER/$GODCAPP_NAME/$GODCAPP_BRANCH" "$RELATIVE_WORKTREE_PATH" && \
-    git checkout master && \
-    cd "$RELATIVE_WORKTREE_PATH" && \
-    git branch --set-upstream-to=origin/"$GODCAPP_SOURCE_BRANCH"
-    #go_work
-}
-
-function remove_godcapp_worktree()
-{
-    local USAGE="remove_godcapp_worktree <Private Branch Name - ex: EFA-12345>"
-
-    if [[ $# -lt 1 || $# -ge 2 || "$1" =~ (^-h$|^--help$) ]]; then
-        echo "$USAGE"
-        return 1
-    fi
-
-    local GODCAPP_BRANCH="$1"
-    local GODCAPP_NAME="GoDCApp"
-    local RELATIVE_WORKTREE_PATH="../../$GODCAPP_BRANCH/$GODCAPP_NAME"
-    local WORKTREE_PARENT_DIR=$(dirname "$MASTER_GODCAPP_SRC/$RELATIVE_WORKTREE_PATH")
-
-    pushd "$MASTER_GODCAPP_SRC" > /dev/null
-
-    sudo git worktree remove --force "$MASTER_GODCAPP_SRC/$RELATIVE_WORKTREE_PATH" && \
-    git branch -D "$USER/$GODCAPP_NAME/$GODCAPP_BRANCH"
+    sudo git worktree remove --force "$MASTER_REPO_SRC/$RELATIVE_WORKTREE_PATH" && \
+    git branch -D "$USER/$REPO_NAME/$GIT_BRANCH"
 
     popd > /dev/null 2>&1
 
@@ -119,70 +118,18 @@ function remove_godcapp_worktree()
     fi
 }
 
-function list_godcapp_worktree()
+function list_worktree()
 {
-    pushd "$MASTER_GODCAPP_SRC" > /dev/null
-
-    git worktree list
-
-    popd > /dev/null 2>&1
-}
-
-function add_platformservices_worktree()
-{
-    local USAGE="add_platformservices_worktree <Private Branch Name - ex: NVO-12345> <Source Branch>"
-
-    if [[ $# -lt 2 || $# -ge 3 || "$1" =~ (^-h$|^--help$) ]]; then
-        echo "$USAGE"
-        return 1
-    fi
-
-    local PLATFORMSERVICES_BRANCH="$1"
-    local PLATFORMSERVICES_SOURCE_BRANCH="$2"
-    local PLATFORMSERVICES_NAME="PlatformServices"
-    local RELATIVE_WORKTREE_PATH="../../$PLATFORMSERVICES_BRANCH/$PLATFORMSERVICES_NAME"
-
-    pushd "$MASTER_PLATFORMSERVICES_SRC" > /dev/null
-
-    git pull && \
-    git checkout "$PLATFORMSERVICES_SOURCE_BRANCH" && \
-    git pull && \
-    git worktree add -b "$USER/$PLATFORMSERVICES_NAME/$PLATFORMSERVICES_BRANCH" "$RELATIVE_WORKTREE_PATH" && \
-    git checkout main && \
-    cd "$RELATIVE_WORKTREE_PATH" && \
-    git branch --set-upstream-to=origin/"$PLATFORMSERVICES_SOURCE_BRANCH"
-    #go_work
-}
-
-function remove_platformservices_worktree()
-{
-    local USAGE="remove_platformservices_worktree <Private Branch Name - ex: NVO-12345>"
+    local USAGE="list_worktree <Repo Name - ex: GoDCApp | PlatformServices | PlatformCommonModels>"
 
     if [[ $# -lt 1 || $# -ge 2 || "$1" =~ (^-h$|^--help$) ]]; then
         echo "$USAGE"
         return 1
     fi
 
-    local PLATFORMSERVICES_BRANCH="$1"
-    local PLATFORMSERVICES_NAME="PlatformServices"
-    local RELATIVE_WORKTREE_PATH="../../$PLATFORMSERVICES_BRANCH/$PLATFORMSERVICES_NAME"
-    local WORKTREE_PARENT_DIR=$(dirname "$MASTER_PLATFORMSERVICES_SRC/$RELATIVE_WORKTREE_PATH")
+    local REPO_NAME="$1"
 
-    pushd "$MASTER_PLATFORMSERVICES_SRC" > /dev/null
-
-    sudo git worktree remove --force "$MASTER_PLATFORMSERVICES_SRC/$RELATIVE_WORKTREE_PATH" && \
-    git branch -D "$USER/$PLATFORMSERVICES_NAME/$PLATFORMSERVICES_BRANCH"
-
-    popd > /dev/null 2>&1
-
-    if [[ $(ls -1 $WORKTREE_PARENT_DIR | wc -l) -eq 0 ]]; then
-        sudo rm -rf "$WORKTREE_PARENT_DIR"
-    fi
-}
-
-function list_platformservices_worktree()
-{
-    pushd "$MASTER_PLATFORMSERVICES_SRC" > /dev/null
+    pushd "$MASTER_REPO_SRC/$REPO_NAME" > /dev/null
 
     git worktree list
 
