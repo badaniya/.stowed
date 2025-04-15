@@ -831,3 +831,21 @@ function get_process_file_descriptor_usage()
 
     expect_ssh "$HOST_IP" "root" "fibranne" "$HOST_OPTIONS" "$HOST_CMD"
 }
+
+function free_swap_mem()
+{
+    local FREE_MEM="$(free | grep 'Mem:' | awk '{print $7}')"
+    local USED_SWAP="$(free | grep 'Swap:' | awk '{print $3}')"
+    
+    echo -e "Free memory:\t$FREE_MEM kB ($((FREE_MEM / 1024)) MiB)\nUsed swap:\t$USED_SWAP kB ($((USED_SWAP / 1024)) MiB)"
+    if [[ $USED_SWAP -eq 0 ]]; then
+        echo "Congratulations! No swap is in use."
+    elif [[ $USED_SWAP -lt $FREE_MEM ]]; then
+        echo "Freeing swap..."
+        sudo swapoff -a
+        sudo swapon -a
+    else
+        echo "Not enough free memory. Exiting."
+        exit 1
+    fi
+}
