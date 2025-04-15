@@ -13,11 +13,11 @@ return {
             jump_next = ']]',
             accept = '<CR>',
             refresh = 'gr',
-            open = '<M-CR>'
+            open = '<M-CR>',
           },
           layout = {
             position = 'right', -- | top | left | right
-            ratio = 0.25
+            ratio = 0.25,
           },
         },
         suggestion = {
@@ -53,9 +53,9 @@ return {
     end,
   },
   {
-    "zbirenbaum/copilot-cmp",
+    'zbirenbaum/copilot-cmp',
     config = function()
-      require("copilot_cmp").setup()
-    end
+      require('copilot_cmp').setup()
+    end,
   },
 }
