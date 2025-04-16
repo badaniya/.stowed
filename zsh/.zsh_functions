@@ -103,7 +103,7 @@ function remove_worktree()
 
     local REPO_NAME="$1"
     local GIT_BRANCH="$2"
-    local RELATIVE_WORKTREE_PATH="../../$GIT_BRANCH/$REPO_NAME"
+    local RELATIVE_WORKTREE_PATH="../$GIT_BRANCH/$REPO_NAME"
     local WORKTREE_PARENT_DIR=$(dirname "$MASTER_REPO_SRC/$RELATIVE_WORKTREE_PATH")
 
     pushd "$MASTER_REPO_SRC/$REPO_NAME" > /dev/null
@@ -114,7 +114,7 @@ function remove_worktree()
     popd > /dev/null 2>&1
 
     if [[ $(ls -1 $WORKTREE_PARENT_DIR | wc -l) -eq 0 ]]; then
-        echo sudo rm -rf "$WORKTREE_PARENT_DIR"
+        sudo rm -rf "$WORKTREE_PARENT_DIR"
     fi
 }
 
@@ -414,7 +414,7 @@ function wait_for_xauth_lock()
     done
 }
 
-# Function: terminal_laucher
+# Function: terminal_launcher
 # Description: This will launch a preset multi-tabbed gnome terminal.  When chassis or switch is specified with a label then all terminal session output
 #              Is logged to an appropriate labeled file under $HOME/sessionlogs.
 function terminal_launcher()
