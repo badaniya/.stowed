@@ -24,6 +24,10 @@ This repository is used to store all dot-config files for various shells and edi
 - vim
 - emacs
 
+**Stowed Optional Terminal Tools:**
+
+- gitui
+
 ## How To Use GNU Stow
 
 ### 1) Install GNU Stow
@@ -54,7 +58,12 @@ git reset --hard HEAD
 rm -rf $HOME/.config/ghostty; rm -rf $HOME/.bash*; rm -rf $HOME/.zsh*; rm -rf $HOME/.oh-my-zsh; rm -rf $HOME/.config/nvim; rm -rf $HOME/.vim*; rm -rf $HOME/.emacs*; stow -d $HOME/.stowed stow ghostty tmux fzf bat delta starship bash zsh nvim vim emacs
 ```
 
-## Follow-up Package Installation for Shell/Editor Tools
+### 4) Run Stow Command to Establish Symlinks to the Repository for Optional Terminal Tools
+
+```bash
+# Sure-file Way to Ensure Stow Symlink Creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
+rm -rf $HOME/.config/gitui; stow -d $HOME/.stowed gitui
+```
 
 ### 0) Ghostty
 
@@ -118,7 +127,7 @@ git config --global include.path '~/.config/delta/delta.gitconfig'
 curl -sS https://starship.rs/install.sh | sh
 ```
 
-### 6) Neovim
+### 8) Neovim
 
 ```bash
 # neovim: Latest version
