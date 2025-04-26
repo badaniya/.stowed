@@ -54,18 +54,20 @@ stow -d $HOME/.stowed --adopt ghostty stow tmux fzf bat delta starship bash zsh 
 cd $HOME/.stowed
 git reset --hard HEAD
 
-# Sure-file Way to Ensure Stow Symlink Creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
+# Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
 rm -rf $HOME/.config/ghostty; rm -rf $HOME/.bash*; rm -rf $HOME/.zsh*; rm -rf $HOME/.oh-my-zsh; rm -rf $HOME/.config/nvim; rm -rf $HOME/.vim*; rm -rf $HOME/.emacs*; stow -d $HOME/.stowed stow ghostty tmux fzf bat delta starship bash zsh nvim vim emacs
 ```
 
 ### 4) Run Stow Command to Establish Symlinks to the Repository for Optional Terminal Tools
 
 ```bash
-# Sure-file Way to Ensure Stow Symlink Creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
+# Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
 rm -rf $HOME/.config/gitui; stow -d $HOME/.stowed gitui
 ```
 
-### 0) Ghostty
+## Installing Stowed Terminal Tools
+
+### 0) Ghostty - A fast efficient terminal with GPU acceleration and Kitty image support
 
 ```bash
 # ghostty: Ubuntu debian version
@@ -73,35 +75,35 @@ wget https://github.com/mkasberg/ghostty-ubuntu/releases/download/1.0.1-0-ppa1/g
 sudo dpgk -i ghostty_1.0.1-0.ppa1_amd64_24.04.deb
 ```
 
-### 1) Tmux
+### 1) Tmux - A terminal multiplexer to maintain terminal sessions and split-pane layouts
 
 ```bash
 # tmux: Ubuntu package version
 sudo apt install -y tmux
 ```
 
-### 2) Zsh
+### 2) Zsh - A powerful bash-like shell with command completion and syntax highlighting
 
 ```bash
 # zsh: Ubuntu package version
 sudo apt install -y zsh
 ```
 
-### 3) Fzf
+### 3) Fzf - A fuzzy finder that integrates with various shells and editors
 
 ```bash
 # fzf: Ubuntu package version
 sudo apt install -y fzf
 ```
 
-### 4) Zoxide
+### 4) Zoxide - A quick way to change directories to your most frequently used paths
 
 ```bash
 # zoxide: Shell script installer
 curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh
 ```
 
-### 5) Bat
+### 5) Bat - A visually pleasing and themed `cat`
 
 ```bash
 # bat: Ubuntu package version
@@ -111,7 +113,7 @@ ln -s /usr/bin/batcat ~/.local/bin/bat
 bat cache --build
 ```
 
-### 6) Delta
+### 6) Delta - A visually pleasing and themed diff tool (using `bat`)
 
 ```bash
 # delta: git diff colorized
@@ -120,14 +122,14 @@ sudo dpkg -i git-delta_0.18.2_amd64.deb
 git config --global include.path '~/.config/delta/delta.gitconfig'
 ```
 
-### 7) Starship
+### 7) Starship - A tool to help customize your shell prompt
 
 ```bash
 # starship: Shell script installer
 curl -sS https://starship.rs/install.sh | sh
 ```
 
-### 8) Neovim
+### 8) Neovim - A `vim` editor with outstanding plug-in support to make a fully customizable programming IDE 
 
 ```bash
 # neovim: Latest version
@@ -144,7 +146,7 @@ unzip -od ~/.local/share/fonts/ JetBrainsMono.zip
 fc-cache -fv
 ```
 
-### 6.1) Neovim Plugin Dependencies
+### 8.1) Neovim Plugin Dependencies
 
 #### Database UI Plugin
 
@@ -154,18 +156,34 @@ sudo apt install -y postgresql-client
 sudo apt install -y mariadb-client 
 ```
 
-### 7) Vim
+### 9) Vim - A ubiquitous editor
 
 ```bash
 sudo apt install -y vim
 ```
 
-### 8) Emacs
+### 10) Emacs - GNU editor
 
 ```bash
 sudo apt-add-repository -y ppa:kelleyk/emacs
 sudo apt update -y
 sudo apt install -y emacs28
+```
+
+## Installing Optional Stowed Terminal Tools
+
+### 0) Nix Package Manager - A package manager with a massive amount of open-source installation images
+
+```bash
+# Multi-User Nix Package Manager Installer
+sh <(curl -L https://nixos.org/nix/install) --daemon
+```
+
+### 1) Gitui - Terminal Git TUI
+
+```bash
+# Nix dependency
+nix-env -iA nixpkgs.gitui
 ```
 
 ## Linux Development Environment Setup
