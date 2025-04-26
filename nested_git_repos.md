@@ -27,6 +27,7 @@ git remote add tmux-resurrect https://github.com/tmux-plugins/tmux-resurrect
 git remote add tmux-continuum https://github.com/tmux-plugins/tmux-continuum
 git remote add tmux-thumbs https://github.com/fcsonline/tmux-thumbs
 git remote add tmux-floax https://github.com/omerxx/tmux-floax
+git remote add tmux-fzf-url https://github.com/wfxr/tmux-fzf-url
 git remote add catppuccin https://github.com/catppuccin/tmux
 git subtree add --prefix=tmux/.tmux/plugins/tpm tpm master --squash
 git subtree add --prefix=tmux/.tmux/plugins/tmux-sensible tmux-sensible master --squash
@@ -35,8 +36,9 @@ git subtree add --prefix=tmux/.tmux/plugins/tmux-copycat tmux-copycat master --s
 git subtree add --prefix=tmux/.tmux/plugins/vim-tmux-navigator vim-tmux-navigator master --squash
 git subtree add --prefix=tmux/.tmux/plugins/tmux-resurrect tmux-resurrect master --squash
 git subtree add --prefix=tmux/.tmux/plugins/tmux-continuum tmux-continuum master --squash
-git subtree add --prefix=tmux/.tmux/plugins/tmux-thumbs tmux-thumbs master --sqaush
+git subtree add --prefix=tmux/.tmux/plugins/tmux-thumbs tmux-thumbs master --squash
 git subtree add --prefix=tmux/.tmux/plugins/tmux-floax tmux-floax main --squash
+git subtree add --prefix=tmux/.tmux/plugins/tmux-fzf-url tmux-fzf-url master --squash
 git subtree add --prefix=tmux/.tmux/plugins/tmux catppuccin main --squash
 ```
 
