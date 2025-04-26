@@ -288,6 +288,16 @@ tmux kill-server
 <C-b> ] : Pastes the selection
 ```
 
+## Tmux Plugin Key Bindings
+
+```text
+# tmux-fzf-url - Fzf URL Links Launcher
+<C-b> u : Use the fuzzy finder to select from a list of URL links to launch 
+
+# tmux-thumbs - Activate a quick copy mode to make selections of text from the tmux pane
+<C-b> space : Quick copy mode to capture file paths, UUIDs, IP addresses...
+```
+
 ## Nvim Key Bindings
 
 ```text
