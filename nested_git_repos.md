@@ -21,7 +21,6 @@ cd $HOME/.stowed
 git remote add tpm https://github.com/tmux-plugins/tpm
 git remote add tmux-sensible https://github.com/tmux-plugins/tmux-sensible
 git remote add tmux-yank https://github.com/tmux-plugins/tmux-yank
-git remote add tmux-copycat https://github.com/tmux-plugins/tmux-copycat
 git remote add vim-tmux-navigator https://github.com/christoomey/vim-tmux-navigator
 git remote add tmux-resurrect https://github.com/tmux-plugins/tmux-resurrect
 git remote add tmux-continuum https://github.com/tmux-plugins/tmux-continuum
@@ -29,12 +28,10 @@ git remote add tmux-thumbs https://github.com/fcsonline/tmux-thumbs
 git remote add tmux-floax https://github.com/omerxx/tmux-floax
 git remote add tmux-fzf-url https://github.com/wfxr/tmux-fzf-url
 git remote add catppuccin https://github.com/catppuccin/tmux
-git remote add tmux-cpu https://github.com/tmux-plugins/tmux-cpu
 git remote add tmux-mem-cpu-load https://github.com/thewtex/tmux-mem-cpu-load
 git subtree add --prefix=tmux/.tmux/plugins/tpm tpm master --squash
 git subtree add --prefix=tmux/.tmux/plugins/tmux-sensible tmux-sensible master --squash
 git subtree add --prefix=tmux/.tmux/plugins/tmux-yank tmux-yank master --squash
-git subtree add --prefix=tmux/.tmux/plugins/tmux-copycat tmux-copycat master --squash
 git subtree add --prefix=tmux/.tmux/plugins/vim-tmux-navigator vim-tmux-navigator master --squash
 git subtree add --prefix=tmux/.tmux/plugins/tmux-resurrect tmux-resurrect master --squash
 git subtree add --prefix=tmux/.tmux/plugins/tmux-continuum tmux-continuum master --squash
@@ -42,7 +39,6 @@ git subtree add --prefix=tmux/.tmux/plugins/tmux-thumbs tmux-thumbs master --squ
 git subtree add --prefix=tmux/.tmux/plugins/tmux-floax tmux-floax main --squash
 git subtree add --prefix=tmux/.tmux/plugins/tmux-fzf-url tmux-fzf-url master --squash
 git subtree add --prefix=tmux/.tmux/plugins/tmux catppuccin main --squash
-git subtree add --prefix=tmux/.tmux/plugins/tmux-cpu tmux-cpu master --squash
 git subtree add --prefix=tmux/.tmux/plugins/tmux-mem-cpu-load tmux-mem-cpu-load master --squash
 ```
 
