@@ -285,8 +285,8 @@ tmux kill-server
 <C-b> [ : Enters copy-mode
 <space> : Starts the selection (use vi motions to expand the selection)
 <enter> : Stores the selection
-<C-b> ] : Pastes the selection
-<C-y>   : Pastes the selection into a tmux `search up/down` command line
+<C-y>   : In copy-mode, pastes the selection into a tmux `search up/down` command line
+<C-b> ] : Pastes the selection outside of copy-mode
 ```
 
 ## Tmux Plugin Key Bindings
