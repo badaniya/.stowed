@@ -69,7 +69,6 @@ git subtree add --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-vi-mode zsh-vi-mode m
 git subtree add --prefix=zsh/.oh-my-zsh/custom/plugins/forgit forgit main --squash
 git subtree add --prefix=zsh/.oh-my-zsh/custom/plugins/tmux-xpanes tmux-xpanes master --squash
 
-    greymd/tmux-xpanes
 # How to Pull in Oh My ZSH Plugin Updates
 git subtree pull --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting zsh-syntax-highlighting master --squash
 git subtree pull --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-autosuggestions zsh-autosuggestions master --squash
