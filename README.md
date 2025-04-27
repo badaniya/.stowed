@@ -286,6 +286,7 @@ tmux kill-server
 <space> : Starts the selection (use vi motions to expand the selection)
 <enter> : Stores the selection
 <C-b> ] : Pastes the selection
+<C-y>   : Pastes the selection into a tmux `search up/down` command line
 ```
 
 ## Tmux Plugin Key Bindings
