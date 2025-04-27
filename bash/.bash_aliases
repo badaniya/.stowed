@@ -3,7 +3,7 @@ if [[ "$SHELL" =~ bash && -f $HOME/.bash_functions ]]; then
     source $HOME/.bash_functions
 elif [[ "$SHELL" =~ zsh && -f $HOME/.zsh_functions ]]; then
     source $HOME/.zsh_functions
-fi 
+fi
 
 # Source Other Aliases
 if [[ -f $HOME/.private_bash_aliases ]]; then
@@ -18,6 +18,7 @@ alias iosched="sudo bash -c 'echo bfq > /sys/block/sda/queue/scheduler'; cat /sy
 # Linux Aliases
 alias fzfbat="fzf --preview 'bat --color=always --style=numbers --line-range=:500 {}'"
 alias le="eza --icons"
+alias xpanes='xpanes -t -B "tmux select-pane -t \${TMUX_PANE} -T \"ARG:{} PID:$$\""'
 
 # Go Aliases
 alias gomodtidy="find . -type f ! -path '*/pkg/*' -name go.mod -execdir pwd \; -execdir go mod tidy -go=1.20 \;"
