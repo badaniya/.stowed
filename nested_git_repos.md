@@ -60,13 +60,16 @@ git remote add zsh-syntax-highlighting-catppuccin https://github.com/catppuccin/
 git remote add last-working-dir-tmux https://github.com/badaniya/last-working-dir-tmux
 git remote add zsh-vi-mode https://github.com/jeffreytse/zsh-vi-mode
 git remote add forgit https://github.com/wfxr/forgit
+git remote add tmux-xpanes https://github.com/greymd/tmux-xpanes
 git subtree add --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting zsh-syntax-highlighting master --squash
 git subtree add --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-autosuggestions zsh-autosuggestions master --squash
 git subtree add --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting/catppuccin zsh-syntax-highlighting-catppuccin main --squash
 git subtree add --prefix=zsh/.oh-my-zsh/custom/plugins/last-working-dir-tmux last-working-dir-tmux master --squash
 git subtree add --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-vi-mode zsh-vi-mode master --squash
 git subtree add --prefix=zsh/.oh-my-zsh/custom/plugins/forgit forgit main --squash
+git subtree add --prefix=zsh/.oh-my-zsh/custom/plugins/tmux-xpanes tmux-xpanes master --squash
 
+    greymd/tmux-xpanes
 # How to Pull in Oh My ZSH Plugin Updates
 git subtree pull --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting zsh-syntax-highlighting master --squash
 git subtree pull --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-autosuggestions zsh-autosuggestions master --squash

@@ -79,6 +79,7 @@ plugins=(
     zsh-vi-mode
     last-working-dir-tmux
     urltools
+    tmux-xpanes
 )
 
 if [[ -f $ZSH/custom/plugins/zsh-syntax-highlighting/catppuccin/themes/catppuccin_mocha-zsh-syntax-highlighting.zsh ]]; then
@@ -184,6 +185,9 @@ fi
 
 # Zoxide Support
 [ -f ~/.local/bin/zoxide ] && eval "$(zoxide init zsh)"
+
+# Xpanes Support
+[ -f $ZSH/custom/plugins/tmux-xpanes/completion.zsh ] && source $ZSH/custom/plugins/tmux-xpanes/completion.zsh
 
 # Starship Shell
 eval "$(starship init zsh)"
