@@ -4,7 +4,6 @@ return {
   ---@type Flash.Config
   opts = {},
   -- stylua: ignore
-  
   config = function()
     require('flash').setup {
       -- labels = "abcdefghijklmnopqrstuvwxyz",
