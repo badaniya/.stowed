@@ -71,8 +71,8 @@ rm -rf $HOME/.config/gitui; stow -d $HOME/.stowed gitui
 
 ```bash
 # ghostty: Ubuntu debian version
-wget https://github.com/mkasberg/ghostty-ubuntu/releases/download/1.0.1-0-ppa1/ghostty_1.0.1-0.ppa1_amd64_24.04.deb
-sudo dpgk -i ghostty_1.0.1-0.ppa1_amd64_24.04.deb
+wget https://github.com/mkasberg/ghostty-ubuntu/releases/download/1.1.3-0-ppa2/ghostty_1.1.3-0.ppa2_amd64_24.04.deb
+sudo dpkg -i ghostty_1.1.3-0.ppa2_amd64_24.04.deb
 ```
 
 ### 1) Tmux - A terminal multiplexer to maintain terminal sessions and split-pane layouts
