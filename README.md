@@ -179,7 +179,14 @@ sudo apt install -y emacs28
 sh <(curl -L https://nixos.org/nix/install) --daemon
 ```
 
-### 1) Gitui - Terminal Git TUI
+### 1) Tmuxinator - A tmux session layout creator
+
+```bash
+# Nix dependency
+nix-env -iA nixpkgs.tmuxinator
+```
+
+### 2) Gitui - Terminal Git TUI
 
 ```bash
 # Nix dependency
