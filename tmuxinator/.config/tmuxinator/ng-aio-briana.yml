@@ -8,7 +8,7 @@ windows:
     - ngaio-briana-c9 -t "k9s"
     - ngaio-briana-c9 
     - ngaio-briana-c9 
-    - ngaio-briana-c9 -t "psqlplatformdb -P pager=off"
+    - ngaio-briana-c9 -t "kubectl -n xiq exec -it hm-postgresql-ha-postgresql-0 -- bash -c 'export PGPASSWORD=aerohive; psql -h localhost -U postgres platform_com -P pager=off'"
 - notes:
     layout: 2d66,255x70,0,0,116
     panes:
