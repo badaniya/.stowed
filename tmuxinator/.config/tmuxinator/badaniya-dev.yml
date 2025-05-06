@@ -11,7 +11,7 @@ windows:
 - edit:
     layout: 1695,255x70,0,0{189x70,0,0[189x57,0,0,53,189x12,0,58,54],65x70,190,0,55}
     panes:
-    - nvim
+    - nvim --
     -
     - tail -F /var/log/network/network-server.log /var/log/edge/edge-server.log /var/log/scheduler/scheduler-server.log /var/log/runonce/runonce-server.log | loggo stream -t ~/nvo-loggo.tpl
 - build:
@@ -38,7 +38,7 @@ windows:
 - notes:
     layout: da64,255x70,0,0,63
     panes:
-    - cd /home/badaniya/vaults/work/proj; nvim
+    - cd /home/badaniya/vaults/work/proj; nvim --
 - test:
     layout: da65,255x70,0,0,64
     panes:

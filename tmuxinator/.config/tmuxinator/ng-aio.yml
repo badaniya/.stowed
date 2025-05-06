@@ -12,4 +12,4 @@ windows:
 - notes:
     layout: 2d66,255x70,0,0,116
     panes:
-    - cd /home/badaniya/vaults/work; nvim
+    - cd /home/badaniya/vaults/work; nvim --
