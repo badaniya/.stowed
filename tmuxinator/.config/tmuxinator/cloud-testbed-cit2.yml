@@ -1,19 +1,19 @@
 ---
-name: cloud-testbed
+name: cloud-testbed-cit2
 project_root: "/home/badaniya/workspace/badaniya"
 windows:
 - g1-console:
     layout: 2575,273x76,0,0{87x76,0,0,182,185x76,88,0,186}
     panes:
-    -
-    -
+    - nvo-cloud-cit2 -t "sudo -i watch 'kubectl -n cit2 get pods; kubectl -n common get pods'"
+    - nvo-cloud-cit2 -t "sudo -i" 
 - r1-console:
     layout: 6e59,273x76,0,0{87x76,0,0,183,185x76,88,0[185x26,88,0,187,185x26,88,27,188,185x22,88,54,189]}
     panes:
-    -
-    -
-    -
-    -
+    - nvo-cloud-cit2r1 -t "sudo -i watch 'kubectl -n nvo get pods; kubectl -n nvo top pods'"
+    - nvo-cloud-cit2r1 -t "sudo -i"
+    - nvo-cloud-cit2r1 -t "sudo -i"
+    - nvo-cloud-cit2r1 -t "sudo -i"
 - loki:
     layout: b247,273x75,0,0,184
     panes:
