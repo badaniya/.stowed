@@ -13,7 +13,7 @@ windows:
     - nvo-cloud-ws4r1 -t "sudo -i watch 'kubectl -n nvo get pods; kubectl -n nvo top pods'"
     - nvo-cloud-ws4r1 -t "sudo -i"
     - nvo-cloud-ws4r1 -t "sudo -i"
-    - nvo-cloud-ws4r1 -t "sudo -i psql -h aurora-ws4r1.cluster-ciwa6umsjipp.us-east-2.rds.amazonaws.com -U postgres platform_common_db -P pager=off"
+    - nvo-cloud-ws4r1 -t "sudo -i psql -h aurora-ws4r1.cluster-ciwa6umsjipp.us-east-2.rds.amazonaws.com -U nvouser platform_common_db -P pager=off"
 - loki:
     layout: b247,273x75,0,0,184
     panes:
