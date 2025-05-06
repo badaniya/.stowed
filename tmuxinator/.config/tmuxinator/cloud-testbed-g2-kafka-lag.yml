@@ -1,0 +1,23 @@
+---
+name: cloud-testbed-g2-kafka-lag
+project_root: "/home/badaniya/workspace/badaniya"
+windows:
+- g1-console:
+    layout: 83a0,273x76,0,0{102x76,0,0,68,170x76,103,0,72}
+    panes:
+    - nvo-cloud-g2 -t "sudo -i watch 'kubectl -n g2 get pods; kubectl -n common get pods'"
+    - nvo-cloud-g2 -t "sudo -i"
+- r1-console:
+    layout: c0b2,273x76,0,0{87x76,0,0,69,185x76,88,0[185x61,88,0,73,185x14,88,62,76]}
+    panes:
+    - nvo-cloud-g2r1 -t "sudo -i watch 'kubectl -n nvo get pods; kubectl -n nvo top pods'"
+    - nvo-cloud-g2r1 -t "sudo -i watch \"kubectl -n common exec -it common-kafka-0 -- /bin/bash -c 'unset JMX_PORT ;/opt/bitnami/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group network'\""
+    - nvo-cloud-g2r1 -t "sudo -i watch \"kubectl -n nvo exec -it nvo-kafka-0 -- /bin/bash -c 'unset JMX_PORT ;/opt/bitnami/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group network | grep -e TOPIC -e NVOAPP_DEVICE_ONBOARD'\""
+- loki:
+    layout: 6422,273x75,0,0,70
+    panes:
+    -
+- notes:
+    layout: 6423,273x75,0,0,71
+    panes:
+    - cd /home/badaniya/vaults/work/proj; nvim --

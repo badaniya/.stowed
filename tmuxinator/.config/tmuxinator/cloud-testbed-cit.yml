@@ -13,7 +13,7 @@ windows:
     - nvo-cloud-citr2 -t "sudo -i watch 'kubectl -n nvo get pods; kubectl -n nvo top pods'"
     - nvo-cloud-citr2 -t "sudo -i"
     - nvo-cloud-citr2 -t "sudo -i"
-    - nvo-cloud-citr2 -t "sudo -i"
+    - nvo-cloud-citr2 -t "sudo -i psql -h aurora-citr2.cluster-cbayk0yeyfjc.us-east-2.rds.amazonaws.com -U postgres platform_common_db -P pager=off"
 - loki:
     layout: b247,273x75,0,0,184
     panes:
