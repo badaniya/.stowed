@@ -1,0 +1,12 @@
+---
+name: home-config
+project_root: "/home/badaniya/.stowed"
+windows:
+- edit:
+    layout: b245,273x75,0,0,106
+    panes:
+    - cd /home/badaniya/.stowed
+- test:
+    layout: b246,273x75,0,0,107
+    panes:
+    - cd /home/badaniya/.stowed

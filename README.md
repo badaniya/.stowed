@@ -1,4 +1,5 @@
 # .stowed
+
 This repository is used to store all dot-config files for various shells and editors.  This repository can be cloned to a new linux machine which can be setup quickly with GNU `stow`. This will bring back all custom shell and editor configurations or easily sync custom configuration between linux machines.
 
 [How Nested Git Repositories Are Configured - For Reference ONLY](nested_git_repos.md):  A reference on how this .stowed repository was created with the various nested git repositories for the shell and editor plugins.
@@ -26,6 +27,7 @@ This repository is used to store all dot-config files for various shells and edi
 
 **Stowed Optional Terminal Tools:**
 
+- tmuxinator
 - gitui
 
 ## How To Use GNU Stow
@@ -62,7 +64,7 @@ rm -rf $HOME/.config/ghostty; rm -rf $HOME/.bash*; rm -rf $HOME/.zsh*; rm -rf $H
 
 ```bash
 # Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
-rm -rf $HOME/.config/gitui; stow -d $HOME/.stowed gitui
+rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/gitui; stow -d $HOME/.stowed tmuxinator gitui
 ```
 
 ## Installing Stowed Terminal Tools
