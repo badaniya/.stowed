@@ -5,20 +5,20 @@ windows:
 - g1-console:
     layout: d107,273x75,0,0{82x75,0,0,93,190x75,83,0,131}
     panes:
-    - cd /home/badaniya/workspace/badaniya
-    - cd /home/badaniya/workspace/badaniya
+    -
+    -
 - r1-console:
     layout: 47b1,273x75,0,0{82x75,0,0,94,190x75,83,0[190x25,83,0,95,190x26,83,26,96,190x22,83,53,130]}
     panes:
-    - cd /home/badaniya/workspace/badaniya
-    - cd /home/badaniya/workspace/badaniya
-    - cd /home/badaniya/workspace/badaniya
-    - cd /home/badaniya/workspace/badaniya
+    -
+    -
+    -
+    -
 - loki:
     layout: 642a,273x75,0,0,97
     panes:
-    - cd /home/badaniya/workspace/badaniya
+    -
 - notes:
     layout: 642b,273x75,0,0,98
     panes:
-    - cd /home/badaniya/vaults/work/proj
+    - nvim
