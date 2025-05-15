@@ -1,0 +1,5 @@
+* Default
+** badaniya
+ - path :: ~/workspace/badaniya
+** mod
+ - path :: ~/go/pkg/mod/cache/download

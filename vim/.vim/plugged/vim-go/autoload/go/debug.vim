@@ -362,7 +362,7 @@ function! s:goto_file() abort
     return
   endif
   call win_gotoid(win_getid(bufs[0][0]))
-  let filename = m[1]
+  let filename = s:substituteLocalPath(m[1])
   let linenr = m[2]
   let oldfile = fnamemodify(expand('%'), ':p:gs!\\!/!')
   if oldfile != filename
@@ -771,7 +771,7 @@ function! s:message(buf, data) abort
     " and
     "     for every list you receive in a callback, all items except the first
     "     represent newlines.
-    call s:logger('DATA: ', '', printf('%s', a:data))
+
     let l:data = printf('%s%s', a:buf, a:data[0])
     for l:msg in a:data[1:]
       let l:data = printf("%s\n%s", l:data, l:msg)

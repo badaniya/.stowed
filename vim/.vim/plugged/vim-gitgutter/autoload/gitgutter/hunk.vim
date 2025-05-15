@@ -308,8 +308,9 @@ function! s:stage(hunk_diff)
       write
       let path = gitgutter#utility#repo_path(bufnr, 1)
       " Add file to index.
-      let cmd = gitgutter#git(bufnr).' add '.
-            \ gitgutter#utility#shellescape(gitgutter#utility#filename(bufnr))
+      let cmd = gitgutter#utility#cd_cmd(bufnr,
+            \ gitgutter#git().' add '.
+            \ gitgutter#utility#shellescape(gitgutter#utility#filename(bufnr)))
       let [_, error_code] = gitgutter#utility#system(cmd)
     else
       return
@@ -319,7 +320,7 @@ function! s:stage(hunk_diff)
     let diff = s:adjust_header(bufnr, a:hunk_diff)
     " Apply patch to index.
     let [_, error_code] = gitgutter#utility#system(
-          \ gitgutter#git(bufnr).' apply --cached --unidiff-zero - ',
+          \ gitgutter#utility#cd_cmd(bufnr, gitgutter#git().' apply --cached --unidiff-zero - '),
           \ diff)
   endif
 
@@ -359,11 +360,6 @@ endfunction
 
 
 function! s:preview(hunk_diff)
-  if g:gitgutter_preview_win_floating && exists('*nvim_set_current_win') && s:winid != 0
-    call nvim_set_current_win(s:winid)
-    return
-  endif
-
   let lines = split(a:hunk_diff, '\r\?\n')
   let header = lines[0:4]
   let body = lines[5:]

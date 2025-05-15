@@ -341,8 +341,8 @@ ds                      Perform a |:Ghdiffsplit| on the file under the cursor.
 dh
 
                                                 *fugitive_dq*
-dq                      Close all but the currently focused diff buffer, and
-                        invoke |:diffoff|!.
+dq                      Close all but one diff buffer, and |:diffoff|! the
+                        last one.
 
                                                 *fugitive_d?*
 d?                      Show this help.
@@ -465,18 +465,15 @@ Commit maps ~
 
 cc                      Create a commit.
 
-cvc                     Create a commit with -v.
-
 ca                      Amend the last commit and edit the message.
-
-cva                     Amend the last commit with -v.
 
 ce                      Amend the last commit without editing the message.
 
 cw                      Reword the last commit.
 
-cW                      Create an `amend!` commit that rewords the commit
-                        under the cursor.
+cvc                     Create a commit with -v.
+
+cva                     Amend the last commit with -v
 
 cf                      Create a `fixup!` commit for the commit under the
                         cursor.
@@ -490,8 +487,8 @@ cs                      Create a `squash!` commit for the commit under the
 cS                      Create a `squash!` commit for the commit under the
                         cursor and immediately rebase it.
 
-cn                      Create a `squash!` commit for the commit under the
-(formerly cA)           cursor and edit the message.
+cA                      Create a `squash!` commit for the commit under the
+                        cursor and edit the message.
 
 c<Space>                Populate command line with ":Git commit ".
 
