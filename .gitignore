@@ -1,0 +1,6 @@
+Session.vim
+session/
+transient/
+.cache/
+.lsp-session-v1
+projectile-bookmarks.eld
