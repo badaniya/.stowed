@@ -13,7 +13,8 @@ return {
 
       system_prompt = 'COPILOT_INSTRUCTIONS', -- System prompt to use (can be specified manually in prompt via /).
 
-      model = 'gpt-4o', -- Default model to use, see ':CopilotChatModels' for available models (can be specified manually in prompt via $).
+      --model = 'gpt-4o', -- Default model to use, see ':CopilotChatModels' for available models (can be specified manually in prompt via $).
+      model = 'claude-3.7-sonnet-thought', -- Default model to use, see ':CopilotChatModels' for available models (can be specified manually in prompt via $).
       agent = 'copilot', -- Default agent to use, see ':CopilotChatAgents' for available agents (can be specified manually in prompt via @).
       context = nil, -- Default context or array of contexts to use (can be specified manually in prompt via #).
       sticky = nil, -- Default sticky prompt or array of sticky prompts to use at start of every new chat.
