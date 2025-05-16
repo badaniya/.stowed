@@ -94,8 +94,8 @@ sudo apt install -y zsh
 ### 3) Fzf - A fuzzy finder that integrates with various shells and editors
 
 ```bash
-# fzf: Ubuntu package version
-sudo apt install -y fzf
+# fzf: Shell script installer (NOTE: Ensure GNU Stow fzf is done before running the installation script)
+~/.fzf/install
 ```
 
 ### 4) Zoxide - A quick way to change directories to your most frequently used paths
