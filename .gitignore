@@ -1,5 +1,5 @@
 Session.vim
-session/
+vim/**/session/
 transient/
 .cache/
 .lsp-session-v1
