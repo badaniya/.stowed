@@ -177,6 +177,11 @@ if which carapace >/dev/null; then
     source <(carapace _carapace)
 fi
 
+# JWT Shell Completion Support
+if hash jwt > /dev/null; then
+  source <(jwt completion zsh)
+fi
+
 # Fuzzy Finder Support
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
