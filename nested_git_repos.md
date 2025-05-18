@@ -28,7 +28,7 @@ git remote add tmux-thumbs https://github.com/fcsonline/tmux-thumbs
 git remote add tmux-floax https://github.com/omerxx/tmux-floax
 git remote add tmux-fzf-url https://github.com/wfxr/tmux-fzf-url
 git remote add catppuccin https://github.com/catppuccin/tmux
-git remote add tmux-mem-cpu-load https://github.com/thewtex/tmux-mem-cpu-load
+git remote add tmux-cpu https://github.com/tmux-plugins/tmux-cpu
 git subtree add --prefix=tmux/.tmux/plugins/tpm tpm master --squash
 git subtree add --prefix=tmux/.tmux/plugins/tmux-sensible tmux-sensible master --squash
 git subtree add --prefix=tmux/.tmux/plugins/tmux-yank tmux-yank master --squash
@@ -39,7 +39,7 @@ git subtree add --prefix=tmux/.tmux/plugins/tmux-thumbs tmux-thumbs master --squ
 git subtree add --prefix=tmux/.tmux/plugins/tmux-floax tmux-floax main --squash
 git subtree add --prefix=tmux/.tmux/plugins/tmux-fzf-url tmux-fzf-url master --squash
 git subtree add --prefix=tmux/.tmux/plugins/tmux catppuccin main --squash
-git subtree add --prefix=tmux/.tmux/plugins/tmux-mem-cpu-load tmux-mem-cpu-load master --squash
+git subtree add --prefix=tmux/.tmux/plugins/tmux-cpu tmux-cpu master --squash
 ```
 
 ### 2) zsh
