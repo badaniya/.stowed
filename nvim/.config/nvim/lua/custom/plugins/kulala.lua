@@ -13,5 +13,13 @@ return {
     kulala_keymaps_prefix = '',
   },
 
+  -- Add description for keymapping
   vim.api.nvim_set_keymap('n', '<leader>R', '', { desc = '[R]est Request' }),
+
+  -- Use kulala for .http file extensions
+  vim.filetype.add {
+    extension = {
+      ['http'] = 'http',
+    },
+  },
 }
