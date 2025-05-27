@@ -17,7 +17,7 @@ SWITCH_TERMINAL_GEOMETRY="89x25"
 CHASSIS_TERMINAL_GEOMETRY="180x25"
 FULL_TERMINAL_GEOMETRY="180x56"
 
-if [[ -f $HOME/.private_zsh_functions ]]; then
+if [[ -f $HOME/.private_zsh_functions.zsh ]]; then
     source $HOME/.private_zsh_functions.zsh
 fi
 
