@@ -1,8 +1,8 @@
 # Source Common Bash Functions
-if [[ "$SHELL" =~ bash && -f $HOME/.bash_functions ]]; then
-    source $HOME/.bash_functions
-elif [[ "$SHELL" =~ zsh && -f $HOME/.zsh_functions ]]; then
-    source $HOME/.zsh_functions
+if [[ "$SHELL" =~ bash && -f $HOME/.bash_functions.sh ]]; then
+    source $HOME/.bash_functions.sh
+elif [[ "$SHELL" =~ zsh && -f $HOME/.zsh_functions.zsh ]]; then
+    source $HOME/.zsh_functions.zsh
 fi
 
 # Source Other Aliases

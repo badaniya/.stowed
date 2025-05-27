@@ -18,7 +18,7 @@ CHASSIS_TERMINAL_GEOMETRY="180x25"
 FULL_TERMINAL_GEOMETRY="180x56"
 
 if [[ -f $HOME/.private_zsh_functions ]]; then
-    source $HOME/.private_zsh_functions
+    source $HOME/.private_zsh_functions.zsh
 fi
 
 host_ip()
