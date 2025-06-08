@@ -156,9 +156,9 @@ return {
     picker = { enabled = true },
     notifier = { enabled = true },
     quickfile = { enabled = true },
-    scope = { enabled = false },
+    scope = { enabled = true },
     scroll = { enabled = true },
     statuscolumn = { enabled = false },
-    words = { enabled = false },
+    words = { enabled = true },
   },
 }
