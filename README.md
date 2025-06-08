@@ -195,6 +195,13 @@ nix-env -iA nixpkgs.tmuxinator
 nix-env -iA nixpkgs.gitui
 ```
 
+### 3) Image and Diagram Markdown Support in NeoVIM
+
+```bash
+nix-env -iA nixpkgs.imagemagick
+nix-env -iA nixpkgs.mermaid-cli
+```
+
 ## Linux Development Environment Setup
 
 ### 1) Golang
