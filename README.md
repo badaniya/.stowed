@@ -29,6 +29,8 @@ This repository is used to store all dot-config files for various shells and edi
 
 - tmuxinator
 - gitui
+- imagemagick
+- mermaid-cli
 
 ## How To Use GNU Stow
 
@@ -195,7 +197,7 @@ nix-env -iA nixpkgs.tmuxinator
 nix-env -iA nixpkgs.gitui
 ```
 
-### 3) Image and Diagram Markdown Support in NeoVIM
+### 3) Image and Diagram Markdown Support in Neovim
 
 ```bash
 nix-env -iA nixpkgs.imagemagick
