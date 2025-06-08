@@ -12,6 +12,7 @@ return {
     explorer = { enabled = true },
     indent = { enabled = true },
     image = {
+      enabled = true,
       ---@class snacks.image.Config
       ---@field enabled? boolean enable image viewer
       ---@field wo? vim.wo|{} options for windows showing the image
@@ -22,7 +23,6 @@ return {
       --- When `nil`, the path is resolved relative to the file.
       ---@field resolve? fun(file: string, src: string): string?
       ---@field convert? snacks.image.convert.Config
-      enabled = true,
       formats = {
         'png',
         'jpg',
@@ -138,7 +138,21 @@ return {
         },
       },
     },
-    input = { enabled = true },
+    input = {
+      enabled = true,
+      ---@class snacks.input.Config
+      ---@field enabled? boolean
+      ---@field win? snacks.win.Config|{}
+      ---@field icon? string
+      ---@field icon_pos? snacks.input.Pos
+      ---@field prompt_pos? snacks.input.Pos
+      icon = ' ',
+      icon_hl = 'SnacksInputIcon',
+      icon_pos = 'left',
+      prompt_pos = 'title',
+      win = { style = 'input' },
+      expand = true,
+    },
     picker = { enabled = true },
     notifier = { enabled = true },
     quickfile = { enabled = true },
