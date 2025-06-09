@@ -82,13 +82,11 @@ plugins=(
     tmux-xpanes
 )
 
-if [[ -f $ZSH/custom/plugins/zsh-syntax-highlighting/catppuccin/themes/catppuccin_mocha-zsh-syntax-highlighting.zsh ]]; then
-    source $ZSH/custom/plugins/zsh-syntax-highlighting/catppuccin/themes/catppuccin_mocha-zsh-syntax-highlighting.zsh
-fi
+# Syntax highlighting plugin support
+[[ -f $ZSH/custom/plugins/zsh-syntax-highlighting/catppuccin/themes/catppuccin_mocha-zsh-syntax-highlighting.zsh ]] && source $ZSH/custom/plugins/zsh-syntax-highlighting/catppuccin/themes/catppuccin_mocha-zsh-syntax-highlighting.zsh
 
-if [[ -f $ZSH/oh-my-zsh.sh ]]; then
-    source $ZSH/oh-my-zsh.sh
-fi
+# Main oh-my-zsh script
+[[ -f $ZSH/oh-my-zsh.sh ]] && source $ZSH/oh-my-zsh.sh
 
 # User configuration
 export ZVM_VI_EDITOR=nvim
@@ -156,19 +154,14 @@ bindkey "^[[1;3A" up-line-or-beginning-search   # [ALT] + Cursor up
 #bindkey "^[[1;3B" down-line-or-local-history  # [ALT] + Cursor up
 bindkey "^[[1;3B" down-line-or-beginning-search  # [ALT] + Cursor up
 
-# Source in existing bash stuff
-if [ -f ~/.bash_profile ]; then
-    source ~/.bash_profile
-fi 
-
-if [ -f ~/.bash_aliases ]; then
-    source ~/.bash_aliases
-fi
+# Source in existing bash profile and aliases
+[[ -f ~/.bash_profile ]] && source ~/.bash_profile
+[[ -f ~/.bash_aliases ]] && source ~/.bash_aliases
 
 # NVM - Node Version Manager
 export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+[[ -s "$NVM_DIR/nvm.sh" ]] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[[ -s "$NVM_DIR/bash_completion" ]] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 # Carapace Shell Completion Support
 if which carapace >/dev/null; then 
@@ -179,22 +172,19 @@ if which carapace >/dev/null; then
 fi
 
 # JWT Shell Completion Support
-if hash jwt > /dev/null; then
-  source <(jwt completion zsh)
-fi
+hash jwt >/dev/null && source <(jwt completion zsh)
 
 # Fuzzy Finder Support
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+[[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
 
 # Forgit Support
-[ -f $ZSH/custom/plugins/forgit/forgit.plugin.zsh ] && source $ZSH/custom/plugins/forgit/forgit.plugin.zsh
+[[ -f $ZSH/custom/plugins/forgit/forgit.plugin.zsh ]] && source $ZSH/custom/plugins/forgit/forgit.plugin.zsh
 
 # Zoxide Support
-[ -f ~/.local/bin/zoxide ] && eval "$(zoxide init zsh)"
+which zoxide >/dev/null && eval "$(zoxide init zsh)"
 
 # Xpanes Support
-[ -f $ZSH/custom/plugins/tmux-xpanes/completion.zsh ] && source $ZSH/custom/plugins/tmux-xpanes/completion.zsh
+[[ -f $ZSH/custom/plugins/tmux-xpanes/completion.zsh ]] && source $ZSH/custom/plugins/tmux-xpanes/completion.zsh
 
 # Starship Shell
-eval "$(starship init zsh)"
-
+which starship >/dev/null && eval "$(starship init zsh)"
