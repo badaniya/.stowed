@@ -13,7 +13,7 @@ background-opacity = 0.85
 
 # Font Config
 font-family = "JetBrainsMono Nerd Font"
-font-size = 18.0
+font-size = 16.0
 
 # Keybinds
 keybind = f10=toggle_window_decorations
