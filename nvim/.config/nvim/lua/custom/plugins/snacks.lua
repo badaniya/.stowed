@@ -7,7 +7,9 @@ return {
     -- your configuration comes here
     -- or leave it empty to use the default settings
     -- refer to the configuration section below
+
     bigfile = { enabled = true },
+
     dashboard = {
       enabled = true,
       ---@class snacks.dashboard.Config
@@ -78,8 +80,11 @@ return {
         { section = 'startup' },
       },
     },
+
     explorer = { enabled = true },
+
     indent = {
+      enabled = true,
       ---@class snacks.indent.Config
       ---@field enabled? boolean
       indent = {
@@ -101,17 +106,17 @@ return {
         --     "SnacksIndent8",
         -- },
       },
-      -- animate scopes. Enabled by default for Neovim >= 0.10
-      -- Works on older versions but has to trigger redraws during animation.
-      ---@class snacks.indent.animate: snacks.animate.Config
-      ---@field enabled? boolean
-      --- * out: animate outwards from the cursor
-      --- * up: animate upwards from the cursor
-      --- * down: animate downwards from the cursor
-      --- * up_down: animate up or down based on the cursor position
-      ---@field style? "out"|"up_down"|"down"|"up"
       animate = {
         enabled = vim.fn.has 'nvim-0.10' == 1,
+        -- animate scopes. Enabled by default for Neovim >= 0.10
+        -- Works on older versions but has to trigger redraws during animation.
+        ---@class snacks.indent.animate: snacks.animate.Config
+        ---@field enabled? boolean
+        --- * out: animate outwards from the cursor
+        --- * up: animate upwards from the cursor
+        --- * down: animate downwards from the cursor
+        --- * up_down: animate up or down based on the cursor position
+        ---@field style? "out"|"up_down"|"down"|"up"
         style = 'out',
         easing = 'linear',
         duration = {
@@ -151,6 +156,7 @@ return {
         return vim.g.snacks_indent ~= false and vim.b[buf].snacks_indent ~= false and vim.bo[buf].buftype == ''
       end,
     },
+
     image = {
       enabled = true,
       ---@class snacks.image.Config
@@ -278,6 +284,7 @@ return {
         },
       },
     },
+
     input = {
       enabled = true,
       ---@class snacks.input.Config
@@ -293,12 +300,19 @@ return {
       win = { style = 'input' },
       expand = true,
     },
+
     picker = { enabled = true },
+
     notifier = { enabled = true },
+
     quickfile = { enabled = true },
+
     scope = { enabled = true },
+
     scroll = { enabled = false },
+
     statuscolumn = { enabled = false },
+
     words = { enabled = true },
   },
 }
