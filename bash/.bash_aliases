@@ -17,7 +17,6 @@ alias iosched="sudo bash -c 'echo bfq > /sys/block/sda/queue/scheduler'; cat /sy
 
 # Linux Aliases
 alias fzfbat="fzf --preview 'bat --color=always --style=numbers --line-range=:500 {}'"
-alias le="eza --icons"
 alias l="pls -d std"
 alias xpanes='xpanes -t -B "tmux select-pane -t \${TMUX_PANE} -T \"ARG:{} PID:$$\""'
 
