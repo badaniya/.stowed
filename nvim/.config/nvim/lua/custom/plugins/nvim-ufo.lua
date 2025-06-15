@@ -33,8 +33,9 @@ return {
       vim.o.foldenable = true
       vim.o.fillchars = [[eob: ,fold: ,foldopen:,foldsep: ,foldclose:]]
 
-      vim.keymap.set('n', 'zR', require('ufo').openAllFolds)
-      vim.keymap.set('n', 'zM', require('ufo').closeAllFolds)
+      -- These are already set
+      --vim.keymap.set('n', 'zR', require('ufo').openAllFolds)
+      --vim.keymap.set('n', 'zM', require('ufo').closeAllFolds)
     end,
 
     config = function(_, opts)
