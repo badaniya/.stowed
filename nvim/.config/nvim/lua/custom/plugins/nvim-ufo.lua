@@ -34,10 +34,6 @@ return {
       vim.o.fillchars = [[eob: ,fold: ,foldopen:󰧖,foldsep:│,foldclose:󰧚]]
       --vim.o.fillchars = [[eob: ,fold: ,foldopen:󰧖,foldsep:┊,foldclose:󰧚]]
       --vim.o.fillchars = [[eob: ,fold: ,foldopen:󰧖,foldsep:╎,foldclose:󰧚]]
-
-      -- These are already set
-      --vim.keymap.set('n', 'zR', require('ufo').openAllFolds)
-      --vim.keymap.set('n', 'zM', require('ufo').closeAllFolds)
     end,
 
     config = function(_, opts)
@@ -79,9 +75,38 @@ return {
       require('ufo').setup(opts)
     end,
   },
-  -- Folding preview, by default h and l keys are used.
-  -- On first press of h key, when cursor is on a closed fold, the preview will be shown.
-  -- On second press the preview will be closed and fold will be opened.
-  -- When preview is opened, the l key will close it and open fold. In all other cases these keys will work as usual.
-  { 'anuvyklack/fold-preview.nvim', dependencies = 'anuvyklack/keymap-amend.nvim', config = true },
+
+  -- Folding session persistence
+  {
+    'chrisgrieser/nvim-origami',
+    event = 'VeryLazy',
+    opts = {}, -- needed even when using default config
+
+    config = function(_, opts)
+      -- default settings
+      require('origami').setup {
+        -- features incompatible with `nvim-ufo`
+        useLspFoldsWithTreesitterFallback = not package.loaded['ufo'],
+        autoFold = {
+          enabled = false,
+          kinds = { 'comment', 'imports' }, ---@type lsp.FoldingRangeKind[]
+        },
+        foldtextWithLineCount = {
+          enabled = not package.loaded['ufo'],
+          template = '   %s lines', -- `%s` gets the number of folded lines
+          hlgroupForCount = 'Comment',
+        },
+
+        -- can be used with or without `nvim-ufo`
+        pauseFoldsOnSearch = true,
+        foldKeymaps = {
+          setup = true, -- modifies `h` and `l`
+          hOnlyOpensOnFirstColumn = false,
+        },
+
+        -- features requiring `nvim-ufo`
+        keepFoldsAcrossSessions = package.loaded['ufo'],
+      }
+    end,
+  },
 }
