@@ -209,6 +209,12 @@ nix-env -iA nixpkgs.imagemagick
 nix-env -iA nixpkgs.mermaid-cli
 ```
 
+### 4) Kulala format conversion - Openapi to http
+
+```bash
+nix-env -iA nixpkgs.kulala-fmt
+```
+
 ## Linux Development Environment Setup
 
 ### 1) Golang
