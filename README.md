@@ -205,6 +205,7 @@ nix-env -iA nixpkgs.gitui
 ### 3) Image and Diagram Markdown Support in Neovim
 
 ```bash
+# Nix dependency
 nix-env -iA nixpkgs.imagemagick
 nix-env -iA nixpkgs.mermaid-cli
 ```
@@ -212,6 +213,9 @@ nix-env -iA nixpkgs.mermaid-cli
 ### 4) Kulala format conversion - Openapi to http
 
 ```bash
+npm install -g @mistweaverco/kulala-fmt
+# or
+# Nix dependency
 nix-env -iA nixpkgs.kulala-fmt
 ```
 
