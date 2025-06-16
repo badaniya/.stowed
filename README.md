@@ -77,6 +77,11 @@ rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/gitui; stow -d $HOME/.stow
 # ghostty: Ubuntu debian version
 wget https://github.com/mkasberg/ghostty-ubuntu/releases/download/1.1.3-0-ppa2/ghostty_1.1.3-0.ppa2_amd64_24.04.deb
 sudo dpkg -i ghostty_1.1.3-0.ppa2_amd64_24.04.deb
+
+# NOTE: Copy Ghostty's terminfo to a remote machine if tmux fails with: `missing or unsuitable terminal: xterm-ghostty`
+# The following one-liner will export the terminfo entry from your host and import it on the remote machine:
+# Reference: https://ghostty.org/docs/help/terminfo#copy-ghostty's-terminfo-to-a-remote-machine 
+infocmp -x xterm-ghostty | ssh <YOUR-SERVER> -- tic -x -
 ```
 
 ### 1) Tmux - A terminal multiplexer to maintain terminal sessions and split-pane layouts
