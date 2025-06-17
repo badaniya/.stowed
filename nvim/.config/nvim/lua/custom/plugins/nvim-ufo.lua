@@ -32,8 +32,7 @@ return {
       vim.o.foldlevelstart = 99
       vim.o.foldenable = true
       vim.o.fillchars = [[eob: ,fold: ,foldopen:󰧖,foldsep:│,foldclose:󰧚]]
-      --vim.o.fillchars = [[eob: ,fold: ,foldopen:󰧖,foldsep:┊,foldclose:󰧚]]
-      --vim.o.fillchars = [[eob: ,fold: ,foldopen:󰧖,foldsep:╎,foldclose:󰧚]]
+      --vim.o.fillchars = [[eob: ,fold: ,foldopen:,foldsep:│,foldclose:]]
     end,
 
     config = function(_, opts)
@@ -42,6 +41,7 @@ return {
         local totalLines = vim.api.nvim_buf_line_count(0)
         local foldedLines = endLnum - lnum
         local suffix = (' 󰘕 %d %d%%'):format(foldedLines, foldedLines / totalLines * 100)
+        --local suffix = (' 󰘖 %d %d%%'):format(foldedLines, foldedLines / totalLines * 100)
         local sufWidth = vim.fn.strdisplaywidth(suffix)
         local targetWidth = width - sufWidth
         local curWidth = 0
