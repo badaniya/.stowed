@@ -82,6 +82,7 @@ return {
     event = 'VeryLazy',
     opts = {}, -- needed even when using default config
 
+    tag = 'v1.9', -- 2.0 does not work with nvim-ufo
     config = function(_, opts)
       -- default settings
       require('origami').setup {
