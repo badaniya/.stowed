@@ -81,8 +81,6 @@ return {
       },
     },
 
-    explorer = { enabled = true },
-
     indent = {
       enabled = true,
       ---@class snacks.indent.Config
@@ -301,7 +299,18 @@ return {
       expand = true,
     },
 
-    picker = { enabled = true },
+    explorer = {
+      enabled = true,
+    },
+
+    picker = {
+      enabled = true,
+      explorer = {
+        -- your explorer picker configuration comes here
+        -- or leave it empty to use the default settings
+        include = { 'hidden' },
+      },
+    },
 
     notifier = { enabled = true },
 
@@ -314,5 +323,9 @@ return {
     statuscolumn = { enabled = false },
 
     words = { enabled = true },
+  },
+
+  keys = {
+    { '\\', ':lua Snacks.explorer()<CR>', desc = 'Explorer reveal', silent = true },
   },
 }
