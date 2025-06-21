@@ -342,6 +342,12 @@ return {
   },
 
   keys = {
-    { '\\', ':lua Snacks.explorer()<CR>', desc = 'Explorer reveal', silent = true },
+    {
+      '\\',
+      function()
+        Snacks.explorer()
+      end,
+      desc = 'File Explorer',
+    },
   },
 }
