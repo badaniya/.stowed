@@ -362,7 +362,7 @@ return {
 
     -- Picker - Git
     {
-      '<leader>gb',
+      '<leader>gB',
       function()
         Snacks.picker.git_branches()
       end,
