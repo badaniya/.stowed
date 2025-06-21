@@ -305,11 +305,10 @@ return {
 
     picker = {
       enabled = true,
-      explorer = {
-        -- your explorer picker configuration comes here
-        -- or leave it empty to use the default settings
-        include = { 'hidden' },
-      },
+      -- show hidden files like .env
+      hidden = true,
+      -- show files ignored by git like node_modules
+      ignored = true,
     },
 
     notifier = { enabled = true },
@@ -320,7 +319,24 @@ return {
 
     scroll = { enabled = false },
 
-    statuscolumn = { enabled = false },
+    statuscolumn = {
+      enabled = true,
+      ---@class snacks.statuscolumn.Config
+      ---@field left snacks.statuscolumn.Components
+      ---@field right snacks.statuscolumn.Components
+      ---@field enabled? boolean
+      left = { 'mark', 'sign' }, -- priority of signs on the left (high to low)
+      right = { 'fold', 'git' }, -- priority of signs on the right (high to low)
+      folds = {
+        open = true, -- show open fold icons
+        git_hl = true, -- use Git Signs hl for fold icons
+      },
+      git = {
+        -- patterns to match Git signs
+        patterns = { 'GitSign', 'MiniDiffSign' },
+      },
+      refresh = 50, -- refresh at most every 50ms
+    },
 
     words = { enabled = true },
   },
