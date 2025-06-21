@@ -1070,6 +1070,12 @@ require('lazy').setup({
       -- mini.sessions
       require('mini.sessions').setup()
 
+      -- mini.splitjoin
+      require('mini.splitjoin').setup()
+
+      -- mini.comment
+      require('mini.comment').setup()
+
       -- ... and there is more!
       --  Check out: https://github.com/echasnovski/mini.nvim
     end,
