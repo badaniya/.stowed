@@ -390,7 +390,7 @@ return {
 
     -- Picker - Git
     {
-      '<leader>gB',
+      '<leader>gb',
       function()
         Snacks.picker.git_branches()
       end,
@@ -437,6 +437,39 @@ return {
         Snacks.picker.git_log_file()
       end,
       desc = 'Git Log File',
+    },
+    -- Git Browse (Open in Browser)
+    {
+      '<leader>gB',
+      function()
+        Snacks.gitbrowse()
+      end,
+      desc = 'Git Browse',
+      mode = { 'n', 'v' },
+    },
+    -- LazyGit
+    {
+      '<leader>gg',
+      function()
+        Snacks.lazygit()
+      end,
+      desc = 'Lazygit',
+    },
+    -- Notification History
+    {
+      '<leader>n',
+      function()
+        Snacks.notifier.show_history()
+      end,
+      desc = 'Notification History',
+    },
+    -- File Rename
+    {
+      '<leader>cR',
+      function()
+        Snacks.rename.rename_file()
+      end,
+      desc = 'Rename File',
     },
   },
 }

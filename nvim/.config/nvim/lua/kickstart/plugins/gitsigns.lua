@@ -49,7 +49,7 @@ return {
         map('n', '<leader>ghp', gitsigns.preview_hunk, { desc = '[G]it [H]unk [P]review' })
         map('n', '<leader>gs', gitsigns.stage_buffer, { desc = '[G]it [S]tage Buffer' })
         map('n', '<leader>gr', gitsigns.reset_buffer, { desc = '[G]it [R]eset Buffer' })
-        map('n', '<leader>gb', gitsigns.blame_line, { desc = '[G]it [B]lame Line' })
+        -- map('n', '<leader>gb', gitsigns.blame_line, { desc = '[G]it [B]lame Line' })
         map('n', '<leader>gd', '', { desc = '[G]it [D]iff' })
         map('n', '<leader>gdi', gitsigns.diffthis, { desc = '[G]it [D]iff Against [I]ndex' })
         map('n', '<leader>gdc', function()
