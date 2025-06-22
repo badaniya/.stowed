@@ -505,6 +505,13 @@ return {
       end,
       desc = 'Lazygit',
     },
+    {
+      '<leader>gr',
+      function()
+        Snacks.lazygit().reflog()
+      end,
+      desc = 'Lazygit Reflog',
+    },
 
     -- File Rename
     {
