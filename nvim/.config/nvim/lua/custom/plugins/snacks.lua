@@ -523,7 +523,13 @@ return {
       desc = 'Git Browse',
       mode = { 'n', 'v' },
     },
+
     -- LazyGit
+    {
+      '<leader>L',
+      '',
+      desc = '[L]azygit',
+    },
     {
       '<leader>Lg',
       function()
@@ -665,4 +671,7 @@ return {
       end,
     })
   end,
+
+  -- Label for leader u
+  vim.keymap.set('n', '<leader>u', '', { desc = '[U]ser Toggles' }),
 }
