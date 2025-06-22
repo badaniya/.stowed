@@ -47,14 +47,14 @@ return {
         map('n', '<leader>ghu', gitsigns.undo_stage_hunk, { desc = '[G]it [H]unk Stage [U]ndo' })
         map('n', '<leader>ghr', gitsigns.reset_hunk, { desc = '[G]it [H]unk [R]eset' })
         map('n', '<leader>ghp', gitsigns.preview_hunk, { desc = '[G]it [H]unk [P]review' })
-        map('n', '<leader>gs', gitsigns.stage_buffer, { desc = '[G]it [S]tage Buffer' })
-        map('n', '<leader>gr', gitsigns.reset_buffer, { desc = '[G]it [R]eset Buffer' })
+        map('n', '<leader>ga', gitsigns.stage_buffer, { desc = '[G]it [A]dd Stage Buffer' })
+        map('n', '<leader>gr', gitsigns.reset_buffer, { desc = '[G]it [R]eset Stage Buffer' })
         -- map('n', '<leader>gb', gitsigns.blame_line, { desc = '[G]it [B]lame Line' })
-        map('n', '<leader>gd', '', { desc = '[G]it [D]iff' })
-        map('n', '<leader>gdi', gitsigns.diffthis, { desc = '[G]it [D]iff Against [I]ndex' })
-        map('n', '<leader>gdc', function()
-          gitsigns.diffthis '@'
-        end, { desc = '[G]it [D]iff Against Last [C]ommit' })
+        -- map('n', '<leader>gd', '', { desc = '[G]it [D]iff' })
+        -- map('n', '<leader>gdi', gitsigns.diffthis, { desc = '[G]it [D]iff Against [I]ndex' })
+        -- map('n', '<leader>gdc', function()
+        --   gitsigns.diffthis '@'
+        -- end, { desc = '[G]it [D]iff Against Last [C]ommit' })
         -- Toggles
         map('n', '<leader>gt', '', { desc = '[G]it [T]oggle' })
         map('n', '<leader>gtb', gitsigns.toggle_current_line_blame, { desc = '[G]it [T]oggle Show [B]lame Line' })
