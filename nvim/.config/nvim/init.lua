@@ -267,7 +267,7 @@ require('lazy').setup({
         { '<leader>d_', hidden = true },
         { '<leader>f', group = '[F]ind' },
         { '<leader>f_', hidden = true },
-        { '<leader>g', group = '[G]it', mode = { 'n', 'i' } },
+        { '<leader>g', group = '[G]it', mode = 'n' },
         { '<leader>g_', hidden = true },
         { '<leader>g', group = '[G]it Hunk', mode = 'v' },
         { '<leader>g_', hidden = true },
