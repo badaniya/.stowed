@@ -429,42 +429,42 @@ return {
 
     -- Picker - Find
     {
-      '<leader>fb',
+      '<leader>Fb',
       function()
         Snacks.picker.buffers()
       end,
       desc = 'Buffers',
     },
     {
-      '<leader>fc',
+      '<leader>Fc',
       function()
         Snacks.picker.files { cwd = vim.fn.stdpath 'config' }
       end,
       desc = 'Find Config File',
     },
     {
-      '<leader>ff',
+      '<leader>Ff',
       function()
         Snacks.picker.files()
       end,
       desc = 'Find Files',
     },
     {
-      '<leader>fg',
+      '<leader>Fg',
       function()
         Snacks.picker.git_files()
       end,
       desc = 'Find Git Files',
     },
     {
-      '<leader>fp',
+      '<leader>Fp',
       function()
         Snacks.picker.projects()
       end,
       desc = 'Projects',
     },
     {
-      '<leader>fr',
+      '<leader>Fr',
       function()
         Snacks.picker.recent()
       end,
