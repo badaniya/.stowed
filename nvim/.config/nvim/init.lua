@@ -748,10 +748,24 @@ require('lazy').setup({
 
       -- Add/delete/replace surroundings (brackets, quotes, etc.)
       --
-      -- - saiw) - [S]urround [A]dd [I]nner [W]ord [)]Paren
-      -- - sd'   - [S]urround [D]elete [']quotes
-      -- - sr)'  - [S]urround [R]eplace [)] [']
-      require('mini.surround').setup()
+      -- - zaiw) - [S]urround [A]dd [I]nner [W]ord [)]Paren
+      -- - zd'   - [S]urround [D]elete [']quotes
+      -- - zr)'  - [S]urround [R]eplace [)] [']
+      require('mini.surround').setup {
+        -- Module mappings. Use `''` (empty string) to disable one.
+        mappings = {
+          add = 'za', -- Add surrounding in Normal and Visual modes
+          delete = 'zd', -- Delete surrounding
+          find = 'zf', -- Find surrounding (to the right)
+          find_left = 'zF', -- Find surrounding (to the left)
+          highlight = 'zh', -- Highlight surrounding
+          replace = 'zr', -- Replace surrounding
+          update_n_lines = 'zn', -- Update `n_lines`
+
+          suffix_last = 'l', -- Suffix to search with "prev" method
+          suffix_next = 'n', -- Suffix to search with "next" method
+        },
+      }
 
       -- Simple and easy statusline.
       --  You could remove this setup call if you don't like it,
