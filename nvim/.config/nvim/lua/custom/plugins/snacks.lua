@@ -889,7 +889,4 @@ return {
       end,
     })
   end,
-
-  -- Label for leader u
-  vim.keymap.set('n', '<leader>u', '', { desc = '[U]ser Toggles' }),
 }

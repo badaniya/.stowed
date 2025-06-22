@@ -277,6 +277,8 @@ require('lazy').setup({
         { '<leader>s_', hidden = true },
         { '<leader>t', group = '[T]rouble' },
         { '<leader>t_', hidden = true },
+        { '<leader>u', group = '[U]ser Toggles' },
+        { '<leader>u_', hidden = true },
         { '<leader>w', group = '[W]orkspace' },
         { '<leader>w_', hidden = true },
       }
