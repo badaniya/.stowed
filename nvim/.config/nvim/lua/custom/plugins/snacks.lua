@@ -309,6 +309,10 @@ return {
       hidden = true,
       -- show files ignored by git like node_modules
       ignored = true,
+      -- show most search results first
+      matcher = {
+        frecency = true,
+      },
       win = {
         input = {
           keys = {
