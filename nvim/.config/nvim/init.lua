@@ -265,8 +265,10 @@ require('lazy').setup({
         { '<leader>c_', hidden = true },
         { '<leader>d', group = '[D]ocument' },
         { '<leader>d_', hidden = true },
-        { '<leader>F', group = '[F]ind' },
-        { '<leader>F_', hidden = true },
+        { '<leader>f', group = '[F]ind' },
+        { '<leader>f_', hidden = true },
+        { '<leader>g', group = '[G]it', mode = { 'n', 'i' } },
+        { '<leader>g_', hidden = true },
         { '<leader>g', group = '[G]it Hunk', mode = 'v' },
         { '<leader>g_', hidden = true },
         { '<leader>l', group = '[L]SP' },
@@ -669,7 +671,7 @@ require('lazy').setup({
     lazy = false,
     keys = {
       {
-        '<leader>f',
+        '<leader>F',
         function()
           require('conform').format { async = true, lsp_fallback = true }
         end,
