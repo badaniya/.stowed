@@ -367,6 +367,8 @@ return {
     },
 
     words = { enabled = true },
+
+    zen = { enabled = true },
   },
 
   keys = {
@@ -560,35 +562,35 @@ return {
       end,
       desc = 'LSP Workspace Symbols',
     },
-  },
-  -- Other
-  {
-    '<leader>z',
-    function()
-      Snacks.zen()
-    end,
-    desc = 'Toggle Zen Mode',
-  },
-  {
-    '<leader>Z',
-    function()
-      Snacks.zen.zoom()
-    end,
-    desc = 'Toggle Zoom',
-  },
-  {
-    '<leader>bd',
-    function()
-      Snacks.bufdelete()
-    end,
-    desc = 'Delete Buffer',
-  },
-  {
-    '<leader>un',
-    function()
-      Snacks.notifier.hide()
-    end,
-    desc = 'Dismiss All Notifications',
+    -- Other
+    {
+      '<leader>z',
+      function()
+        Snacks.zen()
+      end,
+      desc = 'Toggle Zen Mode',
+    },
+    {
+      '<leader>Z',
+      function()
+        Snacks.zen.zoom()
+      end,
+      desc = 'Toggle Zoom',
+    },
+    {
+      '<leader>bd',
+      function()
+        Snacks.bufdelete()
+      end,
+      desc = 'Delete Buffer',
+    },
+    {
+      '<leader>un',
+      function()
+        Snacks.notifier.hide()
+      end,
+      desc = 'Dismiss All Notifications',
+    },
   },
 
   init = function()
