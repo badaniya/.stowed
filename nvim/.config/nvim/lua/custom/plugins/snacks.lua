@@ -317,7 +317,7 @@ return {
         input = {
           keys = {
             ['<a-s>'] = { 'flash', mode = { 'n', 'i' } },
-            -- ['s'] = { 'flash' }, -- This mapping overrides mini.surround
+            ['s'] = { 'flash' },
           },
         },
       },
