@@ -317,7 +317,7 @@ return {
         input = {
           keys = {
             ['<a-s>'] = { 'flash', mode = { 'n', 'i' } },
-            ['s'] = { 'flash' },
+            -- ['s'] = { 'flash' }, -- This mapping overrides mini.surround
           },
         },
       },
@@ -338,18 +338,6 @@ return {
               local idx = picker.list:row2idx(match.pos[1])
               picker.list:_move(idx, true, true)
             end,
-          }
-        end,
-        trouble = function(picker)
-          require('trouble.sources.snacks').actions, win = {
-            input = {
-              keys = {
-                ['<c-t>'] = {
-                  'trouble_open',
-                  mode = { 'n', 'i' },
-                },
-              },
-            },
           }
         end,
       },
