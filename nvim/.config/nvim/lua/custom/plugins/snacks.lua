@@ -340,6 +340,18 @@ return {
             end,
           }
         end,
+        trouble = function(picker)
+          require('trouble.sources.snacks').actions, win = {
+            input = {
+              keys = {
+                ['<c-t>'] = {
+                  'trouble_open',
+                  mode = { 'n', 'i' },
+                },
+              },
+            },
+          }
+        end,
       },
     },
 
@@ -422,6 +434,20 @@ return {
       desc = 'Help Pages',
     },
     {
+      '<leader>st',
+      function()
+        Snacks.picker.todo_comments()
+      end,
+      desc = 'Todo',
+    },
+    {
+      '<leader>sT',
+      function()
+        Snacks.picker.todo_comments { keywords = { 'TODO', 'FIX', 'FIXME' } }
+      end,
+      desc = 'Todo/Fix/Fixme',
+    },
+    {
       '<leader>N',
       function()
         Snacks.notifier.show_history()
@@ -499,18 +525,25 @@ return {
     },
     -- LazyGit
     {
-      '<leader>gg',
+      '<leader>Lg',
       function()
         Snacks.lazygit()
       end,
       desc = 'Lazygit',
     },
     {
-      '<leader>gr',
+      '<leader>Ll',
       function()
-        Snacks.lazygit().reflog()
+        Snacks.lazygit.log()
       end,
-      desc = 'Lazygit Reflog',
+      desc = 'Lazygit Log',
+    },
+    {
+      '<leader>Lf',
+      function()
+        Snacks.lazygit.log_file()
+      end,
+      desc = 'Lazygit Log File',
     },
 
     -- File Rename
