@@ -429,42 +429,42 @@ return {
 
     -- Picker - Find
     {
-      '<leader>Fb',
+      '<leader>fb',
       function()
         Snacks.picker.buffers()
       end,
       desc = 'Buffers',
     },
     {
-      '<leader>Fc',
+      '<leader>fc',
       function()
         Snacks.picker.files { cwd = vim.fn.stdpath 'config' }
       end,
       desc = 'Find Config File',
     },
     {
-      '<leader>Ff',
+      '<leader>ff',
       function()
         Snacks.picker.files()
       end,
       desc = 'Find Files',
     },
     {
-      '<leader>Fg',
+      '<leader>fg',
       function()
         Snacks.picker.git_files()
       end,
       desc = 'Find Git Files',
     },
     {
-      '<leader>Fp',
+      '<leader>fp',
       function()
         Snacks.picker.projects()
       end,
       desc = 'Projects',
     },
     {
-      '<leader>Fr',
+      '<leader>fr',
       function()
         Snacks.picker.recent()
       end,
@@ -711,7 +711,7 @@ return {
       desc = 'Git Stash',
     },
     {
-      '<leader>gD',
+      '<leader>gd',
       function()
         Snacks.picker.git_diff()
       end,
