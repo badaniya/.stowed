@@ -20,7 +20,11 @@ return {
       foldtext = {
         enabled = true,
         lineCount = {
-          template = '…  󰘖 %d', -- `%d` is repalced with the number of folded lines
+          template = '…  󰐒 %d', -- `%d` is repalced with the number of folded lines
+          -- template = '…  󰘖 %d', -- `%d` is repalced with the number of folded lines
+          -- template = '…  󰉸 %d', -- `%d` is repalced with the number of folded lines
+          -- template = '…   %d', -- `%d` is repalced with the number of folded lines
+          -- template = '…   %d', -- `%d` is repalced with the number of folded lines
           hlgroup = 'Comment',
         },
         diagnostics = {
