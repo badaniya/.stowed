@@ -271,6 +271,8 @@ require('lazy').setup({
         { '<leader>g_', hidden = true },
         { '<leader>g', group = '[G]it Hunk', mode = 'v' },
         { '<leader>g_', hidden = true },
+        { '<leader>K', group = '[K]ulala Requests' },
+        { '<leader>K_', hidden = true },
         { '<leader>l', group = '[L]SP' },
         { '<leader>l_', hidden = true },
         { '<leader>r', group = '[R]ename' },
