@@ -717,6 +717,37 @@ require('lazy').setup({
       require('catppuccin').setup {
         flavour = 'mocha', -- latte, frappe, macchiato, mocha
         transparent_background = true, -- disables setting the background color.
+        float = {
+          transparent = true, -- enable transparent floating windows
+          solid = false, -- use solid styling for floating windows, see |winborder|
+        },
+
+        auto_integrations = true, -- automatically detect lazy plugins for theme integration
+        integrations = { -- forced integrations
+          barbar = false,
+          dadbod_ui = false,
+          --gitsigns = {
+          --  enabled = true,
+          --  -- align with the transparent_background option by default
+          --  transparent = true,
+          --},
+          --treesitter = true,
+          --notify = true,
+          --mini = {
+          --  enabled = true,
+          --  indentscope_color = '',
+          --},
+          --diffview = true,
+          --markview = true,
+          --neotest = true,
+          --snacks = {
+          --  enabled = true,
+          --  indent_scope_color = '', -- catppuccin color (eg. `lavender`) Default: text
+          --},
+          --lsp_trouble = true,
+          --gitgutter = true,
+          --which_key = true,
+        },
       }
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
