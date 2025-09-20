@@ -61,6 +61,9 @@ return {
           'dadbod',
           'buffer',
         },
+        codecompanion = {
+          'codecompanion',
+        },
       },
       providers = {
         -- Add copilot to the completion providers
