@@ -6,5 +6,7 @@ return {
   build = 'npm install -g mcp-hub@latest', -- Installs `mcp-hub` node binary globally
   config = function()
     require('mcphub').setup()
+    -- Load native time server after setup
+    require 'custom.mcpserver.time'
   end,
 }
