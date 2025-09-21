@@ -187,6 +187,3 @@ mcphub.add_resource_template('time', {
     return res:text(string.format('Time at UTC%+d: %s', offset, formatted)):send()
   end,
 })
-
-print 'Time MCP Server loaded with tools: get_current_time, convert_timezone, from_timestamp'
-print 'Resources: time://current, time://timezone/{offset}'
