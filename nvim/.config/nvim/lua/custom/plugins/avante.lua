@@ -7,14 +7,18 @@ return {
     -- add any opts here
     provider = 'copilot', -- recommend using Claude for better code understanding
     auto_suggestions = true, -- Experimental stage
-    copilot = {
-      endpoint = 'https://api.githubcopilot.com',
-      model = 'claude-sonnet-4',
-      proxy = nil, -- [protocol://]host[:port] Use this proxy
-      allow_insecure = false, -- Allow insecure server connections
-      timeout = 30000, -- Timeout in milliseconds
-      temperature = 0,
-      max_tokens = 4096,
+    providers = {
+      copilot = {
+        endpoint = 'https://api.githubcopilot.com',
+        model = 'claude-sonnet-4',
+        proxy = nil, -- [protocol://]host[:port] Use this proxy
+        allow_insecure = false, -- Allow insecure server connections
+        timeout = 30000, -- Timeout in milliseconds
+        extra_request_body = {
+          temperature = 0,
+          max_tokens = 4096,
+        },
+      },
     },
     behaviour = {
       auto_suggestions = false, -- Experimental stage
