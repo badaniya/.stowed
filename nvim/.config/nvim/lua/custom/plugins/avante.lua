@@ -1,7 +1,5 @@
 return {
   'yetone/avante.nvim',
-  event = 'VeryLazy',
-  lazy = false,
   version = false, -- set this if you want to always pull the latest change
   opts = {
     -- add any opts here
@@ -15,7 +13,6 @@ return {
     -- WARNING: Since auto-suggestions are a high-frequency operation and therefore expensive,
     -- currently designating it as `copilot` provider is dangerous because: https://github.com/yetone/avante.nvim/issues/1048
     -- Of course, you can reduce the request frequency by increasing `suggestion.debounce`.
-    auto_suggestions_provider = nil,
     providers = {
       copilot = {
         endpoint = 'https://api.githubcopilot.com',
@@ -74,10 +71,10 @@ return {
       ---@type "right" | "left" | "top" | "bottom"
       position = 'right', -- the position of the sidebar
       wrap = true, -- similar to vim.o.wrap
-      width = 30, -- default % based on available width
+      width = 35, -- default % based on available width
       sidebar_header = {
         align = 'center', -- left, center, right for title
-        rounded = true,
+        rounded = false,
       },
     },
     selector = {
@@ -113,7 +110,6 @@ return {
   build = 'make',
   -- build = "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false" -- for windows
   dependencies = {
-    'stevearc/dressing.nvim',
     'nvim-lua/plenary.nvim',
     'MunifTanjim/nui.nvim',
     --- The below dependencies are optional,

@@ -5,6 +5,7 @@ return {
     'rafamadriz/friendly-snippets',
     'moyiz/blink-emoji.nvim',
     'giuxtaposition/blink-cmp-copilot',
+    'Kaiser-Yang/blink-cmp-avante',
     'Kaiser-Yang/blink-cmp-git',
     'ribru17/blink-cmp-spell',
   },
@@ -46,6 +47,7 @@ return {
     -- elsewhere in your config, without redefining it, due to `opts_extend`
     sources = {
       default = {
+        'avante',
         'lsp',
         'path',
         'snippets',
@@ -121,6 +123,13 @@ return {
               end
               return in_spell_capture
             end,
+          },
+        },
+        avante = {
+          module = 'blink-cmp-avante',
+          name = 'Avante',
+          opts = {
+            -- options for blink-cmp-avante
           },
         },
       },
