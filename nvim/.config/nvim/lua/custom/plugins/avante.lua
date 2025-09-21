@@ -133,15 +133,4 @@ return {
       },
     },
   },
-  keys = {
-    -- Avante main commands
-    { '<leader>aa', '<cmd>AvanteAsk<CR>', desc = '[A]vante [A]sk', mode = { 'n', 'v' } },
-    { '<leader>ar', '<cmd>AvanteRefresh<CR>', desc = '[A]vante [R]efresh' },
-    { '<leader>ae', '<cmd>AvanteEdit<CR>', desc = '[A]vante [E]dit', mode = { 'n', 'v' } },
-    { '<leader>at', '<cmd>AvanteToggle<CR>', desc = '[A]vante [T]oggle' },
-    { '<leader>ac', '<cmd>AvanteChat<CR>', desc = '[A]vante [C]hat' },
-    { '<leader>af', '<cmd>AvanteFocus<CR>', desc = '[A]vante [F]ocus' },
-    { '<leader>ai', '<cmd>AvanteAsk<CR>', desc = '[A]vante [I]nstruct' },
-    { '<leader>as', '<cmd>AvanteSwitchProvider<CR>', desc = '[A]vante [S]witch Provider' },
-  },
 }

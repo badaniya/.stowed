@@ -263,6 +263,8 @@ require('lazy').setup({
       wk.add {
         { '<leader>a', group = '[A]vante AI' },
         { '<leader>a_', hidden = true },
+        { '<leader>C', group = 'Code[C]ompanion' },
+        { '<leader>C_', hidden = true },
         { '<leader>c', group = '[C]ode' },
         { '<leader>c_', hidden = true },
         { '<leader>d', group = '[D]ocument' },

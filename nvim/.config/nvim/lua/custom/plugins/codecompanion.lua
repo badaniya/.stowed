@@ -263,8 +263,8 @@ return {
     local opts = { noremap = true, silent = true }
 
     -- Move to previous/next
-    map({ 'n', 'v' }, '<C-A>', '<cmd>CodeCompanionActions<cr>', opts)
-    map({ 'n', 'v' }, '<LocalLeader>C', '<cmd>CodeCompanionChat Toggle<cr>', { desc = 'CodeCompanion[C]hat', noremap = opts.noremap, silent = opts.silent })
+    map({ 'n', 'v' }, '<LocalLeader>Ca', '<cmd>CodeCompanionActions<cr>', { desc = 'Code[C]ompanion [A]ctions', noremap = opts.noremap, silent = opts.silent })
+    map({ 'n', 'v' }, '<LocalLeader>Cc', '<cmd>CodeCompanionChat Toggle<cr>', { desc = 'Code[C]ompanion [C]hat', noremap = opts.noremap, silent = opts.silent })
     map('v', 'ga', '<cmd>CodeCompanionChat Add<cr>', opts)
 
     -- Expand 'cc' into 'CodeCompanion' in the command line
