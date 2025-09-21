@@ -31,16 +31,6 @@ return {
             show_tools_processing = true, -- Show the loading message when tools are being executed?
             start_in_insert_mode = false, -- Open the chat buffer in insert mode?
           },
-          opts = {
-            ---Decorate the user message before it's sent to the LLM
-            ---@param message string
-            ---@param adapter CodeCompanion.Adapter
-            ---@param context table
-            ---@return string
-            prompt_decorator = function(message, adapter, context)
-              return string.format([[<prompt>%s</prompt>]], message)
-            end,
-          },
           adapter = {
             name = 'copilot',
             model = 'claude-sonnet-4',
@@ -72,6 +62,16 @@ return {
                 },
               },
             },
+          },
+          opts = {
+            ---Decorate the user message before it's sent to the LLM
+            ---@param message string
+            ---@param adapter CodeCompanion.Adapter
+            ---@param context table
+            ---@return string
+            prompt_decorator = function(message, adapter, context)
+              return string.format([[<prompt>%s</prompt>]], message)
+            end,
           },
         },
         inline = {
