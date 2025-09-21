@@ -4,7 +4,7 @@
 local mcphub = require 'mcphub'
 
 -- Add current time tool
-mcphub.add_tool('time', {
+mcphub.add_tool('mytime', {
   name = 'get_current_time',
   description = 'Get the current date and time in various formats',
   inputSchema = {
@@ -52,7 +52,7 @@ mcphub.add_tool('time', {
 })
 
 -- Add timezone tool
-mcphub.add_tool('time', {
+mcphub.add_tool('mytime', {
   name = 'convert_timezone',
   description = 'Convert time between timezones (basic offset calculation)',
   inputSchema = {
@@ -106,7 +106,7 @@ mcphub.add_tool('time', {
 })
 
 -- Add timestamp conversion tool
-mcphub.add_tool('time', {
+mcphub.add_tool('mytime', {
   name = 'from_timestamp',
   description = 'Convert Unix timestamp to human-readable date',
   inputSchema = {
@@ -134,7 +134,7 @@ mcphub.add_tool('time', {
 })
 
 -- Add current time resource
-mcphub.add_resource('time', {
+mcphub.add_resource('mytime', {
   name = 'current',
   uri = 'time://current',
   description = 'Current date and time information',
@@ -170,7 +170,7 @@ Local Time: %s
 })
 
 -- Add timezone resource template
-mcphub.add_resource_template('time', {
+mcphub.add_resource_template('mytime', {
   name = 'timezone',
   uriTemplate = 'time://timezone/{offset}',
   description = 'Get current time for a specific UTC offset',

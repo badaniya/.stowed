@@ -7,6 +7,6 @@ return {
   config = function()
     require('mcphub').setup()
     -- Load native time server after setup
-    require 'custom.mcpserver.time'
+    require 'custom.mcpserver.mytime'
   end,
 }
