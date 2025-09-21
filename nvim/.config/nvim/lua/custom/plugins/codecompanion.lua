@@ -5,6 +5,8 @@ return {
     'nvim-treesitter/nvim-treesitter',
     'ravitemer/mcphub.nvim',
     'ravitemer/codecompanion-history.nvim',
+
+    'lalitmee/codecompanion-spinners.nvim', -- Add the spinners extension
   },
 
   config = function()
@@ -210,6 +212,49 @@ return {
               },
               files_ls = {},
               files_rm = {},
+            },
+          },
+        },
+        -- 🌀 Add the spinners extension
+        spinner = {
+          enabled = true,
+          opts = {
+            -- Choose your preferred spinner style:
+            -- "cursor-relative" - Floating window near cursor (default)
+            -- "fidget" - Uses fidget.nvim for progress notifications
+            -- "snacks" - Rich notifications via snacks.nvim
+            -- "lualine" - Statusline integration for lualine users
+            -- "heirline" - Statusline integration for heirline users
+            -- "native" - Configurable floating window
+            -- "none" - Disable all spinners
+            style = 'snacks', -- Using snacks since you have it configured
+
+            -- You can also try "fidget" since you have fidget.nvim installed:
+            -- style = "fidget",
+
+            -- Custom content for different states (optional - these are the defaults)
+            content = {
+              -- 🧠 General states
+              thinking = { icon = '💡', message = 'Thinking...', spacing = ' ' },
+              receiving = { icon = '📨', message = 'Receiving...', spacing = ' ' },
+              done = { icon = '✅', message = 'Done!', spacing = ' ' },
+              stopped = { icon = '🛑', message = 'Stopped', spacing = ' ' },
+              cleared = { icon = '🧹', message = 'Chat cleared', spacing = ' ' },
+
+              -- 🔧 Tool-related states
+              tools_started = { icon = '🔧', message = 'Running tools...', spacing = ' ' },
+              tools_finished = { icon = '⤷', message = 'Processing tool output...', spacing = ' ' },
+
+              -- 📝 Diff-related states
+              diff_attached = { icon = '📝', message = 'Review changes', spacing = ' ' },
+              diff_accepted = { icon = '✅', message = 'Change accepted', spacing = ' ' },
+              diff_rejected = { icon = '❌', message = 'Change rejected', spacing = ' ' },
+
+              -- 💬 Chat-related states
+              chat_ready = { icon = '💬', message = 'Chat ready', spacing = ' ' },
+              chat_opened = { icon = '🚀', message = 'Chat opened', spacing = ' ' },
+              chat_hidden = { icon = '👁', message = 'Chat hidden', spacing = ' ' },
+              chat_closed = { icon = '🚪', message = 'Chat closed', spacing = ' ' },
             },
           },
         },
