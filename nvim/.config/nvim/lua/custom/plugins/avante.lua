@@ -6,7 +6,7 @@ return {
   opts = {
     -- add any opts here
     provider = 'copilot', -- recommend using Claude for better code understanding
-    auto_suggestions = true, -- Experimental stage
+    auto_suggestions = false, -- Disabled to ensure user prompting
     providers = {
       copilot = {
         endpoint = 'https://api.githubcopilot.com',
@@ -21,10 +21,10 @@ return {
       },
     },
     behaviour = {
-      auto_suggestions = false, -- Experimental stage
+      auto_suggestions = false, -- Disabled to ensure user prompting
       auto_set_highlight_group = true,
       auto_set_keymaps = true,
-      auto_apply_diff_after_generation = false,
+      auto_apply_diff_after_generation = false, -- Disabled to require manual approval
       support_paste_from_clipboard = false,
     },
     mappings = {
