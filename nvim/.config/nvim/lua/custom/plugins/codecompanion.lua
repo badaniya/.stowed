@@ -5,7 +5,6 @@ return {
     'nvim-treesitter/nvim-treesitter',
     'ravitemer/mcphub.nvim',
     'ravitemer/codecompanion-history.nvim',
-
     'lalitmee/codecompanion-spinners.nvim', -- Add the spinners extension
   },
 
@@ -103,8 +102,8 @@ return {
             -- Custom content for different states (optional - these are the defaults)
             content = {
               -- 🧠 General states
-              thinking = { icon = '💡', message = 'Thinking...', spacing = ' ' },
-              receiving = { icon = '📨', message = 'Receiving...', spacing = ' ' },
+              thinking = { icon = ' ', message = 'Thinking...', spacing = ' ' },
+              receiving = { icon = ' ', message = 'Receiving...', spacing = ' ' },
               done = { icon = '✅', message = 'Done!', spacing = ' ' },
               stopped = { icon = '🛑', message = 'Stopped', spacing = ' ' },
               cleared = { icon = '🧹', message = 'Chat cleared', spacing = ' ' },
@@ -120,7 +119,7 @@ return {
 
               -- 💬 Chat-related states
               chat_ready = { icon = '💬', message = 'Chat ready', spacing = ' ' },
-              chat_opened = { icon = '🚀', message = 'Chat opened', spacing = ' ' },
+              chat_opened = { icon = '💭', message = 'Chat opened', spacing = ' ' },
               chat_hidden = { icon = '👁', message = 'Chat hidden', spacing = ' ' },
               chat_closed = { icon = '🚪', message = 'Chat closed', spacing = ' ' },
             },
