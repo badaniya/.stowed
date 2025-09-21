@@ -5,8 +5,17 @@ return {
   version = false, -- set this if you want to always pull the latest change
   opts = {
     -- add any opts here
+    debug = false,
+    ---@alias avante.Mode "agentic" | "legacy"
+    ---@type avante.Mode
+    mode = 'agentic',
+    ---@alias avante.ProviderName "claude" | "openai" | "azure" | "gemini" | "vertex" | "cohere" | "copilot" | "bedrock" | "ollama" | "watsonx_code_assistant" | string
+    ---@type avante.ProviderName
     provider = 'copilot', -- recommend using Claude for better code understanding
-    auto_suggestions = false, -- Disabled to ensure user prompting
+    -- WARNING: Since auto-suggestions are a high-frequency operation and therefore expensive,
+    -- currently designating it as `copilot` provider is dangerous because: https://github.com/yetone/avante.nvim/issues/1048
+    -- Of course, you can reduce the request frequency by increasing `suggestion.debounce`.
+    auto_suggestions_provider = nil,
     providers = {
       copilot = {
         endpoint = 'https://api.githubcopilot.com',
@@ -25,7 +34,8 @@ return {
       auto_set_highlight_group = true,
       auto_set_keymaps = true,
       auto_apply_diff_after_generation = false, -- Disabled to require manual approval
-      support_paste_from_clipboard = false,
+      auto_approve_tool_permissions = false,
+      support_paste_from_clipboard = true,
     },
     mappings = {
       --- @class AvanteConflictMappings
@@ -70,6 +80,21 @@ return {
         rounded = true,
       },
     },
+    selector = {
+      --- @alias avante.SelectorProvider "native" | "fzf_lua" | "mini_pick" | "snacks" | "telescope" | fun(selector: avante.ui.Selector): nil
+      --- @type avante.SelectorProvider
+      provider = 'snacks',
+      -- Options override for custom providers
+      provider_opts = {},
+    },
+    input = {
+      provider = 'snacks',
+      provider_opts = {
+        -- Additional snacks.input options
+        title = 'Avante Input',
+        icon = ' ',
+      },
+    },
     highlights = {
       ---@type AvanteConflictHighlights
       diff = {
@@ -110,14 +135,6 @@ return {
           use_absolute_path = true,
         },
       },
-    },
-    {
-      -- Make sure to set this up properly if you have lazy=true
-      'MeanderingProgrammer/render-markdown.nvim',
-      opts = {
-        file_types = { 'markdown', 'Avante' },
-      },
-      ft = { 'markdown', 'Avante' },
     },
   },
   keys = {
