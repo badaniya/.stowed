@@ -31,6 +31,7 @@ This repository is used to store all dot-config files for various shells and edi
 - gitui
 - imagemagick
 - mermaid-cli
+- vectorcode
 
 ## How To Use GNU Stow
 
@@ -66,7 +67,7 @@ rm -rf $HOME/.config/ghostty; rm -rf $HOME/.bash*; rm -rf $HOME/.zsh*; rm -rf $H
 
 ```bash
 # Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
-rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/gitui; stow -d $HOME/.stowed tmuxinator gitui
+rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/gitui; rm -rf $HOME/.config/vectorcode; stow -d $HOME/.stowed tmuxinator gitui vectorcode
 ```
 
 ## Installing Stowed Terminal Tools
@@ -217,6 +218,15 @@ npm install -g @mistweaverco/kulala-fmt
 # or
 # Nix dependency
 nix-env -iA nixpkgs.kulala-fmt
+```
+
+### 5) Vectorcode - A source code indexed vector DB for AI MCP use 
+
+```bash
+uv tool install "vectorcode<1.0.0"
+# or
+# Nix dependency
+nix-env -iA nixpkgs.vectorcode
 ```
 
 ## Linux Development Environment Setup
