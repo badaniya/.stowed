@@ -5,7 +5,7 @@
     "backend": "torch",
     "device": "cuda"
   },
-  "db_path": "~/.local/share/vectorcode/chromadb/",
+  //"db_path": "~/.local/share/vectorcode/chromadb/",
   "db_log_path": "~/.local/share/vectorcode/",
   "db_settings": null,
   "chunk_size": 2500,
