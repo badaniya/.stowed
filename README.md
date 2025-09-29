@@ -75,7 +75,10 @@ rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/gitui; rm -rf $HOME/.confi
 ### 0) Ghostty - A fast efficient terminal with GPU acceleration and Kitty image support
 
 ```bash
-# ghostty: Ubuntu debian version
+# ghostty: Ubuntu debian version - official w/systemd support
+sudo snap install ghostty --classic
+
+# ghostty: Ubuntu debian version - unofficial
 sudo /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/mkasberg/ghostty-ubuntu/HEAD/install.sh)"
 
 # NOTE: Copy Ghostty's terminfo to a remote machine if tmux fails with: `missing or unsuitable terminal: xterm-ghostty`
