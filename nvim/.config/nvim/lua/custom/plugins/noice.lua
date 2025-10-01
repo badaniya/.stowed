@@ -22,6 +22,9 @@ return {
 
     -- Setup Noice
     require('noice').setup {
+      notify = {
+        enabled = false, -- The Snacks plugin will handle notifications, but the Noice plugin is still enabled for command and search
+      },
       lsp = {
         -- override markdown rendering so that **cmp** and other plugins use **Treesitter**
         override = {
