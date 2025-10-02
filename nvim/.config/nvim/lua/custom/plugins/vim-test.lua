@@ -15,6 +15,6 @@ return {
   vim.keymap.set('n', '<leader>vv', ':TestVisit<CR>', { desc = '[V]im-Test Run [V]isit' }),
 
   vim.cmd "let test#strategy = 'vimux'",
-  vim.cmd "let test#go#runner = 'gotest'",
-  vim.cmd "let test#go#gotest#options = '-v -timeout 0 -count 1 -tags ci_jenkins -coverprofile=coverage.out -covermode=atomic -coverpkg=all'", -- -v: verbose, -timeout 0: infinite timeout, -count 1: non-cached run always, -tags ci_jenkins: run against CI setup.
+  vim.cmd "let test#go#runner = 'gotestsum'",
+  vim.cmd "let test#go#gotest#options = '-f testname -- -v -timeout 0 -count 1 -tags ci_jenkins -coverprofile=coverage.out -covermode=atomic -coverpkg=all'", -- -v: verbose, -timeout 0: infinite timeout, -count 1: non-cached run always, -tags ci_jenkins: run against CI setup.
 }
