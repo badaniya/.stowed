@@ -168,6 +168,19 @@ sudo apt install -y postgresql-client
 sudo apt install -y mariadb-client 
 ```
 
+#### CopilotChat, CodeCompanion, Avante Plugins - AI chat for github copilot and others which uses nodejs
+
+```bash
+# Nix dependency
+nix-env -iA nixpkgs.nodejs
+
+# Change nix npm default lib installation path
+npm set prefix ~/.local/lib
+
+# Global install of mcp-hub for agent based AI tools
+npm install -g mcp-hub@latest
+```
+
 ### 9) Vim - A ubiquitous editor
 
 ```bash
