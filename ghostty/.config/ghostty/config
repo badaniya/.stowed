@@ -1,6 +1,6 @@
 # Conditionally load platform-specific configuration files.
 # These will override settings from the main config.
-config-file = "?config_wsl"
+config-file = "?~/.config_wsl"
 
 # Theme and Color Config
 theme = "Catppuccin Mocha"
