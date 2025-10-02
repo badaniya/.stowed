@@ -1,8 +1,0 @@
-# Transparency
-background-blur = false
-
-# Cursor Smear Shader
-custom-shader = 
-
-# Font Config
-font-size = 18.0
