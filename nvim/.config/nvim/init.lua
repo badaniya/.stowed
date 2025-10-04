@@ -283,6 +283,8 @@ require('lazy').setup({
         { '<leader>r_', hidden = true },
         { '<leader>s', group = '[S]earch' },
         { '<leader>s_', hidden = true },
+        { '<leader>S', group = '[S]idekick AI' },
+        { '<leader>S_', hidden = true },
         { '<leader>t', group = '[T]rouble' },
         { '<leader>t_', hidden = true },
         { '<leader>u', group = '[U]ser Toggles' },
@@ -572,6 +574,7 @@ require('lazy').setup({
         { 'bash-language-server', auto_update = true },
 
         'clangd',
+        'copilot-language-server',
         'css-lsp',
         'delve',
         'gitleaks',

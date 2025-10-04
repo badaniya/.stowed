@@ -17,5 +17,5 @@ return {
   end,
 
   -- Set DB UI mapping
-  vim.keymap.set('n', '<leader>S', ':DBUIToggle <CR>', { desc = 'Database UI for [S]QL queries' }),
+  vim.keymap.set('n', '<leader>D', ':DBUIToggle <CR>', { desc = '[D]atabase UI for SQL queries' }),
 }
