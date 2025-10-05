@@ -172,7 +172,7 @@ sudo apt install -y mariadb-client
 
 ```bash
 # Nix dependency
-nix-env -iA nixpkgs.nodejs
+nix-env -iA nixpkgs.nodejs_22
 
 # Global install of mcp-hub for agent based AI tools
 npm install -g mcp-hub@latest
@@ -208,7 +208,7 @@ sh <(curl -L https://nixos.org/nix/install) --daemon
 
 ```bash
 # Nix dependency
-nix-env -iA nixpkgs.nodejs
+nix-env -iA nixpkgs.nodejs_22
 ```
 
 ### 3) Tmuxinator - A tmux session layout creator
