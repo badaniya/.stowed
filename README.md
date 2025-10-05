@@ -67,7 +67,7 @@ rm -rf $HOME/.config/ghostty; rm -rf $HOME/.bash*; rm -rf $HOME/.zsh*; rm -rf $H
 
 ```bash
 # Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
-rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/gitui; rm -rf $HOME/.config/vectorcode; stow -d $HOME/.stowed tmuxinator gitui vectorcode
+rm -rf $HOME/.npmrc; rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/gitui; rm -rf $HOME/.config/vectorcode; stow -d $HOME/.stowed npm tmuxinator gitui vectorcode
 ```
 
 ## Installing Stowed Terminal Tools
@@ -174,11 +174,11 @@ sudo apt install -y mariadb-client
 # Nix dependency
 nix-env -iA nixpkgs.nodejs
 
-# Change nix npm default lib installation path
-npm set prefix ~/.local/lib
-
 # Global install of mcp-hub for agent based AI tools
 npm install -g mcp-hub@latest
+
+# Global install of copilot-cli
+npm install -g @github/copilot
 ```
 
 ### 9) Vim - A ubiquitous editor
@@ -197,28 +197,35 @@ sudo apt install -y emacs28
 
 ## Installing Optional Stowed Terminal Tools
 
-### 0) Nix Package Manager - A package manager with a massive amount of open-source installation images
+### 1) Nix Package Manager - A package manager with a massive amount of open-source installation images
 
 ```bash
 # Multi-User Nix Package Manager Installer
 sh <(curl -L https://nixos.org/nix/install) --daemon
 ```
 
-### 1) Tmuxinator - A tmux session layout creator
+### 2) NPM - Node package manager for AI tools
+
+```bash
+# Nix dependency
+nix-env -iA nixpkgs.nodejs
+```
+
+### 3) Tmuxinator - A tmux session layout creator
 
 ```bash
 # Nix dependency
 nix-env -iA nixpkgs.tmuxinator
 ```
 
-### 2) Gitui - Terminal Git TUI
+### 4) Gitui - Terminal Git TUI
 
 ```bash
 # Nix dependency
 nix-env -iA nixpkgs.gitui
 ```
 
-### 3) Image and Diagram Markdown Support in Neovim
+### 5) Image and Diagram Markdown Support in Neovim
 
 ```bash
 # Nix dependency
@@ -226,7 +233,7 @@ nix-env -iA nixpkgs.imagemagick
 nix-env -iA nixpkgs.mermaid-cli
 ```
 
-### 4) Kulala format conversion - Openapi to http
+### 6) Kulala format conversion - Openapi to http
 
 ```bash
 npm install -g @mistweaverco/kulala-fmt
@@ -235,7 +242,7 @@ npm install -g @mistweaverco/kulala-fmt
 nix-env -iA nixpkgs.kulala-fmt
 ```
 
-### 5) Vectorcode - A source code indexed vector DB for AI MCP use 
+### 7) Vectorcode - A source code indexed vector DB for AI MCP use 
 
 ```bash
 uv tool install "vectorcode<1.0.0"
