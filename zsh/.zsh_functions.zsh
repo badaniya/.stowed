@@ -86,7 +86,7 @@ function add_worktree()
     git checkout "$GIT_SOURCE_BRANCH" && \
     git pull && \
     git worktree add -b "$USER/$REPO_NAME/$GIT_BRANCH" "$RELATIVE_WORKTREE_PATH" && \
-    (git checkout master || git checkout main) && \
+    (git checkout master || git checkout main || git checkout HEAD) && \
     cd "$RELATIVE_WORKTREE_PATH" && \
     git branch --set-upstream-to=origin/"$GIT_SOURCE_BRANCH"
     #go_work
