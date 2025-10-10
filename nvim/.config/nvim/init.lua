@@ -544,7 +544,7 @@ require('lazy').setup({
         -- JSON/YAML LSP
         spectral = {},
         -- SQL LSP
-        sqls = {},
+        --sqls = {},
         -- Typescript LSP
         ts_ls = {},
         -- Typos LSP
@@ -607,7 +607,7 @@ require('lazy').setup({
         'shellcheck',
         'spectral-language-server',
         'sqruff',
-        'sqls',
+        --'sqls',
         'staticcheck',
         'stylua',
         'taplo',
