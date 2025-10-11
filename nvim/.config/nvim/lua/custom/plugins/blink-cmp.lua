@@ -34,7 +34,7 @@ return {
     -- See :h blink-cmp-config-keymap for defining your own keymap
     keymap = {
       preset = 'default',
-      ['<C-y>'] = {
+      ['<super-tab>'] = {
         'snippet_forward',
         function() -- sidekick next edit suggestion
           return require('sidekick').nes_jump_or_apply()
