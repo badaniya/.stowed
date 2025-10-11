@@ -134,7 +134,18 @@ return {
         ---@type string | fun(): string
         list_opener = 'copen',
       },
-
+      disabled_tools = {
+        'list_files', -- Built-in file operations
+        'search_files',
+        'read_file',
+        'create_file',
+        'rename_file',
+        'delete_file',
+        'create_dir',
+        'rename_dir',
+        'delete_dir',
+        'bash', -- Built-in terminal access
+      },
       -- system_prompt as function ensures LLM always has latest MCP server state
       -- This is evaluated for every message, even in existing chats
       system_prompt = function()
