@@ -30,6 +30,7 @@ alias goinstallgodef="go install github.com/rogpeppe/godef@latest"
 
 # Kubernetes Aliases
 alias k3sctl="k3s kubectl"
+which kubecolor >/dev/null && alias kubectl="kubecolor"
 
 # Terminal/Expect Aliases
 alias gterm="terminal_launcher gnome-terminal"

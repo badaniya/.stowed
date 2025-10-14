@@ -25,6 +25,7 @@ export DOCKER_BUILDKIT=1
 
 ## Kubectl Environment Settings ##
 export KUBECONFIG=~/.kube/config
+export KUBECOLOR_CONFIG=~/.stowed/kubecolor/catppuccin-mocha.yaml
 
 ## Other Environment Settings ##
 if [[ -f "$HOME/.private_bash_profile" ]]; then
