@@ -279,6 +279,8 @@ require('lazy').setup({
         { '<leader>K_', hidden = true },
         { '<leader>l', group = '[L]SP' },
         { '<leader>l_', hidden = true },
+        { '<leader>o', group = '[O]pencode' },
+        { '<leader>o_', hidden = true },
         { '<leader>r', group = '[R]ename' },
         { '<leader>r_', hidden = true },
         { '<leader>s', group = '[S]earch' },
