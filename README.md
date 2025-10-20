@@ -31,7 +31,12 @@ This repository is used to store all dot-config files for various shells and edi
 - gitui
 - imagemagick
 - mermaid-cli
+- kubecolor (kubectl)
+
+**Stowed Optional AI Terminal Tools:**
+
 - vectorcode
+- opencode
 
 ## How To Use GNU Stow
 
@@ -67,7 +72,14 @@ rm -rf $HOME/.config/ghostty; rm -rf $HOME/.bash*; rm -rf $HOME/.zsh*; rm -rf $H
 
 ```bash
 # Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
-rm -rf $HOME/.npmrc; rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/gitui; rm -rf $HOME/.config/vectorcode; stow -d $HOME/.stowed npm tmuxinator gitui vectorcode
+rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/gitui; stow -d $HOME/.stowed tmuxinator gitui
+```
+
+### 5) Run Stow Command to Establish Symlinks to the Repository for Optional AI Terminal Tools
+
+```bash
+# Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
+rm -rf $HOME/.npmrc; rm -rf $HOME/.config/vectorcode; rm -rf $HOME/.config/opencode; stow -d $HOME/.stowed npm vectorcode opencode
 ```
 
 ## Installing Stowed Terminal Tools
