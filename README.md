@@ -220,13 +220,6 @@ sudo apt install -y emacs28
 sh <(curl -L https://nixos.org/nix/install) --daemon
 ```
 
-### 2) NPM - Node package manager for AI tools
-
-```bash
-# Nix dependency
-nix-env -iA nixpkgs.nodejs_22
-```
-
 ### 3) Tmuxinator - A tmux session layout creator
 
 ```bash
@@ -258,13 +251,28 @@ npm install -g @mistweaverco/kulala-fmt
 nix-env -iA nixpkgs.kulala-fmt
 ```
 
-### 7) Vectorcode - A source code indexed vector DB for AI MCP use 
+## Installing Optional Stowed AI Terminal Tools
+
+### 1) NPM - Node package manager for AI tools
+
+```bash
+# Nix dependency
+nix-env -iA nixpkgs.nodejs_22
+```
+
+### 2) Vectorcode - A source code indexed vector DB for AI MCP use 
 
 ```bash
 uv tool install "vectorcode<1.0.0"
 # or
 # Nix dependency
 nix-env -iA nixpkgs.vectorcode
+```
+
+### 3) Opencode - An open source AI coding agent for the terminal
+
+```bash
+curl -fsSL https://opencode.ai/install | bash
 ```
 
 ## Linux Development Environment Setup

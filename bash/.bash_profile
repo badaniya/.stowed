@@ -18,7 +18,7 @@ if [[ ! "$PATH" =~ $GOBASEPATH/bin ]]; then
     export PATH=$GOBASEPATH/bin:$PATH
 fi
 
-export PATH=$PATH:$HOME/.local/bin:$HOME/.cargo/bin:/opt/nvim-linux-x86_64/bin
+export PATH=$PATH:$HOME/.local/bin:$HOME/.cargo/bin:/opt/nvim-linux-x86_64/bin:$HOME/.opencode/bin
 
 ## Docker Environment Settings ##
 export DOCKER_BUILDKIT=1
