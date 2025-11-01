@@ -5,3 +5,5 @@ transient/
 .lsp-session-v1
 projectile-bookmarks.eld
 goose/**/githubcopilot
+goose/**/*.bak
+goose/**/history.txt
