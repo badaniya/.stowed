@@ -20,16 +20,16 @@ return {
           width = 100, -- set to 0 for default split width
           height = 100, -- set to 0 for default split height
         },
-        mux = {
-          backend = 'tmux',
-          enabled = true,
-          -- Options for tmux below do not seem to work.
-          -- create = 'terminal', ---@type "terminal"|"window"|"split"
-          -- split = {
-          --   vertical = true, -- vertical or horizontal split
-          --   size = 0.40, -- size of the split (0-1 for percentage)
-          -- },
-        },
+      },
+      mux = {
+        backend = 'tmux',
+        enabled = true,
+        -- Options for tmux below do not seem to work.
+        -- create = 'terminal', ---@type "terminal"|"window"|"split"
+        -- split = {
+        --   vertical = true, -- vertical or horizontal split
+        --   size = 0.40, -- size of the split (0-1 for percentage)
+        -- },
       },
     },
   },
