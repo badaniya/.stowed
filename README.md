@@ -35,8 +35,10 @@ This repository is used to store all dot-config files for various shells and edi
 
 **Stowed Optional AI Terminal Tools:**
 
-- vectorcode
+- copilot-cli
 - opencode
+- goose
+- vectorcode (vector DB)
 
 ## How To Use GNU Stow
 
@@ -79,7 +81,7 @@ rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/gitui; stow -d $HOME/.stow
 
 ```bash
 # Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
-rm -rf $HOME/.npmrc; rm -rf $HOME/.config/vectorcode; rm -rf $HOME/.config/opencode; stow -d $HOME/.stowed npm vectorcode opencode
+rm -rf $HOME/.npmrc; rm -rf $HOME/.config/.copilot; rm -rf $HOME/.config/opencode; rm -rf $HOME/.config/goose; rm -rf $HOME/.config/vectorcode; stow -d $HOME/.stowed npm copilot opencode goose vectorcode
 ```
 
 ## Installing Stowed Terminal Tools
@@ -260,19 +262,31 @@ nix-env -iA nixpkgs.kulala-fmt
 nix-env -iA nixpkgs.nodejs_22
 ```
 
-### 2) Vectorcode - A source code indexed vector DB for AI MCP use 
+### 2) Copilot-cli - GitHub Copilot for the terminal
 
 ```bash
-uv tool install "vectorcode<1.0.0"
-# or
-# Nix dependency
-nix-env -iA nixpkgs.vectorcode
+npm install -g @github/copilot
 ```
 
 ### 3) Opencode - An open source AI coding agent for the terminal
 
 ```bash
 curl -fsSL https://opencode.ai/install | bash
+```
+
+### 4) Goose - An AI coding assistant for the terminal
+
+```bash
+curl -fsSL https://github.com/block/goose/releases/download/stable/download_cli.sh | bash
+```
+
+### 5) Vectorcode - A source code indexed vector DB for AI MCP use 
+
+```bash
+uv tool install "vectorcode<1.0.0"
+# or
+# Nix dependency
+nix-env -iA nixpkgs.vectorcode
 ```
 
 ## Linux Development Environment Setup

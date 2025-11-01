@@ -31,6 +31,20 @@ return {
         --   size = 0.40, -- size of the split (0-1 for percentage)
         -- },
       },
+      tools = {
+        goose = {
+          cmd = { 'goose', 'session' },
+          -- Optional: custom keymaps for this tool
+          -- keys = {
+          --   submit = {
+          --     '<c-s>',
+          --     function(t)
+          --       t:send '\n'
+          --     end,
+          --   },
+          -- },
+        },
+      },
     },
   },
   -- stylua: ignore
