@@ -2,10 +2,34 @@ return {
   'folke/sidekick.nvim',
   opts = {
     -- add any options here
+    -- Work with AI cli tools directly from within Neovim
     cli = {
-      mux = {
-        backend = 'tmux',
-        enabled = true,
+      watch = true, -- notify Neovim of file changes done by AI CLI tools
+      ---@class sidekick.win.Opts
+      win = {
+        --- This is run when a new terminal is created, before starting it.
+        --- Here you can change window options `terminal.opts`.
+        ---@param terminal sidekick.cli.Terminal
+        config = function(terminal) end,
+        wo = {}, ---@type vim.wo
+        bo = {}, ---@type vim.bo
+        layout = 'right', ---@type "float"|"left"|"bottom"|"top"|"right"
+        -- Options used when layout is "left"|"bottom"|"top"|"right"
+        ---@type vim.api.keyset.win_config
+        split = {
+          width = 100, -- set to 0 for default split width
+          height = 100, -- set to 0 for default split height
+        },
+        mux = {
+          backend = 'tmux',
+          enabled = true,
+          -- Options for tmux below do not seem to work.
+          -- create = 'terminal', ---@type "terminal"|"window"|"split"
+          -- split = {
+          --   vertical = true, -- vertical or horizontal split
+          --   size = 0.40, -- size of the split (0-1 for percentage)
+          -- },
+        },
       },
     },
   },
