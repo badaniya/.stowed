@@ -17,7 +17,7 @@
       "enabled": true,
       "url": "https://ws1-jira-mcp.qa.xcloudiq.com/mcp",
       "type": "remote",
-      "headers": {"x-jira-pat": "${JIRA_MCP_API_TOKEN}"}
+      "headers": {"x-jira-pat": "{env:JIRA_MCP_API_TOKEN}"}
     }
   },
 }
