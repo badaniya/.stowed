@@ -1,2 +1,35 @@
 GOOSE_MODEL: claude-sonnet-4.5
 GOOSE_PROVIDER: github_copilot
+extensions:
+  computercontroller:
+    available_tools: []
+    bundled: true
+    description: controls for webscraping, file caching, and automations
+    display_name: Computer Controller
+    enabled: true
+    name: computercontroller
+    timeout: 300
+    type: builtin
+  developer:
+    available_tools: []
+    bundled: true
+    description: Code editing and shell access
+    display_name: Developer Tools
+    enabled: true
+    name: developer
+    timeout: 300
+    type: builtin
+  extensionmanager:
+    available_tools: []
+    bundled: true
+    description: Enable extension management tools for discovering, enabling, and disabling extensions
+    enabled: true
+    name: Extension Manager
+    type: platform
+  todo:
+    available_tools: []
+    bundled: true
+    description: Enable a todo list for Goose so it can keep track of what it is doing
+    enabled: true
+    name: todo
+    type: platform
