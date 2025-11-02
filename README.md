@@ -38,6 +38,7 @@ This repository is used to store all dot-config files for various shells and edi
 - copilot-cli
 - opencode
 - goose
+- mcphub (NeoVIM MCP servers hub)
 - vectorcode (vector DB)
 
 ## How To Use GNU Stow
@@ -81,7 +82,7 @@ rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/gitui; stow -d $HOME/.stow
 
 ```bash
 # Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
-rm -rf $HOME/.npmrc; rm -rf $HOME/.config/.copilot; rm -rf $HOME/.config/opencode; rm -rf $HOME/.config/goose; rm -rf $HOME/.config/vectorcode; stow -d $HOME/.stowed npm copilot opencode goose vectorcode
+rm -rf $HOME/.npmrc; rm -rf $HOME/.config/.copilot; rm -rf $HOME/.config/opencode; rm -rf $HOME/.config/goose; rm -rf $HOME/.config/mcphub; rm -rf $HOME/.config/vectorcode; stow -d $HOME/.stowed npm copilot opencode goose mcphub vectorcode
 ```
 
 ## Installing Stowed Terminal Tools
