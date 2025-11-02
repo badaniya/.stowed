@@ -4,6 +4,7 @@ transient/
 .cache/
 .lsp-session-v1
 projectile-bookmarks.eld
+copilot/**/logs/
 goose/**/githubcopilot
 goose/**/*.bak*
 goose/**/*.yaml
