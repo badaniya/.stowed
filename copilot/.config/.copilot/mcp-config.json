@@ -5,6 +5,11 @@
       "type": "http",
       "headers": {"x-jira-pat": "${input:jira-pat-token}"},
       "tools": ["*"]
+    },
+    "mcphub": {
+      "url": "http://localhost:37373/mcp",
+      "type": "http",
+      "tools": ["*"]
     }
   },
   "inputs": [

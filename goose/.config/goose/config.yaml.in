@@ -39,6 +39,17 @@ extensions:
     timeout: 300
     type: streamable_http
     uri: https://ws1-jira-mcp.qa.xcloudiq.com/mcp
+  mcphub:
+    available_tools: []
+    bundled: null
+    description: MCPHub
+    enabled: true
+    env_keys: []
+    envs: {}
+    name: mcphub
+    timeout: 300
+    type: streamable_http
+    uri: https://localhost:37373/mcphub
   todo:
     available_tools: []
     bundled: true
