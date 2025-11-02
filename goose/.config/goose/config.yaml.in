@@ -48,8 +48,8 @@ extensions:
     envs: {}
     name: mcphub
     timeout: 300
-    type: streamable_http
-    uri: https://localhost:37373/mcphub
+    type: sse
+    uri: http://localhost:37373/mcp
   todo:
     available_tools: []
     bundled: true
