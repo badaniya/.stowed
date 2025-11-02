@@ -21,6 +21,17 @@ if [[ -f $HOME/.private_zsh_functions.zsh ]]; then
     source $HOME/.private_zsh_functions.zsh
 fi
 
+# preexe - a built-in zsh function that is called before executing certain commands
+preexec() 
+{
+    case $1 in
+    goose*)
+        # This sets up the goose config file with env variables before running any goose command
+        envsubst < $HOME/.config/goose/config.yaml.in > $HOME/.config/goose/config.yaml
+        ;;
+    esac
+}
+
 host_ip()
 {
     hostname -I | cut -d ' ' -f 1
