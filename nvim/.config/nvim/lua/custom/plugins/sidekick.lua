@@ -33,7 +33,8 @@ return {
       },
       tools = {
         goose = {
-          cmd = { 'goose', 'session' },
+          -- Start goose with zsh so the preexec hook is called.
+          cmd = { 'zsh', '-c', 'goose', 'session' },
           -- Optional: custom keymaps for this tool
           -- keys = {
           --   submit = {
