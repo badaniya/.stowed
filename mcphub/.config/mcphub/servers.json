@@ -1,0 +1,54 @@
+{
+  "mcpServers": {
+    "browser_tools": {
+      "args": [
+        "@agentdeskai/browser-tools-mcp@latest"
+      ],
+      "command": "npx"
+    },
+    "fetch": {
+      "args": [
+        "mcp-server-fetch"
+      ],
+      "command": "uvx"
+    },
+    "git-dev-repo": {
+      "args": [
+        "mcp-server-git",
+        "--repository",
+        "${GIT_DEV_REPO_PATH}"
+      ],
+      "command": "uvx"
+    },
+    "github": {
+      "disabled": false,
+      "headers": {
+        "Authorization": "Bearer ${GH_TOKEN}"
+      },
+      "url": "https://api.githubcopilot.com/mcp/"
+    },
+    "jira-remote-mcp": {
+      "headers": {
+        "x-jira-pat": "${JIRA_MCP_API_TOKEN}"
+      },
+      "tools": [
+        "*"
+      ],
+      "type": "http",
+      "url": "https://ws1-jira-mcp.qa.xcloudiq.com/mcp"
+    },
+    "sequentialthinking": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ],
+      "command": "npx"
+    },
+    "time": {
+      "args": [
+        "mcp-server-time"
+      ],
+      "command": "uvx"
+    }
+  }
+}
