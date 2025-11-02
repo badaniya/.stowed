@@ -1,0 +1,19 @@
+{
+  "banner": "once",
+  "last_logged_in_user": {
+    "host": "https://github.com",
+    "login": "${USER}"
+  },
+  "logged_in_users": [
+    {
+      "host": "https://github.com",
+      "login": "${USER}"
+    }
+  ],
+  "render_markdown": true,
+  "screen_reader": false,
+  "theme": "auto",
+  "copilot_tokens": {
+    "https://github.com:badaniya": "${GH_TOKEN}"
+  }
+}
