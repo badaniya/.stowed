@@ -3,7 +3,7 @@
     "jira-remote-mcp": {
       "url": "https://ws1-jira-mcp.qa.xcloudiq.com/mcp",
       "type": "http",
-      "headers": {"x-jira-pat": "${input:jira-pat-token}"},
+      "headers": {"x-jira-pat": "${JIRA_MCP_API_TOKEN}"},
       "tools": ["*"]
     },
     "mcphub": {
@@ -11,13 +11,5 @@
       "type": "http",
       "tools": ["*"]
     }
-  },
-  "inputs": [
-    {
-      "type": "promptString",
-      "id": "jira-pat-token",
-      "description": "Enter your JIRA Personal Access Token",
-      "password": true
-    }
-  ]
+  }
 }
