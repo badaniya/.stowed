@@ -296,7 +296,7 @@ nix-env -iA nixpkgs.vectorcode
 
 ```bash
 # golang:
-golang_version="1.22.7"
+golang_version="1.25.3"
 wget https://go.dev/dl/go"$golang_version".linux-amd64.tar.gz
 sudo tar -xvf go"$golang_version".linux-amd64.tar.gz
 sudo rm -rf /usr/local/go && sudo mv go /usr/local
