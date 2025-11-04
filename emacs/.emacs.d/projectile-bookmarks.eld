@@ -1,1 +1,0 @@
-("~/workspace/badaniya/campus_fabric/GoDCApp/" "~/.stowed/" "~/")
