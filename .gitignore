@@ -3,7 +3,8 @@ vim/**/session/
 transient/
 .cache/
 .lsp-session-v1
-projectile-bookmarks.eld
+emacs/.emacs.d/projectile-bookmarks.eld
+emacs/.emacs.d/eln-cache/
 copilot/**/logs/
 goose/**/githubcopilot
 goose/**/*.bak*
