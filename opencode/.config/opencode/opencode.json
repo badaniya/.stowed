@@ -22,7 +22,7 @@
     "messages_half_page_up": "ctrl+u",
     "messages_half_page_down": "ctrl+d",
     "messages_first": "ctrl+g,home",
-    "messages_last": "ctrl+z,end",
+    "messages_last": "ctrl+e,end",
     "messages_copy": "<leader>y",
     "messages_undo": "<leader>u",
     "messages_redo": "<leader>r",
