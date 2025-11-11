@@ -29,6 +29,7 @@ This repository is used to store all dot-config files for various shells and edi
 
 - tmuxinator
 - gitui
+- lazygit
 - imagemagick
 - mermaid-cli
 - kubecolor (kubectl)
@@ -75,7 +76,7 @@ rm -rf $HOME/.config/ghostty; rm -rf $HOME/.bash*; rm -rf $HOME/.zsh*; rm -rf $H
 
 ```bash
 # Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
-rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/gitui; stow -d $HOME/.stowed tmuxinator gitui
+rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/gitui; rm -rf $HOME/.config/lazygit; stow -d $HOME/.stowed tmuxinator gitui lazygit
 ```
 
 ### 5) Run Stow Command to Establish Symlinks to the Repository for Optional AI Terminal Tools
@@ -230,14 +231,21 @@ sh <(curl -L https://nixos.org/nix/install) --daemon
 nix-env -iA nixpkgs.tmuxinator
 ```
 
-### 4) Gitui - Terminal Git TUI
+### 4) Gitui - Terminal Git TUI (Rust based)
 
 ```bash
 # Nix dependency
 nix-env -iA nixpkgs.gitui
 ```
 
-### 5) Image and Diagram Markdown Support in Neovim
+### 5) Lazygit - Another Terminal Git TUI
+
+```bash
+# Nix dependency
+nix-env -iA nixpkgs.lazygit
+```
+
+### 6) Image and Diagram Markdown Support in Neovim
 
 ```bash
 # Nix dependency
@@ -245,7 +253,7 @@ nix-env -iA nixpkgs.imagemagick
 nix-env -iA nixpkgs.mermaid-cli
 ```
 
-### 6) Kulala format conversion - Openapi to http
+### 7) Kulala format conversion - Openapi to http
 
 ```bash
 npm install -g @mistweaverco/kulala-fmt
