@@ -59,7 +59,7 @@ return {
           },
           adapter = {
             name = 'copilot',
-            model = 'claude-sonnet-4.5', -- prefer using Claude 4.5 'claude-sonnet-4.5' (but incurs a premium multiplier of 1)
+            model = 'claude-haiku-4.5', -- prefer using Claude 4.5 'claude-sonnet-4.5' (but incurs a premium multiplier of 1)
           },
           roles = {
             ---The header name for the LLM's messages
@@ -103,7 +103,7 @@ return {
         inline = {
           adapter = {
             name = 'copilot',
-            model = 'claude-sonnet-4.5', -- prefer using Claude 4.5 'claude-sonnet-4.5' (but incurs a premium multiplier of 1)
+            model = 'claude-haiku-4.5', -- prefer using Claude 4.5 'claude-sonnet-4.5' (but incurs a premium multiplier of 1)
           },
         },
       },
