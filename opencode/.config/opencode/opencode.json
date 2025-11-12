@@ -47,12 +47,33 @@
     "edit": true,
     "read": true,
     "write": true,
-    "grep": true,
-    "glob": true,
-    "list": true,
-    "todoread": true,
-    "todowrite": true,
+    "grep": false,
+    "glob": false,
+    "list": false,
+    "todoread": false,
+    "todowrite": false,
     "webfetch": true
+  },
+  "agent": {
+    "build": {
+      "mode": "primary",
+      "model": "github-copilot/claude-haiku-4.5",
+      "tools": {
+        "write": true,
+        "edit": true,
+        "bash": true
+      }
+    },
+    "plan": {
+      "mode": "primary",
+      "model": "github-copilot/claude-haiku-4.5",
+      "tools": {
+        "write": false,
+        "edit": false,
+        "bash": false,
+        "mcphub*": false
+      }
+    },
   },
   "mcp": {
     "jira-remote-mcp": {
