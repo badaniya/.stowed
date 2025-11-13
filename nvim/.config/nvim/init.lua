@@ -737,6 +737,14 @@ require('lazy').setup({
           solid = false, -- use solid styling for floating windows, see |winborder|
         },
 
+        custom_highlights = function(colors)
+          return {
+            LineNrAbove = { fg = colors.surface2 },
+            --LineNr = { fg = colors.surface2 },
+            LineNrBelow = { fg = colors.surface2 },
+          }
+        end,
+
         auto_integrations = true, -- automatically detect lazy plugins for theme integration
         integrations = { -- forced integrations
           barbar = false,
