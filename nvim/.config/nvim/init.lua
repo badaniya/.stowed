@@ -739,9 +739,16 @@ require('lazy').setup({
 
         custom_highlights = function(colors)
           return {
-            LineNrAbove = { fg = colors.surface2 },
-            --LineNr = { fg = colors.surface2 },
-            LineNrBelow = { fg = colors.surface2 },
+            -- Lighter gray for relative numbering (only)
+            -- LineNrAbove = { fg = colors.overlay0 },
+            -- LineNrBelow = { fg = colors.overlay0 },
+
+            -- Darker gray for relative numbering (only)
+            -- LineNrAbove = { fg = colors.surface2 },
+            -- LineNrBelow = { fg = colors.surface2 },
+
+            -- Lighter gray for relative numbering and file tree exlorer structure lines
+            LineNr = { fg = colors.overlay0 },
           }
         end,
 
