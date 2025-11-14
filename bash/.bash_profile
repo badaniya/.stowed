@@ -24,7 +24,7 @@ export PATH=$PATH:$HOME/.local/bin:$HOME/.cargo/bin:/opt/nvim-linux-x86_64/bin:$
 export DOCKER_BUILDKIT=1
 
 ## Kubectl Environment Settings ##
-export KUBECONFIG=~/.kube/config
+export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 export KUBECOLOR_CONFIG=~/.stowed/kubecolor/catppuccin-mocha.yaml
 
 ## Other Environment Settings ##
