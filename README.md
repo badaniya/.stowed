@@ -417,7 +417,8 @@ tmux kill-server
 # General Nvim Bindings
 <space> : Main leader key for all menus
 <\> : Toggle NeoTree - Directory Browser
-<*> : Bring up search for the highlighted text object
+<#> : Upwards search for the highlighted text object
+<*> : Downwards search for the highlighted text object
 <q-/> : Bring up search history
 <q-:> : Bring up command history
 <C-v> : Block-Visual editing mode (<C-q> for WSL2)
