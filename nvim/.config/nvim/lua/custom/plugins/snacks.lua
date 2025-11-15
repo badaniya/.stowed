@@ -722,6 +722,22 @@ return {
       mode = { 'n', 'v' },
     },
 
+    -- Picker GitHub
+    {
+      '<leader>gp',
+      function()
+        Snacks.picker.gh_pr()
+      end,
+      desc = 'GitHub Pull Requests (open)',
+    },
+    {
+      '<leader>gP',
+      function()
+        Snacks.picker.gh_pr { state = 'all' }
+      end,
+      desc = 'GitHub Pull Requests (all)',
+    },
+
     -- LazyGit
     {
       '<leader>L',
