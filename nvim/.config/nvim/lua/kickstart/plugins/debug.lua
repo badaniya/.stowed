@@ -109,11 +109,11 @@ return {
       dap.set_breakpoint(vim.fn.input 'Breakpoint condition: ')
     end, { desc = 'Debug: Set Breakpoint' })
     vim.keymap.set('n', '<F12>', dap.disconnect, { desc = 'Debug: Disconnect' })
+    vim.keymap.set('n', '<M-k>', '<Cmd>lua require("dapui").eval()<CR>', { desc = 'Debug: Eval at cursor' })
 
     -- Pretty up the debug breakpoints
     vim.fn.sign_define('DapBreakpoint', { text = '🔴', texthl = '', linehl = '', numhl = 'DapBreakpoint' })
-    vim.fn.sign_define('DapBreakpointCondition',
-      { text = '🟡', texthl = '', linehl = '', numhl = 'DapBreakpointCondition' })
+    vim.fn.sign_define('DapBreakpointCondition', { text = '🟡', texthl = '', linehl = '', numhl = 'DapBreakpointCondition' })
     vim.fn.sign_define('DapStopped', { text = '', texthl = '', linehl = '', numhl = 'DapStopped' })
   end,
 }
