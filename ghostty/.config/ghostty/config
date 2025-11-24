@@ -21,6 +21,11 @@ custom-shader = ./shaders/cursor_smear_fade.glsl
 
 # Font Config
 font-family = "JetBrainsMono Nerd Font"
+#font-family = "Roboto Mono Nerd Font"
+#font-family = "Source Code Pro Nerd Font"
+#font-family = "FiraMono Nerd Font"
+#font-family = "FiraCode Nerd Font"
+#font-family = "UbuntuMono Nerd Font"
 font-size = 15.0
 
 # Keybinds
