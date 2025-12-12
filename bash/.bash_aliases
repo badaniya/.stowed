@@ -32,6 +32,11 @@ alias goinstallgodef="go install github.com/rogpeppe/godef@latest"
 alias k3sctl="k3s kubectl"
 which kubecolor >/dev/null && alias kubectl="kubecolor"
 
+# Diff-Review Aliases
+alias dr="$HOME/diff-review/diff-review"
+alias vr="$HOME/diff-review/view-review"
+alias vrt="$HOME/diff-review/view-review-tabs --palette dstd --keybindings $HOME/.config/diff-review/vim.json"
+
 # Terminal/Expect Aliases
 alias gterm="terminal_launcher gnome-terminal"
 alias mterm="terminal_launcher mate-terminal"
