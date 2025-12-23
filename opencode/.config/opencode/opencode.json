@@ -56,7 +56,7 @@
   "agent": {
     "build": {
       "mode": "primary",
-      "model": "github-copilot/claude-sonnet-4.5",
+      "model": "github-copilot/claude-opus-4.5",
       "tools": {
         "write": true,
         "edit": true,
@@ -65,7 +65,7 @@
     },
     "plan": {
       "mode": "primary",
-      "model": "github-copilot/claude-sonnet-4.5",
+      "model": "github-copilot/claude-opus-4.5",
       "tools": {
         "write": false,
         "edit": false,
