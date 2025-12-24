@@ -2,7 +2,8 @@ return {
   'yetone/avante.nvim',
   version = false, -- set this if you want to always pull the latest change
   -- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
-  build = 'make',
+  -- Using prebuilt binaries since Rust/Cargo is not installed
+  build = 'make BUILD_FROM_SOURCE=false',
   -- build = "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false" -- for windows
   dependencies = {
     'nvim-lua/plenary.nvim',
