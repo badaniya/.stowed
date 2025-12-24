@@ -895,6 +895,7 @@ require('lazy').setup({
   },
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
+    branch = 'master', -- pin to master branch for backward compatibility with old configs API
     build = ':TSUpdate',
     dependencies = {
       { 'nvim-treesitter/nvim-treesitter-textobjects' },
