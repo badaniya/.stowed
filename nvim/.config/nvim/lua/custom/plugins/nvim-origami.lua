@@ -12,7 +12,10 @@ return {
   config = function(_, opts)
     -- default settings
     require('origami').setup {
-      useLspFoldsWithTreesitterFallback = true, -- required for `autoFold`
+      useLspFoldsWithTreesitterFallback = {
+        enabled = true, -- required for `autoFold`
+        foldmethodIfNeitherIsAvailable = 'indent', ---@type string|fun(bufnr: number): string
+      },
       autoFold = {
         enabled = true,
         kinds = { 'comment', 'imports' }, ---@type lsp.FoldingRangeKind[]
