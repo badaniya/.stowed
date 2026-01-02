@@ -545,7 +545,35 @@ require('lazy').setup({
         -- nix/nix flakes LSP
         nil_ls = {},
         -- python LSP
-        pyright = {},
+        -- pyright = {}, // Note: Disabled in favor of pylsp
+        pylsp = { -- python-lsp-server
+          settings = {
+            pylsp = {
+              plugins = {
+                -- formatter options
+                black = { enabled = false },
+                autopep8 = { enabled = false },
+                flake8 = { enabled = false },
+                yapf = { enabled = false },
+                -- linter options
+                pylint = { enabled = false, executable = 'pylint' },
+                pyflakes = { enabled = false },
+                pycodestyle = { enabled = false },
+                pydocstyle = { enabled = false },
+                -- type checker
+                pylsp_mypy = { enabled = false },
+                -- auto-completion options
+                jedi_completion = { fuzzy = false },
+                -- import sorting
+                pyls_isort = { enabled = false },
+                -- complexity checker
+                mccabe = { enabled = false },
+                preload = { enabled = false },
+                rope_completion = { enabled = false },
+              },
+            },
+          },
+        },
         -- JSON/YAML LSP
         spectral = {},
         -- SQL LSP
@@ -608,7 +636,9 @@ require('lazy').setup({
         'marksman',
         'nil',
         'nilaway',
+        'python-lsp-server',
         'revive',
+        'ruff',
         'shellcheck',
         'spectral-language-server',
         'sqruff',
@@ -666,18 +696,18 @@ require('lazy').setup({
       }
       require('mason-lspconfig').setup {
         ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
-        --automatic_installation = true,
-        --handlers = {
-        --  function(server_name)
-        --    local server = servers[server_name] or {}
-        --    -- This handles overriding only values explicitly passed
-        --    -- by the server configuration above. Useful when disabling
-        --    -- certain features of an LSP (for example, turning off formatting for ts_ls)
-        --    server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-        --    require('lspconfig')[server_name].setup(server)
-        --  end,
-        --},
+        automatic_enable = false, -- We manually configure servers below
       }
+
+      -- Neovim 0.11+ / lspconfig v2.x: Use vim.lsp.config() to configure servers
+      for server_name, server_config in pairs(servers) do
+        -- This handles overriding only values explicitly passed
+        -- by the server configuration above. Useful when disabling
+        -- certain features of an LSP (for example, turning off formatting for ts_ls)
+        server_config.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server_config.capabilities or {})
+        vim.lsp.config(server_name, server_config)
+        vim.lsp.enable(server_name)
+      end
     end,
   },
 

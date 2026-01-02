@@ -18,6 +18,7 @@ return {
       lint.linters_by_ft['markdown'] = { 'markdownlint', 'markdownlint-cli2' }
       lint.linters_by_ft['nix'] = { 'nix' }
       lint.linters_by_ft['yaml'] = { 'yq' }
+      lint.linters_by_ft['py'] = { 'ruff' }
 
       -- To allow other plugins to add linters to require('lint').linters_by_ft,
       -- instead set linters_by_ft like this:
