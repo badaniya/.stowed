@@ -73,13 +73,66 @@
         "mcphub*": false
       }
     },
+    "thinking-beast-mode": {
+      "disable": true
+    },
+    "ultimate-transparent-thinking-beast-mode": {
+      "disable": true
+    },
+    "address-comments": {
+      "disable": true
+    },
+    "atlassian-requirements-to-jira": {
+      "disable": true
+    },
+    "blueprint-mode": {
+      "disable": true
+    },
+    "code-reviewer": {
+      "disable": true
+    },
+    "critical-thinking": {
+      "disable": true
+    },
+    "debug": {
+      "disable": true
+    },
+    "go-mcp-expert": {
+      "disable": true
+    },
+    "mentor": {
+      "disable": true
+    },
+    "strategic-plan": {
+      "disable": true
+    },
+    "principal-software-engineer": {
+      "disable": true
+    },
+    "prompt-builder": {
+      "disable": true
+    },
+    "software-engineer-agent-v1": {
+      "disable": true
+    },
+    "task-planner": {
+      "disable": true
+    },
+    "tech-debt-remediation-plan": {
+      "disable": true
+    },
+    "voidbeast-gpt41enhanced": {
+      "disable": true
+    },
   },
   "mcp": {
     "jira-remote-mcp": {
       "enabled": true,
       "url": "https://ws1-jira-mcp.qa.xcloudiq.com/mcp",
       "type": "remote",
-      "headers": {"x-jira-pat": "{env:JIRA_MCP_API_TOKEN}"}
+      "headers": {
+        "x-jira-pat": "{env:JIRA_MCP_API_TOKEN}"
+      }
     },
     "mcphub": {
       "enabled": true,
@@ -87,4 +140,7 @@
       "type": "remote"
     }
   },
+  "plugin": [
+    "oh-my-opencode"
+  ]
 }
