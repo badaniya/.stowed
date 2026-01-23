@@ -116,3 +116,15 @@ cd $HOME/.stowed
 git remote add fzf https://github.com/junegunn/fzf.git
 git subtree add --prefix=fzf/.fzf fzf master --squash
 ```
+
+### 6) AI - opencode
+
+```bash
+# Superpowers - Extended skills and plugins for OpenCode
+cd $HOME/.stowed
+git remote add superpowers https://github.com/obra/superpowers.git
+git subtree add --prefix=opencode/.config/opencode/superpowers superpowers main --squash
+
+# How to Pull in Superpowers Updates
+git subtree pull --prefix=opencode/.config/opencode/superpowers superpowers main --squash
+```
