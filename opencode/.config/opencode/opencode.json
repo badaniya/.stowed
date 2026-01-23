@@ -127,7 +127,7 @@
   },
   "mcp": {
     "jira-remote-mcp": {
-      "enabled": true,
+      "enabled": false,
       "url": "https://ws1-jira-mcp.qa.xcloudiq.com/mcp",
       "type": "remote",
       "headers": {
@@ -135,7 +135,7 @@
       }
     },
     "mcphub": {
-      "enabled": true,
+      "enabled": false,
       "url": "http://localhost:37373/mcp",
       "type": "remote"
     }
