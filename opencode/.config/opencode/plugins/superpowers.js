@@ -1,1 +1,1 @@
-/home/badaniya/.config/opencode/superpowers/.opencode/plugin/superpowers.js
+/home/badaniya/.config/opencode/superpowers/.opencode/plugins/superpowers.js
