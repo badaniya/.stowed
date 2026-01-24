@@ -122,13 +122,13 @@ testbeds:
     grafana_url: https://ws3r1-log.ep1test.com
     datasource_uid: nvo
     username: admin
-    password: ${LOKI_PASSWORD:-Extreme@123}
+    password: ${LOKI_PASSWORD:-password}
   
   g2r1:
     grafana_url: https://g2r1-log.ep1test.com
     datasource_uid: nvo
     username: readonly
-    password: ${LOKI_PASSWORD:-Extreme@123}
+    password: ${LOKI_PASSWORD:-password}
 ```
 
 ### Environment Variable Expansion
