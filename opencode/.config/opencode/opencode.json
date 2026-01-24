@@ -126,19 +126,6 @@
     },
   },
   "mcp": {
-    "jira-remote-mcp": {
-      "enabled": false,
-      "url": "https://ws1-jira-mcp.qa.xcloudiq.com/mcp",
-      "type": "remote",
-      "headers": {
-        "x-jira-pat": "{env:JIRA_MCP_API_TOKEN}"
-      }
-    },
-    "mcphub": {
-      "enabled": false,
-      "url": "http://localhost:37373/mcp",
-      "type": "remote"
-    }
   },
   "plugin": [
     "opencode-antigravity-auth@latest",
