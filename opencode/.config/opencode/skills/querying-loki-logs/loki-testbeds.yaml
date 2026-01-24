@@ -1,0 +1,18 @@
+testbeds:
+  ws3r1:
+    grafana_url: https://ws3r1-log.ep1test.com
+    datasource_uid: nvo
+    username: admin
+    password: ${LOKI_PASSWORD:-Extreme@123}
+
+  nvo2:
+    grafana_url: https://nvo2-log.ep1test.com
+    datasource_uid: nvo
+    username: admin
+    password: ${LOKI_PASSWORD:-Extreme@123}
+
+  st2r1:
+    grafana_url: https://st2r1-log.ep1test.com
+    datasource_uid: xiq
+    username: admin
+    password: ${LOKI_PASSWORD:-Extreme@123}
