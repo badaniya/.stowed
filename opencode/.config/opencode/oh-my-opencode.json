@@ -10,6 +10,9 @@
     "atlas": {
       "model": "github-copilot/claude-sonnet-4.5"
     },
+    "metis": {
+      "model": "github-copilot/claude-sonnet-4.5"
+    },
     "librarian": {
       "model": "opencode/glm-4.7-free"
     },
