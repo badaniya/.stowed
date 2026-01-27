@@ -41,6 +41,7 @@ This repository is used to store all dot-config files for various shells and edi
 - goose
 - mcphub (NeoVIM MCP servers hub)
 - vectorcode (vector DB)
+- agents (centralized skills for AI tools)
 
 ## How To Use GNU Stow
 
@@ -83,7 +84,7 @@ rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/gitui; rm -rf $HOME/.confi
 
 ```bash
 # Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
-rm -rf $HOME/.npmrc; rm -rf $HOME/.config/.copilot; rm -rf $HOME/.config/opencode; rm -rf $HOME/.config/goose; rm -rf $HOME/.config/mcphub; rm -rf $HOME/.config/vectorcode; stow -d $HOME/.stowed npm copilot opencode goose mcphub vectorcode
+rm -rf $HOME/.npmrc; rm -rf $HOME/.config/.copilot; rm -rf $HOME/.config/opencode; rm -rf $HOME/.config/goose; rm -rf $HOME/.config/mcphub; rm -rf $HOME/.config/vectorcode; rm -rf $HOME/.agents; stow -d $HOME/.stowed npm copilot opencode goose mcphub vectorcode agents
 ```
 
 ## Installing Stowed Terminal Tools
@@ -296,6 +297,13 @@ uv tool install "vectorcode<1.0.0"
 # or
 # Nix dependency
 nix-env -iA nixpkgs.vectorcode
+```
+
+### 6) Agents - A centralized skills area for all AI tools
+
+```bash
+# Sure-fire way to ensure stow symlink creation
+rm -rf $HOME/.agents; stow -d $HOME/.stowed agents
 ```
 
 ## Linux Development Environment Setup
