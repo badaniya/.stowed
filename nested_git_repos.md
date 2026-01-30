@@ -117,14 +117,30 @@ git remote add fzf https://github.com/junegunn/fzf.git
 git subtree add --prefix=fzf/.fzf fzf master --squash
 ```
 
-### 6) AI - opencode
+### 6) AI Agent Skills (No Longer a Subtree)
+
+Skills for AI agents (opencode, goose, copilot) are now managed via the `npx skills` CLI
+instead of git subtrees. Skills are installed to `~/.agents/skills/` and symlinked to
+each agent's config directory.
 
 ```bash
-# Superpowers - Extended skills and plugins for OpenCode
-cd $HOME/.stowed
-git remote add superpowers https://github.com/obra/superpowers.git
-git subtree add --prefix=opencode/.config/opencode/superpowers superpowers main --squash
+# Install skills using the skills CLI (https://skills.sh/)
+npx skills find <query>              # Search for skills
+npx skills add <owner/repo@skill> -g -y  # Install a skill globally
 
-# How to Pull in Superpowers Updates
-git subtree pull --prefix=opencode/.config/opencode/superpowers superpowers main --squash
+# Example: Install all obra/superpowers skills
+npx skills add obra/superpowers@brainstorming -g -y
+npx skills add obra/superpowers@systematic-debugging -g -y
+npx skills add obra/superpowers@test-driven-development -g -y
+npx skills add obra/superpowers@writing-plans -g -y
+npx skills add obra/superpowers@executing-plans -g -y
+npx skills add obra/superpowers@subagent-driven-development -g -y
+
+# Check for skill updates
+npx skills check
+npx skills update
 ```
+
+**Note**: The `agents/.agents/skills/` directory in this repo contains custom skills
+that are symlinked via GNU Stow. Third-party skills from `npx skills` are installed
+to `~/.agents/skills/` outside this repo.
