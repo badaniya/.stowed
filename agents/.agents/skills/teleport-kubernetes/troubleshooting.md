@@ -90,6 +90,23 @@ tkl <cluster-name>
 
 ### Cluster Name Not Found
 
+```
+ERROR: kubernetes cluster "stage-va" not found
+```
+
+**Root Cause:** Cluster names ALWAYS include a suffix (`-rdc`, `-gdc`, `-uz`). User input often omits this.
+
+**Resolution Rules (for AI Agents):**
+1. If name already ends with `-rdc` or `-gdc` → use as-is
+2. If name matches known GDC pattern → append `-gdc`:
+   - `eu0`, `eu1`, `us0`, `us1` (global data centers)
+   - `cal` (California GDC)
+   - Any of the above with `-staging` suffix
+3. Otherwise → append `-rdc` (default to Regional Data Center)
+
+**Known GDC clusters:** `cal-gdc`, `eu0-gdc`, `eu0-staging-gdc`, `eu1-gdc`, `eu1-staging-gdc`, `us0-gdc`, `us0-staging-gdc`, `us1-gdc`, `us1-staging-gdc`
+
+**Verification:**
 ```bash
 # List available clusters
 tsh kube ls --format=json 2>/dev/null | jq -r '.[].kube_cluster_name'
@@ -100,13 +117,17 @@ tsh kube ls --format=json | jq -r '.[].kube_cluster_name' | grep -i <partial>
 
 ### Common Naming Patterns
 
-| Input | Actual Cluster Name |
-|-------|---------------------|
-| stage-va | stage-va-rdc |
-| va | va-rdc |
-| fra | fra-rdc |
-| jp | jp-rdc |
-| eu0 | eu0-gdc |
+| User Input | Actual Cluster Name | Rule |
+|------------|---------------------|------|
+| `stage-va` | `stage-va-rdc` | Default → append `-rdc` |
+| `va` | `va-rdc` | Default → append `-rdc` |
+| `fra` | `fra-rdc` | Default → append `-rdc` |
+| `jp` | `jp-rdc` | Default → append `-rdc` |
+| `eu0` | `eu0-gdc` | Known GDC → append `-gdc` |
+| `us1` | `us1-gdc` | Known GDC → append `-gdc` |
+| `cal` | `cal-gdc` | Known GDC → append `-gdc` |
+| `eu0-staging` | `eu0-staging-gdc` | Known GDC → append `-gdc` |
+| `stage` | `stage-rdc` | Default → append `-rdc` |
 
 ## Database Queries
 

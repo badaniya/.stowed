@@ -1,7 +1,6 @@
 ---
 name: teleport-kubernetes
 description: Use when accessing Kubernetes clusters via Teleport, running kubectl commands through tsh, debugging pods in RDC/GDC clusters, or connecting to databases (Postgres, Kafka) via Teleport proxy.
-version: 2.0.0
 ---
 
 # Teleport Kubernetes Access
@@ -148,9 +147,34 @@ kubectl config current-context
 
 | Suffix | Type | Examples |
 |--------|------|----------|
-| `-rdc` | Regional Data Center | `va-rdc`, `fra-rdc`, `jp-rdc` |
-| `-gdc` | Global Data Center | `eu0-gdc`, `us1-gdc` |
-| `-uz` | User Zone | `va-uz`, `fra-uz` |
+| `-rdc` | Regional Data Center | `va-rdc`, `fra-rdc`, `jp-rdc`, `stage-rdc`, `stage-va-rdc` |
+| `-gdc` | Global Data Center | `eu0-gdc`, `us1-gdc`, `cal-gdc`, `eu0-staging-gdc` |
+
+### ⚠️ Cluster Name Resolution (IMPORTANT for AI Agents)
+
+**Cluster names ALWAYS include the suffix** (`-rdc`, `-gdc`). When a user provides a partial name, you MUST append the appropriate suffix:
+
+| User Says | Actual Cluster Name | Rule Applied |
+|-----------|---------------------|--------------|
+| `stage-va` | `stage-va-rdc` | Append `-rdc` for staging/regional |
+| `va` | `va-rdc` | Append `-rdc` for regional |
+| `fra` | `fra-rdc` | Append `-rdc` for regional |
+| `eu0` | `eu0-gdc` | Append `-gdc` for global |
+| `us1` | `us1-gdc` | Append `-gdc` for global |
+| `cal` | `cal-gdc` | Known GDC → append `-gdc` |
+| `stage` | `stage-rdc` | Append `-rdc` for staging |
+
+**Resolution Rules:**
+1. If name already ends with `-rdc`, `-gdc`, or `-uz` → use as-is
+2. If name matches known GDC pattern → append `-gdc`:
+   - `eu0`, `eu1`, `us0`, `us1` (global data centers)
+   - `cal` (California GDC)
+   - Any of the above with `-staging` suffix (e.g., `eu0-staging` → `eu0-staging-gdc`)
+3. Otherwise → append `-rdc` (default to Regional Data Center)
+
+**Known GDC clusters:** `cal-gdc`, `eu0-gdc`, `eu0-staging-gdc`, `eu1-gdc`, `eu1-staging-gdc`, `us0-gdc`, `us0-staging-gdc`, `us1-gdc`, `us1-staging-gdc`
+
+**When in doubt**, run `tsh kube ls | grep -i <partial-name>` to find the exact cluster name.
 
 ## kubectl via Teleport
 
@@ -234,6 +258,8 @@ check_nvo_pods_rdc fra-rdc jp-rdc va-rdc
 | Expired session | `tsh login --proxy=extreme-cloud.teleport.sh` |
 | Wrong kubeconfig | `export KUBECONFIG=~/.kube/config` |
 | Missing aliases | Re-run `tkl <cluster-name>` |
+| Cluster not found | Append `-rdc`/`-gdc` suffix (e.g., `stage-va` → `stage-va-rdc`) |
+| Partial cluster name | Run `tsh kube ls \| grep -i <name>` to find exact name |
 
 **For full troubleshooting guide**: See [troubleshooting.md](troubleshooting.md)
 

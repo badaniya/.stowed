@@ -1,8 +1,6 @@
 ---
 name: querying-loki-logs
-description: Use when querying Loki logs for debugging, investigating errors, tracing requests, or analyzing log patterns across testbeds
-version: 1.0.0
-trigger: log analysis, loki, logql, debugging logs, log query, tail logs, log volume
+description: "Use when querying Loki logs for debugging, investigating errors, tracing requests, or analyzing log patterns across testbeds. Triggers: log analysis, loki, logql, debugging logs, log query, tail logs, log volume"
 ---
 
 # Querying Loki Logs
@@ -108,11 +106,33 @@ date -d '2024-01-15T10:00:00Z' +%s000000000
 
 ## Testbed Configuration
 
-### Config File Location
+### Config File Location (MUST READ FIRST)
+
+**CRITICAL**: Before ANY Loki query, the agent MUST first resolve the config file:
+
+```bash
+# Step 1: ALWAYS check env var first
+CONFIG_FILE="$LOKI_TESTBEDS_CONFIG"
+
+# Step 2: Only fall back if env var is empty/unset
+if [ -z "$CONFIG_FILE" ] || [ ! -f "$CONFIG_FILE" ]; then
+  CONFIG_FILE="/home/badaniya/.agents/skills/querying-loki-logs/loki-testbeds.yaml"
+fi
+
+# Step 3: Read the config file to get testbed settings
+cat "$CONFIG_FILE"
+```
 
 Resolution order (first found wins):
-1. **`$LOKI_TESTBEDS_CONFIG`** - Environment variable pointing to config file
-2. **`./loki-testbeds.yaml`** - Relative to this skill's directory
+1. **`$LOKI_TESTBEDS_CONFIG`** - Environment variable pointing to config file (CHECK THIS FIRST)
+2. **`./loki-testbeds.yaml`** - Relative to this skill's directory (fallback only)
+
+**IMPORTANT**: Before querying, the agent MUST:
+1. Run `echo "$LOKI_TESTBEDS_CONFIG"` to check the env var
+2. If set and file exists, use that file for ALL testbed lookups
+3. If not set, fall back to `./loki-testbeds.yaml` in this skill's directory
+4. Read and parse the config file to get testbed connection details
+5. List available testbed names from the config file's `testbeds:` keys
 
 ### Config File Format
 
@@ -161,9 +181,25 @@ curl -s -u "$AUTH" "$BASE/query_range" \
 
 ### If Testbed Not Specified
 
-Ask user: "Which testbed should I query? Available: ws2r1, ws3r1, ws4r1, g2r1, st2r1, nvo2"
+First, read the config file to get available testbeds:
 
-(List comes from config file keys)
+```bash
+# ALWAYS check env var first
+if [ -n "$LOKI_TESTBEDS_CONFIG" ] && [ -f "$LOKI_TESTBEDS_CONFIG" ]; then
+  CONFIG_FILE="$LOKI_TESTBEDS_CONFIG"
+else
+  CONFIG_FILE="/home/badaniya/.agents/skills/querying-loki-logs/loki-testbeds.yaml"
+fi
+
+# List available testbeds (keys under 'testbeds:')
+# Option 1: Using grep (no yq dependency)
+grep -E '^\s{2}[a-zA-Z0-9_-]+:\s*$' "$CONFIG_FILE" | sed 's/://g' | awk '{print $1}'
+
+# Option 2: Using yq (if available)
+# yq -r '.testbeds | keys | .[]' "$CONFIG_FILE"
+```
+
+Then ask user: "Which testbed should I query? Available: [list from config]"
 
 ## Loki API Reference (via Grafana Proxy)
 
