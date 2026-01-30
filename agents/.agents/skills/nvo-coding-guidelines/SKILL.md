@@ -144,6 +144,26 @@ device, err := database.FindByID[Device](ctx, db, id,
 )
 ```
 
+**Important**: `clause.Associations` only preloads **first-level** sub-tables. Nested associations (e.g., `Device.Ports[].Connections`) are NOT loaded automatically. Always verify that any sub-table you access in code has been explicitly preloaded:
+
+```go
+// Wrong: assumes Ports.Connections is loaded, but it's not
+device, err := database.FindByID[Device](ctx, db, id,
+    database.WithPreload(clause.Associations),
+)
+for _, port := range device.Ports {
+    for _, conn := range port.Connections { // nil or empty - NOT preloaded!
+        // ...
+    }
+}
+
+// Correct: explicitly preload nested associations
+device, err := database.FindByID[Device](ctx, db, id,
+    database.WithPreload("Ports"),
+    database.WithPreload("Ports.Connections"), // nested preload
+)
+```
+
 ### Existence Checks
 
 ```go
