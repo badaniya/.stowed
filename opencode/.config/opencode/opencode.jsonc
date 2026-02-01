@@ -130,12 +130,13 @@
       // "description": "Kubernetes cluster management via kubernetes-mcp-server (deployed in mcp-services namespace)",
       "type": "remote",
       "url": "http://10.64.13.61/kubernetes-mcp/mcp",
-      "enabled": true
+      "enabled": false
     },
     "loki": {
       // "description": "Loki log querying and analysis"
       "type": "remote",
       "url": "http://10.64.13.61/loki-mcp/mcp",
+      "enabled": false
     }
   },
   "plugin": [
