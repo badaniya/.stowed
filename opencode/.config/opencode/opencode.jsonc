@@ -140,9 +140,9 @@
     }
   },
   "plugin": [
-    "oh-my-opencode",
+    "oh-my-opencode@latest",
     "opencode-antigravity-auth@latest",
-    "@tarquinen/opencode-dcp@latest",
+    "@tarquinen/opencode-dcp@latest"
   ],
   "provider": {
     "google": {

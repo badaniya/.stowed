@@ -2,25 +2,29 @@
   "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-opencode.schema.json",
   "agents": {
     "sisyphus": {
-      "model": "github-copilot/claude-opus-4.5"
+      "model": "github-copilot/claude-opus-4.6",
+      "variant": "max"
     },
     "prometheus": {
-      "model": "github-copilot/claude-opus-4.5"
+      "model": "github-copilot/claude-opus-4.6",
+      "variant": "max"
     },
     "atlas": {
       "model": "github-copilot/claude-sonnet-4.5"
     },
     "metis": {
-      "model": "github-copilot/claude-sonnet-4.5"
+      "model": "github-copilot/claude-opus-4.6",
+      "variant": "max"
     },
     "librarian": {
-      "model": "opencode/big-pickle"
+      "model": "github-copilot/claude-sonnet-4.5"
     },
     "explore": {
-      "model": "github-copilot/claude-haiku-4.5"
+      "model": "github-copilot/gpt-5-mini"
     },
     "oracle": {
-      "model": "github-copilot/gpt-5.2-codex"
+      "model": "github-copilot/gpt-5.2",
+      "variant": "high"
     },
     "frontend-ui-ux-engineer": {
       "model": "github-copilot/gemini-3-pro-preview"
@@ -29,6 +33,43 @@
       "model": "github-copilot/gemini-3-flash-preview"
     },
     "multimodal-looker": {
+      "model": "github-copilot/gemini-3-flash-preview"
+    },
+    "hephaestus": {
+      "model": "github-copilot/gpt-5.2-codex",
+      "variant": "medium"
+    },
+    "momus": {
+      "model": "github-copilot/gpt-5.2",
+      "variant": "medium"
+    }
+  },
+  "categories": {
+    "visual-engineering": {
+      "model": "github-copilot/gemini-3-pro-preview"
+    },
+    "ultrabrain": {
+      "model": "github-copilot/gpt-5.2-codex",
+      "variant": "xhigh"
+    },
+    "deep": {
+      "model": "github-copilot/gpt-5.2-codex",
+      "variant": "medium"
+    },
+    "artistry": {
+      "model": "github-copilot/gemini-3-pro-preview",
+      "variant": "high"
+    },
+    "quick": {
+      "model": "github-copilot/claude-haiku-4.5"
+    },
+    "unspecified-low": {
+      "model": "github-copilot/claude-sonnet-4.5"
+    },
+    "unspecified-high": {
+      "model": "github-copilot/claude-sonnet-4.5"
+    },
+    "writing": {
       "model": "github-copilot/gemini-3-flash-preview"
     }
   }
