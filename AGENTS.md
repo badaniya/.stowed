@@ -1,7 +1,7 @@
 # .stowed Repository Knowledge Base
 
-**Generated:** 2026-01-11T05:43:39Z
-**Commit:** c14adcdd
+**Generated:** 2026-02-08T19:59:48Z
+**Commit:** a0da805e
 **Branch:** main
 
 ## Overview
