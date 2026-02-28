@@ -31,7 +31,7 @@
         "bash": true,
         "mcphub*": false
       }
-    },
+    }
   },
   "mcp": {
     "kubernetes": {
@@ -48,7 +48,7 @@
     }
   },
   "plugin": [
-    "oh-my-opencode@latest",
+    "oh-my-opencode@3.8.5",
     "opencode-antigravity-auth@latest",
     "@ramtinj95/opencode-tokenscope@latest",
     //"@tarquinen/opencode-dcp@latest"
