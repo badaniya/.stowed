@@ -1,0 +1,43 @@
+-- Neo-tree is a Neovim plugin to browse the file system
+-- https://github.com/nvim-neo-tree/neo-tree.nvim
+
+return {
+  {
+    'nvim-neo-tree/neo-tree.nvim',
+    version = '*',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'nvim-tree/nvim-web-devicons', -- not strictly required, but recommended
+      'MunifTanjim/nui.nvim',
+    },
+    lazy = false,
+    keys = {
+      { '\\', ':Neotree reveal<CR>', desc = 'NeoTree reveal', silent = true },
+    },
+    opts = {
+      filesystem = {
+        window = {
+          mappings = {
+            ['\\'] = 'close_window',
+          },
+        },
+        filtered_items = {
+          visible = true,
+        },
+      },
+    },
+  },
+
+  -- Neo-tree session persistence helper
+  {
+    'rmagatti/auto-session',
+    config = function()
+      vim.o.sessionoptions = 'blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions'
+      vim.keymap.set('n', '<leader>p', require('auto-session.session-lens').search_session)
+      require('auto-session').setup {
+        pre_save_cmds = { 'Neotree close' },
+        post_restore_cmds = { 'Neotree filesystem show' },
+      }
+    end,
+  },
+}

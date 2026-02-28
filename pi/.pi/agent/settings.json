@@ -1,0 +1,14 @@
+{
+  "lastChangelogVersion": "0.55.3",
+  "defaultProvider": "github-copilot",
+  "defaultModel": "claude-sonnet-4.5",
+  "theme": "catppuccin-mocha-opaque",
+  "packages": [
+    "npm:pi-extmgr",
+    "npm:pi-markdown-preview",
+    "npm:@marckrenn/pi-sub-bar",
+    "npm:oh-pi"
+  ],
+  "defaultThinkingLevel": "off",
+  "hideThinkingBlock": false
+}

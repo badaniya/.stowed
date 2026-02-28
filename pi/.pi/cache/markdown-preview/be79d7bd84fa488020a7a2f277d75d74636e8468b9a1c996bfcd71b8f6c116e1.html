@@ -1,0 +1,225 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Markdown Preview</title>
+<style>
+:root {
+  --bg: #313244;
+  --card: #181825;
+  --border: #89b4fa;
+  --text: #cdd6f4;
+  --muted: #6c7086;
+  --code-bg: #313244;
+  --link: #89b4fa;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+body {
+  min-height: 100vh;
+  padding: 28px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+#preview-root {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 24px 28px;
+  overflow-wrap: anywhere;
+  line-height: 1.58;
+  font-size: 16px;
+}
+#preview-root h1, #preview-root h2, #preview-root h3, #preview-root h4, #preview-root h5, #preview-root h6 {
+  margin-top: 1.2em;
+  margin-bottom: 0.5em;
+  line-height: 1.25;
+}
+#preview-root h1 { font-size: 2em; border-bottom: 1px solid var(--border); padding-bottom: 0.3em; }
+#preview-root h2 { font-size: 1.5em; border-bottom: 1px solid var(--border); padding-bottom: 0.25em; }
+#preview-root p, #preview-root ul, #preview-root ol, #preview-root blockquote, #preview-root table {
+  margin-top: 0;
+  margin-bottom: 1em;
+}
+#preview-root a { color: var(--link); text-decoration: none; }
+#preview-root a:hover { text-decoration: underline; }
+#preview-root blockquote {
+  margin-left: 0;
+  padding: 0 1em;
+  border-left: 0.25em solid var(--border);
+  color: var(--muted);
+}
+#preview-root pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  overflow: auto;
+}
+#preview-root code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.9em;
+}
+#preview-root :not(pre) > code {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.12em 0.35em;
+}
+#preview-root table {
+  border-collapse: collapse;
+  display: block;
+  max-width: 100%;
+  overflow: auto;
+}
+#preview-root th, #preview-root td {
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+}
+#preview-root hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 1.25em 0;
+}
+#preview-root img { max-width: 100%; }
+#preview-root math[display="block"] {
+  display: block;
+  margin: 1em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+#preview-root .mermaid-container {
+  text-align: center;
+  margin: 1em 0;
+  overflow-x: auto;
+}
+#preview-root .mermaid-container svg {
+  max-width: 100%;
+  height: auto;
+}
+</style>
+</head>
+<body>
+  <article id="preview-root"><h2 id="catppuccin-mocha-theme-crescent_moon"><strong>Catppuccin Mocha
+Theme</strong> 🌙</h2>
+<p>Your dotfiles use the <strong>Catppuccin Mocha</strong> theme
+consistently across all tools:</p>
+<h3 id="art-theme-configuration-by-tool">🎨 Theme Configuration by
+Tool</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Tool</th>
+<th>Config File</th>
+<th>Theme Setting</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Starship</strong> (prompt)</td>
+<td><code>starship/.config/starship.toml</code></td>
+<td><code>palette = "catppuccin_mocha"</code></td>
+</tr>
+<tr class="even">
+<td><strong>Neovim</strong></td>
+<td><code>nvim/.config/nvim/init.lua</code></td>
+<td><code>catppuccin/nvim</code> plugin</td>
+</tr>
+<tr class="odd">
+<td><strong>Tmux</strong></td>
+<td><code>tmux/.tmux/plugins/tmux/catppuccin_options_tmux.conf</code></td>
+<td><code>@catppuccin_flavor "mocha"</code></td>
+</tr>
+<tr class="even">
+<td><strong>Bat</strong> (syntax)</td>
+<td><code>bat/.config/bat/config</code></td>
+<td><code>--theme="Catppuccin Mocha"</code></td>
+</tr>
+<tr class="odd">
+<td><strong>Delta</strong> (git diff)</td>
+<td><code>delta/.config/delta/delta.gitconfig</code></td>
+<td><code>features = catppuccin-mocha</code></td>
+</tr>
+<tr class="even">
+<td><strong>GitUI</strong></td>
+<td><code>gitui/.config/gitui/theme.ron</code></td>
+<td>Catppuccin Mocha colors</td>
+</tr>
+<tr class="odd">
+<td><strong>Zsh</strong> (syntax)</td>
+<td><code>zsh/.zshrc</code></td>
+<td><code>catppuccin_mocha-zsh-syntax-highlighting.zsh</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="art-catppuccin-mocha-color-palette">🎨 Catppuccin Mocha Color
+Palette</h3>
+<pre><code>Base Colors:
+  rosewater: #f5e0dc    flamingo: #f2cdcd
+  pink:      #f5c2e7    mauve:    #cba6f7
+  red:       #f38ba8    maroon:   #eba0ac
+  peach:     #fab387    yellow:   #f9e2af
+  green:     #a6e3a1    teal:     #94e2d5
+  sky:       #89dceb    sapphire: #74c7ec
+  blue:      #89b4fa    lavender: #b4befe
+
+Text &amp; Overlays:
+  text:      #cdd6f4    subtext1: #bac2de
+  subtext0:  #a6adc8    overlay2: #9399b2
+  overlay1:  #7f849c    overlay0: #6c7086
+
+Surfaces:
+  surface2:  #585b70    surface1: #45475a
+  surface0:  #313244    base:     #1e1e2e
+  mantle:    #181825    crust:    #11111b</code></pre>
+<h3 id="file_folder-available-theme-files">📁 Available Theme Files</h3>
+<ul>
+<li>Bat themes: <code>bat/.config/bat/themes/Catppuccin*.tmTheme</code>
+(4 variants)</li>
+<li>Delta theme:
+<code>delta/.config/delta/themes/catppuccin.gitconfig</code></li>
+<li>GitUI themes: <code>gitui/.config/gitui/catppuccin-*.ron</code> (4
+variants)</li>
+</ul>
+<p>All tools are configured for the <strong>Mocha</strong> variant
+(dark, warm theme). Other variants available: Latte (light), Frappé,
+Macchiato.</p>
+</article>
+  <script type="module">
+  (async () => {
+    const mermaidBlocks = document.querySelectorAll('pre.mermaid');
+    if (mermaidBlocks.length === 0) {
+      window.__mermaidDone = true;
+      return;
+    }
+    try {
+      const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs');
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'dark',
+      });
+      mermaidBlocks.forEach(pre => {
+        const code = pre.querySelector('code');
+        const src = code ? code.textContent : pre.textContent;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'mermaid-container';
+        const div = document.createElement('div');
+        div.className = 'mermaid';
+        div.textContent = src;
+        wrapper.appendChild(div);
+        pre.replaceWith(wrapper);
+      });
+      await mermaid.run();
+    } catch (e) { console.error('Mermaid render failed:', e); }
+    window.__mermaidDone = true;
+  })();
+  </script>
+</body>
+</html>

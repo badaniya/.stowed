@@ -1,0 +1,26 @@
+{
+  "banner": "never",
+  "last_logged_in_user": {
+    "host": "https://github.com",
+    "login": "badaniya"
+  },
+  "logged_in_users": [
+    {
+      "host": "https://github.com",
+      "login": "badaniya"
+    }
+  ],
+  "render_markdown": true,
+  "screen_reader": false,
+  "theme": "auto",
+  "copilot_tokens": {
+    "https://github.com:badaniya": "${GH_TOKEN}"
+  },
+  "skill_directories": [
+    "/home/badaniya/.agent/skills"
+  ],
+  "allowed_urls": [
+    "https://build-nvo.extremenetworks.com",
+    "http://10.64.10.57:8080"
+  ]
+}

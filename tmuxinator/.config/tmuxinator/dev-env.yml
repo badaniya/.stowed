@@ -1,0 +1,45 @@
+---
+name: dev-env
+project_root: "/home/badaniya/workspace/badaniya"
+windows:
+- jira:
+    layout: b6c7,273x76,0,0[273x22,0,0,127,273x25,0,23,128,273x27,0,49,129]
+    panes:
+    - 
+    -
+    -
+- edit:
+    layout: 1695,255x70,0,0{189x70,0,0[189x57,0,0,53,189x12,0,58,54],65x70,190,0,55}
+    panes:
+    - nvim --
+    -
+    -
+- build:
+    layout: a396,255x70,0,0{128x70,0,0,56,126x70,129,0[126x29,129,0,57,126x13,129,30{63x13,129,30,58,62x13,193,30,126},126x13,129,44,124,126x12,129,58,125]}
+    panes:
+    - lazydocker
+    -
+    -
+    -
+    -
+    -
+- deploy:
+    layout: 2442,255x70,0,0{93x70,0,0[93x35,0,0,59,93x34,0,36,123],161x70,94,0[161x50,94,0,60,161x19,94,51,122]}
+    panes:
+    - k9s
+    -
+    -
+    -
+- review:
+    layout: a69d,255x70,0,0[255x36,0,0,61,255x33,0,37,62]
+    panes:
+    -
+    -
+- notes:
+    layout: da64,255x70,0,0,63
+    panes:
+    - cd /home/badaniya/vaults/work/proj; nvim --
+- test:
+    layout: da65,255x70,0,0,64
+    panes:
+    -

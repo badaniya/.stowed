@@ -1,0 +1,17 @@
+---
+name: ci-docker
+project_root: "/home/badaniya/workspace/badaniya"
+windows:
+- code:
+    layout: b247,273x75,0,0,108
+    panes:
+    - cd /home/badaniya/workspace/badaniya
+- run:
+    layout: dab8,273x75,0,0{133x75,0,0,109,139x75,134,0,110}
+    panes:
+    - cd /home/badaniya/workspace/badaniya
+    - cd /home/badaniya/workspace/badaniya
+- notes:
+    layout: 3241,273x75,0,0,111
+    panes:
+    - cd /home/badaniya/vaults/work/proj; nvim --

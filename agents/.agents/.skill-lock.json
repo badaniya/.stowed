@@ -1,0 +1,114 @@
+{
+  "version": 3,
+  "skills": {
+    "skill-creator": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/anthropics/skills.git",
+      "skillPath": "skills/skill-creator/SKILL.md",
+      "skillFolderHash": "7bd8fc459f09f0e14dcc2adbb4a5a58e60ea755c",
+      "installedAt": "2026-01-28T01:02:09.205Z",
+      "updatedAt": "2026-01-28T01:02:09.205Z"
+    },
+    "brainstorming": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/obra/superpowers.git",
+      "skillPath": "skills/brainstorming/SKILL.md",
+      "skillFolderHash": "761c2f359474328f40d73db9cb4cc1f5721917e5",
+      "installedAt": "2026-01-30T01:44:10.124Z",
+      "updatedAt": "2026-01-30T01:44:10.124Z"
+    },
+    "systematic-debugging": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/obra/superpowers.git",
+      "skillPath": "skills/systematic-debugging/SKILL.md",
+      "skillFolderHash": "828c239ac986cc1fc7edd10292f66e4a3640e9c0",
+      "installedAt": "2026-01-30T01:44:10.432Z",
+      "updatedAt": "2026-01-30T01:44:10.432Z"
+    },
+    "test-driven-development": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/obra/superpowers.git",
+      "skillPath": "skills/test-driven-development/SKILL.md",
+      "skillFolderHash": "98904a7d8e0e04b9bd46220b9b17298f45fe0b72",
+      "installedAt": "2026-01-30T01:44:11.118Z",
+      "updatedAt": "2026-01-30T01:44:11.118Z"
+    },
+    "writing-plans": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/obra/superpowers.git",
+      "skillPath": "skills/writing-plans/SKILL.md",
+      "skillFolderHash": "ff9617a705411dd9ab273366106f4f7f83f9f60d",
+      "installedAt": "2026-01-30T01:44:11.994Z",
+      "updatedAt": "2026-01-30T01:44:11.994Z"
+    },
+    "executing-plans": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/obra/superpowers.git",
+      "skillPath": "skills/executing-plans/SKILL.md",
+      "skillFolderHash": "d29f65b534726822ec7f58224b7866ae4855ca86",
+      "installedAt": "2026-01-30T01:44:12.366Z",
+      "updatedAt": "2026-01-30T01:44:12.366Z"
+    },
+    "subagent-driven-development": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/obra/superpowers.git",
+      "skillPath": "skills/subagent-driven-development/SKILL.md",
+      "skillFolderHash": "0a809712916c8d05ad9ae006ef63be75dfcadbec",
+      "installedAt": "2026-01-30T01:44:12.930Z",
+      "updatedAt": "2026-01-30T01:44:12.930Z"
+    },
+    "obsidian-markdown": {
+      "source": "kepano/obsidian-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/kepano/obsidian-skills.git",
+      "skillPath": "skills/obsidian-markdown/SKILL.md",
+      "skillFolderHash": "1a03add8c7e440843213cbb0a15e3cdd86a6edf2",
+      "installedAt": "2026-02-04T01:16:11.753Z",
+      "updatedAt": "2026-02-04T01:16:11.753Z"
+    },
+    "obsidian-bases": {
+      "source": "kepano/obsidian-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/kepano/obsidian-skills.git",
+      "skillPath": "skills/obsidian-bases/SKILL.md",
+      "skillFolderHash": "5bfadf62f4bf19090d4d31b808322ccd8d61b42e",
+      "installedAt": "2026-02-04T01:16:13.611Z",
+      "updatedAt": "2026-02-04T01:16:13.611Z"
+    },
+    "json-canvas": {
+      "source": "kepano/obsidian-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/kepano/obsidian-skills.git",
+      "skillPath": "skills/json-canvas/SKILL.md",
+      "skillFolderHash": "9b4b2082bf287a246c2d3ce6f4c12a437f6b9633",
+      "installedAt": "2026-02-04T01:16:15.302Z",
+      "updatedAt": "2026-02-04T01:16:15.302Z"
+    },
+    "mcp-builder": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/anthropics/skills.git",
+      "skillPath": "skills/mcp-builder/SKILL.md",
+      "skillFolderHash": "9173e2c2107aac82d4ca6c726d71e89d11760470",
+      "installedAt": "2026-02-19T17:11:21.518Z",
+      "updatedAt": "2026-02-19T17:11:21.518Z"
+    },
+    "dev-browser": {
+      "source": "sawyerhood/dev-browser",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/sawyerhood/dev-browser.git",
+      "skillPath": "skills/dev-browser/SKILL.md",
+      "skillFolderHash": "710b6a7d1b7f68d6893629b6911143584e22add6",
+      "installedAt": "2026-02-21T02:09:40.159Z",
+      "updatedAt": "2026-02-21T02:09:40.159Z"
+    }
+  },
+  "dismissed": {}
+}

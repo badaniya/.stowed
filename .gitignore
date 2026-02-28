@@ -1,0 +1,29 @@
+Session.vim
+vim/**/session/
+transient/
+.cache/
+.lsp-session-v1
+emacs/.emacs.d/projectile-bookmarks.eld
+emacs/.emacs.d/eln-cache/
+emacs/.emacs.d/elpa/
+copilot/**/logs/
+goose/**/githubcopilot
+goose/**/*.bak*
+goose/**/*.yaml
+goose/**/history.txt
+
+
+# Dependencies
+**/node_modules/
+
+# Browser automation profiles
+**/browser-data/
+
+# Python build artifacts
+**/__pycache__/
+**/*.pyc
+
+# Ephemeral session/tmp artifacts
+pi-session-*.html
+**/skills/*/tmp/.sisyphus/
+agents/.agents/skills/dev-browser/tmp/
