@@ -1,0 +1,35 @@
+{
+  "lastChangelogVersion": "0.55.4",
+  "defaultProvider": "github-copilot",
+  "defaultModel": "claude-sonnet-4.5",
+  "theme": "pi-catppuccin-mocha",
+  "packages": [
+    "npm:pi-extmgr",
+    "npm:pi-markdown-preview",
+    "npm:@marckrenn/pi-sub-bar",
+    "npm:oh-pi",
+    {
+      "source": "npm:@aliou/pi-guardrails",
+      "extensions": [
+        "+src/index.ts"
+      ]
+    },
+    "npm:pi-mcp-adapter",
+    "npm:pi-read-map",
+    "npm:pi-super-curl",
+    {
+      "source": "npm:lsp-pi",
+      "extensions": [
+        "+lsp.ts"
+      ]
+    },
+    "npm:pi-teams",
+    "npm:pi-shell-completions",
+    "npm:visual-explainer",
+    "npm:pi-which-key",
+    "npm:pi-screenshots-picker",
+    "npm:@marckrenn/pi-sub-core"
+  ],
+  "defaultThinkingLevel": "off",
+  "hideThinkingBlock": false
+}

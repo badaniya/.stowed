@@ -1,0 +1,77 @@
+name: Release
+
+on:
+  schedule:
+    # Run on every first day of the month
+    - cron: '0 0 1 * *'
+  push:
+    tags:
+      - '**'
+
+jobs:
+
+  changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set version
+        id: set_version
+        # Set version depending on whether this is a regular monthly release or
+        # a custom release triggered by a tag push.
+        run: |
+          if [ "${{ github.event_name }}" == "push" ]; then
+            VERSION=${{ github.ref_name }}
+          else
+            VERSION=$(date +'%y.%m.0')
+          fi
+          echo "VERSION=$VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Generate Changelog
+        id: changelog
+        uses: orhun/git-cliff-action@v4
+        with:
+            config: cliff.toml
+            # Consider the changes from the pushed tag (latest) when running due to a
+            # tag push and consider unreleased changes when this is a regular monthly
+            # release. This is necessary, because on monthly releases, the tag is created later.
+            args: --verbose $( [ "${{github.event_name }}" == "push" ] && echo --latest || echo --unreleased --tag ${{ steps.set_version.outputs.VERSION }} )
+        env:
+            OUTPUT: CHANGELOG.md
+            GITHUB_REPO: ${{ github.repository }}
+
+      - name: Check Changelog
+        id: check_changelog
+        # Test if the changelog contains any entries
+        run: test -n "${{ steps.changelog.outputs.content }}"
+        continue-on-error: true
+
+    outputs:
+      changeLogOutcome: ${{ steps.check_changelog.outcome }}
+      changelog: ${{ steps.changelog.outputs.content }}
+      version: ${{ steps.set_version.outputs.VERSION }}
+
+  release:
+    runs-on: ubuntu-latest
+    needs: changelog
+    if: needs.changelog.outputs.changeLogOutcome == 'success'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Create Package
+        run: tar -czf forgit-${{ needs.changelog.outputs.version }}.tar.gz --exclude LICENSE --exclude README.md --exclude cliff.toml *
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          # The release action implicitly creates the tag if it does not exist.
+          tag_name: ${{ needs.changelog.outputs.version }}
+          body: ${{ needs.changelog.outputs.changelog }}
+          files: forgit-${{ needs.changelog.outputs.version }}.tar.gz

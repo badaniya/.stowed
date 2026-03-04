@@ -1,0 +1,23 @@
+{
+  "name": "@marckrenn/pi-sub-shared",
+  "version": "1.3.0",
+  "description": "Shared types and event contract for the sub-* ecosystem",
+  "type": "module",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "files": [
+    "index.ts",
+    "README.md"
+  ],
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "scripts": {
+    "check": "tsc --noEmit",
+    "check:watch": "tsc --noEmit --watch"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.0"
+  }
+}

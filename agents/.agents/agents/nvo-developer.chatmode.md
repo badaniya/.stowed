@@ -1,0 +1,1 @@
+/home/badaniya/.private_agents/nvo-developer.chatmode.md

@@ -1,0 +1,1 @@
+/home/badaniya/.private_prompts/gap-analysis.md

@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "kubernetes": {
+      "description": "Kubernetes cluster management via kubernetes-mcp-server (deployed in mcp-services namespace)",
+      "type": "http",
+      "url": "http://10.64.13.61/kubernetes-mcp/mcp",
+      "tools": ["*"]
+    },
+    "loki": {
+       "description": "Loki log querying and analysis",
+      "type": "http",
+      "url": "http://10.64.13.61/loki-mcp/mcp",
+      "tools": ["*"]
+    }
+  }
+}

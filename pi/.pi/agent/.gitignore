@@ -1,0 +1,5 @@
+.extmgr-cache
+cache
+sessions
+auth.json
+.update-check
