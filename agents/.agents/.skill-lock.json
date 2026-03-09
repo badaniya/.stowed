@@ -6,9 +6,9 @@
       "sourceType": "github",
       "sourceUrl": "https://github.com/anthropics/skills.git",
       "skillPath": "skills/skill-creator/SKILL.md",
-      "skillFolderHash": "5c26c1472b98de33a48074ba5d3efe3a727b8e37",
+      "skillFolderHash": "98a510d1cfef9f82c3b1eec200229ca68725e613",
       "installedAt": "2026-01-28T01:02:09.205Z",
-      "updatedAt": "2026-03-04T01:21:53.949Z"
+      "updatedAt": "2026-03-09T15:17:28.082Z"
     },
     "brainstorming": {
       "source": "obra/superpowers",
@@ -108,6 +108,24 @@
       "skillFolderHash": "710b6a7d1b7f68d6893629b6911143584e22add6",
       "installedAt": "2026-02-21T02:09:40.159Z",
       "updatedAt": "2026-02-21T02:09:40.159Z"
+    },
+    "ai-image-generation": {
+      "source": "toolshell/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/toolshell/skills.git",
+      "skillPath": "tools/image/ai-image-generation/SKILL.md",
+      "skillFolderHash": "6dc182f1fb439bc6e61f4ea909bc72dec8e3f0f8",
+      "installedAt": "2026-03-09T15:10:46.023Z",
+      "updatedAt": "2026-03-09T15:10:46.023Z"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/skills.git",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "skillFolderHash": "c2f31172b6f256272305a5e6e7228b258446899f",
+      "installedAt": "2026-03-09T15:16:01.629Z",
+      "updatedAt": "2026-03-09T15:16:01.629Z"
     }
   },
   "dismissed": {}

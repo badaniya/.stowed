@@ -48,7 +48,7 @@
     }
   },
   "plugin": [
-    "oh-my-opencode@3.8.5",
+    //"oh-my-opencode@latest",
     "opencode-antigravity-auth@latest",
     "@ramtinj95/opencode-tokenscope@latest",
     //"@tarquinen/opencode-dcp@latest"
