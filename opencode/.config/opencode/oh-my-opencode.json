@@ -42,9 +42,6 @@
     "momus": {
       "model": "github-copilot/gpt-5.2",
       "variant": "medium"
-    },
-    "nvo-developer": {
-      "model": "github-copilot/claude-sonnet-4.5",
     }
   },
   "categories": {

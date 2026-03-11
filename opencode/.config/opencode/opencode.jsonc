@@ -31,6 +31,10 @@
         "bash": true,
         "mcphub*": false
       }
+    },
+    "nvo-developer": {
+      "mode": "primary",
+      "model": "github-copilot/claude-sonnet-4.5"
     }
   },
   "mcp": {
@@ -48,7 +52,7 @@
     }
   },
   "plugin": [
-    //"oh-my-opencode@latest",
+    "oh-my-opencode@latest",
     "opencode-antigravity-auth@latest",
     "@ramtinj95/opencode-tokenscope@latest",
     //"@tarquinen/opencode-dcp@latest"
