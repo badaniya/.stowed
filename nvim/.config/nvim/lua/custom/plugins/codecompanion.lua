@@ -45,7 +45,7 @@ return {
           },
         },
       },
-      strategies = {
+      interactions = {
         chat = {
           display = {
             intro_message = 'Welcome to CodeCompanion ✨! Press ? for options',
@@ -278,7 +278,7 @@ return {
         mcphub = {
           callback = 'mcphub.extensions.codecompanion',
           opts = {
-            make_vars = true,
+            make_vars = false, -- Disabled: mcphub references config.interactions.chat.variables which was renamed to editor_context in codecompanion v19.0.0 (PR #2719)
             make_slash_commands = true,
             show_results_in_chat = true,
           },
