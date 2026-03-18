@@ -35,7 +35,7 @@
     },
     "nvo-developer": {
       "mode": "primary",
-      "model": "github-copilot/claude-sonnet-4.5"
+      "model": "github-copilot/claude-sonnet-4.6"
     }
   },
   "mcp": {
