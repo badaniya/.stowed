@@ -87,7 +87,7 @@ rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/mise; rm -rf $HOME/.config
 
 ```bash
 # Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
-rm -rf $HOME/.npmrc; rm -rf $HOME/.config/.copilot; rm -rf $HOME/.config/opencode; rm -rf $HOME/.pi; rm -rf $HOME/.config/goose; rm -rf $HOME/.config/mcphub; rm -rf $HOME/.config/vectorcode; rm -rf $HOME/.agents; stow -d $HOME/.stowed npm copilot opencode pi goose mcphub vectorcode agents
+rm -rf $HOME/.npmrc; rm -rf $HOME/.config/.copilot; rm -rf $HOME/.config/opencode; rm -rf $HOME/.pi; rm -rf $HOME/.config/goose; rm -rf $HOME/.config/mcphub; rm -rf $HOME/.config/vectorcode; rm -rf $HOME/.config/github-copilot; rm -rf $HOME/.agents; stow -d $HOME/.stowed npm copilot opencode pi goose mcphub vectorcode github-copilot agents
 ```
 
 ## Installing Stowed Terminal Tools
