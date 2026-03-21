@@ -73,7 +73,7 @@ cd $HOME/.stowed
 git reset --hard HEAD
 
 # Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
-rm -rf $HOME/.config/ghostty; rm -rf $HOME/.bash*; rm -rf $HOME/.zsh*; rm -rf $HOME/.oh-my-zsh; rm -rf $HOME/.tmux*; rm -rf $HOME/.config/nvim; rm -rf $HOME/.vim*; rm -rf $HOME/.emacs*; stow -d $HOME/.stowed stow ghostty tmux fzf bat delta starship bash zsh nvim vim emacs
+rm -rf $HOME/.config/ghostty; rm -rf $HOME/.bash*; rm -rf $HOME/.zsh*; rm -rf $HOME/.oh-my-zsh; rm -rf $HOME/.tmux*; rm -rf $HOME/.config/nvim; rm -rf $HOME/.vim*; rm -rf $HOME/.emacs*; rm -rf $HOME/.config/github-copilot; rm -rf $HOME/.config/Code/User; stow -d $HOME/.stowed stow ghostty tmux fzf bat delta starship bash zsh nvim vim emacs goland code
 ```
 
 ### 4) Run Stow Command to Establish Symlinks to the Repository for Optional Terminal Tools
@@ -87,7 +87,7 @@ rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/mise; rm -rf $HOME/.config
 
 ```bash
 # Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
-rm -rf $HOME/.npmrc; rm -rf $HOME/.config/.copilot; rm -rf $HOME/.config/opencode; rm -rf $HOME/.pi; rm -rf $HOME/.config/goose; rm -rf $HOME/.config/mcphub; rm -rf $HOME/.config/vectorcode; rm -rf $HOME/.config/github-copilot; rm -rf $HOME/.agents; stow -d $HOME/.stowed npm copilot opencode pi goose mcphub vectorcode github-copilot agents
+rm -rf $HOME/.npmrc; rm -rf $HOME/.config/.copilot; rm -rf $HOME/.config/opencode; rm -rf $HOME/.pi; rm -rf $HOME/.config/goose; rm -rf $HOME/.config/mcphub; rm -rf $HOME/.config/vectorcode; rm -rf $HOME/.agents; stow -d $HOME/.stowed npm copilot opencode pi goose mcphub vectorcode agents
 ```
 
 ## Installing Stowed Terminal Tools
