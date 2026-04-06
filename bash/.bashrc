@@ -120,3 +120,9 @@ fi
 [ -f ~/"$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
 
 if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init bash)"; fi
+
+# NVO Skills Config - resolver/verify paths derived from opencode skills install location
+_NVO_SKILLS_SCRIPTS="$HOME/.agents/skills/nvo-skills-config/scripts"
+export NVO_CONFIG_RESOLVER_PATH="$_NVO_SKILLS_SCRIPTS/nvo-config-resolver.sh"
+export NVO_VERIFY_CREDENTIALS_PATH="$_NVO_SKILLS_SCRIPTS/nvo-verify-credentials.sh"
+unset _NVO_SKILLS_SCRIPTS
