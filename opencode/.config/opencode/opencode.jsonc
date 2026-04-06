@@ -55,7 +55,8 @@
   "plugin": [
     "oh-my-openagent@latest",
     "opencode-antigravity-auth@latest",
-    "@ramtinj95/opencode-tokenscope@latest"
+    "@ramtinj95/opencode-tokenscope@latest",
+    "@tarquinen/opencode-dcp@latest"
   ],
   "provider": {
     "google": {
