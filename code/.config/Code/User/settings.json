@@ -13,5 +13,6 @@
       "commands": ["editor.action.goToImplementation"]
     },
 ],
-"go.toolsManagement.autoUpdate": true
+"go.toolsManagement.autoUpdate": true,
+"workbench.startupEditor": "none"
 }

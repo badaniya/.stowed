@@ -357,7 +357,7 @@ rm -rf $HOME/.agents; stow -d $HOME/.stowed agents
 
 ```bash
 # golang:
-golang_version="1.25.3"
+golang_version="1.26.1"
 wget https://go.dev/dl/go"$golang_version".linux-amd64.tar.gz
 sudo tar -xvf go"$golang_version".linux-amd64.tar.gz
 sudo rm -rf /usr/local/go && sudo mv go /usr/local
