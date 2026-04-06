@@ -1,25 +1,93 @@
 {
-  "cursorUp": ["up", "alt+k"],
-  "cursorDown": ["down", "alt+j"],
-  "cursorLeft": ["left", "alt+h"],
-  "cursorRight": ["right", "alt+l"],
-  "cursorWordLeft": ["alt+left", "alt+b"],
-  "cursorWordRight": ["alt+right", "+alt+w"],
-  "cursorLineStart": ["home", "shift+^"],
-  "cursorLineEnd": ["end", "shift+$"],
-  "jumpForward": ["ctrl+]","alt+;"],
-  "jumpBackward": ["ctrl+alt+]","alt+,"],
-  "pageUp": ["pageUp", "alt+u", "alt+h"],
-  "pageDown": ["pageDown", "alt+d", "alt+l"],
-  "deleteWordBackward": ["alt+backspace", "ctrl+alt+b"],
-  "deleteWordForward": ["alt+delete", "ctrl+alt+w"],
-  "deleteToLineStart": ["alt+shift+^"],
-  "deleteToLineEnd": ["alt+shift+$"],
-  "selectUp": ["up", "alt+k"],
-  "selectDown": ["down", "alt+j"],
-  "selectPageUp": ["pageUp", "alt+u", "alt+h"],
-  "selectPageDown": ["pageDown", "alt+d", "alt+l"],
-  "selectModel": ["alt+m"],
-  "undo": ["alt+r"],
-  "exit": ["ctrl+c"]
+  "tui.editor.cursorUp": [
+    "up",
+    "alt+k"
+  ],
+  "tui.editor.cursorDown": [
+    "down",
+    "alt+j"
+  ],
+  "tui.editor.cursorLeft": [
+    "left",
+    "alt+h"
+  ],
+  "tui.editor.cursorRight": [
+    "right",
+    "alt+l"
+  ],
+  "tui.editor.cursorWordLeft": [
+    "alt+left",
+    "alt+b"
+  ],
+  "tui.editor.cursorWordRight": [
+    "alt+right",
+    "+alt+w"
+  ],
+  "tui.editor.cursorLineStart": [
+    "home",
+    "shift+^"
+  ],
+  "tui.editor.cursorLineEnd": [
+    "end",
+    "shift+$"
+  ],
+  "tui.editor.jumpForward": [
+    "ctrl+]",
+    "alt+;"
+  ],
+  "tui.editor.jumpBackward": [
+    "ctrl+alt+]",
+    "alt+,"
+  ],
+  "tui.editor.pageUp": [
+    "pageUp",
+    "alt+u",
+    "alt+h"
+  ],
+  "tui.editor.pageDown": [
+    "pageDown",
+    "alt+d",
+    "alt+l"
+  ],
+  "tui.editor.deleteWordBackward": [
+    "alt+backspace",
+    "ctrl+alt+b"
+  ],
+  "tui.editor.deleteWordForward": [
+    "alt+delete",
+    "ctrl+alt+w"
+  ],
+  "tui.editor.deleteToLineStart": [
+    "alt+shift+^"
+  ],
+  "tui.editor.deleteToLineEnd": [
+    "alt+shift+$"
+  ],
+  "tui.editor.undo": [
+    "alt+r"
+  ],
+  "tui.select.up": [
+    "up",
+    "alt+k"
+  ],
+  "tui.select.down": [
+    "down",
+    "alt+j"
+  ],
+  "tui.select.pageUp": [
+    "pageUp",
+    "alt+u",
+    "alt+h"
+  ],
+  "tui.select.pageDown": [
+    "pageDown",
+    "alt+d",
+    "alt+l"
+  ],
+  "app.exit": [
+    "ctrl+c"
+  ],
+  "app.model.select": [
+    "alt+m"
+  ]
 }
