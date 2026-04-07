@@ -14,6 +14,7 @@ Run a self-reflection on this session:
 - Any interruptions and course corrections by the user for skill/workflow corrections MUST be incorporated back into the skill.
 - Validate the skill is within specification and refactor accordingly, BUT correct triggering and progressive disclosure MUST be maintained.
 - Ensure skill compliance with standards with the extra restriction that SKILLS.md should be under 200 lines.
+- Ensure skill compliance with the skill description being under 1024 chars.
 - Limit skill references to 200 lines as well and refactor to preserve domain knowledge.
 - Snapshot each skill before editing: `cp -r <skill-path> ~/.agents/skill-snapshots/<skill-name>/`
   (NEVER snapshot into ~/.config/opencode/skills/ — the `**/SKILL.md` glob loads it as a duplicate)
