@@ -36,6 +36,17 @@
     "nvo-developer": {
       "mode": "primary",
       "model": "github-copilot/claude-sonnet-4.6"
+    },
+    "nvo-eval": {
+      "mode": "primary",
+      "model": "github-copilot/claude-sonnet-4.6",
+      "tools": {
+        "bash": false,
+        "interactive_bash": false,
+        "edit": false,
+        "write": false,
+        "webfetch": false
+      }
     }
   },
   "mcp": {
