@@ -1,0 +1,5 @@
+ide/
+logs/
+restart/
+session-state/
+*.json
