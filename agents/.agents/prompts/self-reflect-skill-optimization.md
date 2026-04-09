@@ -19,6 +19,7 @@ Run a self-reflection on this session:
 - Snapshot each skill before editing: `cp -r <skill-path> ~/.agents/skill-snapshots/<skill-name>/`
   (NEVER snapshot into ~/.config/opencode/skills/ — the `**/SKILL.md` glob loads it as a duplicate)
 - Source nvo-config-resolver.sh via `bash -c '...'` (bash-only syntax — not zsh-compatible).
+- After ALL optimizations are complete, backup the entire ~/.private_skills/* directory as a .tgz file and save the file as ~/.private_skills_backup_<datetimestamp>.tgz
 
 # DONT'S
 - Hard-code credentials in the skills. ONLY use the skill config ENV variables or generic labels and terms if no ENV exist.
