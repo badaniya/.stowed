@@ -25,6 +25,7 @@ Run a self-reflection on this session:
 # DONT'S
 - Hard-code credentials in the skills. ONLY use the skill config ENV variables or generic labels and terms if no ENV exist.
 - Hard-code the credentials file name. ONLY use the skill config ENV variable for the credentials file.
+- Remove the bootstrap nvo credentials section in the skill if exists.
 - Run evals. ONLY do a skill optimization unless specifically prompted to run a eval.
 - Restart a delegated agent session — always RESUME by session_id.
 
