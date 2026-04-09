@@ -19,6 +19,7 @@ Run a self-reflection on this session:
 - Snapshot each skill before editing: `cp -r <skill-path> ~/.agents/skill-snapshots/<skill-name>/`
   (NEVER snapshot into ~/.config/opencode/skills/ — the `**/SKILL.md` glob loads it as a duplicate)
 - Source nvo-config-resolver.sh via `bash -c '...'` (bash-only syntax — not zsh-compatible).
+- Update the metadata skill version for any changes. Major refactoring or restructuring of the skill warrants a Major version increment, smaller changes warrant a Minor version increment. Major is greater than or equal to 500 lines, Minor is less than 500 lines.
 - After ALL optimizations are complete, backup the entire ~/.private_skills/* directory as a .tgz file and save the file as ~/.private_skills_backup_<datetimestamp>.tgz
 
 # DONT'S
