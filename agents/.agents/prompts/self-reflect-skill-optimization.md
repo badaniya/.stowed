@@ -7,7 +7,7 @@ model: github-copilot/claude-opus-4.6
 Run a self-reflection on this session:
 
 # DO'S
-- Evaluate the session and optimize all skills utilized using the skill-creator, tokenscope skills.
+- Evaluate the session and optimize all skills utilized using the skill-creator, context-engineering-collection, tokenscope skills.
 - Use a sub-agent, one per skill that needs to be refactored and optimized. Ensure that sub-agent triggering instruction is generic for any agent harness to understand.
 - Ensure that the skills are RELIABLE (skill triggering, referencing resources/examples, and scripts execution MUST be followed).
 - Optimize by reducing the number of tool calls by the agent and sub-agents. This takes PRIORITY over token optimizations.
@@ -16,6 +16,7 @@ Run a self-reflection on this session:
 - Ensure skill compliance with standards with the extra restriction that SKILLS.md should be under 200 lines.
 - Ensure skill compliance with the skill description being under 1024 chars.
 - Limit skill references to 200 lines as well and refactor to preserve domain knowledge.
+- Ensure nvo private skills true source dir is under ~/.private_skills/, ~/.agents/skills/ dir symlinks to these nvo private skills source, and the agent harness tool symlinks the ~/.agent/skills dir for skills access.
 - Snapshot each skill before editing: `cp -r <skill-path> ~/.agents/skill-snapshots/<skill-name>/`
   (NEVER snapshot into ~/.config/opencode/skills/ — the `**/SKILL.md` glob loads it as a duplicate)
 - Source nvo-config-resolver.sh via `bash -c '...'` (bash-only syntax — not zsh-compatible).
