@@ -126,6 +126,34 @@
       "skillFolderHash": "c2f31172b6f256272305a5e6e7228b258446899f",
       "installedAt": "2026-03-09T15:16:01.629Z",
       "updatedAt": "2026-03-09T15:16:01.629Z"
+    },
+    "marp-slide": {
+      "source": "softaworks/agent-toolkit",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/softaworks/agent-toolkit.git",
+      "skillPath": "skills/marp-slide/SKILL.md",
+      "skillFolderHash": "fcba767a6ab48cbe297d752d83c7987f61eabdb8",
+      "installedAt": "2026-04-14T01:10:55.735Z",
+      "updatedAt": "2026-04-14T01:10:55.735Z"
+    },
+    "context-engineering-collection": {
+      "source": "muratcankoylan/agent-skills-for-context-engineering",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/muratcankoylan/agent-skills-for-context-engineering.git",
+      "skillPath": "SKILL.md",
+      "skillFolderHash": "7a95d94c364e25c869a86896a45791dfda6db8bf",
+      "installedAt": "2026-04-14T14:49:06.806Z",
+      "updatedAt": "2026-04-14T14:49:06.806Z"
+    },
+    "pdf": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/anthropics/skills.git",
+      "skillPath": "skills/pdf/SKILL.md",
+      "skillFolderHash": "6369f4649de69bd6857c9bc3b058a77206009238",
+      "pluginName": "document-skills",
+      "installedAt": "2026-04-14T16:01:55.666Z",
+      "updatedAt": "2026-04-14T16:01:55.666Z"
     }
   },
   "dismissed": {}

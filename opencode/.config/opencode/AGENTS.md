@@ -19,3 +19,14 @@ Using text search for symbol lookup when LSP is available is a critical error.
 - File discovery by name pattern
 - Non-code files (markdown, yaml, json)
 - Languages where `lsp_diagnostics` returns no results
+
+---
+
+## Learned Rules
+
+_Auto-populated by the memory engine when observations are promoted to rule tier._
+_Run `~/.private_agents_memory/memory-engine.sh export-rules` to update._
+
+<!-- MEMORY_RULES_START -->
+_No rules promoted yet. Rules require α ≥ 7, confidence ≥ 0.85, and age ≥ 14 days._
+<!-- MEMORY_RULES_END -->
