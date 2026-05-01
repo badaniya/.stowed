@@ -1,7 +1,7 @@
 ---
 description: Self reflection with skills optimization
 agent: nvo-developer
-model: github-copilot/claude-opus-4.6
+model: github-copilot/claude-sonnet-4.6
 ---
 
 Run a self-reflection on this session:
