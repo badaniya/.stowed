@@ -78,6 +78,7 @@ Before writing ANY bash command that falls under a loaded skill's domain:
 | Jenkins JSON parse | `python3 -c "import sys,json; ..."` | `jq '.field'` (crashes on malformed responses) |
 | NVO log access | Loki query via `nvo-loki-access` | `kubectl logs <pod>` (NVO doesn't write to stdout) |
 | Jenkins nested job path | `/job/Folder/job/SubFolder/job/JobName/` | `/job/Folder/SubFolder/job/JobName/` (missing `/job/` separator) |
+| **PR body extraction** | `gh pr view 123 --json body --jq '.body'` | `--json body` + Python `json.loads` (crashes on code blocks: `JSONDecodeError: Invalid control character`) |
 
 ### Signal That You Are Deviating
 

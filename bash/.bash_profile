@@ -27,9 +27,6 @@ export DOCKER_BUILDKIT=1
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 export KUBECOLOR_CONFIG=~/.stowed/kubecolor/catppuccin-mocha.yaml
 
-## Ghostty Workaround: prevent GTK4 segfault on touch/touchpad events (NVO-debug: libgtk-4.so crash)
-export GDK_CORE_DEVICE_EVENTS=1
-
 ## Other Environment Settings ##
 if [[ -f "$HOME/.private_bash_profile" ]]; then
     source "$HOME/.private_bash_profile"

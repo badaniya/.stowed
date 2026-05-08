@@ -6,27 +6,27 @@
       "sourceType": "github",
       "sourceUrl": "https://github.com/anthropics/skills.git",
       "skillPath": "skills/skill-creator/SKILL.md",
-      "skillFolderHash": "98a510d1cfef9f82c3b1eec200229ca68725e613",
+      "skillFolderHash": "3cf9a8db32597ba3e24b584a3d696f4e11c7d7b6",
       "installedAt": "2026-01-28T01:02:09.205Z",
-      "updatedAt": "2026-03-09T15:17:28.082Z"
+      "updatedAt": "2026-05-06T20:36:12.174Z"
     },
     "brainstorming": {
       "source": "obra/superpowers",
       "sourceType": "github",
       "sourceUrl": "https://github.com/obra/superpowers.git",
       "skillPath": "skills/brainstorming/SKILL.md",
-      "skillFolderHash": "d28aa4ed67fe5a3f1336f0fcccb1e548c67dc864",
+      "skillFolderHash": "f260c775073816860fef8a37c032ac77e2ff5821",
       "installedAt": "2026-01-30T01:44:10.124Z",
-      "updatedAt": "2026-03-04T01:21:56.605Z"
+      "updatedAt": "2026-05-06T20:36:13.841Z"
     },
     "systematic-debugging": {
       "source": "obra/superpowers",
       "sourceType": "github",
       "sourceUrl": "https://github.com/obra/superpowers.git",
       "skillPath": "skills/systematic-debugging/SKILL.md",
-      "skillFolderHash": "828c239ac986cc1fc7edd10292f66e4a3640e9c0",
+      "skillFolderHash": "e96f5f2620c17069d668be1880d5492e34c84ceb",
       "installedAt": "2026-01-30T01:44:10.432Z",
-      "updatedAt": "2026-01-30T01:44:10.432Z"
+      "updatedAt": "2026-05-06T20:36:15.335Z"
     },
     "test-driven-development": {
       "source": "obra/superpowers",
@@ -42,27 +42,27 @@
       "sourceType": "github",
       "sourceUrl": "https://github.com/obra/superpowers.git",
       "skillPath": "skills/writing-plans/SKILL.md",
-      "skillFolderHash": "cf6f5c8813cf0445276129a5f2b443927b50f645",
+      "skillFolderHash": "8fe8e8b6ee9e5cbe53cb172a36f0dc31f9875847",
       "installedAt": "2026-01-30T01:44:11.994Z",
-      "updatedAt": "2026-03-04T01:21:59.840Z"
+      "updatedAt": "2026-05-06T20:36:16.634Z"
     },
     "executing-plans": {
       "source": "obra/superpowers",
       "sourceType": "github",
       "sourceUrl": "https://github.com/obra/superpowers.git",
       "skillPath": "skills/executing-plans/SKILL.md",
-      "skillFolderHash": "75248b138170840e3e82680cfde7ca615414a548",
+      "skillFolderHash": "7c20d2bd7ff7b166ea3064e21b1e5f0455750878",
       "installedAt": "2026-01-30T01:44:12.366Z",
-      "updatedAt": "2026-03-04T01:22:02.793Z"
+      "updatedAt": "2026-05-06T20:36:18.028Z"
     },
     "subagent-driven-development": {
       "source": "obra/superpowers",
       "sourceType": "github",
       "sourceUrl": "https://github.com/obra/superpowers.git",
       "skillPath": "skills/subagent-driven-development/SKILL.md",
-      "skillFolderHash": "0a57c1590ddebe07ab4963238b6429447459659a",
+      "skillFolderHash": "73b43347c1bdc10f6ab81a5cdb036dd1c8098cc0",
       "installedAt": "2026-01-30T01:44:12.930Z",
-      "updatedAt": "2026-03-04T01:22:06.142Z"
+      "updatedAt": "2026-05-06T20:36:19.443Z"
     },
     "obsidian-markdown": {
       "source": "kepano/obsidian-skills",
@@ -96,36 +96,36 @@
       "sourceType": "github",
       "sourceUrl": "https://github.com/anthropics/skills.git",
       "skillPath": "skills/mcp-builder/SKILL.md",
-      "skillFolderHash": "9173e2c2107aac82d4ca6c726d71e89d11760470",
+      "skillFolderHash": "b866bcfb57b780c10b587c7b543e871a91661ce0",
       "installedAt": "2026-02-19T17:11:21.518Z",
-      "updatedAt": "2026-02-19T17:11:21.518Z"
+      "updatedAt": "2026-05-06T20:36:21.109Z"
     },
     "dev-browser": {
       "source": "sawyerhood/dev-browser",
       "sourceType": "github",
       "sourceUrl": "https://github.com/sawyerhood/dev-browser.git",
       "skillPath": "skills/dev-browser/SKILL.md",
-      "skillFolderHash": "710b6a7d1b7f68d6893629b6911143584e22add6",
+      "skillFolderHash": "71aa88dcc39949f014a7c87f68bc400843498da3",
       "installedAt": "2026-02-21T02:09:40.159Z",
-      "updatedAt": "2026-02-21T02:09:40.159Z"
+      "updatedAt": "2026-05-06T20:36:22.572Z"
     },
     "ai-image-generation": {
       "source": "toolshell/skills",
       "sourceType": "github",
       "sourceUrl": "https://github.com/toolshell/skills.git",
       "skillPath": "tools/image/ai-image-generation/SKILL.md",
-      "skillFolderHash": "6dc182f1fb439bc6e61f4ea909bc72dec8e3f0f8",
+      "skillFolderHash": "6dd506bfcba735783e28b8ab64559efa44d3a486",
       "installedAt": "2026-03-09T15:10:46.023Z",
-      "updatedAt": "2026-03-09T15:10:46.023Z"
+      "updatedAt": "2026-05-06T20:36:24.404Z"
     },
     "find-skills": {
       "source": "vercel-labs/skills",
       "sourceType": "github",
       "sourceUrl": "https://github.com/vercel-labs/skills.git",
       "skillPath": "skills/find-skills/SKILL.md",
-      "skillFolderHash": "c2f31172b6f256272305a5e6e7228b258446899f",
+      "skillFolderHash": "3013fdeb8a11b10b1eb795ec3ae8bfca38f7c26d",
       "installedAt": "2026-03-09T15:16:01.629Z",
-      "updatedAt": "2026-03-09T15:16:01.629Z"
+      "updatedAt": "2026-05-06T20:36:25.052Z"
     },
     "marp-slide": {
       "source": "softaworks/agent-toolkit",
@@ -162,7 +162,7 @@
       "skillPath": "skills/agent-browser/SKILL.md",
       "skillFolderHash": "121eecacd86c0aab06aef5cd4663e80c5397cd41",
       "installedAt": "2026-04-20T16:20:53.704Z",
-      "updatedAt": "2026-04-20T16:20:53.704Z"
+      "updatedAt": "2026-05-06T20:35:31.023Z"
     }
   },
   "dismissed": {}
