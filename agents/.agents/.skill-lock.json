@@ -163,6 +163,75 @@
       "skillFolderHash": "121eecacd86c0aab06aef5cd4663e80c5397cd41",
       "installedAt": "2026-04-20T16:20:53.704Z",
       "updatedAt": "2026-05-06T20:35:31.023Z"
+    },
+    "improve-codebase-architecture": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/mattpocock/skills.git",
+      "skillPath": "skills/engineering/improve-codebase-architecture/SKILL.md",
+      "skillFolderHash": "3ad8fa787b3b9b622d1f5a3d0afc27812ac782fa",
+      "pluginName": "mattpocock-skills",
+      "installedAt": "2026-05-10T17:12:48.987Z",
+      "updatedAt": "2026-05-10T17:12:48.987Z"
+    },
+    "grill-me": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/mattpocock/skills.git",
+      "skillPath": "skills/productivity/grill-me/SKILL.md",
+      "skillFolderHash": "2a1ad17028306ebe45f0e49703fa28b9b2e7f499",
+      "pluginName": "mattpocock-skills",
+      "installedAt": "2026-05-10T17:35:02.050Z",
+      "updatedAt": "2026-05-10T17:35:02.050Z"
+    },
+    "grill-with-docs": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/mattpocock/skills.git",
+      "skillPath": "skills/engineering/grill-with-docs/SKILL.md",
+      "skillFolderHash": "2969a1224c70fe41b9dd2ddbe32c2ec62f2815bd",
+      "pluginName": "mattpocock-skills",
+      "installedAt": "2026-05-10T17:36:09.070Z",
+      "updatedAt": "2026-05-10T17:36:09.070Z"
+    },
+    "using-superpowers": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/obra/superpowers.git",
+      "skillPath": "skills/using-superpowers/SKILL.md",
+      "skillFolderHash": "225dd70596c396940ff158335a954a64d93ece40",
+      "installedAt": "2026-05-10T17:42:11.478Z",
+      "updatedAt": "2026-05-10T17:42:11.478Z"
+    },
+    "pptx": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/anthropics/skills.git",
+      "skillPath": "skills/pptx/SKILL.md",
+      "skillFolderHash": "10b3d70962e489867ddfee7da92f7da6b0eccc4f",
+      "pluginName": "document-skills",
+      "installedAt": "2026-05-11T21:56:33.151Z",
+      "updatedAt": "2026-05-11T21:56:33.151Z"
+    },
+    "xlsx": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/anthropics/skills.git",
+      "skillPath": "skills/xlsx/SKILL.md",
+      "skillFolderHash": "f5fb1cdb7993b2feee8367e983e9d4d58d2eedd4",
+      "pluginName": "document-skills",
+      "installedAt": "2026-05-11T21:57:14.230Z",
+      "updatedAt": "2026-05-11T21:57:14.230Z"
+    },
+    "docx": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/anthropics/skills.git",
+      "skillPath": "skills/docx/SKILL.md",
+      "skillFolderHash": "a0d216202f9793a78da44cf96aabe48f42e627ac",
+      "pluginName": "document-skills",
+      "installedAt": "2026-05-11T21:57:14.303Z",
+      "updatedAt": "2026-05-11T21:57:14.303Z"
     }
   },
   "dismissed": {}

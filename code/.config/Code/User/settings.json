@@ -15,5 +15,6 @@
 ],
 "go.toolsManagement.autoUpdate": true,
 "workbench.startupEditor": "none",
-"chat.permissions.default": "autoApprove"
+"chat.permissions.default": "autoApprove",
+"github.copilot.chat.agentDebugLog.fileLogging.enabled": true
 }

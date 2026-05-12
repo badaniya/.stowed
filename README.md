@@ -38,6 +38,7 @@ This repository is used to store all dot-config files for various shells and edi
 
 **Stowed Optional AI Terminal Tools:**
 
+- claude
 - copilot-cli
 - opencode
 - pi
@@ -87,7 +88,7 @@ rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/mise; rm -rf $HOME/.config
 
 ```bash
 # Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
-rm -rf $HOME/.npmrc; rm -rf $HOME/.copilot; rm -rf $HOME/.config/.copilot; rm -rf $HOME/.config/opencode; rm -rf $HOME/.pi; rm -rf $HOME/.config/goose; rm -rf $HOME/.config/mcphub; rm -rf $HOME/.config/vectorcode; rm -rf $HOME/.agents; stow -d $HOME/.stowed npm copilot opencode pi goose mcphub vectorcode agents
+rm -rf $HOME/.npmrc; rm -rf $HOME/.claude; rm -rf $HOME/.copilot; rm -rf $HOME/.config/.copilot; rm -rf $HOME/.config/opencode; rm -rf $HOME/.pi; rm -rf $HOME/.config/goose; rm -rf $HOME/.config/mcphub; rm -rf $HOME/.agents; stow -d $HOME/.stowed npm claude copilot opencode pi goose mcphub agents
 ```
 
 ## Installing Stowed Terminal Tools
@@ -295,19 +296,25 @@ nix-env -iA nixpkgs.kulala-fmt
 nix-env -iA nixpkgs.nodejs_22
 ```
 
-### 2) Copilot-cli - GitHub Copilot for the terminal
+### 2) Claude Code - Anthropic's AI coding agent for the terminal
+
+```bash
+curl -fsSL https://claude.ai/install.sh | bash
+```
+
+### 3) Copilot-cli - GitHub Copilot for the terminal
 
 ```bash
 npm install -g @github/copilot
 ```
 
-### 3) Opencode - An open source AI coding agent for the terminal
+### 4) Opencode - An open source AI coding agent for the terminal
 
 ```bash
 curl -fsSL https://opencode.ai/install | bash
 ```
 
-### 4) Pi - A fully customizable AI coding agent for the terminal
+### 5) Pi - A fully customizable AI coding agent for the terminal
 
 ```bash
 npm install -g @mariozechner/pi-coding-agent
@@ -329,19 +336,10 @@ pi install npm:@marckrenn/pi-sub-core
 pi install npm:@marckrenn/pi-sub-bar
 ```
 
-### 5) Goose - An AI coding assistant for the terminal
+### 6) Goose - An AI coding assistant for the terminal
 
 ```bash
 curl -fsSL https://github.com/block/goose/releases/download/stable/download_cli.sh | bash
-```
-
-### 6) Vectorcode - A source code indexed vector DB for AI MCP use 
-
-```bash
-uv tool install "vectorcode<1.0.0"
-# or
-# Nix dependency
-nix-env -iA nixpkgs.vectorcode
 ```
 
 ### 7) Agents - A centralized skills area for all AI tools
