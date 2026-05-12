@@ -30,6 +30,7 @@ mauve='\033[38;2;203;166;247m'      # git branch
 teal='\033[38;2;148;226;213m'       # rate limit bars / labels
 sapphire='\033[38;2;116;199;236m'   # context bar brackets
 red='\033[38;2;243;139;168m'        # high usage warning
+overlay0='\033[38;2;108;112;134m'   # section separators
 reset='\033[0m'
 bold='\033[1m'
 dim='\033[2m'
@@ -139,34 +140,53 @@ if [ -n "$used_pct" ] && [ -n "$remaining_pct" ]; then
     _bar_off=""; _i=0
     while [ "$_i" -lt "$_empty" ]; do _bar_off="${_bar_off}⣿"; _i=$((_i+1)); done
 
-    right="$(printf "${dim}Ctx${reset}  ${dim}|${reset}  ${_rc}%s%s${reset}${dim}%s${reset}  ${dim}|${reset}  ${_rc}%d%%${reset}" \
+    right="$(printf "${dim}Ctx${reset} ${dim}│${reset}${_rc}%s%s${reset}${dim}%s${reset}${dim}│${reset} ${_rc}%d%%${reset}" \
         "$_bar_on" "$_pchar" "$_bar_off" "$_used")"
 fi
+
+# Helper: build braille bar segment (sub-char precision), sets _bar_on, _pchar, _bar_off
+_make_braille_bar() {
+    _mbpct="$1"; _mbw="$2"
+    _mbsub=$(awk "BEGIN { printf \"%d\", int($_mbpct / 100.0 * $_mbw * 8 + 0.5) }")
+    _mbfull=$(( _mbsub / 8 ))
+    _mbpart=$(( _mbsub % 8 ))
+    _mbhas=$(( _mbpart > 0 ? 1 : 0 ))
+    _mbempty=$(( _mbw - _mbfull - _mbhas ))
+    _bar_on=""; _j=0
+    while [ "$_j" -lt "$_mbfull" ]; do _bar_on="${_bar_on}⣿"; _j=$((_j+1)); done
+    _pchar=""
+    case "$_mbpart" in
+        1) _pchar="⡀";; 2) _pchar="⡄";; 3) _pchar="⡆";;
+        4) _pchar="⡇";; 5) _pchar="⣇";; 6) _pchar="⣧";; 7) _pchar="⣷";;
+    esac
+    _bar_off=""; _j=0
+    while [ "$_j" -lt "$_mbempty" ]; do _bar_off="${_bar_off}⣿"; _j=$((_j+1)); done
+}
 
 # 5-hour session rate limit
 if [ -n "$five_pct" ]; then
     _fp=$(printf '%.0f' "$five_pct")
-    _bar=$(make_bar "$_fp" 6)
-    _suffix=""
-    [ -n "$five_reset" ] && _suffix=" ($(fmt_reset "$five_reset"))"
-    [ -n "$right" ] && right="${right}$(printf "  ${dim}|${reset}  ")"
-    right="${right}$(printf "${teal}5h [%s] %d%%%s${reset}" "$_bar" "$_fp" "$_suffix")"
+    _make_braille_bar "$_fp" 16
+    [ -n "$right" ] && right="${right}$(printf "  ${overlay0}│${reset}  ")"
+    right="${right}$(printf "${dim}5h${reset} ${dim}│${reset}${teal}%s%s${reset}${dim}%s${reset}${dim}│${reset} ${teal}%d%%${reset}" \
+        "$_bar_on" "$_pchar" "$_bar_off" "$_fp")"
+    [ -n "$five_reset" ] && right="${right}$(printf " ${dim}│${reset} ${teal}%s${reset}" "$(fmt_reset "$five_reset")")"
 fi
 
 # 7-day (monthly) rate limit
 if [ -n "$week_pct" ]; then
     _wp=$(printf '%.0f' "$week_pct")
-    _bar=$(make_bar "$_wp" 6)
-    _suffix=""
-    [ -n "$week_reset" ] && _suffix=" ($(fmt_reset "$week_reset"))"
-    [ -n "$right" ] && right="${right}$(printf "  ${dim}|${reset}  ")"
-    right="${right}$(printf "${teal}Month [%s] %d%%%s${reset}" "$_bar" "$_wp" "$_suffix")"
+    _make_braille_bar "$_wp" 16
+    [ -n "$right" ] && right="${right}$(printf "  ${overlay0}│${reset}  ")"
+    right="${right}$(printf "${dim}Month${reset} ${dim}│${reset}${teal}%s%s${reset}${dim}%s${reset}${dim}│${reset} ${teal}%d%%${reset}" \
+        "$_bar_on" "$_pchar" "$_bar_off" "$_wp")"
+    [ -n "$week_reset" ] && right="${right}$(printf " ${dim}│${reset} ${teal}%s${reset}" "$(fmt_reset "$week_reset")")"
 fi
 
 # ============================================================
 # Assemble: LEFT  |  MIDDLE  |  RIGHT
 # ============================================================
-sep="$(printf "  ${dim}|${reset}  ")"
+sep="$(printf "  ${overlay0}│${reset}  ")"
 out="$left"
 [ -n "$middle" ] && out="${out}${sep}${middle}"
 [ -n "$right" ]  && out="${out}${sep}${right}"
