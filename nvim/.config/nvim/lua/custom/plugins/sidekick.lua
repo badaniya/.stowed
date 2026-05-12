@@ -32,6 +32,9 @@ return {
         -- },
       },
       tools = {
+        claude = {
+          cmd = { 'claude' },
+        },
         pi = {
           cmd = { 'pi' },
         },
