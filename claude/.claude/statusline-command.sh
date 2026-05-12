@@ -113,14 +113,34 @@ fi
 # ============================================================
 right=""
 
-# Context window: bar shows used%, number shows remaining%
+# Context window: Ctx | braille bar (8x sub-char precision) | used%
 if [ -n "$used_pct" ] && [ -n "$remaining_pct" ]; then
     _used=$(printf '%.0f' "$used_pct")
-    _rem=$(printf '%.0f' "$remaining_pct")
-    _ctx_bar=$(make_bar "$_used" 8)
+    _w=32
     _rc="$green"
-    [ "$_rem" -le 20 ] && _rc="$red"
-    right="$(printf "${sapphire}[%s] ${_rc}%d%%${reset}" "$_ctx_bar" "$_used")"
+    [ "$_used" -ge 80 ] && _rc="$red"
+
+    # Each cell = 8 sub-units → resolution = width * 8
+    _subunits=$(awk "BEGIN { printf \"%d\", int($_used / 100.0 * $_w * 8 + 0.5) }")
+    _full=$(( _subunits / 8 ))
+    _partial=$(( _subunits % 8 ))
+    _has_partial=$(( _partial > 0 ? 1 : 0 ))
+    _empty=$(( _w - _full - _has_partial ))
+
+    _bar_on=""; _i=0
+    while [ "$_i" -lt "$_full" ]; do _bar_on="${_bar_on}⣿"; _i=$((_i+1)); done
+
+    _pchar=""
+    case "$_partial" in
+        1) _pchar="⡀";; 2) _pchar="⡄";; 3) _pchar="⡆";;
+        4) _pchar="⡇";; 5) _pchar="⣇";; 6) _pchar="⣧";; 7) _pchar="⣷";;
+    esac
+
+    _bar_off=""; _i=0
+    while [ "$_i" -lt "$_empty" ]; do _bar_off="${_bar_off}⣿"; _i=$((_i+1)); done
+
+    right="$(printf "${dim}Ctx${reset}  ${dim}|${reset}  ${_rc}%s%s${reset}${dim}%s${reset}  ${dim}|${reset}  ${_rc}%d%%${reset}" \
+        "$_bar_on" "$_pchar" "$_bar_off" "$_used")"
 fi
 
 # 5-hour session rate limit
