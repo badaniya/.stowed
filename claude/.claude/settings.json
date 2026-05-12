@@ -1,3 +1,4 @@
 {
-    "autoMemoryDirectory": "~/.private_claude_memory",
+  "theme": "dark",
+  "model": "sonnet[1m]"
 }
