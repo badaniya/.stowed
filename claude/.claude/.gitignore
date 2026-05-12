@@ -1,7 +1,11 @@
 backups/
 cache/
 downloads/
+file-history/
+image-cache/
 projects/
+session-env/
 sessions/
+shell-snapshots/
 transcripts/
 history.jsonl
