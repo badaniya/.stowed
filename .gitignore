@@ -23,6 +23,9 @@ goose/**/history.txt
 **/__pycache__/
 **/*.pyc
 
+# Pi update check (auto-written by pi, not meaningful to track)
+pi/.pi/agent/.update-check
+
 # Ephemeral session/tmp artifacts
 pi-session-*.html
 **/skills/*/tmp/.sisyphus/
