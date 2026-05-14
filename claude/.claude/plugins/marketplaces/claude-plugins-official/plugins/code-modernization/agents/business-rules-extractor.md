@@ -42,5 +42,5 @@ of the technology, skip it.
 
 ## Output format
 
-One "Rule Card" per rule (see the format in the modernize:extract-rules
+One "Rule Card" per rule (see the format in the `/modernize-extract-rules`
 command). Group by category. Lead with a summary table.

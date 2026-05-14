@@ -23,6 +23,10 @@ cloc --quiet --csv <parent>/<sys>          # LOC by language
 lizard -s cyclomatic_complexity <parent>/<sys> 2>/dev/null | tail -1
 ```
 
+If `cloc`/`lizard` are not installed, fall back to `scc <parent>/<sys>`
+(LOC + complexity) or `find` + `wc -l` grouped by extension, and estimate
+complexity by counting decision keywords per file. Note which tool you used.
+
 Capture: total SLOC, dominant language, file count, mean & max
 cyclomatic complexity (CCN). For dependency freshness, locate the
 manifest (`package.json`, `pom.xml`, `*.csproj`, `requirements*.txt`,
@@ -69,6 +73,17 @@ scc legacy/$1
 Then run `scc --by-file -s complexity legacy/$1 | head -25` to identify the
 highest-complexity files. Capture the COCOMO effort/cost estimate scc provides.
 
+If `scc` is not installed, fall back in order:
+1. `cloc legacy/$1` for the LOC table, then compute COCOMO-II effort
+   yourself: `PM = 2.94 × (KSLOC)^1.10` (nominal scale factors). Show the
+   inputs.
+2. If `cloc` is also missing, use `find` + `wc -l` grouped by extension
+   for LOC, and rank file complexity by counting decision keywords
+   (`IF`/`EVALUATE`/`WHEN`/`PERFORM` for COBOL; `if`/`for`/`while`/`case`/
+   `catch` for C-family). Compute COCOMO from KSLOC as above.
+
+Note in the assessment which tool was used so the figures are reproducible.
+
 ## Step 2 — Technology fingerprint
 
 Identify, with file evidence:
@@ -80,12 +95,15 @@ Identify, with file evidence:
 
 ## Step 3 — Parallel deep analysis
 
-Spawn three subagents **concurrently** using the Task tool:
+Spawn three subagents **in parallel**:
 
 1. **legacy-analyst** — "Build a structural map of legacy/$1: what are the
-   5-10 major functional domains, which source files belong to each, and how
-   do they depend on each other? Return a markdown table + a Mermaid
-   `graph TD` of domain-level dependencies. Cite file paths."
+   5-12 major functional domains (group optional/feature-gated subsystems
+   under one umbrella), which source files belong to each, and how do they
+   depend on each other (control flow + shared data)? Return a markdown
+   table + a Mermaid `graph TD` of domain-level dependencies — use
+   `subgraph` to cluster and cap at ~40 edges. Cite repo-relative file
+   paths. Flag dangling references (defined but no source, or unused)."
 
 2. **legacy-analyst** — "Identify technical debt in legacy/$1: dead code,
    deprecated APIs, copy-paste duplication, god objects/programs, missing
@@ -99,20 +117,21 @@ Spawn three subagents **concurrently** using the Task tool:
 
 Wait for all three. Synthesize their findings.
 
-## Step 4 — Production runtime overlay (observability)
+## Step 4 — Production runtime overlay (optional)
 
-If the system has batch jobs (e.g. JCL members under `app/jcl/`), call the
-`observability` MCP tool `get_batch_runtimes` for each business-relevant
-job name (interest, posting, statement, reporting). Use the returned
-p50/p95/p99 and 90-day series to:
+If production telemetry is available — an observability/APM MCP server, batch
+job logs, or runtime exports the user can supply — gather p50/p95/p99
+wall-clock for the system's key jobs/transactions (e.g. JCL members under
+`legacy/$1/jcl/`, scheduled batches, top API routes). Use it to:
 
 - Tag each functional domain from Step 3 with its production wall-clock
   cost and **p99 variance** (p99/p50 ratio).
 - Flag the highest-variance domain as the highest operational risk —
   this is telemetry-grounded, not a static-analysis opinion.
 
-Include a small **Batch Runtime** table (Job · Domain · p50 · p95 · p99 ·
-p99/p50) in the assessment.
+Include a small **Runtime Profile** table (Job/Route · Domain · p50 · p95 ·
+p99 · p99/p50) in the assessment. If no telemetry is available, skip this
+step and note the gap in the assessment.
 
 ## Step 5 — Documentation gap analysis
 
@@ -126,7 +145,7 @@ Create `analysis/$1/ASSESSMENT.md` with these sections:
 - **Executive Summary** (3-4 sentences: what it is, how big, how risky, headline recommendation)
 - **System Inventory** (the scc table + tech fingerprint)
 - **Architecture-at-a-Glance** (the domain table; reference the diagram)
-- **Production Runtime Profile** (the batch-runtime table from Step 4, with the highest-variance domain called out)
+- **Production Runtime Profile** (the runtime table from Step 4 with the highest-variance domain called out — or "no telemetry available")
 - **Technical Debt** (top 10, ranked)
 - **Security Findings** (CWE table)
 - **Documentation Gaps** (top 5)

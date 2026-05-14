@@ -38,6 +38,7 @@ Merge the three result sets. Deduplicate. For each distinct rule, write a
 ```
 ### RULE-NNN: <plain-English name>
 **Category:** Calculation | Validation | Lifecycle | Policy
+**Priority:** P0 | P1 | P2
 **Source:** `path/to/file.ext:line-line`
 **Plain English:** One sentence a business analyst would recognize.
 **Specification:**
@@ -47,11 +48,18 @@ Merge the three result sets. Deduplicate. For each distinct rule, write a
   [And  <additional outcome>]
 **Parameters:** <constants, rates, thresholds with their current values>
 **Edge cases handled:** <list>
-**Confidence:** High | Medium | Low — <why>
+**Suspected defect:** <optional — legacy behavior that looks wrong; decide preserve-vs-fix during transform>
+**Confidence:** High | Medium | Low — <why; if < High, state the exact SME question>
 ```
 
+Priority heuristic — default to **P1**. Assign **P0** if the rule moves money,
+enforces a regulatory/compliance requirement, or guards data integrity (and
+flag P0 rules at <High confidence as SME-required). Assign **P2** for
+display/formatting/convenience rules. The downstream `/modernize-brief`
+behavior contract is built from the P0 rules, so assign deliberately.
+
 Write all rule cards to `analysis/$1/BUSINESS_RULES.md` with:
-- A summary table at top (ID, name, category, source, confidence)
+- A summary table at top (ID, name, category, priority, source, confidence)
 - Rule cards grouped by category
 - A final **"Rules requiring SME confirmation"** section listing every
   Medium/Low confidence rule with the specific question a human needs to answer

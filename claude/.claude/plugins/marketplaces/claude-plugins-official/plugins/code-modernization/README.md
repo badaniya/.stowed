@@ -7,43 +7,55 @@ A structured workflow and set of specialist agents for modernizing legacy codeba
 Legacy modernization fails most often not because the target technology is wrong, but because teams skip steps: they transform code before understanding it, reimagine architecture before extracting business rules, or ship without a harness that would catch behavior drift. This plugin enforces a sequence:
 
 ```
-assess → map → extract-rules → reimagine → transform → harden
+assess → map → extract-rules → brief → reimagine | transform → harden
 ```
 
-Each step has a dedicated slash command. Specialist agents (legacy analyst, business rules extractor, architecture critic, security auditor, test engineer) are invoked from within those commands — or directly — to keep the work honest.
+The discovery commands (`assess`, `map`, `extract-rules`) build artifacts under `analysis/<system>/`. The `brief` command synthesizes them into an approval gate. The build commands (`reimagine`, `transform`) write new code under `modernized/`. The `harden` command audits the legacy system and produces a reviewable remediation patch. Each step has a dedicated slash command, and specialist agents (legacy analyst, business rules extractor, architecture critic, security auditor, test engineer) are invoked from within those commands — or directly — to keep the work honest.
+
+## Expected layout
+
+Commands take a `<system-dir>` argument and assume the system being modernized lives at `legacy/<system-dir>/`. Discovery artifacts go to `analysis/<system-dir>/`, transformed code to `modernized/<system-dir>/…`. If your codebase lives elsewhere, symlink it in:
+
+```bash
+mkdir -p legacy && ln -s /path/to/your/legacy/codebase legacy/billing
+```
+
+## Optional tooling
+
+`/modernize-assess` works best with [`scc`](https://github.com/boyter/scc) (LOC + complexity + COCOMO) or [`cloc`](https://github.com/AlDanial/cloc), and falls back to `find`/`wc` if neither is installed. Portfolio mode also benefits from [`lizard`](https://github.com/terryyin/lizard) (cyclomatic complexity). The commands degrade gracefully without them, but the metrics will be coarser.
 
 ## Commands
 
 The commands are designed to be run in order, but each produces a standalone artifact so you can stop, review, and resume.
 
-### `/modernize-brief`
-Capture the modernization brief: what's being modernized, why now, constraints (regulatory, data, runtime), non-goals, and success criteria. Produces `analysis/brief.md`. Run this first.
+### `/modernize-assess <system-dir>`  — or — `/modernize-assess --portfolio <parent-dir>`
+Inventory the legacy codebase: languages, line counts, complexity, build system, integrations, technical debt, security posture, documentation gaps, and a COCOMO-derived effort estimate. Produces `analysis/<system>/ASSESSMENT.md` and `analysis/<system>/ARCHITECTURE.mmd`. Spawns `legacy-analyst` (×2) and `security-auditor` in parallel for deep reads. With `--portfolio`, sweeps every subdirectory of a parent directory and writes a sequencing heat-map to `analysis/portfolio.html`.
 
-### `/modernize-assess`
-Inventory the legacy codebase: languages, line counts, module boundaries, external integrations, build system, test coverage, known pain points. Produces `analysis/assessment.md`. Uses the `legacy-analyst` agent for deep reads on unfamiliar dialects.
+### `/modernize-map <system-dir>`
+Build a dependency and topology map of the **legacy** system: program/module call graph, data lineage (programs ↔ data stores), entry points, dead-end candidates, and one traced critical-path business flow. Writes a re-runnable extraction script and produces `analysis/<system>/topology.json` (machine-readable), `analysis/<system>/TOPOLOGY.html` (rendered Mermaid + architect observations), and standalone `call-graph.mmd`, `data-lineage.mmd`, and `critical-path.mmd`.
 
-### `/modernize-map`
-Map the legacy structure onto a target architecture: which legacy modules become which target services/packages, data-flow diagrams, migration sequencing. Produces `analysis/map.md`. Uses the `architecture-critic` agent to pressure-test the design.
+### `/modernize-extract-rules <system-dir> [module-pattern]`
+Mine the business rules embedded in the legacy code — calculations, validations, eligibility, state transitions, policies — into Given/When/Then "Rule Cards" with `file:line` citations and confidence ratings. Spawns three `business-rules-extractor` agents in parallel (calculations, validations, lifecycle). Produces `analysis/<system>/BUSINESS_RULES.md` and `analysis/<system>/DATA_OBJECTS.md`.
 
-### `/modernize-extract-rules`
-Extract business rules from the legacy code — the rules that are encoded in procedural logic, COBOL copybooks, stored procedures, or config files — into human-readable form with citations back to source. Produces `analysis/rules.md`. Uses the `business-rules-extractor` agent.
+### `/modernize-brief <system-dir> [target-stack]`
+Synthesize the discovery artifacts into a phased **Modernization Brief** — the single document a steering committee approves and engineering executes: target architecture, strangler-fig phase plan with entry/exit criteria, behavior contract, validation strategy, open questions, and an approval block. Reads `ASSESSMENT.md`, `TOPOLOGY.html`, and `BUSINESS_RULES.md` and **stops if any are missing** — run the discovery commands first. Produces `analysis/<system>/MODERNIZATION_BRIEF.md` and enters plan mode as a human-in-the-loop gate.
 
-### `/modernize-reimagine`
-Propose the target design: APIs, data model, runtime. Explicitly list what changes from legacy and what stays identical. Produces `analysis/design.md`. Uses the `architecture-critic` agent to challenge over-engineering.
+### `/modernize-reimagine <system-dir> <target-vision>`
+Greenfield rebuild from extracted intent rather than a structural port. Mines a spec (`analysis/<system>/AI_NATIVE_SPEC.md`), designs a target architecture and has it adversarially reviewed (`analysis/<system>/REIMAGINED_ARCHITECTURE.md`), then **scaffolds services with executable acceptance tests** under `modernized/<system>-reimagined/` and writes a `CLAUDE.md` knowledge handoff for the new system. Two human-in-the-loop checkpoints. Spawns `business-rules-extractor`, `legacy-analyst` (×2), `architecture-critic`, and general-purpose scaffolding agents.
 
-### `/modernize-transform`
-Do the actual code transformation — module by module. Writes to `modernized/`. Pairs each transformed module with a test suite that pins the pre-transform behavior.
+### `/modernize-transform <system-dir> <module> <target-stack>`
+Surgical, single-module strangler-fig rewrite. Plans first (HITL gate), then writes characterization tests via `test-engineer`, then an idiomatic target implementation under `modernized/<system>/<module>/`, proves equivalence by running the tests, and produces `TRANSFORMATION_NOTES.md` mapping legacy → modern with deliberate deviations called out. Reviewed by `architecture-critic`.
 
-### `/modernize-harden`
-Post-transform review pass: security audit, test coverage, error handling, observability. Uses `security-auditor` and `test-engineer` agents. Produces a findings report ranked Blocker / High / Medium / Nit.
+### `/modernize-harden <system-dir>`
+Security hardening pass on the **legacy** system: OWASP/CWE scan, dependency CVEs, secrets, injection. Spawns `security-auditor`. Produces `analysis/<system>/SECURITY_FINDINGS.md` ranked Critical / High / Medium / Low and a reviewed `analysis/<system>/security_remediation.patch` with minimal fixes for the Critical/High findings. The patch is reviewed by a second `security-auditor` pass before you see it. **Never edits `legacy/`** — you review and apply the patch yourself when ready, then re-run to verify. Useful as a pre-modernization step when the legacy system will keep running in production during the migration.
 
 ## Agents
 
-- **`legacy-analyst`** — Reads legacy code (COBOL, legacy Java/C++, procedural PHP, classic ASP) and produces structured summaries. Good at spotting implicit dependencies, copybook inheritance, and "JOBOL" patterns (procedural code wearing a modern syntax).
-- **`business-rules-extractor`** — Extracts business rules from procedural code with source citations. Each rule includes: what, where it's implemented, which conditions fire it, and any corner cases hidden in data.
-- **`architecture-critic`** — Adversarial reviewer for target architectures and transformed code. Default stance is skeptical: asks "do we actually need this?" Flags microservices-for-the-resume, ceremonial error handling, abstractions with one implementation.
-- **`security-auditor`** — Reviews transformed code for auth, input validation, secret handling, and dependency CVEs. Tuned for the kinds of issues that appear when translating security primitives across stacks (e.g., session handling from servlet to stateless JWT).
-- **`test-engineer`** — Audits test suites for behavior-pinning vs. coverage-theater. Flags tests that exercise code paths without asserting outcomes.
+- **`legacy-analyst`** — Reads legacy code (COBOL, legacy Java/C++, procedural PHP, classic ASP) and produces structured summaries. Good at spotting implicit dependencies, copybook inheritance, and "JOBOL" patterns (procedural code wearing a modern syntax). Used by `assess` and `reimagine`.
+- **`business-rules-extractor`** — Extracts business rules from procedural code with source citations. Each rule includes: what, where it's implemented, which conditions fire it, and any corner cases hidden in data. Used by `extract-rules` and `reimagine`.
+- **`architecture-critic`** — Adversarial reviewer for target architectures and transformed code. Default stance is skeptical: asks "do we actually need this?" Flags microservices-for-the-resume, ceremonial error handling, abstractions with one implementation. Used by `reimagine` and `transform`.
+- **`security-auditor`** — Reviews code for auth, input validation, secret handling, and dependency CVEs. Tuned for the kinds of issues that appear when translating security primitives across stacks (e.g., session handling from servlet to stateless JWT). Used by `assess` and `harden`.
+- **`test-engineer`** — Writes characterization, contract, and equivalence tests that pin legacy behavior so transformation can be proven correct. Flags tests that exercise code paths without asserting outcomes. Used by `transform`.
 
 ## Installation
 
@@ -75,31 +87,31 @@ This plugin ships commands and agents, but modernization projects benefit from a
 }
 ```
 
-Adjust `legacy/` and `modernized/` to match your actual layout. The key invariants: `Edit` under `legacy/` is denied, and writes are scoped to `analysis/` (for documents) and `modernized/` (for the new code).
+Adjust `legacy/` and `modernized/` to match your actual layout. The key invariants: `Edit` under `legacy/` is denied, and writes are scoped to `analysis/` (for documents) and `modernized/` (for the new code). Every command in this plugin respects this — `/modernize-harden` writes a patch to `analysis/` rather than editing `legacy/` in place.
 
 ## Typical Workflow
 
 ```bash
-# 1. Write the brief — what are we modernizing and why?
-/modernize-brief
+# 1. Inventory the legacy system (or sweep a portfolio of them)
+/modernize-assess billing
 
-# 2. Inventory the legacy code
-/modernize-assess
+# 2. Map call graph, data lineage, and the critical path
+/modernize-map billing
 
-# 3. Extract business rules before touching the code
-/modernize-extract-rules
+# 3. Extract business rules into testable Rule Cards
+/modernize-extract-rules billing
 
-# 4. Map legacy structure to target
-/modernize-map
+# 4. Synthesize the approved Modernization Brief (human-in-the-loop gate)
+/modernize-brief billing java-spring
 
-# 5. Propose the target design and review it
-/modernize-reimagine
+# 5a. Greenfield rebuild from the extracted spec…
+/modernize-reimagine billing "event-driven services on Java 21 / Spring Boot"
 
-# 6. Transform module by module
-/modernize-transform
+# 5b. …or transform module by module (strangler fig)
+/modernize-transform billing interest-calc java-spring
 
-# 7. Harden: security, tests, observability
-/modernize-harden
+# 6. Security-harden the legacy system that's still in production
+/modernize-harden billing
 ```
 
 ## License

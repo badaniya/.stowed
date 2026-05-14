@@ -11,20 +11,29 @@ engineer can fix.
 
 ## Coverage checklist
 
-Work through systematically:
+Adapt to the target stack — web items don't apply to a batch system,
+terminal/screen items don't apply to a SPA. Work through what's relevant:
+
 - **Injection** (SQL, NoSQL, OS command, LDAP, XPath, template) — trace every
-  user-controlled input to every sink
+  user-controlled input to every sink, including dynamic SQL and shell-outs
 - **Authentication / session** — hardcoded creds, weak session handling,
-  missing auth checks on sensitive routes
-- **Sensitive data exposure** — secrets in source, weak crypto, PII in logs
-- **Access control** — IDOR, missing ownership checks, privilege escalation paths
-- **XSS / CSRF** — unescaped output, missing tokens
-- **Insecure deserialization** — pickle/yaml.load/ObjectInputStream on
-  untrusted data
+  missing auth checks on sensitive routes/transactions/jobs
+- **Sensitive data exposure** — secrets in source, weak crypto, PII in logs,
+  cleartext sensitive data in record layouts, flat files, or temp datasets
+- **Access control** — IDOR, missing ownership checks, privilege escalation;
+  missing/permissive resource ACLs (RACF profiles, IAM policies, file perms);
+  unguarded admin functions
+- **XSS / CSRF** — unescaped output, missing tokens (web targets)
+- **Insecure deserialization** — untrusted data into pickle/yaml.load/
+  `ObjectInputStream` or custom record parsers
 - **Vulnerable dependencies** — run `npm audit` / `pip-audit` /
   read manifests and flag versions with known CVEs
-- **SSRF / path traversal / open redirect**
-- **Security misconfiguration** — debug mode, verbose errors, default creds
+- **SSRF / path traversal / open redirect** (web/network targets)
+- **Input validation** — missing length/range/format checks at trust
+  boundaries (form/screen fields, API params, batch input records) before
+  persistence or downstream calls
+- **Security misconfiguration** — debug mode, verbose errors, default creds,
+  hardcoded credentials in deployment scripts, job definitions, or config
 
 ## Tooling
 

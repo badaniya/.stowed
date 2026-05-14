@@ -8,8 +8,10 @@ single document a steering committee approves and engineering executes.
 
 Target stack: `$2` (if blank, recommend one based on the assessment findings).
 
-Read `analysis/$1/ASSESSMENT.md`, `TOPOLOGY.md`, and `BUSINESS_RULES.md` first.
-If any are missing, say so and stop.
+Read `analysis/$1/ASSESSMENT.md`, `analysis/$1/TOPOLOGY.html` (and the `.mmd`
+files alongside it), and `analysis/$1/BUSINESS_RULES.md` first. If any are
+missing, say so and stop — they come from `/modernize-assess`, `/modernize-map`,
+and `/modernize-extract-rules` respectively. Run those first.
 
 ## The Brief
 
@@ -35,8 +37,11 @@ fewest-dependencies first. For each phase:
 Render the phases as a Mermaid `gantt` chart.
 
 ### 4. Behavior Contract
-List the **P0 behaviors** from BUSINESS_RULES.md that MUST be proven
-equivalent before any phase ships. These become the regression suite.
+List the **P0 rules** from BUSINESS_RULES.md (the ones tagged `Priority: P0` —
+money, regulatory, data integrity) that MUST be proven equivalent before any
+phase ships. These become the regression suite. Flag any P0 rule with
+Confidence < High as a blocker requiring SME confirmation before its phase
+starts.
 
 ### 5. Validation Strategy
 State which combination applies: characterization tests, contract tests,

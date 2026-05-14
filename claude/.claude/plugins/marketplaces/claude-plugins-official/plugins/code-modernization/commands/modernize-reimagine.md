@@ -57,8 +57,9 @@ Enter plan mode. Present the architecture. Wait for approval.
 
 ## Phase E — Parallel scaffolding
 
-For each service in the approved architecture (cap at 3 for the demo), spawn
-a **general-purpose agent in parallel**:
+For each service in the approved architecture (cap at 3 to keep the run
+tractable; tell the user which you deferred), spawn a **general-purpose agent
+in parallel**:
 
 "Scaffold the <service-name> service per analysis/$1/REIMAGINED_ARCHITECTURE.md
 and AI_NATIVE_SPEC.md. Create: project skeleton, domain model, API stubs
