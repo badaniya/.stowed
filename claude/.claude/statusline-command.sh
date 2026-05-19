@@ -25,6 +25,7 @@ lavender='\033[38;2;180;190;254m'
 mauve='\033[38;2;203;166;247m'
 red='\033[38;2;243;139;168m'
 overlay0='\033[38;2;108;112;134m'
+surface1='\033[38;2;49;50;68m'
 reset='\033[0m'
 bold='\033[1m'
 dim='\033[2m'
@@ -72,7 +73,7 @@ if [ -n "$used_pct" ] && [ -n "$remaining_pct" ]; then
     _bar_off=""; _i=0
     while [ "$_i" -lt "$_empty" ]; do _bar_off="${_bar_off}⣿"; _i=$((_i+1)); done
 
-    line1="$(printf "${dim}Ctx${reset} ${dim}│${reset}${_rc}%s%s${reset}${dim}%s${reset}${dim}│${reset} ${_rc}%d%%${reset}" \
+    line1="$(printf "${dim}Ctx${reset} ${dim}│${reset}${_rc}%s%s${reset}${surface1}%s${reset}${dim}│${reset} ${_rc}%d%%${reset}" \
         "$_bar_on" "$_pchar" "$_bar_off" "$_used")"
 
     line1="${line1}$(printf "  ${overlay0}│${reset}  ${dim}session${reset}  ${yellow}%s/%s${reset}" "$in_tok" "$out_tok")"
