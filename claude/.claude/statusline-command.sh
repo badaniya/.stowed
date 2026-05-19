@@ -8,8 +8,8 @@ input=$(cat)
 # --- Extract JSON fields ---
 cwd=$(echo "$input"           | jq -r '.workspace.current_dir // .cwd // empty')
 model=$(echo "$input"         | jq -r '.model.display_name // empty')
-in_tok=$(echo "$input"        | jq -r '.context_window.current_usage.input_tokens // 0')
-out_tok=$(echo "$input"       | jq -r '.context_window.current_usage.output_tokens // 0')
+in_tok=$(echo "$input"        | jq -r '.context_window.total_input_tokens // 0')
+out_tok=$(echo "$input"       | jq -r '.context_window.total_output_tokens // 0')
 used_pct=$(echo "$input"      | jq -r '.context_window.used_percentage // empty')
 remaining_pct=$(echo "$input" | jq -r '.context_window.remaining_percentage // empty')
 cost_usd=$(echo "$input"      | jq -r '.cost.total_cost_usd // empty')
@@ -74,28 +74,21 @@ if [ -n "$used_pct" ] && [ -n "$remaining_pct" ]; then
 
     line1="$(printf "${dim}Ctx${reset} ${dim}│${reset}${_rc}%s%s${reset}${dim}%s${reset}${dim}│${reset} ${_rc}%d%%${reset}" \
         "$_bar_on" "$_pchar" "$_bar_off" "$_used")"
+
+    line1="${line1}$(printf "  ${overlay0}│${reset}  ${dim}session${reset}  ${yellow}%s/%s${reset}" "$in_tok" "$out_tok")"
+
+    if [ -n "$cost_usd" ]; then
+        line1="${line1}$(printf "  ${yellow}\$%.2f${reset}" "$cost_usd")"
+    fi
 fi
 
 # ============================================================
-# LINE 2: model  in/out  $cost  used%  |  dir  branch
+# LINE 2: model  used%  |  dir  branch
 # ============================================================
 line2=""
 
 if [ -n "$model" ]; then
     line2="$(printf "${bold}${peach}%s${reset}" "$model")"
-fi
-
-line2="${line2}$(printf "  ${yellow}%s/%s${reset}" "$in_tok" "$out_tok")"
-
-if [ -n "$cost_usd" ]; then
-    line2="${line2}$(printf "  ${yellow}\$%.2f${reset}" "$cost_usd")"
-fi
-
-if [ -n "$used_pct" ]; then
-    _used_int=$(printf '%.0f' "$used_pct")
-    _uc="$yellow"
-    [ "$_used_int" -ge 80 ] && _uc="$red"
-    line2="${line2}$(printf "  ${_uc}%.0f%%${reset}" "$used_pct")"
 fi
 
 sep="$(printf "  ${overlay0}│${reset}  ")"
