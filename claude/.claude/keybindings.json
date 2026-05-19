@@ -44,7 +44,9 @@
         "tab": "autocomplete:accept",
         "escape": "autocomplete:dismiss",
         "up": "autocomplete:previous",
-        "down": "autocomplete:next"
+        "ctrl+p": "autocomplete:previous",
+        "down": "autocomplete:next",
+        "ctrl+n": "autocomplete:next"
       }
     },
     {
@@ -64,7 +66,8 @@
         "d": "settings:periodDay",
         "w": "settings:periodWeek",
         "t": "settings:sortByTokens",
-        "ctrl+u": "scroll:halfPageUp"
+        "ctrl+u": "scroll:halfPageUp",
+        "shift+g": "select:last"
       }
     },
     {
@@ -217,9 +220,13 @@
       "bindings": {
         "escape": "diff:dismiss",
         "left": "diff:previousSource",
+        "h": "diff:previousSource",
         "right": "diff:nextSource",
+        "l": "diff:nextSource",
         "up": "diff:previousFile",
+        "k": "diff:previousFile",
         "down": "diff:nextFile",
+        "j": "diff:nextFile",
         "enter": "diff:viewDetails"
       }
     },
@@ -242,7 +249,9 @@
         "pageup": "select:pageUp",
         "pagedown": "select:pageDown",
         "home": "select:first",
+        "g g": "select:first",
         "end": "select:last",
+        "shift+g": "select:last",
         "enter": "select:accept",
         "escape": "select:cancel"
       }
