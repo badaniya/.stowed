@@ -33,7 +33,7 @@ return {
       },
       tools = {
         claude = {
-          cmd = { 'claude' },
+          cmd = { 'claude --allow-dangerously-skip-permissions' },
         },
         pi = {
           cmd = { 'pi' },
