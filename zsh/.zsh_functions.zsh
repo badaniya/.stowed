@@ -1,6 +1,5 @@
 #GLOBALS
 MASTER_REPO_SRC="$HOME/workspace/badaniya/master"
-PROJECT_NAME="NVO-DEV"
 NUM_CPU_CORES=`cat /proc/cpuinfo | grep processor | wc -l`
 
 if [[ -f $HOME/.private_zsh_functions.zsh ]]; then
@@ -81,7 +80,7 @@ function add_worktree()
     local REPO_NAME="$1"
     local GIT_BRANCH="$2"
     local GIT_SOURCE_BRANCH="$3"
-    local RELATIVE_WORKTREE_PATH="../../$PROJECT_NAME/$GIT_BRANCH/$REPO_NAME"
+    local RELATIVE_WORKTREE_PATH="../../$GIT_BRANCH/$REPO_NAME"
 
     pushd "$MASTER_REPO_SRC/$REPO_NAME" > /dev/null
 
@@ -101,7 +100,7 @@ function remove_worktree()
 
     local REPO_NAME="$1"
     local GIT_BRANCH="$2"
-    local RELATIVE_WORKTREE_PATH="../$PROJECT_NAME/$GIT_BRANCH/$REPO_NAME"
+    local RELATIVE_WORKTREE_PATH="../$GIT_BRANCH/$REPO_NAME"
     local WORKTREE_PARENT_DIR=$(dirname "$MASTER_REPO_SRC/$RELATIVE_WORKTREE_PATH")
 
     pushd "$MASTER_REPO_SRC/$REPO_NAME" > /dev/null
