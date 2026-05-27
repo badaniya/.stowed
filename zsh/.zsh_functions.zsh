@@ -1,5 +1,6 @@
 #GLOBALS
 MASTER_REPO_SRC="$HOME/workspace/badaniya/master"
+PROJECT_NAME="NVO-DEV"
 NUM_CPU_CORES=`cat /proc/cpuinfo | grep processor | wc -l`
 
 if [[ -f $HOME/.private_zsh_functions.zsh ]]; then
@@ -63,7 +64,9 @@ function git_clone()
     fi
 
     local NON_HTTPS_URL=${GIT_URL#https://}
-    git clone "https://$GIT_USER:$PASS@$NON_HTTPS_URL" $@
+
+    # bare cloning for git worktrees
+    git clone --bare "https://$GIT_USER:$PASS@$NON_HTTPS_URL" $@
 }
 
 function add_worktree()
@@ -78,18 +81,13 @@ function add_worktree()
     local REPO_NAME="$1"
     local GIT_BRANCH="$2"
     local GIT_SOURCE_BRANCH="$3"
-    local RELATIVE_WORKTREE_PATH="../../$GIT_BRANCH/$REPO_NAME"
+    local RELATIVE_WORKTREE_PATH="../../$PROJECT_NAME/$GIT_BRANCH/$REPO_NAME"
 
     pushd "$MASTER_REPO_SRC/$REPO_NAME" > /dev/null
 
-    git pull && \
-    git checkout "$GIT_SOURCE_BRANCH" && \
-    git pull && \
     git worktree add -b "$USER/$REPO_NAME/$GIT_BRANCH" "$RELATIVE_WORKTREE_PATH" && \
-    (git checkout master || git checkout main || git checkout HEAD) && \
     cd "$RELATIVE_WORKTREE_PATH" && \
     git branch --set-upstream-to=origin/"$GIT_SOURCE_BRANCH"
-    #go_work
 }
 
 function remove_worktree()
@@ -103,7 +101,7 @@ function remove_worktree()
 
     local REPO_NAME="$1"
     local GIT_BRANCH="$2"
-    local RELATIVE_WORKTREE_PATH="../$GIT_BRANCH/$REPO_NAME"
+    local RELATIVE_WORKTREE_PATH="../$PROJECT_NAME/$GIT_BRANCH/$REPO_NAME"
     local WORKTREE_PARENT_DIR=$(dirname "$MASTER_REPO_SRC/$RELATIVE_WORKTREE_PATH")
 
     pushd "$MASTER_REPO_SRC/$REPO_NAME" > /dev/null
