@@ -17,12 +17,18 @@ Run a self-reflection on this session:
 - Ensure skill compliance with standards with the extra restriction that SKILLS.md should be under 200 lines.
 - Ensure skill compliance with the skill description being under 1024 chars.
 - If a reference file exceeds 200 lines, SPLIT the overflow into a new reference file; then (1) add a pointer line at the bottom of the original reference file pointing to the new file, and (2) update the SKILL.md dispatch table (the `## Reference Files` section) to include the new file name — NEVER delete domain knowledge to hit the line limit. The 200-line ceiling is a SPLIT trigger, not a deletion trigger.
-- Ensure nvo private skills true source dir is under ~/.private_skills/, ~/.agents/skills/ dir symlinks to these nvo private skills source, and the agent harness tool symlinks the ~/.agent/skills dir for skills access.
-- Snapshot each skill before editing: `cp -r <skill-path> ~/.agents/skill-snapshots/<skill-name>/`
-  (NEVER snapshot into ~/.config/opencode/skills/ — the `**/SKILL.md` glob loads it as a duplicate)
+- Ensure nvo private skills true source dir is under $HOME/.private_skills/, $HOME/.agents/skills/ dir symlinks to these nvo private skills source, and the agent harness tool symlinks the $HOME/.agent/skills dir for skills access.
+- **Skill directory layout (ENFORCE during gap analysis):** Each skill MUST follow this structure:
+  - `scripts/` — all executable scripts (`.sh`, `.py`). NEVER place scripts in the skill root or in `references/`.
+  - `assets/` — all static data files read by scripts at runtime (`.yaml`, `.yml`, `.json`, `.toml`, `.csv`, example templates). NEVER place these in `scripts/` (unless runtime-generated cache), the skill root, or `references/`.
+  - `references/` — markdown documentation only (`.md` files loaded as skill knowledge).
+  - `evals/` — trigger accuracy test cases (eval JSON files).
+  - During gap analysis, flag any `.sh`/`.py` found outside `scripts/` and any static config/data files found outside `assets/` as layout violations. Move them and update all path references in SKILL.md and reference files.
+- Snapshot each skill before editing: `cp -r <skill-path> $HOME/.agents/skill-snapshots/<skill-name>/`
+  (NEVER snapshot into $HOME/.agents/skills/ — the `**/SKILL.md` glob loads it as a duplicate)
 - Source nvo-config-resolver.sh via `bash -c '...'` (bash-only syntax — not zsh-compatible).
 - Update the metadata skill version for any changes. Major refactoring or restructuring of the skill warrants a Major version increment plus resetting the Minor version to 0, smaller changes warrant a Minor version increment. Major is greater than or equal to 500 lines, Minor is less than 500 lines.
-- After ALL optimizations are complete, backup the entire ~/.private_skills/* directory as a .tgz file and save the file as ~/.private_skills_backup_<datetimestamp>.tgz
+- After ALL optimizations are complete, backup the entire `$HOME/.private_skills/` directory as a .tgz file: `tar -czf $HOME/private_skills_backup_$(date +%Y%m%d_%H%M%S).tgz $HOME/.private_skills/` — verify the result is ≥ 1MB (a small file means symlinks weren't followed or the wrong path was used)
 - If a sub-agent fails 2 or more times (including after RESUME attempts), fall back to direct edits in the parent session using Edit/Write tools — this fallback is NOT a failure, it achieves the same result.
 
 # DONT'S
@@ -33,6 +39,8 @@ Run a self-reflection on this session:
 - Leave dangling reference files. Attempt to recover from the opencode sqlite session db.
 - Run evals. ONLY do a skill optimization unless specifically prompted to run a eval.
 - Restart a delegated agent session — always RESUME by session_id.
+- Place scripts (`.sh`, `.py`) anywhere except `scripts/`. Not in root, not in `references/`.
+- Place static data files (`.yaml`, `.json`, example templates) anywhere except `assets/`. Not in `scripts/` (unless runtime-generated), not in root, not in `references/`.
 
 ---
 
@@ -98,6 +106,13 @@ Constraints (enforce these — the parent session's rules are NOT visible to you
   - DO NOT add emojis unless explicitly instructed
   - Triggering keywords and progressive disclosure MUST be preserved
   - Source nvo-config-resolver.sh via bash -c (bash-only syntax, not zsh-compatible)
+  - Skill directory layout MUST be enforced:
+      scripts/    → executable .sh/.py files ONLY (no data/config files)
+      assets/     → static data files read by scripts (.yaml, .json, .toml, example templates)
+      references/ → .md documentation files ONLY
+      evals/      → eval JSON files ONLY
+    If any script is found outside scripts/, move it and update all path references.
+    If any static data file is found outside assets/, move it and update all path references.
 ```
 
 ### SECTION 5 — POST-WRITE VERIFICATION (MANDATORY)
@@ -111,7 +126,7 @@ After each write, verify:
   3. Confirm no hardcoded credentials or paths were introduced
   4. If line count EXCEEDS 200, do NOT proceed — report the overage and stop
   5. Report the final line count for each file written
-  6. Run: python3 ~/.config/opencode/skills/skill-creator/scripts/quick_validate.py <skill_dir>
+  6. Run: python3 .agents/skills/skill-creator/scripts/quick_validate.py <skill_dir>
      If quick_validate.py reports errors, STOP and fix before continuing
 ```
 
@@ -122,9 +137,9 @@ After each write, verify:
 > Refactor the `nvo-jira-access` skill.
 >
 > **SECTION 1 — FILES**
-> Read:  `/home/badaniya/.private_skills/nvo-jira-access/SKILL.md`
-> Read:  `/home/badaniya/.private_skills/nvo-jira-access/references/api-operations.md`
-> Write: `/home/badaniya/.private_skills/nvo-jira-access/SKILL.md` (max 200 lines)
+> Read:  `$HOME/.private_skills/nvo-jira-access/SKILL.md`
+> Read:  `$HOME/.private_skills/nvo-jira-access/references/api-operations.md`
+> Write: `$HOME/.private_skills/nvo-jira-access/SKILL.md` (max 200 lines)
 >
 > **SECTION 2 — READ-BEFORE-WRITE GATE**
 > Read both files completely before any edits. Stop and report if Read fails.
@@ -147,11 +162,11 @@ After each write, verify:
 > Split the oversized `operations.md` reference file in the `nvo-example` skill.
 >
 > **SECTION 1 — FILES**
-> Read:  `/home/badaniya/.private_skills/nvo-example/SKILL.md`
-> Read:  `/home/badaniya/.private_skills/nvo-example/references/operations.md`  (currently 280 lines — exceeds 200-line limit)
-> Write: `/home/badaniya/.private_skills/nvo-example/references/operations.md`          (trimmed to ≤ 200 lines, pointer added at bottom)
-> Write: `/home/badaniya/.private_skills/nvo-example/references/operations-advanced.md` (new file — receives overflow lines 201–280)
-> Write: `/home/badaniya/.private_skills/nvo-example/SKILL.md`                          (dispatch table updated to include new file)
+> Read:  `$HOME/.private_skills/nvo-example/SKILL.md`
+> Read:  `$HOME/.private_skills/nvo-example/references/operations.md`  (currently 280 lines — exceeds 200-line limit)
+> Write: `$HOME/.private_skills/nvo-example/references/operations.md`          (trimmed to ≤ 200 lines, pointer added at bottom)
+> Write: `$HOME/.private_skills/nvo-example/references/operations-advanced.md` (new file — receives overflow lines 201–280)
+> Write: `$HOME/.private_skills/nvo-example/SKILL.md`                          (dispatch table updated to include new file)
 >
 > **SECTION 2 — READ-BEFORE-WRITE GATE**
 > Read all three target files completely before any edits. If any Read fails or returns empty, STOP and report the error. Do NOT write from memory.

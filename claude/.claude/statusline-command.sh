@@ -13,6 +13,8 @@ out_tok=$(echo "$input"       | jq -r '.context_window.total_output_tokens // 0'
 used_pct=$(echo "$input"      | jq -r '.context_window.used_percentage // empty')
 remaining_pct=$(echo "$input" | jq -r '.context_window.remaining_percentage // empty')
 cost_usd=$(echo "$input"      | jq -r '.cost.total_cost_usd // empty')
+effort=$(echo "$input"        | jq -r '.effort_level // .effortLevel // empty')
+[ -z "$effort" ] && effort=$(jq -r '.effortLevel // empty' ~/.claude/settings.json 2>/dev/null)
 
 # --- Git branch ---
 git_branch=$(git -C "${cwd:-.}" --no-optional-locks rev-parse --abbrev-ref HEAD 2>/dev/null || true)
@@ -90,6 +92,10 @@ line2=""
 
 if [ -n "$model" ]; then
     line2="$(printf "${bold}${peach}%s${reset}" "$model")"
+fi
+
+if [ -n "$effort" ]; then
+    line2="${line2}$(printf "  ${mauve}%s${reset}" "$effort")"
 fi
 
 sep="$(printf "  ${overlay0}│${reset}  ")"

@@ -150,11 +150,11 @@ Skill edits without post-edit validation silently degrade the skill ecosystem. A
 
 ### Mandatory Post-Edit Steps
 
-After editing any file under a skill directory (`~/.config/opencode/skills/*/` or `~/.private_skills/*/`):
+After editing any file under a skill directory (`$HOME/.agents/skills/*/` or `$HOME/.private_skills/*/`):
 
 ```bash
 # 1. Structural validation (frontmatter, description, required fields)
-python3 ~/.config/opencode/skills/skill-creator/scripts/quick_validate.py <skill_dir>
+python3 $HOME/.agents/skills/skill-creator/scripts/quick_validate.py <skill_dir>
 
 # 2. Self-review checklist (run mentally or as comments)
 ```
@@ -186,7 +186,7 @@ python3 ~/.config/opencode/skills/skill-creator/scripts/quick_validate.py <skill
 ## Learned Rules
 
 _Auto-populated by the memory engine when observations are promoted to rule tier._
-_Run `~/.private_agents_memory/memory-engine.sh export-rules` to update._
+_Run `$HOME/.private_agents_memory/memory-engine.sh export-rules` to update._
 
 <!-- MEMORY_RULES_START -->
 _No rules promoted yet. Rules require α ≥ 7, confidence ≥ 0.85, and age ≥ 14 days._

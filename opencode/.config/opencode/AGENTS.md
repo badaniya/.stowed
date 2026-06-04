@@ -28,7 +28,7 @@ If writing a command from memory rather than a skill reference — **stop, read 
 
 **ALWAYS use the 4-guard pattern. NEVER use bare `json.load(sys.stdin)`** — `gh` writes errors to stdout on bad repo/auth, causing `JSONDecodeError: Expecting value`.
 
-4-guard pattern: check for empty output → `tr` strip → `try/except` JSON parse → `isinstance` check. Full pattern: `~/.agents/agents/references/gh-cli-patterns.md` → `## GitHub CLI 4-Guard Pattern`.
+4-guard pattern: check for empty output → `tr` strip → `try/except` JSON parse → `isinstance` check. Full pattern: `$HOME/.agents/agents/references/gh-cli-patterns.md` → `## GitHub CLI 4-Guard Pattern`.
 
 | Org | GH_HOST | `--repo` |
 |-----|---------|----------|
@@ -45,7 +45,7 @@ If writing a command from memory rather than a skill reference — **stop, read 
 **After ANY edit to a skill file, run `quick_validate.py` and the self-review checklist.**
 
 ```bash
-python3 ~/.config/opencode/skills/skill-creator/scripts/quick_validate.py <skill_dir>
+python3 $HOME/.agents/skills/skill-creator/scripts/quick_validate.py <skill_dir>
 ```
 
 Self-review: no commented-out code in fences; all code blocks copy-pasteable; nullable fields use `(x or default)` not `x.get(k, default)`; every new pattern has ❌/✅ table; new content under top-level `##`; curl flags `-sk --globoff`; JSON uses 4-guard pattern; reference file reads linearly.
@@ -55,7 +55,7 @@ Self-review: no commented-out code in fences; all code blocks copy-pasteable; nu
 ## Learned Rules
 
 _Auto-populated by the memory engine when observations are promoted to rule tier._
-_Run `~/.private_agents_memory/memory-engine.sh export-rules` to update._
+_Run `$HOME/.private_agents_memory/memory-engine.sh export-rules` to update._
 
 <!-- MEMORY_RULES_START -->
 _No rules promoted yet. Rules require α ≥ 7, confidence ≥ 0.85, and age ≥ 14 days._
