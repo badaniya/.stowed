@@ -1,11 +1,16 @@
 backups/
 cache/
+daemon*
 downloads/
 file-history/
 image-cache/
+jobs/
+plugin-catalog-cache.json
 projects/
 session-env/
 sessions/
 shell-snapshots/
+stats-cache.json
 transcripts/
 history.jsonl
+.last*
