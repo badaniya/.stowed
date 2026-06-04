@@ -109,7 +109,7 @@ fi
 # LINE 3: context-mode statusline (ctx savings, budget, etc.)
 # ============================================================
 _ctx_bin=$(ls ~/.claude/plugins/cache/context-mode/context-mode/*/bin/statusline.mjs 2>/dev/null | sort -V | tail -1)
-ctx_line=$(printf '%s' "$input" | node "$_ctx_bin" 2>/dev/null || true)
+ctx_line=$(printf '%s' "$input" | node "$_ctx_bin" 2>/dev/null | sed 's/●/│/g' || true)
 
 # ============================================================
 # Output
