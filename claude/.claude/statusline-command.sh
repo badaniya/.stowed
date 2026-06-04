@@ -110,6 +110,11 @@ fi
 # ============================================================
 _ctx_bin=$(ls ~/.claude/plugins/cache/context-mode/context-mode/*/bin/statusline.mjs 2>/dev/null | sort -V | tail -1)
 ctx_line=$(printf '%s' "$input" | node "$_ctx_bin" 2>/dev/null | sed 's/●/│/g' || true)
+if [ -n "$ctx_line" ]; then
+    _cm_label=$(printf '%s' "$ctx_line" | awk -F'│' '{gsub(/[[:space:]]+$/,"",$1); print $1}')
+    _cm_rest=$(printf '%s' "$ctx_line" | awk -F'│' '{gsub(/^[[:space:]]+/,"",$2); print $2}')
+    ctx_line="$(printf "${dim}%s${reset}  ${overlay0}│${reset}  ${green}%s${reset}" "$_cm_label" "$_cm_rest")"
+fi
 
 # ============================================================
 # Output
