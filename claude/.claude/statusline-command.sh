@@ -106,8 +106,15 @@ if [ -n "$git_branch" ]; then
 fi
 
 # ============================================================
+# LINE 3: context-mode statusline (ctx savings, budget, etc.)
+# ============================================================
+_ctx_bin=$(ls ~/.claude/plugins/cache/context-mode/context-mode/*/bin/statusline.mjs 2>/dev/null | sort -V | tail -1)
+ctx_line=$(printf '%s' "$input" | node "$_ctx_bin" 2>/dev/null || true)
+
+# ============================================================
 # Output
 # ============================================================
+[ -n "$ctx_line" ] && printf "%s\n" "$ctx_line"
 if [ -n "$line1" ]; then
     printf "%s\n%s" "$line1" "$line2"
 else
