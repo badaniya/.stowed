@@ -84,7 +84,8 @@ function add_worktree()
 
     pushd "$MASTER_REPO_SRC/$REPO_NAME" > /dev/null
 
-    git worktree add -b "$USER/$REPO_NAME/$GIT_BRANCH" "$RELATIVE_WORKTREE_PATH" && \
+    git -C "$MASTER_REPO_SRC/$REPO_NAME" fetch origin "$GIT_SOURCE_BRANCH" && \
+    git worktree add -b "$USER/$REPO_NAME/$GIT_BRANCH" "$RELATIVE_WORKTREE_PATH" origin/"$GIT_SOURCE_BRANCH" && \
     cd "$RELATIVE_WORKTREE_PATH" && \
     git branch --set-upstream-to=origin/"$GIT_SOURCE_BRANCH"
 }
