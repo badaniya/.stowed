@@ -113,7 +113,7 @@ ctx_line=$(printf '%s' "$input" | node "$_ctx_bin" 2>/dev/null | sed 's/●/│/
 if [ -n "$ctx_line" ]; then
     _cm_label=$(printf '%s' "$ctx_line" | awk -F'│' '{gsub(/[[:space:]]+$/,"",$1); print $1}')
     _cm_rest=$(printf '%s' "$ctx_line" | awk -F'│' '{gsub(/^[[:space:]]+/,"",$2); print $2}')
-    ctx_line="$(printf "${dim}%s${reset}  ${overlay0}│${reset}  ${green}%s${reset}" "$_cm_label" "$_cm_rest")"
+    ctx_line="$(printf "${dim}%s${reset}  ${overlay0}│${reset}  ${dim}%s${reset}" "$_cm_label" "$_cm_rest")"
 fi
 
 # ============================================================
