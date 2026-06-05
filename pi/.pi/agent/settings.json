@@ -28,7 +28,8 @@
     "npm:visual-explainer",
     "npm:pi-which-key",
     "npm:pi-screenshots-picker",
-    "npm:@marckrenn/pi-sub-core"
+    "npm:@marckrenn/pi-sub-core",
+    "npm:context-mode"
   ],
   "defaultThinkingLevel": "off",
   "hideThinkingBlock": false

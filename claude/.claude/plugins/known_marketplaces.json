@@ -5,6 +5,14 @@
       "repo": "anthropics/claude-plugins-official"
     },
     "installLocation": "/home/badaniya/.claude/plugins/marketplaces/claude-plugins-official",
-    "lastUpdated": "2026-06-04T17:37:57.008Z"
+    "lastUpdated": "2026-06-04T23:53:35.412Z"
+  },
+  "context-mode": {
+    "source": {
+      "source": "github",
+      "repo": "mksglu/context-mode"
+    },
+    "installLocation": "/home/badaniya/.claude/plugins/marketplaces/context-mode",
+    "lastUpdated": "2026-06-04T23:33:14.382Z"
   }
 }

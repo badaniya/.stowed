@@ -2652,6 +2652,22 @@
       "homepage": "https://github.com/UI5/plugins-coding-agents"
     },
     {
+      "name": "valtown",
+      "description": "Build and deploy on Val Town. Bundles the Val Town MCP server and platform skills (HTTP vals, cron/intervals, SQLite, email, OAuth, React UI, third-party integrations, templates).",
+      "author": {
+        "name": "Val Town"
+      },
+      "category": "deployment",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/val-town/plugins.git",
+        "path": "plugin",
+        "ref": "main",
+        "sha": "e01069e11ea6e46b8d2d5fd2945f2dd4d33e6a57"
+      },
+      "homepage": "https://val.town"
+    },
+    {
       "name": "vanta",
       "description": "The Vanta plugin connects Claude Code to Vanta's security and compliance platform through the Vanta MCP server. It combines Vanta's test-specific remediation intelligence with your local repository context to help you fix compliance failures faster.",
       "author": {

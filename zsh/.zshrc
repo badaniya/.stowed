@@ -198,3 +198,10 @@ _NVO_SKILLS_SCRIPTS="$HOME/.agents/skills/nvo-skills-config/scripts"
 export NVO_CONFIG_RESOLVER_PATH="$_NVO_SKILLS_SCRIPTS/nvo-config-resolver.sh"
 export NVO_VERIFY_CREDENTIALS_PATH="$_NVO_SKILLS_SCRIPTS/nvo-verify-credentials.sh"
 unset _NVO_SKILLS_SCRIPTS
+
+# bun completions
+[ -s "/home/badaniya/.bun/_bun" ] && source "/home/badaniya/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"

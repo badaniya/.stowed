@@ -54,6 +54,19 @@
         "installedAt": "2026-06-04T15:46:53.282Z",
         "lastUpdated": "2026-06-04T15:46:53.282Z"
       }
+    ],
+    "context-mode@context-mode": [
+      {
+        "scope": "user",
+        "installPath": "/home/badaniya/.stowed/claude/.claude/plugins/cache/context-mode/context-mode/1.0.162",
+        "version": "1.0.162",
+        "installedAt": "2026-06-04T23:33:31.583Z",
+        "lastUpdated": "2026-06-04T23:38:40.370Z",
+        "gitCommitSha": "ce54a459b7ea191c3bfeed2759fd22b1a7c4b05e"
+      }
     ]
+  },
+  "enabledPlugins": {
+    "context-mode@context-mode": true
   }
 }
