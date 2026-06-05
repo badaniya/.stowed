@@ -68,7 +68,7 @@
     "opencode-antigravity-auth@latest",
     "@ramtinj95/opencode-tokenscope@latest",
     "@tarquinen/opencode-dcp@latest",
-    "context-mode@latest"
+    "context-mode"
   ],
   "provider": {
     "google": {
