@@ -1,5 +1,6 @@
 backups/
 cache/
+context-mode/
 daemon*
 downloads/
 file-history/
