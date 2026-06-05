@@ -13,8 +13,9 @@
       "commands": ["editor.action.goToImplementation"]
     },
 ],
-"go.toolsManagement.autoUpdate": true,
-"workbench.startupEditor": "none",
 "chat.permissions.default": "autoApprove",
-"github.copilot.chat.agentDebugLog.fileLogging.enabled": true
+"editor.lineNumbers": "relative",
+"github.copilot.chat.agentDebugLog.fileLogging.enabled": true,
+"go.toolsManagement.autoUpdate": true,
+"workbench.startupEditor": "none"
 }
