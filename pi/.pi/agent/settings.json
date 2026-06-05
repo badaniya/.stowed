@@ -31,6 +31,6 @@
     "npm:@marckrenn/pi-sub-core",
     "npm:context-mode"
   ],
-  "defaultThinkingLevel": "off",
+  "defaultThinkingLevel": "minimal",
   "hideThinkingBlock": false
 }
