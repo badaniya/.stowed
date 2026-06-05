@@ -74,7 +74,7 @@ cd $HOME/.stowed
 git reset --hard HEAD
 
 # Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
-rm -rf $HOME/.config/ghostty; rm -rf $HOME/.bash*; rm -rf $HOME/.zsh*; rm -rf $HOME/.oh-my-zsh; rm -rf $HOME/.tmux*; rm -rf $HOME/.config/nvim; rm -rf $HOME/.vim*; rm -rf $HOME/.emacs*; rm -rf $HOME/.config/github-copilot; rm -rf $HOME/.config/Code/User; stow -d $HOME/.stowed stow ghostty tmux fzf bat delta starship bash zsh nvim vim emacs goland code
+rm -rf $HOME/.config/ghostty; rm -rf $HOME/.bash*; rm -rf $HOME/.zsh*; rm -rf $HOME/.oh-my-zsh; rm -rf $HOME/.tmux*; rm -rf $HOME/.config/nvim; rm -rf $HOME/.vim*; rm -rf $HOME/.emacs*; rm -rf $HOME/.config/github-copilot; rm -rf $HOME/.ai ; rm -rf $HOME/.config/Code/User; stow -d $HOME/.stowed stow ghostty tmux fzf bat delta starship bash zsh nvim vim emacs goland code
 ```
 
 ### 4) Run Stow Command to Establish Symlinks to the Repository for Optional Terminal Tools
