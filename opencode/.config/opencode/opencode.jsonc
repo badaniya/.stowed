@@ -67,8 +67,9 @@
     //"oh-my-openagent@latest",
     "opencode-antigravity-auth@latest",
     "@ramtinj95/opencode-tokenscope@latest",
-    "@tarquinen/opencode-dcp@latest",
-    "context-mode"
+    //"@tarquinen/opencode-dcp@latest",
+    "context-mode",
+    "superpowers@git+https://github.com/obra/superpowers.git"
   ],
   "provider": {
     "google": {
