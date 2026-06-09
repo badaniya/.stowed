@@ -17,5 +17,9 @@
 "editor.lineNumbers": "relative",
 "github.copilot.chat.agentDebugLog.fileLogging.enabled": true,
 "go.toolsManagement.autoUpdate": true,
-"workbench.startupEditor": "none"
+"workbench.startupEditor": "none",
+"workbench.editor.empty.hint": "hidden",
+"workbench.statusBar.visible": false,
+"pi-vscode.path": "/home/badaniya/.nvm/versions/node/v22.22.2/bin/pi",
+"claudeCode.preferredLocation": "panel"
 }
