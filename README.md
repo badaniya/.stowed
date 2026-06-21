@@ -276,6 +276,10 @@ nix-env -iA nixpkgs.lazygit
 ```bash
 # Npm (node) install
 npm i -g hunkdiff
+
+# Add git hdiff/hshow aliases
+git config --global alias.hdiff "-c core.pager=\"hunk pager\" diff"
+git config --global alias.hshow "-c core.pager=\"hunk pager\" show"
 ```
 
 ### 8) Image and Diagram Markdown Support in Neovim
