@@ -89,7 +89,7 @@ rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/mise; rm -rf $HOME/.config
 
 ```bash
 # Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
-rm -rf $HOME/.npmrc; rm -rf $HOME/.claude; rm -rf $HOME/.copilot; rm -rf $HOME/.config/.copilot; rm -rf $HOME/.config/opencode; rm -rf $HOME/.pi; rm -rf $HOME/.config/goose; rm -rf $HOME/.config/mcphub; rm -rf $HOME/.agents; stow -d $HOME/.stowed npm claude copilot opencode pi goose mcphub agents
+rm -rf $HOME/.npmrc; rm -rf $HOME/.claude.json; rm -rf $HOME/.claude; rm -rf $HOME/.copilot; rm -rf $HOME/.config/.copilot; rm -rf $HOME/.config/opencode; rm -rf $HOME/.pi; rm -rf $HOME/.config/goose; rm -rf $HOME/.config/mcphub; rm -rf $HOME/.agents; stow -d $HOME/.stowed npm claude copilot opencode pi goose mcphub agents
 ```
 
 ## Installing Stowed Terminal Tools
@@ -274,6 +274,10 @@ nix-env -iA nixpkgs.lazygit
 ### 7) Hunk - Terminal TUI Git Diff
 
 ```bash
+# Nix dependency
+nix-env -iA nixpkgs.hunk
+
+# OR
 # Npm (node) install
 npm i -g hunkdiff
 

@@ -55,6 +55,12 @@ def _inject_agent_sdk_venv_into_syspath(state_dir):
     candidates = (
         glob.glob(os.path.join(venv_root, "lib", "python*", "site-packages"))
         + glob.glob(os.path.join(venv_root, "Lib", "site-packages"))
+        # `pip install --target` fallback (ensure_agent_sdk BUILT_TARGET, used
+        # when venv can't bootstrap pip): a FLAT layout — packages sit directly
+        # in agent-sdk-libs/, not under a site-packages subdir. See #2154
+        # follow-up. The pywin32 .pth bootstrap below applies here too (target
+        # installs don't process .pth at runtime, same as a manual venv insert).
+        + [os.path.join(state_dir, "agent-sdk-libs")]
     )
     added = False
     for sp in candidates:

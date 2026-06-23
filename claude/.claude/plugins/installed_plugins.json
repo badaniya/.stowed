@@ -7,7 +7,7 @@
         "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/frontend-design/unknown",
         "version": "unknown",
         "installedAt": "2026-05-14T16:18:03.768Z",
-        "lastUpdated": "2026-05-29T18:37:36.382Z"
+        "lastUpdated": "2026-06-23T17:03:08.749Z"
       }
     ],
     "code-review@claude-plugins-official": [
@@ -16,7 +16,7 @@
         "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/code-review/unknown",
         "version": "unknown",
         "installedAt": "2026-05-14T16:18:03.768Z",
-        "lastUpdated": "2026-05-29T18:37:36.382Z"
+        "lastUpdated": "2026-06-23T17:03:08.748Z"
       }
     ],
     "code-simplifier@claude-plugins-official": [
@@ -31,10 +31,10 @@
     "superpowers@claude-plugins-official": [
       {
         "scope": "user",
-        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/superpowers/5.1.0",
-        "version": "5.1.0",
+        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/superpowers/6.0.3",
+        "version": "6.0.3",
         "installedAt": "2026-05-29T18:37:36.382Z",
-        "lastUpdated": "2026-05-29T18:39:38.691Z"
+        "lastUpdated": "2026-06-19T00:18:43.557Z"
       }
     ],
     "github@claude-plugins-official": [
@@ -43,7 +43,7 @@
         "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/github/unknown",
         "version": "unknown",
         "installedAt": "2026-06-04T15:46:05.709Z",
-        "lastUpdated": "2026-06-04T15:46:05.709Z"
+        "lastUpdated": "2026-06-23T17:03:08.749Z"
       }
     ],
     "gopls-lsp@claude-plugins-official": [
@@ -61,12 +61,19 @@
         "installPath": "/home/badaniya/.stowed/claude/.claude/plugins/cache/context-mode/context-mode/1.0.162",
         "version": "1.0.162",
         "installedAt": "2026-06-04T23:33:31.583Z",
-        "lastUpdated": "2026-06-04T23:38:40.370Z",
+        "lastUpdated": "2026-06-11T21:32:30.026Z",
         "gitCommitSha": "ce54a459b7ea191c3bfeed2759fd22b1a7c4b05e"
       }
+    ],
+    "caveman@caveman": [
+      {
+        "scope": "user",
+        "installPath": "/home/badaniya/.claude/plugins/cache/caveman/caveman/25d22f864ad6",
+        "version": "25d22f864ad6",
+        "installedAt": "2026-06-16T18:53:33.246Z",
+        "lastUpdated": "2026-06-16T18:53:33.246Z",
+        "gitCommitSha": "25d22f864ad68cc447a4cb93aefde918aa4aec9f"
+      }
     ]
-  },
-  "enabledPlugins": {
-    "context-mode@context-mode": true
   }
 }
