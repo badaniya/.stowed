@@ -10,6 +10,7 @@ projects/
 session-env/
 sessions/
 shell-snapshots/
+state/
 tasks/
 transcripts/
 .credentials.json
