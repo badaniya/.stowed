@@ -1,5 +1,6 @@
-.extmgr-cache
 cache
 sessions
 auth.json
+trust.json
+.extmgr-cache
 .update-check
