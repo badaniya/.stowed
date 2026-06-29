@@ -7,7 +7,7 @@
         "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/frontend-design/unknown",
         "version": "unknown",
         "installedAt": "2026-05-14T16:18:03.768Z",
-        "lastUpdated": "2026-06-23T17:03:08.749Z"
+        "lastUpdated": "2026-06-29T18:54:05.575Z"
       }
     ],
     "code-review@claude-plugins-official": [
@@ -16,7 +16,7 @@
         "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/code-review/unknown",
         "version": "unknown",
         "installedAt": "2026-05-14T16:18:03.768Z",
-        "lastUpdated": "2026-06-23T17:03:08.748Z"
+        "lastUpdated": "2026-06-29T18:54:05.574Z"
       }
     ],
     "code-simplifier@claude-plugins-official": [
@@ -43,7 +43,7 @@
         "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/github/unknown",
         "version": "unknown",
         "installedAt": "2026-06-04T15:46:05.709Z",
-        "lastUpdated": "2026-06-23T17:03:08.749Z"
+        "lastUpdated": "2026-06-29T18:54:05.575Z"
       }
     ],
     "gopls-lsp@claude-plugins-official": [
