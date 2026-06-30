@@ -11,5 +11,6 @@
     }
   },
   "compliance_taints": [],
+  "monitoring_notice": null,
   "defaults": {}
 }
