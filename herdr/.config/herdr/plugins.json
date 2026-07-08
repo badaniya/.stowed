@@ -1,0 +1,45 @@
+[
+  {
+    "plugin_id": "rmarganti.herdr-pluck",
+    "name": "Herdr Pluck",
+    "version": "0.1.0",
+    "min_herdr_version": "0.7.0",
+    "description": "Inline keyboard hints for copying visible terminal tokens from Herdr panes",
+    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/rmarganti.herdr-pluck-9cc46c9a5509/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/rmarganti.herdr-pluck-9cc46c9a5509",
+    "enabled": true,
+    "platforms": [
+      "linux",
+      "macos"
+    ],
+    "build": [
+      {
+        "command": [
+          "./scripts/install-binary.sh"
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "id": "pluck",
+        "title": "Pluck visible token",
+        "contexts": [
+          "pane",
+          "workspace"
+        ],
+        "command": [
+          "./bin/herdr-pluck",
+          "open"
+        ]
+      }
+    ],
+    "source": {
+      "kind": "github",
+      "owner": "rmarganti",
+      "repo": "herdr-pluck",
+      "resolved_commit": "c94ebe212ed17998aabc40b8015739e60ef1b37b",
+      "managed_path": "/home/badaniya/.config/herdr/plugins/github/rmarganti.herdr-pluck-9cc46c9a5509",
+      "installed_unix_ms": 1783536557244
+    }
+  }
+]
