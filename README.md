@@ -89,7 +89,7 @@ rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/mise; rm -rf $HOME/.config
 
 ```bash
 # Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
-rm -rf $HOME/.npmrc; rm -rf $HOME/.claude.json; rm -rf $HOME/.claude; rm -rf $HOME/.copilot; rm -rf $HOME/.config/.copilot; rm -rf $HOME/.config/opencode; rm -rf $HOME/.pi; rm -rf $HOME/.config/goose; rm -rf $HOME/.config/mcphub; rm -rf $HOME/.agents; stow -d $HOME/.stowed npm claude copilot opencode pi goose mcphub agents
+rm -rf $HOME/.npmrc; rm -rf $HOME/.config/herdr; rm -rf $HOME/.claude.json; rm -rf $HOME/.claude; rm -rf $HOME/.copilot; rm -rf $HOME/.config/.copilot; rm -rf $HOME/.config/opencode; rm -rf $HOME/.pi; rm -rf $HOME/.config/goose; rm -rf $HOME/.config/mcphub; rm -rf $HOME/.agents; stow -d $HOME/.stowed npm herdr claude copilot opencode pi goose mcphub agents
 ```
 
 ## Installing Stowed Terminal Tools
@@ -312,25 +312,34 @@ nix-env -iA nixpkgs.kulala-fmt
 nix-env -iA nixpkgs.nodejs_22
 ```
 
-### 2) Claude Code - Anthropic's AI coding agent for the terminal
+### 2) Herdr - An AI based terminal multiplexer - Multi agent harness observability
+
+```bash
+curl -fsSL https://herdr.dev/install.sh | sh
+# or
+# Mise dependency
+mise use -g herdr
+```
+
+### 3) Claude Code - Anthropic's AI coding agent for the terminal
 
 ```bash
 curl -fsSL https://claude.ai/install.sh | bash
 ```
 
-### 3) Copilot-cli - GitHub Copilot for the terminal
+### 4) Copilot-cli - GitHub Copilot for the terminal
 
 ```bash
 npm install -g @github/copilot
 ```
 
-### 4) Opencode - An open source AI coding agent for the terminal
+### 5) Opencode - An open source AI coding agent for the terminal
 
 ```bash
 curl -fsSL https://opencode.ai/install | bash
 ```
 
-### 5) Pi - A fully customizable AI coding agent for the terminal
+### 6) Pi - A fully customizable AI coding agent for the terminal
 
 ```bash
 npm install -g @mariozechner/pi-coding-agent
@@ -352,13 +361,13 @@ pi install npm:@marckrenn/pi-sub-core
 pi install npm:@marckrenn/pi-sub-bar
 ```
 
-### 6) Goose - An AI coding assistant for the terminal
+### 7) Goose - An AI coding assistant for the terminal
 
 ```bash
 curl -fsSL https://github.com/block/goose/releases/download/stable/download_cli.sh | bash
 ```
 
-### 7) Agents - A centralized skills area for all AI tools
+### 8) Agents - A centralized skills area for all AI tools
 
 ```bash
 # Sure-fire way to ensure stow symlink creation
