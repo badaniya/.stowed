@@ -69,8 +69,12 @@
     "@ramtinj95/opencode-tokenscope@latest",
     //"@tarquinen/opencode-dcp@latest",
     "context-mode",
-    "superpowers@git+https://github.com/obra/superpowers.git"
+    "superpowers@git+https://github.com/obra/superpowers.git",
+    "/home/badaniya/workspace/badaniya/node_modules/opencode-plugin-langfuse/dist/index.js"
   ],
+  "experimental": {
+    "openTelemetry": true
+  },
   "provider": {
     "google": {
       "models": {

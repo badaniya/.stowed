@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.79.0",
+  "lastChangelogVersion": "0.80.3",
   "defaultProvider": "github-copilot",
   "defaultModel": "claude-sonnet-4.6",
   "theme": "pi-catppuccin-mocha",
@@ -29,7 +29,8 @@
     "npm:pi-which-key",
     "npm:pi-screenshots-picker",
     "npm:@marckrenn/pi-sub-core",
-    "npm:context-mode"
+    "npm:context-mode",
+    "npm:pi-langfuse"
   ],
   "defaultThinkingLevel": "minimal",
   "hideThinkingBlock": false

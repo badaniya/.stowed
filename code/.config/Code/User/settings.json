@@ -21,5 +21,9 @@
 "workbench.editor.empty.hint": "hidden",
 "workbench.statusBar.visible": false,
 "pi-vscode.path": "/home/badaniya/.nvm/versions/node/v22.22.2/bin/pi",
-"claudeCode.preferredLocation": "panel"
+"claudeCode.preferredLocation": "panel",
+"agentTracing.langfuse.autoStart": true,
+"agentTracing.additionalExporters": [],
+"chat.useClaudeHooks": true,
+"chat.viewSessions.orientation": "stacked"
 }
