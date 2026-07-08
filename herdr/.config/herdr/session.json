@@ -2,13 +2,13 @@
   "version": 3,
   "workspaces": [
     {
-      "id": "w8",
+      "id": "wB",
       "custom_name": null,
       "identity_cwd": "/home/badaniya",
       "public_pane_numbers": {
-        "8": 1
+        "2": 1
       },
-      "next_public_pane_number": 2,
+      "next_public_pane_number": 3,
       "public_tab_numbers": [
         1
       ],
@@ -17,16 +17,16 @@
         {
           "custom_name": null,
           "layout": {
-            "Pane": 8
+            "Pane": 2
           },
           "panes": {
-            "8": {
+            "2": {
               "cwd": "/home/badaniya"
             }
           },
           "zoomed": false,
-          "focused": 8,
-          "root_pane": 8
+          "focused": 2,
+          "root_pane": 2
         }
       ],
       "active_tab": 0
