@@ -3,6 +3,7 @@ cache/
 context-mode/
 downloads/
 file-history/
+hooks/.langfuse_config.json
 image-cache/
 jobs/
 paste-cache/
