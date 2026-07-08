@@ -541,6 +541,15 @@
       "pluginName": "firecrawl-workflows",
       "installedAt": "2026-06-18T19:03:40.307Z",
       "updatedAt": "2026-06-18T19:04:01.181Z"
+    },
+    "herdr": {
+      "source": "ogulcancelik/herdr",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/ogulcancelik/herdr.git",
+      "skillPath": "SKILL.md",
+      "skillFolderHash": "552aa8ca223908a2ee3b1058587d4b5a84828e71",
+      "installedAt": "2026-07-08T15:54:49.024Z",
+      "updatedAt": "2026-07-08T15:54:49.024Z"
     }
   },
   "dismissed": {}
