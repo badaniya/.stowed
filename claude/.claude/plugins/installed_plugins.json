@@ -7,7 +7,7 @@
         "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/frontend-design/unknown",
         "version": "unknown",
         "installedAt": "2026-05-14T16:18:03.768Z",
-        "lastUpdated": "2026-07-02T17:29:22.480Z"
+        "lastUpdated": "2026-07-09T14:42:21.525Z"
       }
     ],
     "code-review@claude-plugins-official": [
@@ -16,7 +16,7 @@
         "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/code-review/unknown",
         "version": "unknown",
         "installedAt": "2026-05-14T16:18:03.768Z",
-        "lastUpdated": "2026-07-02T17:29:22.478Z"
+        "lastUpdated": "2026-07-09T14:42:21.522Z"
       }
     ],
     "code-simplifier@claude-plugins-official": [
@@ -31,10 +31,10 @@
     "superpowers@claude-plugins-official": [
       {
         "scope": "user",
-        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/superpowers/6.1.0",
-        "version": "6.1.0",
+        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/superpowers/6.1.1",
+        "version": "6.1.1",
         "installedAt": "2026-05-29T18:37:36.382Z",
-        "lastUpdated": "2026-07-01T00:26:24.640Z"
+        "lastUpdated": "2026-07-08T21:08:24.446Z"
       }
     ],
     "github@claude-plugins-official": [
@@ -43,7 +43,7 @@
         "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/github/unknown",
         "version": "unknown",
         "installedAt": "2026-06-04T15:46:05.709Z",
-        "lastUpdated": "2026-07-02T17:29:22.479Z"
+        "lastUpdated": "2026-07-09T14:42:21.524Z"
       }
     ],
     "gopls-lsp@claude-plugins-official": [
@@ -61,7 +61,7 @@
         "installPath": "/home/badaniya/.stowed/claude/.claude/plugins/cache/context-mode/context-mode/1.0.169",
         "version": "1.0.169",
         "installedAt": "2026-06-04T23:33:31.583Z",
-        "lastUpdated": "2026-07-02T15:58:25.520Z",
+        "lastUpdated": "2026-07-08T21:02:36.597Z",
         "gitCommitSha": "ce54a459b7ea191c3bfeed2759fd22b1a7c4b05e"
       }
     ],

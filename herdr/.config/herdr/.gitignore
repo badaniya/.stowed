@@ -1,2 +1,5 @@
 *.sock
 *.log
+session.json
+session-history.json
+plugins/config/cloudmanic.herdr-plus/projects
