@@ -1,0 +1,8 @@
+auto_open = false # default: true
+
+base_branches = [
+	"origin/campus_fabric",
+	"origin/cloud_platform",
+	"main",
+	"master",
+]

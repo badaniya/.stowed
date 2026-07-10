@@ -298,3 +298,8 @@ key = "prefix+A"                                             # "all panes"; pref
 type = "plugin_action"                                       # must be plugin_action (not plugin_pane)
 command = "synchronize-panes.broadcast"
 description = "broadcast a command to all panes in this tab"
+
+[[keys.command]]
+key = "alt+r"
+type = "plugin_action"
+command = "persiyanov.reviewr.toggle" # <plugin_id>.<action_id> — note the id, not the name

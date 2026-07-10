@@ -223,5 +223,216 @@
       "managed_path": "/home/badaniya/.config/herdr/plugins/github/cloudmanic.herdr-plus-0cce37b56fb9",
       "installed_unix_ms": 1783609397530
     }
+  },
+  {
+    "plugin_id": "persiyanov.reviewr",
+    "name": "reviewr",
+    "version": "0.10.0",
+    "min_herdr_version": "0.7.0",
+    "description": "Native terminal code-review sidebar for herdr.",
+    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/persiyanov.reviewr-e87b654a74f8/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/persiyanov.reviewr-e87b654a74f8",
+    "enabled": true,
+    "platforms": [
+      "macos",
+      "linux"
+    ],
+    "build": [
+      {
+        "command": [
+          "bash",
+          "herdr/install.sh"
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "id": "close",
+        "title": "reviewr: close sidebar",
+        "contexts": [
+          "pane",
+          "workspace"
+        ],
+        "command": [
+          "bash",
+          "herdr/sidebar.sh",
+          "close"
+        ]
+      },
+      {
+        "id": "open",
+        "title": "reviewr: open sidebar",
+        "contexts": [
+          "pane",
+          "workspace"
+        ],
+        "command": [
+          "bash",
+          "herdr/sidebar.sh",
+          "open"
+        ]
+      },
+      {
+        "id": "toggle",
+        "title": "reviewr: toggle sidebar",
+        "contexts": [
+          "pane",
+          "workspace"
+        ],
+        "command": [
+          "bash",
+          "herdr/sidebar.sh",
+          "toggle"
+        ]
+      }
+    ],
+    "events": [
+      {
+        "on": "worktree.created",
+        "command": [
+          "bash",
+          "herdr/sidebar.sh",
+          "auto-open"
+        ]
+      }
+    ],
+    "panes": [
+      {
+        "id": "sidebar",
+        "title": "reviewr",
+        "placement": "split",
+        "command": [
+          "sh",
+          "-c",
+          "exec \"$HERDR_PLUGIN_ROOT/bin/herdr-reviewr\""
+        ]
+      }
+    ],
+    "source": {
+      "kind": "github",
+      "owner": "persiyanov",
+      "repo": "herdr-reviewr",
+      "resolved_commit": "66ab6ae1e180108a337c22720d27b1605dab1ea0",
+      "managed_path": "/home/badaniya/.config/herdr/plugins/github/persiyanov.reviewr-e87b654a74f8",
+      "installed_unix_ms": 1783649021048
+    }
+  },
+  {
+    "plugin_id": "herdr-file-viewer",
+    "name": "herdr-file-viewer",
+    "version": "1.11.0",
+    "min_herdr_version": "0.7.0",
+    "description": "A git-aware, read-only file viewer: a keyboard-driven TUI in a herdr split pane.",
+    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/herdr-file-viewer-c993314e2614/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/herdr-file-viewer-c993314e2614",
+    "enabled": true,
+    "platforms": [
+      "linux",
+      "macos",
+      "windows"
+    ],
+    "build": [
+      {
+        "platforms": [
+          "linux",
+          "macos"
+        ],
+        "command": [
+          "/bin/sh",
+          "scripts/fetch-or-build.sh"
+        ]
+      },
+      {
+        "platforms": [
+          "windows"
+        ],
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-File",
+          "scripts/fetch-or-build.ps1"
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "id": "open-file-viewer",
+        "title": "Open file viewer",
+        "description": "Open the git-aware file viewer in a split pane beside the current work.",
+        "platforms": [
+          "linux",
+          "macos"
+        ],
+        "command": [
+          "bash",
+          "scripts/open-file-viewer.sh"
+        ]
+      },
+      {
+        "id": "open-file-viewer-tab",
+        "title": "Open file viewer (tab)",
+        "description": "Open the git-aware file viewer in its own tab (switch to it if already open).",
+        "platforms": [
+          "linux",
+          "macos"
+        ],
+        "command": [
+          "bash",
+          "scripts/open-file-viewer-tab.sh"
+        ]
+      },
+      {
+        "id": "open-file-viewer-tab-windows",
+        "title": "Open file viewer (tab)",
+        "description": "Open the git-aware file viewer in its own tab (switch to it if already open).",
+        "platforms": [
+          "windows"
+        ],
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-Command",
+          "$b=$env:HERDR_BIN_PATH; if(-not $b){$b='herdr'}; $p=((& $b plugin list --json|ConvertFrom-Json).result.plugins|?{$_.plugin_id -eq 'herdr-file-viewer'}).plugin_root; if($p -and $p.StartsWith('\\\\?\\')){$p=$p.Substring(4)}; & (Join-Path (Join-Path $p 'scripts') 'open-file-viewer-tab.ps1')"
+        ]
+      },
+      {
+        "id": "open-file-viewer-windows",
+        "title": "Open file viewer",
+        "description": "Open the git-aware file viewer in a split pane beside the current work.",
+        "platforms": [
+          "windows"
+        ],
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-Command",
+          "$b=$env:HERDR_BIN_PATH; if(-not $b){$b='herdr'}; $p=((& $b plugin list --json|ConvertFrom-Json).result.plugins|?{$_.plugin_id -eq 'herdr-file-viewer'}).plugin_root; if($p -and $p.StartsWith('\\\\?\\')){$p=$p.Substring(4)}; & (Join-Path (Join-Path $p 'scripts') 'open-file-viewer.ps1')"
+        ]
+      }
+    ],
+    "panes": [
+      {
+        "id": "file-viewer",
+        "title": "Files",
+        "placement": "split",
+        "command": [
+          "./target/release/herdr-file-viewer"
+        ]
+      }
+    ],
+    "source": {
+      "kind": "github",
+      "owner": "smarzban",
+      "repo": "herdr-file-viewer",
+      "resolved_commit": "d8e73ae379c95a841a92ae92c39a0a6b9500ef33",
+      "managed_path": "/home/badaniya/.config/herdr/plugins/github/herdr-file-viewer-c993314e2614",
+      "installed_unix_ms": 1783649059233
+    }
   }
 ]
