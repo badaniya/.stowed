@@ -6,3 +6,5 @@ base_branches = [
 	"main",
 	"master",
 ]
+
+github_host = "github.extremenetworks.com"

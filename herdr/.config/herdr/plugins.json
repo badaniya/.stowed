@@ -292,99 +292,6 @@
     }
   },
   {
-    "plugin_id": "persiyanov.reviewr",
-    "name": "reviewr",
-    "version": "0.10.0",
-    "min_herdr_version": "0.7.0",
-    "description": "Native terminal code-review sidebar for herdr.",
-    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/persiyanov.reviewr-e87b654a74f8/herdr-plugin.toml",
-    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/persiyanov.reviewr-e87b654a74f8",
-    "enabled": true,
-    "platforms": [
-      "macos",
-      "linux"
-    ],
-    "build": [
-      {
-        "command": [
-          "bash",
-          "herdr/install.sh"
-        ]
-      }
-    ],
-    "actions": [
-      {
-        "id": "close",
-        "title": "reviewr: close sidebar",
-        "contexts": [
-          "pane",
-          "workspace"
-        ],
-        "command": [
-          "bash",
-          "herdr/sidebar.sh",
-          "close"
-        ]
-      },
-      {
-        "id": "open",
-        "title": "reviewr: open sidebar",
-        "contexts": [
-          "pane",
-          "workspace"
-        ],
-        "command": [
-          "bash",
-          "herdr/sidebar.sh",
-          "open"
-        ]
-      },
-      {
-        "id": "toggle",
-        "title": "reviewr: toggle sidebar",
-        "contexts": [
-          "pane",
-          "workspace"
-        ],
-        "command": [
-          "bash",
-          "herdr/sidebar.sh",
-          "toggle"
-        ]
-      }
-    ],
-    "events": [
-      {
-        "on": "worktree.created",
-        "command": [
-          "bash",
-          "herdr/sidebar.sh",
-          "auto-open"
-        ]
-      }
-    ],
-    "panes": [
-      {
-        "id": "sidebar",
-        "title": "reviewr",
-        "placement": "split",
-        "command": [
-          "sh",
-          "-c",
-          "exec \"$HERDR_PLUGIN_ROOT/bin/herdr-reviewr\""
-        ]
-      }
-    ],
-    "source": {
-      "kind": "github",
-      "owner": "persiyanov",
-      "repo": "herdr-reviewr",
-      "resolved_commit": "66ab6ae1e180108a337c22720d27b1605dab1ea0",
-      "managed_path": "/home/badaniya/.config/herdr/plugins/github/persiyanov.reviewr-e87b654a74f8",
-      "installed_unix_ms": 1783649021048
-    }
-  },
-  {
     "plugin_id": "herdr-file-viewer",
     "name": "herdr-file-viewer",
     "version": "1.11.0",
@@ -500,6 +407,99 @@
       "resolved_commit": "d8e73ae379c95a841a92ae92c39a0a6b9500ef33",
       "managed_path": "/home/badaniya/.config/herdr/plugins/github/herdr-file-viewer-c993314e2614",
       "installed_unix_ms": 1783649059233
+    }
+  },
+  {
+    "plugin_id": "persiyanov.reviewr",
+    "name": "reviewr",
+    "version": "0.11.0",
+    "min_herdr_version": "0.7.0",
+    "description": "Native terminal code-review sidebar for herdr.",
+    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/persiyanov.reviewr-e87b654a74f8/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/persiyanov.reviewr-e87b654a74f8",
+    "enabled": true,
+    "platforms": [
+      "macos",
+      "linux"
+    ],
+    "build": [
+      {
+        "command": [
+          "bash",
+          "herdr/install.sh"
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "id": "close",
+        "title": "reviewr: close sidebar",
+        "contexts": [
+          "pane",
+          "workspace"
+        ],
+        "command": [
+          "bash",
+          "herdr/sidebar.sh",
+          "close"
+        ]
+      },
+      {
+        "id": "open",
+        "title": "reviewr: open sidebar",
+        "contexts": [
+          "pane",
+          "workspace"
+        ],
+        "command": [
+          "bash",
+          "herdr/sidebar.sh",
+          "open"
+        ]
+      },
+      {
+        "id": "toggle",
+        "title": "reviewr: toggle sidebar",
+        "contexts": [
+          "pane",
+          "workspace"
+        ],
+        "command": [
+          "bash",
+          "herdr/sidebar.sh",
+          "toggle"
+        ]
+      }
+    ],
+    "events": [
+      {
+        "on": "worktree.created",
+        "command": [
+          "bash",
+          "herdr/sidebar.sh",
+          "auto-open"
+        ]
+      }
+    ],
+    "panes": [
+      {
+        "id": "sidebar",
+        "title": "reviewr",
+        "placement": "split",
+        "command": [
+          "sh",
+          "-c",
+          "exec \"$HERDR_PLUGIN_ROOT/bin/herdr-reviewr\""
+        ]
+      }
+    ],
+    "source": {
+      "kind": "github",
+      "owner": "persiyanov",
+      "repo": "herdr-reviewr",
+      "resolved_commit": "ca6dd8a039ea027dd6d881bed6468ccc34f52edd",
+      "managed_path": "/home/badaniya/.config/herdr/plugins/github/persiyanov.reviewr-e87b654a74f8",
+      "installed_unix_ms": 1783693488320
     }
   }
 ]
