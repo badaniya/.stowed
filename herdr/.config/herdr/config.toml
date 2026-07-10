@@ -292,3 +292,9 @@ key = "prefix+a"
 type = "plugin_action"
 command = "cloudmanic.herdr-plus.quick-actions"
 description = "herdr-plus: quick actions"
+
+[[keys.command]]
+key = "prefix+A"                                             # "all panes"; prefix+e is taken by scrollback
+type = "plugin_action"                                       # must be plugin_action (not plugin_pane)
+command = "synchronize-panes.broadcast"
+description = "broadcast a command to all panes in this tab"
