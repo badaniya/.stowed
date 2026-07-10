@@ -1,0 +1,2 @@
+name = "Open workspace: NG-AIO-vaughan-vm"
+command = "bash ~/.config/herdr-spreader/ng-aio-vaughan-vm.sh"

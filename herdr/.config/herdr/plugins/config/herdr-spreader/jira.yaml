@@ -1,0 +1,18 @@
+workspaces:
+  - name: JIRA
+    root: ~/workspace/badaniya
+    tabs:
+      - label: 1 - JIRA
+        panes:
+          # Top: defects
+          - command: "jira issue list -t defect -a 'Brian Adaniya'"
+
+          # Mid: sub-tasks (not Done/Resolved)
+          - split: down
+            ratio: 0.29
+            command: "jira issue list -t sub-task -a 'Brian Adaniya' -s~Done -s~Resolved"
+
+          # Bottom: stories (not Done/Resolved)
+          - split: down
+            ratio: 0.47
+            command: "jira issue list -t story -a 'Brian Adaniya' -s~Done -s~Resolved"

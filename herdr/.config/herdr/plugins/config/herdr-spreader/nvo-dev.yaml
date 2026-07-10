@@ -1,0 +1,38 @@
+workspaces:
+  - name: NVO-DEV
+    root: ~/workspace/badaniya/NVO-DEV
+    tabs:
+      - label: 1 - Build
+        panes:
+          # Top full-width: NVO service log tail → loggo
+          - command: >-
+              tail -F
+              /var/log/network/network-server.log
+              /var/log/edge/edge-server.log
+              /var/log/scheduler/scheduler-server.log
+              /var/log/runonce/runonce-server.log
+              /var/log/system/system-server.log
+              | loggo stream -t ~/.private-nvo-loggo.tpl
+
+          # Bottom row (~42% height) — left: lazydocker
+          - split: down
+            ratio: 0.42
+            command: lazydocker
+
+          # Bottom-right column (3 equal-height panes) — top: PCM shell
+          - split: right
+            ratio: 0.65
+            cwd: PlatformCommonModels/scripts/development
+            command: git fetch --all
+
+          # Bottom-right mid: PlatformServices shell (split gives equal thirds: 0.33 then 0.5)
+          - split: down
+            ratio: 0.33
+            cwd: PlatformServices/scripts/development
+            command: git fetch --all
+
+          # Bottom-right bottom: GoDCApp NVO shell
+          - split: down
+            ratio: 0.5
+            cwd: ~/workspace/badaniya
+            focus: true

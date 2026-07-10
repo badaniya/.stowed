@@ -1,0 +1,2 @@
+name = "Open workspace: Cloud-Testbed-dl1-kafka-lag"
+command = "bash ~/.config/herdr-spreader/cloud-testbed-dl1-kafka-lag.sh"

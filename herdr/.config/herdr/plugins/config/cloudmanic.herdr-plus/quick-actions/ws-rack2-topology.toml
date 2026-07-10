@@ -1,0 +1,2 @@
+name = "Open workspace: rack2-topology"
+command = "bash ~/.config/herdr-spreader/rack2-topology.sh"

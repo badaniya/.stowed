@@ -1,0 +1,2 @@
+name = "Open workspace: NG-AIO-rebs-vm"
+command = "bash ~/.config/herdr-spreader/ng-aio-rebs-vm.sh"

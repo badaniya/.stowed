@@ -1,0 +1,2 @@
+name = "Open workspace: NG-AIO-pasu-vm"
+command = "bash ~/.config/herdr-spreader/ng-aio-pasu-vm.sh"

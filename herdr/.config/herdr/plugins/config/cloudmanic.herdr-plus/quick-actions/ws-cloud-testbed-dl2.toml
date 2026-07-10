@@ -1,0 +1,2 @@
+name = "Open workspace: Cloud-Testbed-dl2"
+command = "bash ~/.config/herdr-spreader/cloud-testbed-dl2.sh"

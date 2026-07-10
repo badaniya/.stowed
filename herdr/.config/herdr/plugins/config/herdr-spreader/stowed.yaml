@@ -1,0 +1,7 @@
+workspaces:
+  - name: STOWED
+    root: ~/.stowed
+    tabs:
+      - label: 1 - Config
+        panes:
+          - command: nvim

@@ -1,0 +1,59 @@
+workspaces:
+  - name: NVO-REVIEW
+    root: ~/workspace/badaniya/NVO-REVIEW
+    tabs:
+      - label: 2 - PR
+        panes:
+          - cwd: GoDCApp
+            command: gh pr view $(git branch --show-current) --comments
+
+      - label: 3 - Diff
+        panes:
+          # Top: PR diff piped through hunk patch for a readable view
+          - cwd: GoDCApp
+            command: >-
+              gh pr diff $(git branch --show-current)
+              | hunk patch -
+
+          # Bottom: Neovim opened on the list of files changed in the PR
+          - split: down
+            ratio: 0.5
+            cwd: GoDCApp
+            command: >-
+              nvim $(gh pr diff $(git branch --show-current) --name-only | tr '\n' ' ')
+            focus: true
+
+      - label: 4 - Build
+        panes:
+          # Top full-width: NVO service log tail → loggo
+          - command: >-
+              tail -F
+              /var/log/network/network-server.log
+              /var/log/edge/edge-server.log
+              /var/log/scheduler/scheduler-server.log
+              /var/log/runonce/runonce-server.log
+              /var/log/system/system-server.log
+              | loggo stream -t ~/.private-nvo-loggo.tpl
+
+          # Bottom row (~42% height) — left: lazydocker
+          - split: down
+            ratio: 0.42
+            command: lazydocker
+
+          # Bottom-right column (3 equal-height panes) — top: PCM shell
+          - split: right
+            ratio: 0.65
+            cwd: PlatformCommonModels/scripts/development
+            command: git fetch --all
+
+          # Bottom-right mid: PlatformServices shell
+          - split: down
+            ratio: 0.33
+            cwd: PlatformServices/scripts/development
+            command: git fetch --all
+
+          # Bottom-right bottom: GoDCApp NVO shell
+          - split: down
+            ratio: 0.5
+            cwd: GoDCApp/NVO/scripts/development
+            focus: true

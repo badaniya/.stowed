@@ -1,0 +1,8 @@
+workspaces:
+  - name: VAULT
+    root: ~/vaults/work
+    tabs:
+      - label: 1 - Notes
+        panes:
+          - command: nvim
+
