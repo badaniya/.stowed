@@ -1,0 +1,2 @@
+name = "Open workspace: NG-AIO-schikkan-vm"
+command = "bash ~/.config/herdr-spreader/ng-aio-schikkan-vm.sh"
