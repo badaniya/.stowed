@@ -1,0 +1,2 @@
+name = "Open workspace: NG-AIO-luxoft327-vm"
+command = "bash ~/.config/herdr-spreader/ng-aio-luxoft327-vm.sh"

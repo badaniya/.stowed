@@ -1,0 +1,6 @@
+name = "Import new NG-AIO workspace"
+type = "form"
+command = "bash ~/.config/herdr-spreader/import-ng-aio.sh '{{.Value}}'"
+
+[form]
+prompt = "NG-AIO name (e.g. vaughan-vm)"

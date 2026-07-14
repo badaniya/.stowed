@@ -1,0 +1,6 @@
+name = "Open workspace: NVO-REVIEW branch"
+type = "form"
+command = "nvo-review-branch '{{.Value}}'"
+
+[form]
+prompt = "Branch name (e.g. CFD-17681/my-feature)"
