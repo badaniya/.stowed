@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "skills": {
+    "okf": {
+      "source": "scaccogatto/okf-skills",
+      "sourceType": "github",
+      "skillPath": "skills/okf/SKILL.md",
+      "computedHash": "e9e933fd2dcbc800e37e6c8f97677d57efae1859a76fe89890d9da51903cd95f"
+    },
+    "validate": {
+      "source": "scaccogatto/okf-skills",
+      "sourceType": "github",
+      "skillPath": "skills/validate/SKILL.md",
+      "computedHash": "9e77e9086058e975d7a0c7a93165f417fe571170e542354458fc54f5e18c9ccf"
+    },
+    "visualize": {
+      "source": "scaccogatto/okf-skills",
+      "sourceType": "github",
+      "skillPath": "skills/visualize/SKILL.md",
+      "computedHash": "2dd5b6f140f3d7536437d85b4a958411490091ba5d55e0e42135c021a91eb286"
+    }
+  }
+}

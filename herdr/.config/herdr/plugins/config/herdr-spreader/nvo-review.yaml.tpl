@@ -3,10 +3,10 @@ workspaces:
     root: ~/workspace/badaniya/NVO-REVIEW
     tabs:
       # ── 1 - Agent ────────────────────────────────────────────────────
-      # pi agent for the review session — lands in GoDCApp/NVO on the branch
+      # pi agent for the review session — lands in the repo root on the branch
       - label: 1 - Agent
         panes:
-          - cwd: GoDCApp/NVO
+          - cwd: ${REPO_CWD}
             command: pi
 
       # ── 2 - JIRA/PR ──────────────────────────────────────────────────
@@ -18,7 +18,7 @@ workspaces:
 
           - split: right
             ratio: 0.5
-            cwd: GoDCApp
+            cwd: ${REPO}
             command: gh pr view ${BRANCH} --comments
             focus: true
 
@@ -27,14 +27,14 @@ workspaces:
       # Bottom: Neovim opened on every file changed in the PR
       - label: 3 - Diff
         panes:
-          - cwd: GoDCApp
+          - cwd: ${REPO}
             command: >-
               gh pr diff ${BRANCH}
               | hunk patch -
 
           - split: down
             ratio: 0.5
-            cwd: GoDCApp
+            cwd: ${REPO}
             command: >-
               nvim $(gh pr diff ${BRANCH} --name-only | tr '\n' ' ')
             focus: true

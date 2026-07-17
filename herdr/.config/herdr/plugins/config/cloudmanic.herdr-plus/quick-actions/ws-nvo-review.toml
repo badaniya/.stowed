@@ -1,0 +1,7 @@
+name = "Open workspace: NVO-REVIEW branch"
+type = "form"
+command = "bash ~/.config/herdr-spreader/nvo-review.sh '{{.Value}}'"
+
+[form]
+prompt = "Branch and repo (e.g. CFD-17681/my-feature  or  CFD-17681/my-feature GoDCApp)"
+placeholder = "branch [GoDCApp|PlatformServices|PlatformServicesCommon|PlatformCommonModels]"

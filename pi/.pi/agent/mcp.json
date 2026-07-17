@@ -1,5 +1,8 @@
 {
   "mcpServers": {
+    "context-mode": {
+      "command": "context-mode"
+    },
     "codegraph": {
       "command": "codegraph serve --mcp",
       "lifecycle": "lazy",

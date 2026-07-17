@@ -1,0 +1,2 @@
+name = "Open workspace: NG-AIO-hliang-vm"
+command = "bash ~/.config/herdr-spreader/ng-aio-hliang-vm.sh"
