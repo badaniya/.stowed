@@ -1,7 +1,8 @@
 {
   "mcpServers": {
     "context-mode": {
-      "command": "context-mode"
+      "command": "context-mode",
+      "directTools": true
     },
     "codegraph": {
       "command": "codegraph serve --mcp",
@@ -11,4 +12,3 @@
     }
   }
 }
-

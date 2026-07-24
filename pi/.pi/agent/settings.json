@@ -1,7 +1,7 @@
 {
-  "lastChangelogVersion": "0.80.10",
-  "defaultProvider": "github-copilot",
-  "defaultModel": "claude-sonnet-4.6",
+  "lastChangelogVersion": "0.81.1",
+  "defaultProvider": "anthropic",
+  "defaultModel": "claude-sonnet-5",
   "theme": "pi-catppuccin-mocha",
   "packages": [
     "npm:pi-extmgr",
@@ -30,8 +30,16 @@
     "npm:pi-screenshots-picker",
     "npm:@marckrenn/pi-sub-core",
     "npm:context-mode",
-    "npm:pi-langfuse"
+    "npm:pi-langfuse",
+    "npm:pi-claude-auth"
   ],
   "defaultThinkingLevel": "minimal",
-  "hideThinkingBlock": false
+  "hideThinkingBlock": false,
+  "enabledModels": [
+    "anthropic/claude-sonnet-4-6",
+    "anthropic/claude-fable-5",
+    "anthropic/claude-haiku-4-5",
+    "anthropic/claude-opus-4-8",
+    "anthropic/claude-sonnet-5"
+  ]
 }
