@@ -1,205 +1,5 @@
 [
   {
-    "plugin_id": "rmarganti.herdr-pluck",
-    "name": "Herdr Pluck",
-    "version": "0.1.0",
-    "min_herdr_version": "0.7.0",
-    "description": "Inline keyboard hints for copying visible terminal tokens from Herdr panes",
-    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/rmarganti.herdr-pluck-9cc46c9a5509/herdr-plugin.toml",
-    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/rmarganti.herdr-pluck-9cc46c9a5509",
-    "enabled": true,
-    "platforms": [
-      "linux",
-      "macos"
-    ],
-    "build": [
-      {
-        "command": [
-          "./scripts/install-binary.sh"
-        ]
-      }
-    ],
-    "actions": [
-      {
-        "id": "pluck",
-        "title": "Pluck visible token",
-        "contexts": [
-          "pane",
-          "workspace"
-        ],
-        "command": [
-          "./bin/herdr-pluck",
-          "open"
-        ]
-      }
-    ],
-    "source": {
-      "kind": "github",
-      "owner": "rmarganti",
-      "repo": "herdr-pluck",
-      "resolved_commit": "c94ebe212ed17998aabc40b8015739e60ef1b37b",
-      "managed_path": "/home/badaniya/.config/herdr/plugins/github/rmarganti.herdr-pluck-9cc46c9a5509",
-      "installed_unix_ms": 1783536557244
-    }
-  },
-  {
-    "plugin_id": "herdr-spreader",
-    "name": "Spreader",
-    "version": "0.1.0",
-    "min_herdr_version": "0.7.0",
-    "description": "Apply tmuxinator-style project layouts from YAML",
-    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/herdr-spreader-f248c87aa2e2/herdr-plugin.toml",
-    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/herdr-spreader-f248c87aa2e2",
-    "enabled": true,
-    "platforms": [
-      "linux",
-      "macos"
-    ],
-    "build": [
-      {
-        "command": [
-          "cargo",
-          "build",
-          "--release"
-        ]
-      }
-    ],
-    "actions": [
-      {
-        "id": "apply",
-        "title": "Apply layout",
-        "contexts": [
-          "workspace"
-        ],
-        "command": [
-          "./target/release/herdr-spreader",
-          "apply"
-        ]
-      }
-    ],
-    "source": {
-      "kind": "github",
-      "owner": "yuk1ty",
-      "repo": "herdr-spreader",
-      "resolved_commit": "1a42aae0f0dfb3a588da0dc6895ea24189de4012",
-      "managed_path": "/home/badaniya/.config/herdr/plugins/github/herdr-spreader-f248c87aa2e2",
-      "installed_unix_ms": 1783620618047
-    }
-  },
-  {
-    "plugin_id": "synchronize-panes",
-    "name": "Synchronize Panes",
-    "version": "0.1.0",
-    "min_herdr_version": "0.7.0",
-    "description": "Broadcast one command to every pane in the current tab",
-    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/synchronize-panes-77788742c0b8/herdr-plugin.toml",
-    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/synchronize-panes-77788742c0b8",
-    "enabled": true,
-    "platforms": [
-      "macos",
-      "linux"
-    ],
-    "actions": [
-      {
-        "id": "broadcast",
-        "title": "Broadcast command to panes",
-        "contexts": [
-          "pane"
-        ],
-        "command": [
-          "node",
-          "open.js"
-        ]
-      }
-    ],
-    "panes": [
-      {
-        "id": "prompt",
-        "title": "Broadcast command to panes",
-        "placement": "overlay",
-        "command": [
-          "node",
-          "broadcast.js"
-        ]
-      }
-    ],
-    "source": {
-      "kind": "github",
-      "owner": "furuhashin",
-      "repo": "herdr-synchronize-panes",
-      "resolved_commit": "9cf8bce662c72c8b7d5b16c20da82e406c557fa4",
-      "managed_path": "/home/badaniya/.config/herdr/plugins/github/synchronize-panes-77788742c0b8",
-      "installed_unix_ms": 1783647168793
-    }
-  },
-  {
-    "plugin_id": "vim-herdr-navigation",
-    "name": "Vim Herdr Navigation",
-    "version": "0.1.0",
-    "min_herdr_version": "0.7.0",
-    "description": "Seamless Ctrl+h/j/k/l navigation across herdr panes and Vim/Neovim splits",
-    "manifest_path": "/home/badaniya/workspace/badaniya/vim-herdr-navigation/herdr-plugin.toml",
-    "plugin_root": "/home/badaniya/workspace/badaniya/vim-herdr-navigation",
-    "enabled": true,
-    "platforms": [
-      "linux",
-      "macos"
-    ],
-    "actions": [
-      {
-        "id": "down",
-        "title": "Navigate down (Vim/herdr)",
-        "contexts": [
-          "global"
-        ],
-        "command": [
-          "bash",
-          "navigate.sh",
-          "down"
-        ]
-      },
-      {
-        "id": "left",
-        "title": "Navigate left (Vim/herdr)",
-        "contexts": [
-          "global"
-        ],
-        "command": [
-          "bash",
-          "navigate.sh",
-          "left"
-        ]
-      },
-      {
-        "id": "right",
-        "title": "Navigate right (Vim/herdr)",
-        "contexts": [
-          "global"
-        ],
-        "command": [
-          "bash",
-          "navigate.sh",
-          "right"
-        ]
-      },
-      {
-        "id": "up",
-        "title": "Navigate up (Vim/herdr)",
-        "contexts": [
-          "global"
-        ],
-        "command": [
-          "bash",
-          "navigate.sh",
-          "up"
-        ]
-      }
-    ],
-    "source": {
-      "kind": "local"
-    }
-  },
-  {
     "plugin_id": "cloudmanic.herdr-plus",
     "name": "Herdr Plus",
     "version": "0.1.16",
@@ -289,6 +89,88 @@
       "resolved_commit": "f32b0825f12543c1d03e54fb10d1741c40d66cdc",
       "managed_path": "/home/badaniya/.config/herdr/plugins/github/cloudmanic.herdr-plus-0cce37b56fb9",
       "installed_unix_ms": 1783609397530
+    }
+  },
+  {
+    "plugin_id": "ez-corp.space-usage",
+    "name": "PC RAM & CPU Usage Overlay",
+    "version": "1.1.0",
+    "min_herdr_version": "0.7.5",
+    "description": "CPU and RAM usage per space, grouped under the branch name.",
+    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/ez-corp.space-usage-2ecf2abc9b18/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/ez-corp.space-usage-2ecf2abc9b18",
+    "enabled": true,
+    "platforms": [
+      "linux"
+    ],
+    "build": [
+      {
+        "platforms": [
+          "linux"
+        ],
+        "command": [
+          "cargo",
+          "build",
+          "--release"
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "id": "report",
+        "title": "Space usage report",
+        "contexts": [
+          "workspace"
+        ],
+        "command": [
+          "./target/release/space-usage",
+          "--once"
+        ]
+      },
+      {
+        "id": "status-disable",
+        "title": "Disable sidebar usage status",
+        "command": [
+          "./target/release/space-usage",
+          "--disable"
+        ]
+      },
+      {
+        "id": "status-enable",
+        "title": "Enable sidebar usage status",
+        "command": [
+          "./target/release/space-usage",
+          "--enable"
+        ]
+      },
+      {
+        "id": "status-toggle",
+        "title": "Toggle sidebar usage status",
+        "command": [
+          "./target/release/space-usage",
+          "--toggle"
+        ]
+      }
+    ],
+    "panes": [
+      {
+        "id": "dashboard",
+        "title": "Space usage",
+        "placement": "overlay",
+        "command": [
+          "./target/release/space-usage",
+          "--interval",
+          "2"
+        ]
+      }
+    ],
+    "source": {
+      "kind": "github",
+      "owner": "ezcorp-org",
+      "repo": "herdr-pc-ram-and-cpu-usage-overlay",
+      "resolved_commit": "bc48270b0554389ee9b5269d9ca4d38a6e128825",
+      "managed_path": "/home/badaniya/.config/herdr/plugins/github/ez-corp.space-usage-2ecf2abc9b18",
+      "installed_unix_ms": 1784771169762
     }
   },
   {
@@ -410,6 +292,175 @@
     }
   },
   {
+    "plugin_id": "herdr-spreader",
+    "name": "Spreader",
+    "version": "0.1.0",
+    "min_herdr_version": "0.7.0",
+    "description": "Apply tmuxinator-style project layouts from YAML",
+    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/herdr-spreader-f248c87aa2e2/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/herdr-spreader-f248c87aa2e2",
+    "enabled": true,
+    "platforms": [
+      "linux",
+      "macos"
+    ],
+    "build": [
+      {
+        "command": [
+          "cargo",
+          "build",
+          "--release"
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "id": "apply",
+        "title": "Apply layout",
+        "contexts": [
+          "workspace"
+        ],
+        "command": [
+          "./target/release/herdr-spreader",
+          "apply"
+        ]
+      }
+    ],
+    "source": {
+      "kind": "github",
+      "owner": "yuk1ty",
+      "repo": "herdr-spreader",
+      "resolved_commit": "1a42aae0f0dfb3a588da0dc6895ea24189de4012",
+      "managed_path": "/home/badaniya/.config/herdr/plugins/github/herdr-spreader-f248c87aa2e2",
+      "installed_unix_ms": 1783620618047
+    }
+  },
+  {
+    "plugin_id": "ntindle.herdr-resurrect",
+    "name": "herdr-resurrect",
+    "version": "0.2.0",
+    "min_herdr_version": "0.7.0",
+    "description": "tmux-resurrect for herdr: snapshot the whole herd (workspaces, tabs, panes, cwd, running programs, agents) and bring it back after a crash or reboot.",
+    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/ntindle.herdr-resurrect-6e4571261caf/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/ntindle.herdr-resurrect-6e4571261caf",
+    "enabled": true,
+    "platforms": [
+      "linux",
+      "macos",
+      "windows"
+    ],
+    "actions": [
+      {
+        "id": "restore",
+        "title": "Resurrect: restore last snapshot",
+        "contexts": [
+          "workspace"
+        ],
+        "command": [
+          "node",
+          "bin/restore.js"
+        ]
+      },
+      {
+        "id": "restore-preview",
+        "title": "Resurrect: preview restore (dry run)",
+        "contexts": [
+          "workspace"
+        ],
+        "command": [
+          "node",
+          "bin/restore.js",
+          "--dry-run"
+        ]
+      },
+      {
+        "id": "save",
+        "title": "Resurrect: save snapshot",
+        "contexts": [
+          "workspace"
+        ],
+        "command": [
+          "node",
+          "bin/save.js"
+        ]
+      },
+      {
+        "id": "snapshots",
+        "title": "Resurrect: list snapshots",
+        "contexts": [
+          "workspace"
+        ],
+        "command": [
+          "node",
+          "bin/list.js"
+        ]
+      }
+    ],
+    "events": [
+      {
+        "on": "pane.agent_detected",
+        "command": [
+          "node",
+          "bin/on-event.js"
+        ]
+      },
+      {
+        "on": "pane.closed",
+        "command": [
+          "node",
+          "bin/on-event.js"
+        ]
+      },
+      {
+        "on": "pane.created",
+        "command": [
+          "node",
+          "bin/on-event.js"
+        ]
+      },
+      {
+        "on": "pane.exited",
+        "command": [
+          "node",
+          "bin/on-event.js"
+        ]
+      },
+      {
+        "on": "workspace.closed",
+        "command": [
+          "node",
+          "bin/on-event.js"
+        ]
+      },
+      {
+        "on": "workspace.created",
+        "command": [
+          "node",
+          "bin/on-event.js"
+        ]
+      }
+    ],
+    "panes": [
+      {
+        "id": "autosave",
+        "title": "resurrect autosave",
+        "placement": "split",
+        "command": [
+          "node",
+          "bin/autosave.js"
+        ]
+      }
+    ],
+    "source": {
+      "kind": "github",
+      "owner": "ntindle",
+      "repo": "herdr-resurrect",
+      "resolved_commit": "461e866cc772e156e39b94d085701972e24761af",
+      "managed_path": "/home/badaniya/.config/herdr/plugins/github/ntindle.herdr-resurrect-6e4571261caf",
+      "installed_unix_ms": 1784853658836
+    }
+  },
+  {
     "plugin_id": "persiyanov.reviewr",
     "name": "reviewr",
     "version": "0.11.0",
@@ -500,6 +551,162 @@
       "resolved_commit": "ca6dd8a039ea027dd6d881bed6468ccc34f52edd",
       "managed_path": "/home/badaniya/.config/herdr/plugins/github/persiyanov.reviewr-e87b654a74f8",
       "installed_unix_ms": 1783693488320
+    }
+  },
+  {
+    "plugin_id": "rmarganti.herdr-pluck",
+    "name": "Herdr Pluck",
+    "version": "0.1.0",
+    "min_herdr_version": "0.7.0",
+    "description": "Inline keyboard hints for copying visible terminal tokens from Herdr panes",
+    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/rmarganti.herdr-pluck-9cc46c9a5509/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/rmarganti.herdr-pluck-9cc46c9a5509",
+    "enabled": true,
+    "platforms": [
+      "linux",
+      "macos"
+    ],
+    "build": [
+      {
+        "command": [
+          "./scripts/install-binary.sh"
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "id": "pluck",
+        "title": "Pluck visible token",
+        "contexts": [
+          "pane",
+          "workspace"
+        ],
+        "command": [
+          "./bin/herdr-pluck",
+          "open"
+        ]
+      }
+    ],
+    "source": {
+      "kind": "github",
+      "owner": "rmarganti",
+      "repo": "herdr-pluck",
+      "resolved_commit": "c94ebe212ed17998aabc40b8015739e60ef1b37b",
+      "managed_path": "/home/badaniya/.config/herdr/plugins/github/rmarganti.herdr-pluck-9cc46c9a5509",
+      "installed_unix_ms": 1783536557244
+    }
+  },
+  {
+    "plugin_id": "synchronize-panes",
+    "name": "Synchronize Panes",
+    "version": "0.1.0",
+    "min_herdr_version": "0.7.0",
+    "description": "Broadcast one command to every pane in the current tab",
+    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/synchronize-panes-77788742c0b8/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/synchronize-panes-77788742c0b8",
+    "enabled": true,
+    "platforms": [
+      "macos",
+      "linux"
+    ],
+    "actions": [
+      {
+        "id": "broadcast",
+        "title": "Broadcast command to panes",
+        "contexts": [
+          "pane"
+        ],
+        "command": [
+          "node",
+          "open.js"
+        ]
+      }
+    ],
+    "panes": [
+      {
+        "id": "prompt",
+        "title": "Broadcast command to panes",
+        "placement": "overlay",
+        "command": [
+          "node",
+          "broadcast.js"
+        ]
+      }
+    ],
+    "source": {
+      "kind": "github",
+      "owner": "furuhashin",
+      "repo": "herdr-synchronize-panes",
+      "resolved_commit": "9cf8bce662c72c8b7d5b16c20da82e406c557fa4",
+      "managed_path": "/home/badaniya/.config/herdr/plugins/github/synchronize-panes-77788742c0b8",
+      "installed_unix_ms": 1783647168793
+    }
+  },
+  {
+    "plugin_id": "vim-herdr-navigation",
+    "name": "Vim Herdr Navigation",
+    "version": "0.1.0",
+    "min_herdr_version": "0.7.0",
+    "description": "Seamless Ctrl+h/j/k/l navigation across herdr panes and Vim/Neovim splits",
+    "manifest_path": "/home/badaniya/workspace/badaniya/vim-herdr-navigation/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/workspace/badaniya/vim-herdr-navigation",
+    "enabled": true,
+    "platforms": [
+      "linux",
+      "macos"
+    ],
+    "actions": [
+      {
+        "id": "down",
+        "title": "Navigate down (Vim/herdr)",
+        "contexts": [
+          "global"
+        ],
+        "command": [
+          "bash",
+          "navigate.sh",
+          "down"
+        ]
+      },
+      {
+        "id": "left",
+        "title": "Navigate left (Vim/herdr)",
+        "contexts": [
+          "global"
+        ],
+        "command": [
+          "bash",
+          "navigate.sh",
+          "left"
+        ]
+      },
+      {
+        "id": "right",
+        "title": "Navigate right (Vim/herdr)",
+        "contexts": [
+          "global"
+        ],
+        "command": [
+          "bash",
+          "navigate.sh",
+          "right"
+        ]
+      },
+      {
+        "id": "up",
+        "title": "Navigate up (Vim/herdr)",
+        "contexts": [
+          "global"
+        ],
+        "command": [
+          "bash",
+          "navigate.sh",
+          "up"
+        ]
+      }
+    ],
+    "source": {
+      "kind": "local"
     }
   }
 ]

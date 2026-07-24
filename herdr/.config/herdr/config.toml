@@ -303,16 +303,19 @@ description = "broadcast a command to all panes in this tab"
 key = "alt+r"
 type = "plugin_action"
 command = "persiyanov.reviewr.toggle" # <plugin_id>.<action_id> — note the id, not the name
+description = "review file"
 
 [[keys.command]] # open in a split beside your work
 key = "prefix+f"
 type = "shell"
 command = "herdr plugin action invoke open-file-viewer --plugin herdr-file-viewer"
+description = "open file viewer"
 
 [[keys.command]] # …or in its own tab
 key = "prefix+shift+f"
 type = "shell"
 command = "herdr plugin action invoke open-file-viewer-tab --plugin herdr-file-viewer"
+description = "open file viewer tab"
 
 [[keys.command]]
 key = "ctrl+h"
@@ -337,3 +340,15 @@ key = "ctrl+l"
 type = "plugin_action"
 command = "vim-herdr-navigation.right"
 description = "navigate right (vim/herdr)"
+
+[[keys.command]]
+key = "prefix+ctrl+s"
+type = "plugin_action"
+command = "ntindle.herdr-resurrect.save"
+description = "resurrect: save"
+
+[[keys.command]]
+key = "prefix+ctrl+r"
+type = "plugin_action"
+command = "ntindle.herdr-resurrect.restore"
+description = "resurrect: restore"

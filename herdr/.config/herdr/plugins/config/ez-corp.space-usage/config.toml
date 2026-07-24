@@ -1,0 +1,4 @@
+mode = "agents-panel" # default — works on stock herdr
+# mode = "sidebar"          # for herdr builds with the sidebar patch (below)
+interval_seconds = 5
+window_title_totals = true
