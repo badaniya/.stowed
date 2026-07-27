@@ -4,11 +4,14 @@
 			"command": "context-mode",
 			"type": "stdio"
 		},
-		"io.github.ChromeDevTools/chrome-devtools-mcp": {
+		"chrome-devtools-brave": {
 			"command": "npx",
 			"args": [
 				"-y",
-				"chrome-devtools-mcp"
+				"chrome-devtools-mcp",
+				"--executablePath", 
+				"/usr/bin/brave-browser", 
+				"--isolated"
 			],
 			"env": {}
 		}

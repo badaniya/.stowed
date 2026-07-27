@@ -11,6 +11,16 @@
       "type": "http",
       "url": "http://10.64.13.61/loki-mcp/mcp",
       "tools": ["*"]
+    },
+    "chrome-devtools-brave": {
+      "command": "npx",
+      "args": [
+      "-y",
+      "chrome-devtools-mcp",
+      "--executablePath", 
+      "/usr/bin/brave-browser", 
+      "--isolated"
+      ],
     }
   }
 }
