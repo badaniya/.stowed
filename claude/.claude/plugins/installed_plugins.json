@@ -7,7 +7,7 @@
         "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/frontend-design/unknown",
         "version": "unknown",
         "installedAt": "2026-05-14T16:18:03.768Z",
-        "lastUpdated": "2026-07-23T22:28:36.864Z"
+        "lastUpdated": "2026-07-27T16:45:53.511Z"
       }
     ],
     "code-review@claude-plugins-official": [
@@ -16,7 +16,7 @@
         "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/code-review/unknown",
         "version": "unknown",
         "installedAt": "2026-05-14T16:18:03.768Z",
-        "lastUpdated": "2026-07-23T22:28:36.858Z"
+        "lastUpdated": "2026-07-27T16:45:53.509Z"
       }
     ],
     "code-simplifier@claude-plugins-official": [
@@ -31,10 +31,10 @@
     "superpowers@claude-plugins-official": [
       {
         "scope": "user",
-        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/superpowers/6.1.1",
-        "version": "6.1.1",
+        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/superpowers/6.2.0",
+        "version": "6.2.0",
         "installedAt": "2026-05-29T18:37:36.382Z",
-        "lastUpdated": "2026-07-08T21:08:24.446Z"
+        "lastUpdated": "2026-07-27T14:19:06.024Z"
       }
     ],
     "github@claude-plugins-official": [
@@ -43,7 +43,7 @@
         "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/github/unknown",
         "version": "unknown",
         "installedAt": "2026-06-04T15:46:05.709Z",
-        "lastUpdated": "2026-07-23T22:28:36.862Z"
+        "lastUpdated": "2026-07-27T16:45:53.510Z"
       }
     ],
     "gopls-lsp@claude-plugins-official": [
@@ -83,6 +83,16 @@
         "installedAt": "2026-06-29T22:42:24.986Z",
         "lastUpdated": "2026-06-29T22:42:24.986Z",
         "gitCommitSha": "4615df55428bdcd8a2095fdea2cbe970b2c5152e"
+      }
+    ],
+    "chrome-devtools-mcp@chrome-devtools-plugins": [
+      {
+        "scope": "user",
+        "installPath": "/home/badaniya/.claude/plugins/cache/chrome-devtools-plugins/chrome-devtools-mcp/1.6.0",
+        "version": "1.6.0",
+        "installedAt": "2026-07-27T16:43:35.133Z",
+        "lastUpdated": "2026-07-27T16:43:35.133Z",
+        "gitCommitSha": "dd2661c764c82da28e352030ec7fe56998471ed4"
       }
     ]
   }

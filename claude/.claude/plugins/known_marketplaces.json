@@ -5,7 +5,7 @@
       "repo": "anthropics/claude-plugins-official"
     },
     "installLocation": "/home/badaniya/.claude/plugins/marketplaces/claude-plugins-official",
-    "lastUpdated": "2026-07-23T22:28:36.699Z"
+    "lastUpdated": "2026-07-27T16:45:53.455Z"
   },
   "context-mode": {
     "source": {
@@ -30,5 +30,13 @@
     },
     "installLocation": "/home/badaniya/.claude/plugins/marketplaces/langfuse-observability",
     "lastUpdated": "2026-06-29T19:12:14.653Z"
+  },
+  "chrome-devtools-plugins": {
+    "source": {
+      "source": "github",
+      "repo": "ChromeDevTools/chrome-devtools-mcp"
+    },
+    "installLocation": "/home/badaniya/.claude/plugins/marketplaces/chrome-devtools-plugins",
+    "lastUpdated": "2026-07-27T16:43:16.223Z"
   }
 }

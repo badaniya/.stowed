@@ -1,0 +1,6 @@
+{
+  "autoRestore": false,
+  "autoRestoreSettleMs": 2500,
+  "agentResume": true,
+  "agentResumeCommands": {}
+}

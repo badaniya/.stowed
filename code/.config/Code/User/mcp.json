@@ -1,9 +1,17 @@
 {
-	"inputs": [],
 	"servers": {
 		"context-mode": {
 			"command": "context-mode",
 			"type": "stdio"
+		},
+		"io.github.ChromeDevTools/chrome-devtools-mcp": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"chrome-devtools-mcp"
+			],
+			"env": {}
 		}
-	}
+	},
+	"inputs": []
 }

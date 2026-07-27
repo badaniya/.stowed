@@ -7,9 +7,5 @@
       "allowed": false
     }
   },
-  "compliance_taints": [],
-  "monitoring_notice": null,
-  "defaults": {
-    "remote_control_at_startup": false
-  }
+  "compliance_taints": []
 }

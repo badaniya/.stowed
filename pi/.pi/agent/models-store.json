@@ -195,6 +195,41 @@
         }
       },
       {
+        "id": "claude-opus-5",
+        "name": "Claude Opus 5",
+        "api": "anthropic-messages",
+        "provider": "github-copilot",
+        "baseUrl": "https://api.individual.githubcopilot.com",
+        "reasoning": true,
+        "input": [
+          "text",
+          "image"
+        ],
+        "cost": {
+          "input": 5,
+          "output": 25,
+          "cacheRead": 0.5,
+          "cacheWrite": 6.25
+        },
+        "contextWindow": 1000000,
+        "maxTokens": 64000,
+        "headers": {
+          "User-Agent": "GitHubCopilotChat/0.35.0",
+          "Editor-Version": "vscode/1.107.0",
+          "Editor-Plugin-Version": "copilot-chat/0.35.0",
+          "Copilot-Integration-Id": "vscode-chat"
+        },
+        "thinkingLevelMap": {
+          "xhigh": "xhigh",
+          "max": "max",
+          "minimal": "low"
+        },
+        "compat": {
+          "forceAdaptiveThinking": true,
+          "supportsTemperature": false
+        }
+      },
+      {
         "id": "claude-sonnet-4",
         "name": "Claude Sonnet 4 (latest)",
         "api": "anthropic-messages",
@@ -515,6 +550,9 @@
           "high": "high",
           "xhigh": null,
           "max": null
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true
         }
       },
       {
@@ -546,6 +584,9 @@
           "off": null,
           "minimal": "low",
           "xhigh": "xhigh"
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true
         }
       },
       {
@@ -577,6 +618,9 @@
           "off": null,
           "minimal": "low",
           "xhigh": "xhigh"
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true
         }
       },
       {
@@ -612,6 +656,9 @@
           "high": "high",
           "xhigh": "xhigh",
           "max": null
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true
         }
       },
       {
@@ -656,6 +703,9 @@
           "high": "high",
           "xhigh": "xhigh",
           "max": null
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true
         }
       },
       {
@@ -691,6 +741,9 @@
           "high": "high",
           "xhigh": "xhigh",
           "max": null
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true
         }
       },
       {
@@ -722,6 +775,9 @@
           "off": null,
           "minimal": "low",
           "xhigh": "xhigh"
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true
         }
       },
       {
@@ -766,6 +822,9 @@
           "high": "high",
           "xhigh": "xhigh",
           "max": null
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true
         }
       },
       {
@@ -810,6 +869,9 @@
           "high": "high",
           "xhigh": "xhigh",
           "max": "max"
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true
         }
       },
       {
@@ -854,6 +916,9 @@
           "high": "high",
           "xhigh": "xhigh",
           "max": "max"
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true
         }
       },
       {
@@ -898,6 +963,9 @@
           "high": "high",
           "xhigh": "xhigh",
           "max": "max"
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true
         }
       },
       {
@@ -966,8 +1034,8 @@
         }
       }
     ],
-    "checkedAt": 1784829983568,
-    "lastModified": 1784811018000
+    "checkedAt": 1785172205333,
+    "lastModified": 1785146167000
   },
   "anthropic": {
     "models": [
@@ -996,7 +1064,8 @@
           "max": "max"
         },
         "compat": {
-          "forceAdaptiveThinking": true
+          "forceAdaptiveThinking": true,
+          "supportsStrictTools": true
         }
       },
       {
@@ -1017,7 +1086,10 @@
           "cacheWrite": 1.25
         },
         "contextWindow": 200000,
-        "maxTokens": 64000
+        "maxTokens": 64000,
+        "compat": {
+          "supportsStrictTools": true
+        }
       },
       {
         "id": "claude-haiku-4-5-20251001",
@@ -1037,7 +1109,10 @@
           "cacheWrite": 1.25
         },
         "contextWindow": 200000,
-        "maxTokens": 64000
+        "maxTokens": 64000,
+        "compat": {
+          "supportsStrictTools": true
+        }
       },
       {
         "id": "claude-opus-4-1",
@@ -1057,7 +1132,10 @@
           "cacheWrite": 18.75
         },
         "contextWindow": 200000,
-        "maxTokens": 32000
+        "maxTokens": 32000,
+        "compat": {
+          "supportsStrictTools": true
+        }
       },
       {
         "id": "claude-opus-4-1-20250805",
@@ -1077,7 +1155,10 @@
           "cacheWrite": 18.75
         },
         "contextWindow": 200000,
-        "maxTokens": 32000
+        "maxTokens": 32000,
+        "compat": {
+          "supportsStrictTools": true
+        }
       },
       {
         "id": "claude-opus-4-5",
@@ -1097,7 +1178,10 @@
           "cacheWrite": 6.25
         },
         "contextWindow": 200000,
-        "maxTokens": 64000
+        "maxTokens": 64000,
+        "compat": {
+          "supportsStrictTools": true
+        }
       },
       {
         "id": "claude-opus-4-5-20251101",
@@ -1117,7 +1201,10 @@
           "cacheWrite": 6.25
         },
         "contextWindow": 200000,
-        "maxTokens": 64000
+        "maxTokens": 64000,
+        "compat": {
+          "supportsStrictTools": true
+        }
       },
       {
         "id": "claude-opus-4-6",
@@ -1142,7 +1229,8 @@
           "max": "max"
         },
         "compat": {
-          "forceAdaptiveThinking": true
+          "forceAdaptiveThinking": true,
+          "supportsStrictTools": true
         }
       },
       {
@@ -1170,7 +1258,8 @@
         },
         "compat": {
           "forceAdaptiveThinking": true,
-          "supportsTemperature": false
+          "supportsTemperature": false,
+          "supportsStrictTools": true
         }
       },
       {
@@ -1198,7 +1287,37 @@
         },
         "compat": {
           "forceAdaptiveThinking": true,
-          "supportsTemperature": false
+          "supportsTemperature": false,
+          "supportsStrictTools": true
+        }
+      },
+      {
+        "id": "claude-opus-5",
+        "name": "Claude Opus 5",
+        "api": "anthropic-messages",
+        "provider": "anthropic",
+        "baseUrl": "https://api.anthropic.com",
+        "reasoning": true,
+        "input": [
+          "text",
+          "image"
+        ],
+        "cost": {
+          "input": 5,
+          "output": 25,
+          "cacheRead": 0.5,
+          "cacheWrite": 6.25
+        },
+        "contextWindow": 1000000,
+        "maxTokens": 128000,
+        "thinkingLevelMap": {
+          "xhigh": "xhigh",
+          "max": "max"
+        },
+        "compat": {
+          "forceAdaptiveThinking": true,
+          "supportsTemperature": false,
+          "supportsStrictTools": true
         }
       },
       {
@@ -1219,7 +1338,10 @@
           "cacheWrite": 3.75
         },
         "contextWindow": 1000000,
-        "maxTokens": 64000
+        "maxTokens": 64000,
+        "compat": {
+          "supportsStrictTools": true
+        }
       },
       {
         "id": "claude-sonnet-4-5-20250929",
@@ -1239,7 +1361,10 @@
           "cacheWrite": 3.75
         },
         "contextWindow": 1000000,
-        "maxTokens": 64000
+        "maxTokens": 64000,
+        "compat": {
+          "supportsStrictTools": true
+        }
       },
       {
         "id": "claude-sonnet-4-6",
@@ -1264,7 +1389,8 @@
           "max": "max"
         },
         "compat": {
-          "forceAdaptiveThinking": true
+          "forceAdaptiveThinking": true,
+          "supportsStrictTools": true
         }
       },
       {
@@ -1291,11 +1417,12 @@
           "max": "max"
         },
         "compat": {
-          "forceAdaptiveThinking": true
+          "forceAdaptiveThinking": true,
+          "supportsStrictTools": true
         }
       }
     ],
-    "checkedAt": 1784829982275,
-    "lastModified": 1784811010000
+    "checkedAt": 1785172204097,
+    "lastModified": 1785146159000
   }
 }
