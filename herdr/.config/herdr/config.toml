@@ -205,7 +205,7 @@ show_agent_labels_on_pane_borders = true
 
 [ui.sidebar.agents]
 row_gap = 0
-rows = [["state_icon", "$title"], ["agent", "$limit"], ["$context"]]
+rows = [["state_icon", "workspace", "tab"], ["agent", "$limit"], ["$context"]]
 
 # Background notification popup delivery
 [ui.toast]
