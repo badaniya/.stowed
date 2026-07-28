@@ -5,6 +5,13 @@
 
 input=$(cat)
 
+# Forward the raw statusline JSON to usagebar so it can track Claude rate-limit
+# windows ($limit sidebar token). Non-blocking; safe if the plugin is absent.
+usagebar_bin=$(ls -d "$HOME"/.config/herdr/plugins/github/usagebar-*/bin/run-statusline.sh 2>/dev/null | head -1)
+if [ -n "$usagebar_bin" ]; then
+    printf '%s' "$input" | bash "$usagebar_bin" >/dev/null 2>&1 &
+fi
+
 # --- Extract JSON fields ---
 cwd=$(echo "$input"           | jq -r '.workspace.current_dir // .cwd // empty')
 model=$(echo "$input"         | jq -r '.model.display_name // empty')
