@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.81.1",
+  "lastChangelogVersion": "0.82.1",
   "defaultProvider": "anthropic",
   "defaultModel": "claude-sonnet-5",
   "theme": "pi-catppuccin-mocha",

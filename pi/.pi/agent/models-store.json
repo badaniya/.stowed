@@ -1034,8 +1034,9 @@
         }
       }
     ],
-    "checkedAt": 1785172205333,
-    "lastModified": 1785146167000
+    "checkedAt": 1785256084877,
+    "lastModified": 1785243494000,
+    "etag": "W/\"eed6f96ab3f57ecb50da2b0d0712485c\""
   },
   "anthropic": {
     "models": [
@@ -1422,7 +1423,8 @@
         }
       }
     ],
-    "checkedAt": 1785172204097,
-    "lastModified": 1785146159000
+    "checkedAt": 1785256085279,
+    "lastModified": 1785243484000,
+    "etag": "W/\"2955a0a2593d701973abef2d80e4a8e0\""
   }
 }

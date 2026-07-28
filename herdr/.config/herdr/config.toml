@@ -284,8 +284,8 @@ scrollback_limit_bytes = 10000000
 [[keys.command]]
 key = "prefix+space"
 type = "plugin_action"
-command = "rmarganti.herdr-pluck.pluck"
-description = "pluck visible token"
+command = "hotchpotch.herdr-tiny-fingers.open"
+description = "fingers mode"
 
 [[keys.command]]
 key = "prefix+a"

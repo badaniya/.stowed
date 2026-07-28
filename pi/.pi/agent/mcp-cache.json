@@ -2,7 +2,7 @@
   "version": 1,
   "servers": {
     "context-mode": {
-      "configHash": "f4d5165845a434761a82554263ed3cc1e1db1f43e6bb8872ce3ebe644d7ccec6",
+      "configHash": "8c5d4948488deb03f219eae6f8fdf4417aaf0361b2b7c9604e8fa45250d02410",
       "tools": [
         {
           "name": "ctx_execute",
@@ -400,7 +400,8 @@
         }
       ],
       "resources": [],
-      "cachedAt": 1784822748670
+      "prompts": [],
+      "cachedAt": 1785258256165
     }
   }
 }

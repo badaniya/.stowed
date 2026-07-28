@@ -336,6 +336,60 @@
     }
   },
   {
+    "plugin_id": "hotchpotch.herdr-tiny-fingers",
+    "name": "herdr-tiny-fingers",
+    "version": "0.1.0",
+    "min_herdr_version": "0.7.0",
+    "description": "tmux-fingers style visible-screen copy hints for Herdr",
+    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/hotchpotch.herdr-tiny-fingers-5596606cf4bb/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/hotchpotch.herdr-tiny-fingers-5596606cf4bb",
+    "enabled": true,
+    "platforms": [
+      "linux",
+      "macos"
+    ],
+    "build": [
+      {
+        "command": [
+          "cargo",
+          "build",
+          "--release",
+          "--locked"
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "id": "open",
+        "title": "Open fingers mode",
+        "description": "Open tmux-fingers style copy hints for the focused pane",
+        "command": [
+          "sh",
+          "-c",
+          "exec \"${HERDR_BIN_PATH:-herdr}\" plugin pane open --plugin hotchpotch.herdr-tiny-fingers --entrypoint finger"
+        ]
+      }
+    ],
+    "panes": [
+      {
+        "id": "finger",
+        "title": "herdr-tiny-fingers",
+        "placement": "overlay",
+        "command": [
+          "./target/release/herdr-tiny-fingers"
+        ]
+      }
+    ],
+    "source": {
+      "kind": "github",
+      "owner": "hotchpotch",
+      "repo": "herdr-tiny-fingers",
+      "resolved_commit": "2c817583fa1d5385fe4a95e2fd4cfa30fa4e915e",
+      "managed_path": "/home/badaniya/.config/herdr/plugins/github/hotchpotch.herdr-tiny-fingers-5596606cf4bb",
+      "installed_unix_ms": 1785259173473
+    }
+  },
+  {
     "plugin_id": "ntindle.herdr-resurrect",
     "name": "herdr-resurrect",
     "version": "0.2.0",
@@ -461,6 +515,74 @@
     }
   },
   {
+    "plugin_id": "official.browser",
+    "name": "Browser",
+    "version": "0.1.0",
+    "min_herdr_version": "0.7.4",
+    "description": "Open and inspect real browser pages from Herdr.",
+    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/official.browser-ff2a44eccae9/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/official.browser-ff2a44eccae9",
+    "enabled": true,
+    "platforms": [
+      "linux",
+      "macos"
+    ],
+    "actions": [
+      {
+        "id": "open-localhost",
+        "title": "Open localhost in browser",
+        "contexts": [
+          "workspace"
+        ],
+        "command": [
+          "bun",
+          "run",
+          "src/actions/open-localhost.ts"
+        ]
+      },
+      {
+        "id": "status",
+        "title": "Browser status",
+        "contexts": [
+          "workspace"
+        ],
+        "command": [
+          "bun",
+          "run",
+          "src/actions/status.ts"
+        ]
+      }
+    ],
+    "panes": [
+      {
+        "id": "browser",
+        "title": "Browser",
+        "placement": "split",
+        "command": [
+          "bun",
+          "run",
+          "src/viewer.ts"
+        ]
+      }
+    ],
+    "link_handlers": [
+      {
+        "id": "localhost",
+        "title": "Open in Herdr Browser",
+        "pattern": "^https?://(localhost|127\\.0\\.0\\.1|\\[::1\\])(:[0-9]+)?([/?#].*)?$",
+        "action": "open-localhost"
+      }
+    ],
+    "source": {
+      "kind": "github",
+      "owner": "ogulcancelik",
+      "repo": "herdr-browser",
+      "resolved_commit": "be6888b71cf4eb5939ee79a746bd1a1c22ade046",
+      "managed_path": "/home/badaniya/.config/herdr/plugins/github/official.browser-ff2a44eccae9",
+      "installed_unix_ms": 1785257323036
+    }
+  },
+  {
     "plugin_id": "persiyanov.reviewr",
     "name": "reviewr",
     "version": "0.11.0",
@@ -551,49 +673,6 @@
       "resolved_commit": "ca6dd8a039ea027dd6d881bed6468ccc34f52edd",
       "managed_path": "/home/badaniya/.config/herdr/plugins/github/persiyanov.reviewr-e87b654a74f8",
       "installed_unix_ms": 1783693488320
-    }
-  },
-  {
-    "plugin_id": "rmarganti.herdr-pluck",
-    "name": "Herdr Pluck",
-    "version": "0.1.0",
-    "min_herdr_version": "0.7.0",
-    "description": "Inline keyboard hints for copying visible terminal tokens from Herdr panes",
-    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/rmarganti.herdr-pluck-9cc46c9a5509/herdr-plugin.toml",
-    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/rmarganti.herdr-pluck-9cc46c9a5509",
-    "enabled": true,
-    "platforms": [
-      "linux",
-      "macos"
-    ],
-    "build": [
-      {
-        "command": [
-          "./scripts/install-binary.sh"
-        ]
-      }
-    ],
-    "actions": [
-      {
-        "id": "pluck",
-        "title": "Pluck visible token",
-        "contexts": [
-          "pane",
-          "workspace"
-        ],
-        "command": [
-          "./bin/herdr-pluck",
-          "open"
-        ]
-      }
-    ],
-    "source": {
-      "kind": "github",
-      "owner": "rmarganti",
-      "repo": "herdr-pluck",
-      "resolved_commit": "c94ebe212ed17998aabc40b8015739e60ef1b37b",
-      "managed_path": "/home/badaniya/.config/herdr/plugins/github/rmarganti.herdr-pluck-9cc46c9a5509",
-      "installed_unix_ms": 1783536557244
     }
   },
   {
