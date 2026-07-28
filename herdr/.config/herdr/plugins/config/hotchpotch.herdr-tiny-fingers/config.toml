@@ -33,3 +33,7 @@ regex = "(NVO|XCP|XIQ|CFD)-[0-9]+"
 [[patterns]]
 name = "env"
 regex = "env=(?P<match>[a-z0-9_-]+)"
+
+[[patterns]]
+name = "datetime"
+regex = "[0-9]{4}-[0-9]{2}-[0-9]{2}[ T][0-9]{2}:[0-9]{2}:[0-9]{2}"
