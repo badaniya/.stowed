@@ -78,7 +78,7 @@
     },
     "chrome-devtools-brave": {
       "type": "local",
-      "command": [ "npx", "-y", "chrome-devtools-mcp@latest", "--executablePath", "/usr/bin/brave-browser", "--isolated" ]
+      "command": [ "npx", "-y", "chrome-devtools-mcp@latest", "--executablePath", "/usr/bin/brave-browser", "--isolated" ],
       "enabled": true
     }
   },
