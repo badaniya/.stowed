@@ -29,6 +29,7 @@ This repository is used to store all dot-config files for various shells and edi
 
 - tmuxinator
 - mise
+- gh-dash
 - gitui
 - lazygit
 - worktrunk
@@ -83,7 +84,7 @@ rm -rf $HOME/.config/ghostty; rm -rf $HOME/.bash*; rm -rf $HOME/.zsh*; rm -rf $H
 
 ```bash
 # Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
-rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/mise; rm -rf $HOME/.config/worktrunk; rm -rf $HOME/.config/gitui; rm -rf $HOME/.config/lazygit; rm -rf $HOME/.config/hunk; rm -rf $HOME/.config/tuicr; stow -d $HOME/.stowed tmuxinator mise worktrunk gitui lazygit hunk tuicr
+rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/mise; rm -rf $HOME/.config/worktrunk; rm -rf $HOME/.config/gh-dash; rm -rf $HOME/.config/gitui; rm -rf $HOME/.config/lazygit; rm -rf $HOME/.config/hunk; rm -rf $HOME/.config/tuicr; stow -d $HOME/.stowed tmuxinator mise worktrunk gh-dash gitui lazygit hunk tuicr
 ```
 
 ### 5) Run Stow Command to Establish Symlinks to the Repository for Optional AI Terminal Tools
