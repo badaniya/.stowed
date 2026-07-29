@@ -62,6 +62,11 @@
       "url": "http://10.64.13.61/loki-mcp/mcp",
       "enabled": false
     },
+    "codebase-memory-mcp": {
+      "type": "local",
+      "command": [ "/home/badaniya/.local/bin/codebase-memory-mcp" ],
+      "enabled": true
+    },
     "codegraph": {
       "type": "local",
       "command": [
@@ -73,7 +78,7 @@
     },
     "chrome-devtools-brave": {
       "type": "local",
-      "command": ["npx", "-y", "chrome-devtools-mcp@latest", "--executablePath", "/usr/bin/brave-browser", "--isolated"]
+      "command": [ "npx", "-y", "chrome-devtools-mcp@latest", "--executablePath", "/usr/bin/brave-browser", "--isolated" ]
       "enabled": true
     }
   },
@@ -84,7 +89,8 @@
     //"@tarquinen/opencode-dcp@latest",
     "context-mode",
     "superpowers@git+https://github.com/obra/superpowers.git",
-    "/home/badaniya/workspace/badaniya/node_modules/opencode-plugin-langfuse/dist/index.js"
+    "/home/badaniya/workspace/badaniya/node_modules/opencode-plugin-langfuse/dist/index.js",
+    "./plugins/caveman/plugin.js"
   ],
   "experimental": {
     "openTelemetry": true

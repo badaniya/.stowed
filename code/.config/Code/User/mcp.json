@@ -1,20 +1,24 @@
 {
-	"servers": {
-		"context-mode": {
-			"command": "context-mode",
-			"type": "stdio"
-		},
-		"chrome-devtools-brave": {
-			"command": "npx",
-			"args": [
-				"-y",
-				"chrome-devtools-mcp",
-				"--executablePath", 
-				"/usr/bin/brave-browser", 
-				"--isolated"
-			],
-			"env": {}
-		}
-	},
-	"inputs": []
+    "servers": {
+        "context-mode": {
+            "command": "context-mode",
+            "type": "stdio"
+        },
+        "chrome-devtools-brave": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "chrome-devtools-mcp",
+                "--executablePath",
+                "/usr/bin/brave-browser",
+                "--isolated"
+            ],
+            "env": {}
+        },
+        "codebase-memory-mcp": {
+            "type": "stdio",
+            "command": "/home/badaniya/.local/bin/codebase-memory-mcp"
+        }
+    },
+    "inputs": []
 }
