@@ -92,6 +92,71 @@
     }
   },
   {
+    "plugin_id": "dave.token-dashboard",
+    "name": "Token Dashboard",
+    "version": "0.1.0",
+    "min_herdr_version": "0.7.0",
+    "description": "Live token spend dashboard + cost notifications for Herdr agent panes",
+    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/dave.token-dashboard-c1bf535be307/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/dave.token-dashboard-c1bf535be307",
+    "enabled": true,
+    "platforms": [
+      "macos",
+      "linux"
+    ],
+    "build": [
+      {
+        "platforms": [
+          "macos",
+          "linux"
+        ],
+        "command": [
+          "./scripts/build.sh"
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "id": "open-dashboard",
+        "title": "Open Token Dashboard",
+        "contexts": [
+          "workspace"
+        ],
+        "command": [
+          "./bin/token-dashboard",
+          "--open"
+        ]
+      }
+    ],
+    "events": [
+      {
+        "on": "pane.agent_status_changed",
+        "command": [
+          "./bin/token-dashboard",
+          "--notify"
+        ]
+      }
+    ],
+    "panes": [
+      {
+        "id": "dashboard",
+        "title": "Token Dashboard",
+        "placement": "tab",
+        "command": [
+          "./bin/token-dashboard"
+        ]
+      }
+    ],
+    "source": {
+      "kind": "github",
+      "owner": "Davidcreador",
+      "repo": "herdr-token-dashboard",
+      "resolved_commit": "b8c9bbe5c46d976e32ed51146139b0996bf7f334",
+      "managed_path": "/home/badaniya/.config/herdr/plugins/github/dave.token-dashboard-c1bf535be307",
+      "installed_unix_ms": 1785262756342
+    }
+  },
+  {
     "plugin_id": "ez-corp.space-usage",
     "name": "PC RAM & CPU Usage Overlay",
     "version": "1.1.0",
@@ -719,6 +784,133 @@
       "resolved_commit": "9cf8bce662c72c8b7d5b16c20da82e406c557fa4",
       "managed_path": "/home/badaniya/.config/herdr/plugins/github/synchronize-panes-77788742c0b8",
       "installed_unix_ms": 1783647168793
+    }
+  },
+  {
+    "plugin_id": "usagebar",
+    "name": "Agent Usage",
+    "version": "0.5.5",
+    "min_herdr_version": "0.7.4",
+    "description": "Sidebar context meters, provider limit windows, and rate-limit toasts for Claude, Codex, OpenCode Go, OMP, Pi coding agent, and Grok",
+    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/usagebar-33803b79d616/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/usagebar-33803b79d616",
+    "enabled": true,
+    "platforms": [
+      "macos",
+      "linux"
+    ],
+    "actions": [
+      {
+        "id": "check-updates",
+        "title": "Check for Agent Usage updates",
+        "contexts": [
+          "workspace",
+          "pane"
+        ],
+        "command": [
+          "bash",
+          "bin/run-update-check.sh"
+        ]
+      },
+      {
+        "id": "enable-toast",
+        "title": "Enable Herdr toast delivery (safe append)",
+        "contexts": [
+          "workspace",
+          "pane"
+        ],
+        "command": [
+          "bash",
+          "bin/run-setup.sh",
+          "--write-toast"
+        ]
+      },
+      {
+        "id": "open-limits",
+        "title": "Open Agent Usage pane",
+        "contexts": [
+          "workspace",
+          "pane"
+        ],
+        "command": [
+          "bash",
+          "bin/open-limits-pane.sh"
+        ]
+      },
+      {
+        "id": "refresh",
+        "title": "Refresh usage status",
+        "contexts": [
+          "workspace",
+          "pane"
+        ],
+        "command": [
+          "bash",
+          "bin/run-status.sh"
+        ]
+      },
+      {
+        "id": "setup",
+        "title": "Setup Agent Usage (show config snippets)",
+        "contexts": [
+          "workspace",
+          "pane"
+        ],
+        "command": [
+          "bash",
+          "bin/run-setup.sh"
+        ]
+      }
+    ],
+    "events": [
+      {
+        "on": "pane.agent_status_changed",
+        "command": [
+          "bash",
+          "bin/run-notify.sh"
+        ]
+      },
+      {
+        "on": "pane.agent_status_changed",
+        "command": [
+          "bash",
+          "bin/run-status.sh"
+        ]
+      },
+      {
+        "on": "pane.focused",
+        "command": [
+          "bash",
+          "bin/run-status.sh"
+        ]
+      },
+      {
+        "on": "pane.focused",
+        "command": [
+          "bash",
+          "bin/run-update-check.sh",
+          "--auto"
+        ]
+      }
+    ],
+    "panes": [
+      {
+        "id": "limits",
+        "title": "Agent Usage",
+        "placement": "split",
+        "command": [
+          "bash",
+          "bin/run-limits-pane.sh"
+        ]
+      }
+    ],
+    "source": {
+      "kind": "github",
+      "owner": "senna-lang",
+      "repo": "herdr-agent-usage",
+      "resolved_commit": "517ee5e207c162aeb7c2cc8358084691e56ec0a5",
+      "managed_path": "/home/badaniya/.config/herdr/plugins/github/usagebar-33803b79d616",
+      "installed_unix_ms": 1785279356060
     }
   },
   {
