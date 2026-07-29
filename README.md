@@ -32,6 +32,7 @@ This repository is used to store all dot-config files for various shells and edi
 - gitui
 - lazygit
 - worktrunk
+- tuicr
 - hunk
 - imagemagick
 - mermaid-cli
@@ -82,7 +83,7 @@ rm -rf $HOME/.config/ghostty; rm -rf $HOME/.bash*; rm -rf $HOME/.zsh*; rm -rf $H
 
 ```bash
 # Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
-rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/mise; rm -rf $HOME/.config/worktrunk; rm -rf $HOME/.config/gitui; rm -rf $HOME/.config/lazygit; rm -rf $HOME/.config/hunk; stow -d $HOME/.stowed tmuxinator mise worktrunk gitui lazygit hunk
+rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/mise; rm -rf $HOME/.config/worktrunk; rm -rf $HOME/.config/gitui; rm -rf $HOME/.config/lazygit; rm -rf $HOME/.config/hunk; rm -rf $HOME/.config/tuicr; stow -d $HOME/.stowed tmuxinator mise worktrunk gitui lazygit hunk tuicr
 ```
 
 ### 5) Run Stow Command to Establish Symlinks to the Repository for Optional AI Terminal Tools
@@ -286,7 +287,17 @@ git config --global alias.hdiff "-c core.pager=\"hunk pager\" diff"
 git config --global alias.hshow "-c core.pager=\"hunk pager\" show"
 ```
 
-### 8) Image and Diagram Markdown Support in Neovim
+### 8) Tuicr - Terminal TUI Git Review
+
+```bash
+# Nix dependency
+nix-env -iA nixpkgs.tuicr
+
+# OR
+curl -fsSL tuicr.dev/install.sh | sh
+```
+
+### 9) Image and Diagram Markdown Support in Neovim
 
 ```bash
 # Nix dependency
@@ -294,7 +305,7 @@ nix-env -iA nixpkgs.imagemagick
 nix-env -iA nixpkgs.mermaid-cli
 ```
 
-### 9) Kulala format conversion - Openapi to http
+### 10) Kulala format conversion - Openapi to http
 
 ```bash
 npm install -g @mistweaverco/kulala-fmt
