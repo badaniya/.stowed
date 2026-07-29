@@ -1,0 +1,17 @@
+defaults:
+  issuesLimit: 20
+  notificationsLimit: 20
+  prApproveComment: LGTM
+  preview:
+    open: true
+    width: 0.60
+    height: 0.89
+    position: auto
+  prsLimit: 20
+  refetchIntervalMinutes: 30
+  view: prs
+keybindings:
+  prs:
+    - key: d
+      name: tuicr diff
+      command: tuicr pr {{.RepoName}}#{{.PrNumber}}

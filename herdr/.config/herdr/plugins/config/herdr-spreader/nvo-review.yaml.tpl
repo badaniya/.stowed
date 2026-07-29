@@ -19,7 +19,7 @@ workspaces:
           - split: right
             ratio: 0.5
             cwd: ${REPO}
-            command: gh pr view ${BRANCH} --comments
+            command: GH_HOST=${GH_HOST} gh dash --config ${GH_DASH_CONFIG}
             focus: true
 
       # ── 3 - Diff ─────────────────────────────────────────────────────
@@ -29,14 +29,13 @@ workspaces:
         panes:
           - cwd: ${REPO}
             command: >-
-              gh pr diff ${BRANCH}
-              | hunk patch -
+              GH_HOST=${GH_HOST} tuicr pr ${PR_NUMBER}
 
           - split: down
             ratio: 0.5
             cwd: ${REPO}
             command: >-
-              nvim $(gh pr diff ${BRANCH} --name-only | tr '\n' ' ')
+              GH_HOST=${GH_HOST} nvim $(GH_HOST=${GH_HOST} gh pr diff ${BRANCH} --name-only | tr '\n' ' ')
             focus: true
 
       # ── 4 - Build ────────────────────────────────────────────────────
