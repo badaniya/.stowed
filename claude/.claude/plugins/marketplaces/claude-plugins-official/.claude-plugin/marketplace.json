@@ -208,7 +208,7 @@
         "url": "https://github.com/amplitude/mcp-marketplace.git",
         "path": "plugins/amplitude",
         "ref": "main",
-        "sha": "05ce0a91cbf3188f1512e324bd9663cc0e23f34a"
+        "sha": "06f6b423ebea9448198e846e942ece297dfbd06e"
       },
       "description": "Use Amplitude as an expert analyst — instrument Amplitude, discover product opportunities, analyze charts, create dashboards, manage experiments, and understand users and accounts.",
       "category": "monitoring",
@@ -238,7 +238,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/apollographql/skills.git",
-        "sha": "85996a0b75cb106eacfc4b9f3a4fdae7a2109a89"
+        "sha": "c288eb80629dd2309eed81f23d693f66a452d043"
       },
       "homepage": "https://www.apollographql.com"
     },
@@ -1738,7 +1738,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/heygen-com/hyperframes.git",
-        "sha": "d8d626537bf6a830711f38e24cc8756bc26f8d48"
+        "sha": "cef3b86c95cb257be7c61ac3bdc4dd6dc9692e11"
       },
       "homepage": "https://hyperframes.heygen.com"
     },
@@ -2167,7 +2167,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/mergifyio/mergify-cli.git",
-        "sha": "68bf9f1e4b27e8cb07b224a2d54b232490d699e1"
+        "sha": "ea7514f7634f26f9f66119bdc6a1080232e5e7e5"
       },
       "homepage": "https://mergify.com"
     },
@@ -2838,7 +2838,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/Digital-Process-Tools/claude-remember.git",
-        "sha": "fc97f082a39431fc88bf038c917dd530de32b73a"
+        "sha": "32a3dae6786bd1bec0fcea3c3de4c0c80f6621e7"
       },
       "homepage": "https://github.com/Digital-Process-Tools/claude-remember"
     },
@@ -2991,7 +2991,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/sanity-io/agent-toolkit.git",
-        "sha": "fc0e709f61be8abd03e805756d0c4c2983b0a1b5"
+        "sha": "dfcdd2844a0e72627d22f93d90ebdc53ef510a66"
       },
       "homepage": "https://www.sanity.io"
     },
@@ -3124,7 +3124,7 @@
         "url": "https://github.com/getsentry/cli.git",
         "path": "plugins/sentry-cli",
         "ref": "main",
-        "sha": "3e292ee4beb5c8254e0f020d2bfaf64fa16a7132"
+        "sha": "9ce265d2ec2950167381ce559aab832dc4fec3ee"
       },
       "homepage": "https://sentry.io"
     },
@@ -3213,7 +3213,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/slackapi/slack-mcp-plugin.git",
-        "sha": "f43f620b0f7a95271ec044e3cfebeef81d2a6ee7"
+        "sha": "937e74b74f0b546ae7a656c3c6b2ed53540d4ab8"
       },
       "homepage": "https://github.com/slackapi/slack-mcp-plugin/tree/main"
     },
@@ -3684,7 +3684,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/wix/skills.git",
-        "sha": "efedbb108aa5ea091f60ab090ead68609e22d816"
+        "sha": "df0c1f4f58f230b5a8ee2e3b698c9728bb46ffb9"
       },
       "homepage": "https://dev.wix.com/docs/wix-cli/guides/development/about-wix-skills"
     },

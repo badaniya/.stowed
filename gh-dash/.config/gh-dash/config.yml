@@ -4,7 +4,7 @@ defaults:
   prApproveComment: LGTM
   preview:
     open: true
-    width: 0.60
+    width: 0.50
     height: 0.89
     position: auto
   prsLimit: 20
