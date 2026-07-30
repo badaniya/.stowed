@@ -1,0 +1,7 @@
+name = "Open workspace: NVO-WORKTREE"
+type = "form"
+command = "bash ~/.config/herdr-spreader/nvo-worktree.sh '{{.Value}}'"
+
+[form]
+prompt = "Branch, repo, upstream version (e.g. NVO-18043 GoDCApp 25.13.0)"
+placeholder = "JIRA# [GoDCApp|PlatformServices|PlatformServicesCommon|PlatformCommonModels] upstream-version"
