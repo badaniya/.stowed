@@ -12,10 +12,18 @@
     },
     "chrome-devtools": {
       "command": "npx",
-      "args": ["-y", "chrome-devtools-mcp@latest", "--executablePath", "/usr/bin/brave-browser", "--isolated"]
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest",
+        "--executablePath",
+        "/usr/bin/brave-browser",
+        "--isolated"
+      ],
+      "directTools": true
     },
     "codebase-memory-mcp": {
-      "command": "/home/badaniya/.local/bin/codebase-memory-mcp"
+      "command": "/home/badaniya/.local/bin/codebase-memory-mcp",
+      "directTools": true
     }
   }
 }
