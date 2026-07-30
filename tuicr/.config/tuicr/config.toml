@@ -8,6 +8,31 @@ comment_vim = false             # vim modal editing in the review comment box
 review_watch_interval_ms = 1000 # set to 0 to disable persisted-review polling
 
 [[comment_types]]
-id = "issue"
+id = "blocker"
+color = "lightred"
+definition = "blocking issue, must fix before merge"
+
+[[comment_types]]
+id = "major"
 color = "red"
-definition = "must fix before merge"
+definition = "major issue, must fix before merge"
+
+[[comment_types]]
+id = "minor"
+color = "yellow"
+definition = "minor issue, should be fixed before merge"
+
+[[comment_types]]
+id = "suggestion"
+color = "blue"
+definition = "non-blocking suggestion"
+
+[[comment_types]]
+id = "note"
+color = "cyan"
+definition = "observational comment"
+
+[[comment_types]]
+id = "praise"
+color = "green"
+definition = "positive feedback"
