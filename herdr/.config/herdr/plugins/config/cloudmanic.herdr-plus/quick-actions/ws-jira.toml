@@ -1,0 +1,2 @@
+name = "Open workspace: JIRA"
+command = "herdr-spreader apply -f ~/.config/herdr/plugins/config/herdr-spreader/jira.yaml"

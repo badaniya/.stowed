@@ -1,0 +1,2 @@
+name = "Open workspace: NVO-DEV"
+command = "herdr-spreader apply -f ~/.config/herdr/plugins/config/herdr-spreader/nvo-dev.yaml"

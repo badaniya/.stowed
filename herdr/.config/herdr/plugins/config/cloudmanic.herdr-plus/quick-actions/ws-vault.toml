@@ -1,0 +1,2 @@
+name = "Open workspace: VAULT"
+command = "herdr-spreader apply -f ~/.config/herdr/plugins/config/herdr-spreader/vault.yaml"
