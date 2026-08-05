@@ -65,6 +65,7 @@ ctop
 lazygit
 lazydocker
 k9s
+loggo
 jira
 
 # --- database / infra clients ---
