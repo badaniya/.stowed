@@ -65,6 +65,7 @@ ctop
 lazygit
 lazydocker
 k9s
+jira
 
 # --- database / infra clients ---
 psql
@@ -78,3 +79,4 @@ kubectl
 # --- networking (comment out if you don't want auto-reconnect on restore) ---
 ssh
 mosh
+sshpass
