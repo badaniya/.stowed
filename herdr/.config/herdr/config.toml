@@ -382,7 +382,7 @@ description = "Worktree: remove"
 [[keys.command]]
 key = "prefix+$"
 type = "plugin_action"
-command = "herdr plugin action invoke dave.token-dashboard.open-dashboard"
+command = "dave.token-dashboard.open-dashboard"
 description = "agent token dashboard: open"
 
 [[keys.command]]
