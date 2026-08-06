@@ -401,7 +401,7 @@
       ],
       "resources": [],
       "prompts": [],
-      "cachedAt": 1785884361111
+      "cachedAt": 1786046081948
     },
     "codebase-memory-mcp": {
       "configHash": "f84d0c40a1f28d4a52b20543a554163d317981adebb9ce7b83ac56f5e8ab306d",
@@ -864,7 +864,7 @@
       ],
       "resources": [],
       "prompts": [],
-      "cachedAt": 1785370579614
+      "cachedAt": 1786045529568
     },
     "chrome-devtools": {
       "configHash": "c2073cfc8767a070af8095fd393875859e97bd7e07db3c8dac8966788981e492",
@@ -1698,7 +1698,7 @@
       ],
       "resources": [],
       "prompts": [],
-      "cachedAt": 1785370593737
+      "cachedAt": 1786045529552
     }
   }
 }

@@ -67,6 +67,7 @@ lazydocker
 k9s
 loggo
 jira
+gh
 
 # --- database / infra clients ---
 psql
