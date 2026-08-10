@@ -27,6 +27,10 @@ status_fg = "black"
 status_bg = "gray"
 
 [[patterns]]
+name = "kubernetes-pod"
+regex = "[A-Za-z0-9-]+[a-z0-9]+"
+
+[[patterns]]
 name = "ticket"
 regex = "(NVO|XCP|XIQ|CFD)-[0-9]+"
 
