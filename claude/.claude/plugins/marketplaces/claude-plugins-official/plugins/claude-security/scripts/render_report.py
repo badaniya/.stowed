@@ -2,41 +2,62 @@
 """Render a scan's machine-readable artifacts from its run directory.
 
 Writes CLAUDE-SECURITY-RESULTS.jsonl (one finding per line, fields in a fixed
-order) and the CLAUDE-SECURITY-REVISION-<tag>.json stamp, places the report
-markdown beside them, then removes the scan's run directory now that its
-records are rendered. Filenames, JSONL field order, and verification.status
-semantics are stable across releases.
+order), CLAUDE-SECURITY-RESULTS.sarif (the same findings as a SARIF 2.1.0 log)
+and the CLAUDE-SECURITY-REVISION-<tag>.json stamp, places the report markdown
+beside them, then removes the scan's run directory now that its records are
+rendered. Findings that name one rule at one line of a file are one record in
+every product (see one_per_site). Filenames, JSONL field order, and
+verification.status semantics are stable across releases.
 
-Usage: render_report.py <run-dir> [--products-dir <dir>]
+Usage:
+  render_report.py <run_dir> [--products-dir <dir>]
+
+Exits 0 on success, 1 on a refusal naming what is wrong, 2 on a usage error.
 Python 3.9-compatible, stdlib only.
 """
 
 from __future__ import annotations
 
-import contextlib
-import json
+import argparse
+import ntpath
 import os
 import re
 import shutil
 import sys
-import tempfile
-from collections.abc import Mapping
+import uuid
+from collections import Counter
 from datetime import datetime, timezone
-from typing import NoReturn, TypedDict, cast
+from pathlib import Path
+from typing import TYPE_CHECKING, NamedTuple, TypedDict
 
-JsonMap = Mapping[str, object]
-Finding = dict[str, object]
+# The lib/ package lives next to this script. Python normally adds a script's own
+# directory to the import path, but not under -P or PYTHONSAFEPATH, so we add it here.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from lib import absolute, console, cwe, plugin, sarif, secret, strictjson
+from lib.finding import (
+    CONFIDENCES,
+    PANEL_KEEP_QUORUM,
+    PANEL_VOTER_COUNT,
+    SEVERITIES,
+    Finding,
+    FindingError,
+    build_finding,
+    panel_complete,
+)
+from lib.strictjson import JsonMap, is_int, is_list, is_map, is_str
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
 
 
-class Panel(TypedDict, total=False):
-    """A validated panel round: an int vote count and the fixed voter count."""
+class _ResearcherCounts(TypedDict, total=False):
+    """The two verification counts a vote record may omit."""
 
-    true: int
-    false: int
-    voters: int
+    researchers_dispatched: int
+    researchers_returned: int
 
 
-class VerificationSummary(TypedDict, total=False):
+class VerificationSummary(_ResearcherCounts):
     """The stamp's `verification` object; every path names why if not verified."""
 
     status: str
@@ -45,229 +66,86 @@ class VerificationSummary(TypedDict, total=False):
     panel_votes: int
     panel_reviewed_findings: int
     panel_quorum_findings: int
-    unreviewed_candidate_sites: object
+    unreviewed_candidate_sites: int
+    incomplete_panel_candidates: int
     attested_findings: int
     reason: str | None
-    researchers_dispatched: int
-    researchers_returned: int
 
 
-REPORT_FIELDS = (
-    "id",
-    "title",
-    "impact",
-    "file",
-    "line",
-    "description",
-    "exploit_scenario",
-    "preconditions",
-    "category",
-    "severity",
-    "confidence",
-    "recommendation",
-    "cwe_id",
-    "snippet",
-    "symbol",
-)
+class Meta(NamedTuple):
+    """The scan meta a render reads back: the scan itself, and the stamp fields beside it."""
 
-SEPARATOR_ESCAPES = {0x85: "\\u0085", 0x2028: "\\u2028", 0x2029: "\\u2029"}
+    scan: sarif.Scan
+    scan_root: str
+    revision: object
+    revision_source: str
+    model: object
+    effort: object
 
-SEVERITIES = ("HIGH", "MEDIUM", "LOW")
-CONFIDENCES = ("low", "medium", "high")
-CONFIDENCE_RANK = {"low": 1, "medium": 2, "high": 3}
 
-PANEL_VOTER_COUNT = 3
-PANEL_KEEP_QUORUM = 2
+class Rendered(NamedTuple):
+    """A completed render: the findings, their verification, and the stamp's tag."""
+
+    findings: list[Finding]
+    verification: VerificationSummary
+    tag: str
+
 
 REVISION_PREFIX = "CLAUDE-SECURITY-REVISION-"
-RUN_DIR_NAME = ".claude-security-run"
-# \Z, not $: `$` also matches before a trailing newline, and this names a file.
-HEX_RE = re.compile(r"^[0-9a-fA-F]{7,64}\Z")
-FINDING_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}\Z")
+JSONL_NAME = "CLAUDE-SECURITY-RESULTS.jsonl"
+SARIF_NAME = "CLAUDE-SECURITY-RESULTS.sarif"
+SANITIZED_REMOTE_RE = re.compile(
+    r"https://[a-z0-9.-]+(?::[0-9]+)?/(?:[A-Za-z0-9._~/-]|%[0-9A-F]{2})+\Z"
+)
+# Set only by workflows/scan.js (its PROVENANCE) on each vote record it computes.
+VOTES_PROVENANCE = "workflows/scan.js"
 
-CATEGORY_ALIASES = {
-    "sqli": "sql-injection",
-    "sql injection": "sql-injection",
-    "rce": "command-injection",
-    "command execution": "command-injection",
-    "cmdi": "command-injection",
-    "xss": "xss",
-    "cross-site scripting": "xss",
-    "csrf": "csrf",
-    "cross-site request forgery": "csrf",
-    "ssrf": "ssrf",
-    "path traversal": "path-traversal",
-    "directory traversal": "path-traversal",
-    "idor": "idor",
-    "authz bypass": "improper-authorization",
-    "authn bypass": "auth-bypass",
-    "hardcoded credentials": "hardcoded-secret",
-    "hardcoded password": "hardcoded-secret",
-    "secret": "hardcoded-secret",
-    "weak cryptography": "weak-crypto",
-    "insecure randomness": "weak-randomness",
-    "uaf": "use-after-free",
-    "oob read": "out-of-bounds-read",
-    "oob write": "out-of-bounds-write",
-    "denial of service": "dos",
-    "prototype pollution": "prototype-pollution",
-}
+
+class Args(argparse.Namespace):
+    """The parsed command line."""
+
+    run_dir: str = ""
+    products_dir: str | None = None
 
 
 class RenderError(Exception):
     """A refusal; the message names what the caller must fix."""
 
 
-def as_map(value: object) -> JsonMap | None:
-    """The value as a str-keyed mapping, or None when it is not one."""
-    if isinstance(value, dict):
-        return cast("JsonMap", value)
-    return None
-
-
-def die(message: str) -> NoReturn:
-    sys.stderr.write(f"render_report.py: {message}\n")
-    sys.exit(1)
-
-
-def read_json(run_dir: str, name: str, required: bool = True) -> object:
-    path = os.path.join(run_dir, name)
+def read_json(run_dir: str, name: str) -> object:
+    """The JSON value in a run file the render requires; a missing or malformed one is a refusal."""
     try:
-        with open(path, encoding="utf-8") as handle:
-            return cast("object", json.load(handle))
-    except OSError as error:
-        if required:
-            msg = f"{name} is missing from the run directory. Write it before running this script."
-            raise RenderError(msg) from error
-        return None
+        return strictjson.load(os.path.join(run_dir, name))
+    except FileNotFoundError as error:
+        msg = f"{name} is missing from the run directory. Write it before running this script."
+        raise RenderError(msg) from error
     except ValueError as error:
         msg = f"{name} is not valid JSON: {error}"
         raise RenderError(msg) from error
 
 
-def normalize_category(raw: object) -> str:
-    """Lowercase/slugify a category and fold known synonyms."""
-    text = str(raw or "").strip().lower()
-    if text in CATEGORY_ALIASES:
-        return CATEGORY_ALIASES[text]
-    slug = re.sub(r"[^a-z0-9]+", "-", text).strip("-")
-    return CATEGORY_ALIASES.get(slug, slug)
-
-
-def confidence_value(raw: object) -> str:
-    """A finding's stated confidence, normalized to low|medium|high; refuses others."""
-    if isinstance(raw, str):
-        word = raw.strip().lower()
-        if word in CONFIDENCE_RANK:
-            return word
-    msg = "confidence {!r} is not one of {}".format(raw, "/".join(CONFIDENCES))
-    raise RenderError(msg)
-
-
-def panel_complete(record: object) -> Panel | None:
-    """The validated panel dict for one round record, or None.
-
-    A complete panel has `voters` equal to PANEL_VOTER_COUNT and an integer
-    `true` vote count.
-    """
-    round_record = as_map(record)
-    if round_record is None:
-        return None
-    panel = as_map(round_record.get("panel"))
-    if panel is None:
-        return None
-    panel_true = panel.get("true")
-    if not isinstance(panel_true, int) or isinstance(panel_true, bool):
-        return None
-    if panel.get("voters") != PANEL_VOTER_COUNT:
-        return None
-    panel_false = panel.get("false")
-    return {
-        "true": panel_true,
-        "false": panel_false if isinstance(panel_false, int) else 0,
-        "voters": PANEL_VOTER_COUNT,
-    }
-
-
-def vote_confidence_ceiling(rounds: object) -> str | None:
-    """The vote-backed confidence ceiling for one finding, or None.
-
-    A unanimous panel yields `high`; a keep quorum below unanimity yields
-    `medium`. None means no usable vote record.
-    """
-    panel = panel_complete(rounds)
-    if panel is None:
-        return None
-    return "high" if panel.get("true", 0) >= PANEL_VOTER_COUNT else "medium"
-
-
-def build_finding(raw: object, index: int, rounds_by_id: JsonMap) -> Finding:
-    """Validate one finding into exactly REPORT_FIELDS, in order."""
-    item = as_map(raw)
-    if item is None:
-        msg = f"findings.json item {index} is not an object"
-        raise RenderError(msg)
-    finding_id = str(item.get("id") or f"F{index + 1}")
-    if not FINDING_ID_RE.match(finding_id):
-        msg = f"finding id {finding_id!r} is not a valid id"
-        raise RenderError(msg)
-
-    for required in ("title", "file", "description", "exploit_scenario"):
-        if not item.get(required):
-            msg = f"finding {finding_id} is missing required field {required!r}"
-            raise RenderError(msg)
-
-    severity = str(item.get("severity", "")).strip().upper()
-    if severity not in SEVERITIES:
-        msg = "finding {} severity {!r} is not one of {}".format(
-            finding_id, item.get("severity"), "/".join(SEVERITIES)
-        )
-        raise RenderError(msg)
-
-    confidence = confidence_value(item.get("confidence"))
-    ceiling = vote_confidence_ceiling(rounds_by_id.get(finding_id))
-    if ceiling is not None and CONFIDENCE_RANK[confidence] > CONFIDENCE_RANK[ceiling]:
-        confidence = ceiling
-
-    raw_line = item.get("line", 0)
+def read_votes(run_dir: str) -> JsonMap | None:
+    """The workflow's vote record, or None when votes.json is absent or not marked as its own."""
     try:
-        line = int(raw_line) if isinstance(raw_line, (int, float, str)) else int(str(raw_line))
-    except (TypeError, ValueError, OverflowError) as error:
-        msg = "finding {} line {!r} is not an integer".format(finding_id, item.get("line"))
+        raw = strictjson.load(os.path.join(run_dir, "votes.json"))
+    except FileNotFoundError:
+        return None
+    except ValueError as error:
+        msg = f"votes.json is not valid JSON: {error}"
         raise RenderError(msg) from error
+    if not is_map(raw):
+        raise RenderError("votes.json must be a JSON object mapping the vote record")
+    if raw.get("provenance") != VOTES_PROVENANCE:
+        return None
+    return raw
 
-    preconditions_raw: object = item.get("preconditions") or []
-    if not isinstance(preconditions_raw, list):
-        msg = f"finding {finding_id} preconditions must be a list"
-        raise RenderError(msg)
 
-    cwe = item.get("cwe_id")
-    if cwe:
-        text = str(cwe).strip().upper().replace("_", "-")
-        if re.match(r"^\d{1,5}$", text):
-            text = "CWE-" + text
-        cwe = text if re.match(r"^CWE-\d{1,5}$", text) else None
-    else:
-        cwe = None
-
-    finding = {
-        "id": finding_id,
-        "title": item.get("title"),
-        "impact": item.get("impact") or "",
-        "file": item.get("file"),
-        "line": line,
-        "description": item.get("description"),
-        "exploit_scenario": item.get("exploit_scenario"),
-        "preconditions": [str(p) for p in cast("list[object]", preconditions_raw)],
-        "category": normalize_category(item.get("category")),
-        "severity": severity,
-        "confidence": confidence,
-        "recommendation": item.get("recommendation") or "",
-        "cwe_id": cwe,
-        "snippet": item.get("snippet") or "",
-        "symbol": item.get("symbol") or "",
-    }
-    return {k: finding[k] for k in REPORT_FIELDS}
+def read_source(scan_root: str, file: str) -> str | None:
+    """The text of a scanned file a finding names; None when it cannot be read."""
+    try:
+        return Path(scan_root, file).read_bytes().decode("utf-8", "surrogateescape")
+    except (OSError, ValueError):
+        return None
 
 
 def read_coverage(run_dir: str) -> tuple[JsonMap | None, str]:
@@ -279,16 +157,12 @@ def read_coverage(run_dir: str) -> tuple[JsonMap | None, str]:
     """
     name = "coverage.json"
     try:
-        raw = read_json(run_dir, name, required=False)
-    except RenderError:
+        raw = strictjson.load(os.path.join(run_dir, name))
+    except FileNotFoundError:
+        return None, "unavailable"
+    except (OSError, ValueError):
         return None, "unreadable"
-    if raw is None:
-        present = os.path.exists(os.path.join(run_dir, name))
-        return None, ("unreadable" if present else "unavailable")
-    cov = as_map(raw)
-    if cov is None:
-        return None, "unreadable"
-    return cov, name
+    return (raw, name) if is_map(raw) else (None, "unreadable")
 
 
 COVERAGE_TEXT_CAP = 300
@@ -296,73 +170,84 @@ COVERAGE_TEXT_CAP = 300
 
 def coverage_text(value: object, cap: int = COVERAGE_TEXT_CAP) -> str | None:
     """A coverage string, trimmed to `cap`, or None when the value is not a string."""
-    if not isinstance(value, str):
+    if not is_str(value):
         return None
     if len(value) > cap:
         return value[:cap] + f"...[+{len(value) - cap} chars]"
     return value
 
 
-def skipped_components(raw: object) -> list[dict[str, object]] | None:
-    """coverage.skippedComponents as [{name, paths, reason}], or None when unusable."""
-    if not isinstance(raw, list):
+def coverage_texts(raw: object, cap: int) -> list[str]:
+    """The strings among a coverage list, each trimmed to `cap`; anything else is dropped."""
+    items: list[object] = raw if is_list(raw) else []
+    return [text for item in items if (text := coverage_text(item, cap))]
+
+
+def tree_relative(path: str, scan_root: str) -> str | None:
+    """A skipped path relative to the scan root; None for an absolute one that is not inside it."""
+    if not absolute.spelled(path):
+        return path
+    try:
+        relative = os.path.relpath(os.path.realpath(path), scan_root).replace("\\", "/")
+    except (ValueError, OSError):
         return None
-    out: list[dict[str, object]] = []
-    for entry in cast("list[object]", raw):
-        item = as_map(entry)
-        if item is None:
-            continue
-        paths_raw = item.get("paths")
-        paths_in: list[object] = (
-            cast("list[object]", paths_raw) if isinstance(paths_raw, list) else []
-        )
-        paths = [text for text in (coverage_text(p, 200) for p in paths_in) if text]
-        out.append({
-            "name": coverage_text(item.get("name"), 100) or "",
-            "paths": paths,
-            "reason": coverage_text(item.get("reason")) or "",
-        })
-    return out
+    return None if relative == ".." or relative.startswith("../") else relative
+
+
+def skipped_component(item: JsonMap, scan_root: str) -> dict[str, object]:
+    paths = (tree_relative(path, scan_root) for path in coverage_texts(item.get("paths"), 200))
+    return {
+        "name": coverage_text(item.get("name"), 100) or "",
+        "paths": [path for path in paths if path is not None],
+        "reason": coverage_text(item.get("reason")) or "",
+    }
+
+
+def skipped_components(raw: object, scan_root: str) -> list[dict[str, object]] | None:
+    """coverage.skippedComponents as [{name, paths, reason}], or None when unusable."""
+    if not is_list(raw):
+        return None
+    return [skipped_component(entry, scan_root) for entry in raw if is_map(entry)]
 
 
 def coverage_enum(value: object, allowed: tuple[str, ...]) -> str | None:
     """A coverage enum field, or None when absent or not one of the known values."""
-    return value if isinstance(value, str) and value in allowed else None
+    return value if is_str(value) and value in allowed else None
 
 
-def run_shape(coverage: JsonMap | None, source: str, effort: object) -> dict[str, object]:
+def coverage_count(value: object) -> int | None:
+    """A coverage count field, or None when absent or not an integer."""
+    return value if is_int(value) else None
+
+
+def run_shape(
+    coverage: JsonMap | None, source: str, effort: object, scan_root: str
+) -> dict[str, object]:
     """What shape actually ran, distinct from the effort tier that was asked."""
     shape: dict[str, object] = {"requested_effort": effort, "collapsed": None, "source": source}
     if coverage is None:
         return shape
-    shape["collapsed"] = coverage.get("collapsed")
-    shape["diff_files"] = coverage.get("diffFiles")
-    shape["diff_lines"] = coverage.get("diffLines")
-    shape["scope_files"] = coverage.get("scopeFiles")
-    shape["empty_diff"] = bool(coverage.get("emptyDiff"))
-    shape["empty_scope"] = bool(coverage.get("emptyScope"))
-    shape["researchers_dispatched"] = coverage.get("researchersDispatched")
-    shape["skipped_components"] = skipped_components(coverage.get("skippedComponents"))
-    shape["completeness_check_outcome"] = coverage_enum(
-        coverage.get("completenessCheckOutcome"),
-        ("checked", "partial", "not-checkable", "not-applicable"),
-    )
-    unaccounted_raw = coverage.get("unaccountedTopLevelDirs")
-    unaccounted_in: list[object] = (
-        cast("list[object]", unaccounted_raw) if isinstance(unaccounted_raw, list) else []
-    )
-    shape["unaccounted_top_level_dirs"] = [
-        text for text in (coverage_text(x, 200) for x in unaccounted_in) if text
-    ]
-    shape["inventory_fallback"] = coverage_enum(
-        coverage.get("inventoryFallback"),
-        ("inventory-failed", "empty-partition", "incomplete-partition"),
-    )
-    top_count = coverage.get("topLevelCount")
-    shape["top_level_dir_count"] = (
-        top_count if isinstance(top_count, int) and not isinstance(top_count, bool) else None
-    )
-    return shape
+    return {
+        **shape,
+        "collapsed": coverage_enum(coverage.get("collapsed"), ("small-diff", "small-scope")),
+        "diff_files": coverage_count(coverage.get("diffFiles")),
+        "diff_lines": coverage_count(coverage.get("diffLines")),
+        "scope_files": coverage_count(coverage.get("scopeFiles")),
+        "empty_diff": bool(coverage.get("emptyDiff")),
+        "empty_scope": bool(coverage.get("emptyScope")),
+        "researchers_dispatched": coverage_count(coverage.get("researchersDispatched")),
+        "skipped_components": skipped_components(coverage.get("skippedComponents"), scan_root),
+        "completeness_check_outcome": coverage_enum(
+            coverage.get("completenessCheckOutcome"),
+            ("checked", "partial", "not-checkable", "not-applicable"),
+        ),
+        "unaccounted_top_level_dirs": coverage_texts(coverage.get("unaccountedTopLevelDirs"), 200),
+        "inventory_fallback": coverage_enum(
+            coverage.get("inventoryFallback"),
+            ("inventory-failed", "empty-partition", "incomplete-partition"),
+        ),
+        "top_level_dir_count": coverage_count(coverage.get("topLevelCount")),
+    }
 
 
 def verification_summary(
@@ -372,174 +257,335 @@ def verification_summary(
 ) -> VerificationSummary:
     """Compute the stamp's verification object from the vote record.
 
-    status is 'verified' only when the vote record proves the panel ran for
-    every finding the report contains; otherwise 'unverified' with a `reason`.
-    votes_present is False when votes.json was absent from the run directory.
+    status is 'verified' only when the vote record proves a complete panel
+    round for every finding the report contains and for every other candidate
+    it holds a round for; otherwise 'unverified' with a `reason`.
+    `incomplete_panel_candidates` counts the unreported candidates whose round
+    is not complete. votes_present is False when read_votes returned None.
     """
-    rounds = as_map(votes.get("rounds")) or {}
-    panel_reviewed = 0
-    panel_quorum = 0
-    incomplete: list[str] = []
-
-    for finding in findings:
-        finding_id = str(finding.get("id", ""))
-        panel = panel_complete(rounds.get(finding_id))
-        if panel is None:
-            incomplete.append(finding_id)
-            continue
-        panel_reviewed += 1
-        if panel.get("true", 0) >= PANEL_KEEP_QUORUM:
-            panel_quorum += 1
+    raw_rounds = votes.get("rounds")
+    rounds: JsonMap = raw_rounds if is_map(raw_rounds) else {}
+    panels = [(f["id"], panel_complete(rounds.get(f["id"]))) for f in findings]
+    incomplete = sorted(finding_id for finding_id, panel in panels if panel is None)
+    reviewed = [panel for _, panel in panels if panel is not None]
+    quorum = sum(panel["true"] >= PANEL_KEEP_QUORUM for panel in reviewed)
+    reported = {f["id"] for f in findings}
+    dropped_incomplete = sorted(
+        round_id
+        for round_id, record in rounds.items()
+        if round_id not in reported and panel_complete(record) is None
+    )
 
     def as_count(key: str) -> int:
         """A vote count as a non-negative int; a wrong shape is a refusal."""
-        value = votes.get(key, 0)
-        if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raw = votes.get(key, 0)
+        if not is_int(raw) or raw < 0:
             msg = (
-                f"votes.json field {key!r} is not a non-negative integer ({value!r}); the "
+                f"votes.json field {key!r} is not a non-negative integer ({raw!r}); the "
                 "vote record is malformed"
             )
             raise RenderError(msg)
-        return value
+        return raw
 
-    def optional_count(key: str) -> int | None:
-        """A count that may be absent: None when so, else as_count's contract."""
-        if key not in votes:
-            return None
-        return as_count(key)
+    candidates = as_count("candidates")
+    dispatched = as_count("researchers_dispatched") if "researchers_dispatched" in votes else None
+    returned = as_count("researchers_returned") if "researchers_returned" in votes else None
 
-    candidates_recorded = "candidates" in votes
-    researchers_dispatched = optional_count("researchers_dispatched")
-    researchers_returned = optional_count("researchers_returned")
-
-    summary: dict[str, object] = {
-        "status": "verified",
-        "candidates": as_count("candidates"),
-        "candidates_deduped": as_count("candidates_deduped"),
-        "panel_votes": as_count("panel_votes"),
-        "panel_reviewed_findings": panel_reviewed,
-        "panel_quorum_findings": panel_quorum,
-        "unreviewed_candidate_sites": as_count("unreviewed_candidate_sites"),
-        "attested_findings": 0,
-        "reason": None,
-    }
-    if researchers_dispatched is not None:
-        summary["researchers_dispatched"] = researchers_dispatched
-    if researchers_returned is not None:
-        summary["researchers_returned"] = researchers_returned
-
-    reportable: list[Finding] = findings
+    reason: str | None = None
     if not votes_present:
-        summary["status"] = "unverified"
-        summary["reason"] = (
-            "votes.json is absent from the run directory: the verification "
-            "pipeline left no vote record, so nothing about this report can be "
-            "attested"
+        reason = (
+            "votes.json is absent from the run directory or is not the scan workflow's record: "
+            "the verification pipeline left no vote record, so nothing about this report can "
+            "be attested"
         )
-    elif not candidates_recorded:
-        summary["status"] = "unverified"
-        summary["reason"] = (
-            "votes.json has no 'candidates' field: the vote record does not "
-            "prove the pipeline ran, so nothing about this report can be attested"
+    elif "candidates" not in votes:
+        reason = (
+            "votes.json has no 'candidates' field: the vote record does not prove the pipeline "
+            "ran, so nothing about this report can be attested"
         )
-    elif researchers_dispatched and researchers_returned == 0:
-        summary["status"] = "unverified"
-        summary["reason"] = (
-            f"{researchers_dispatched} research agent(s) were dispatched but none returned; "
-            "the scan examined nothing"
+    elif dispatched and returned == 0:
+        reason = (
+            f"{dispatched} research agent(s) were dispatched but none returned; the scan "
+            "examined nothing"
         )
     elif incomplete:
-        summary["status"] = "unverified"
-        summary["reason"] = (
+        reason = (
             f"these findings have no complete {PANEL_VOTER_COUNT}-voter panel round: "
-            f"{', '.join(sorted(incomplete))}"
+            f"{', '.join(incomplete)}"
         )
-    elif reportable and panel_quorum != len(reportable):
-        summary["status"] = "unverified"
-        summary["reason"] = (
-            f"{len(reportable) - panel_quorum} of {len(reportable)} reported findings did not "
-            "reach the keep quorum, so the report contains findings the panel rejected"
+    elif findings and quorum != len(findings):
+        reason = (
+            f"{len(findings) - quorum} of {len(findings)} reported findings did not reach the "
+            "keep quorum, so the report contains findings the panel rejected"
         )
-    elif not findings and not votes.get("rounds") and summary["candidates"]:
-        summary["status"] = "unverified"
-        summary["reason"] = f"{summary['candidates']} candidates were recorded but none was paneled"
-    elif not findings and rounds and not any(panel_complete(record) for record in rounds.values()):
-        summary["status"] = "unverified"
-        summary["reason"] = (
+    elif not findings and not rounds and candidates:
+        reason = f"{candidates} candidates were recorded but none was paneled"
+    elif not findings and rounds and not any(map(panel_complete, rounds.values())):
+        reason = (
             f"{len(rounds)} panel round(s) were dispatched but none completed a full "
             f"{PANEL_VOTER_COUNT}-voter review; no candidate was actually verified"
         )
-    return cast("VerificationSummary", cast("object", summary))
+    elif dropped_incomplete:
+        reason = (
+            f"{len(dropped_incomplete)} candidate(s) were dropped without a complete "
+            f"{PANEL_VOTER_COUNT}-voter panel round: {', '.join(dropped_incomplete)}"
+        )
+    summary: VerificationSummary = {
+        "status": "verified" if reason is None else "unverified",
+        "candidates": candidates,
+        "candidates_deduped": as_count("candidates_deduped"),
+        "panel_votes": as_count("panel_votes"),
+        "panel_reviewed_findings": len(reviewed),
+        "panel_quorum_findings": quorum,
+        "unreviewed_candidate_sites": as_count("unreviewed_candidate_sites"),
+        "incomplete_panel_candidates": len(dropped_incomplete),
+        "attested_findings": 0,
+        "reason": reason,
+    }
+    if dispatched is not None:
+        summary["researchers_dispatched"] = dispatched
+    if returned is not None:
+        summary["researchers_returned"] = returned
+    return summary
 
 
 def revision_tag(revision: object) -> str:
     """The stamp's filename tag: <sha12>[-dirty], or UNVERSIONED."""
-    rev = as_map(revision) or {}
-    sha = rev.get("commit") or rev.get("head")
+    if not is_map(revision):
+        msg = f"the run's revision {revision!r} is not an object, so it cannot name the stamp file"
+        raise RenderError(msg)
+    sha = revision.get("commit") or revision.get("head")
     if not sha:
         return "UNVERSIONED"
-    if not (isinstance(sha, str) and HEX_RE.match(sha)):
+    if not is_str(sha) or not plugin.SHA_RE.match(sha):
         msg = f"the run's revision {sha!r} is not a hex commit id, so it cannot name the stamp file"
         raise RenderError(msg)
-    return sha[:12] + ("" if rev.get("dirty") is False else "-dirty")
+    return sha[:12] + ("" if revision.get("dirty") is False else "-dirty")
 
 
-def atomic_write(path: str, text: str) -> None:
-    """Write `text` atomically: a temp file in the same directory, then replace."""
-    directory = os.path.dirname(path)
-    handle, temp = tempfile.mkstemp(dir=directory, prefix=".render.")
+def show_prefix_shaped(prefix: str) -> bool:
+    """Whether `prefix` is what `git rev-parse --show-prefix` prints: empty, or `a/b/`."""
+    if not prefix:
+        return True
+    return (
+        prefix.endswith("/")
+        and "\\" not in prefix
+        and not ntpath.splitdrive(prefix)[0]
+        and all(segment not in {"", ".", ".."} for segment in prefix.split("/")[:-1])
+    )
+
+
+def scan_of(meta: JsonMap) -> Meta:
+    """The scan meta the run records, every field shape-checked; a wrong one is a refusal."""
+    scan_id = meta.get("scan_id")
     try:
-        with os.fdopen(handle, "w", encoding="utf-8") as out:
-            out.write(text)
-            out.flush()
-            os.fsync(out.fileno())
-        os.replace(temp, path)
-    except BaseException:
-        with contextlib.suppress(OSError):
-            os.unlink(temp)
-        raise
-
-
-def jsonl_line(finding: Finding) -> str:
-    """One finding, fixed field order, separators escaped."""
-    text = json.dumps(finding, ensure_ascii=False, sort_keys=False)
-    return text.translate(SEPARATOR_ESCAPES)
-
-
-def render(run_dir: str, products_dir: str) -> tuple[list[Finding], VerificationSummary, str]:
-    meta_raw = read_json(run_dir, "scan-meta.json")
-    findings_raw = read_json(run_dir, "findings.json")
-    votes: object = read_json(run_dir, "votes.json", required=False)
-    coverage, coverage_source = read_coverage(run_dir)
-    votes_present = votes is not None
-    if votes is None:
-        votes = {}
-
-    if not isinstance(findings_raw, list):
-        raise RenderError("findings.json must be a JSON array (use [] for no findings)")
-    meta = as_map(meta_raw)
-    if meta is None:
-        raise RenderError("scan-meta.json must be a JSON object")
-    votes_map = as_map(votes)
-    if votes_map is None:
-        raise RenderError("votes.json must be a JSON object mapping the vote record")
-    rounds_raw = votes_map.get("rounds")
-    rounds_by_id: JsonMap = {} if rounds_raw is None else (as_map(rounds_raw) or {})
-    if rounds_raw is not None and not isinstance(rounds_raw, dict):
-        kind = type(rounds_raw).__name__
-        msg = f"votes.json 'rounds' must be an object keyed by finding id, not {kind}"
+        value = uuid.UUID(scan_id) if is_str(scan_id) else None
+    except ValueError:
+        value = None
+    if value is None or value.version is None or not 1 <= value.version <= 5:
+        msg = (
+            f"scan-meta.json scan_id {scan_id!r} is not a version 1-5 UUID; "
+            "rerun write_scan_meta.py to mint one"
+        )
         raise RenderError(msg)
-    findings = [
-        build_finding(raw, i, rounds_by_id)
-        for i, raw in enumerate(cast("list[object]", findings_raw))
+    mode = meta.get("mode")
+    if not is_str(mode) or mode not in plugin.MODES:
+        msg = f"scan-meta.json mode {mode!r} is not a scan mode; rerun write_scan_meta.py"
+        raise RenderError(msg)
+    scan_root = meta.get("scan_root")
+    if not is_str(scan_root) or not scan_root.strip():
+        msg = f"scan-meta.json scan_root {scan_root!r} is not a path; rerun write_scan_meta.py"
+        raise RenderError(msg)
+    prefix = meta.get("scan_prefix")
+    if prefix is None:
+        prefix = ""
+    if not is_str(prefix) or not show_prefix_shaped(prefix):
+        msg = (
+            f"scan-meta.json scan_prefix {prefix!r} is not a path prefix; rerun write_scan_meta.py"
+        )
+        raise RenderError(msg)
+    remote = meta.get("remote")
+    if remote is not None and (not is_str(remote) or not SANITIZED_REMOTE_RE.match(remote)):
+        msg = (
+            f"scan-meta.json remote {remote!r} is not a sanitized repository URL; "
+            "rerun write_scan_meta.py"
+        )
+        raise RenderError(msg)
+    scope = meta.get("scope", [])
+    entries = [entry for entry in scope if is_str(entry)] if is_list(scope) else []
+    if not is_list(scope) or len(entries) != len(scope):
+        msg = (
+            f"scan-meta.json scope {scope!r} is not the list of paths the scan covered; "
+            "rerun write_scan_meta.py"
+        )
+        raise RenderError(msg)
+    revision: object = meta.get("revision")
+    if revision is None:
+        revision = {}
+    revision_source = meta.get("revision_source", "self-reported")
+    if not is_str(revision_source):
+        msg = (
+            f"scan-meta.json revision_source {revision_source!r} does not name what vouches for "
+            "the revision; rerun write_scan_meta.py"
+        )
+        raise RenderError(msg)
+    clean_commit: str | None = None
+    if is_map(revision) and revision.get("dirty") is False:
+        commit = revision.get("commit")
+        clean_commit = commit if is_str(commit) and plugin.SHA_RE.match(commit) else None
+    scan = sarif.Scan(
+        id=value,
+        mode=mode,
+        prefix=prefix,
+        remote=remote,
+        scope=tuple(entries),
+        revision=clean_commit,
+    )
+    return Meta(scan, scan_root, revision, revision_source, meta.get("model"), meta.get("effort"))
+
+
+def jsonl_text(findings: Sequence[Finding]) -> str:
+    """The findings as JSONL: one record per line as the products carry it, findings.json order."""
+    return "".join(strictjson.text(secret.withheld(item)) + "\n" for item in findings)
+
+
+def strength(finding: Finding) -> tuple[int, int]:
+    """A finding's rank among those at one site: severity first, then confidence."""
+    return -SEVERITIES.index(finding["severity"]), CONFIDENCES.index(finding["confidence"])
+
+
+def one_per_site(
+    findings: Sequence[Finding], scan: sarif.Scan, sources: Mapping[str, str]
+) -> tuple[list[Finding], list[str]]:
+    """The findings reduced to one per site, and one disclosure sentence per finding merged away.
+
+    A site is a rule at a line of a file (sarif.site), which is what a result
+    stands for to a SARIF or JSONL consumer, so the products carry one record
+    for it: of the findings at one site the strongest is kept, the first of
+    them in findings.json order when they tie, and each of the others is
+    named in a sentence with the finding it was merged into. A finding with
+    no site, one whose line was never determined, is kept as it is.
+    """
+    sites = [sarif.site(item, scan, sources.get(item["file"])) for item in findings]
+    by_site: dict[sarif.Site, list[Finding]] = {}
+    for item, where in zip(findings, sites):
+        if where is not None:
+            by_site.setdefault(where, []).append(item)
+    kept = {where: max(group, key=strength) for where, group in by_site.items()}
+    merged = [
+        f"finding {other['id']} names the same site as finding {kept[where]['id']}, "
+        f"{where.path}:{where.line} under rule {where.rule}; merged into it"
+        for where, group in by_site.items()
+        for other in group
+        if other is not kept[where]
+    ]
+    unmerged = [
+        item if where is None else kept[where]
+        for item, where in zip(findings, sites)
+        if where is None or item is by_site[where][0]
+    ]
+    return unmerged, merged
+
+
+def unrecognized_cwes(findings: Sequence[Finding]) -> list[str]:
+    """One disclosure sentence per finding whose declared CWE the pinned release does not define."""
+    return [
+        f"finding {item['id']} cwe_id {item['cwe_id']} is not a weakness in "
+        f"CWE {cwe.catalog.version}; filed as Uncategorized"
+        for item in findings
+        if not cwe.catalog.defines(cwe.id_number(item["cwe_id"]))
     ]
 
-    seen = {}
-    for finding in findings:
-        if finding["id"] in seen:
-            msg = "finding id {!r} appears twice in findings.json".format(finding["id"])
+
+def notifications_of(
+    shape: Mapping[str, object],
+    verification: VerificationSummary,
+    merged: Sequence[str],
+    unrecognized: Sequence[str],
+    symlinks: Sequence[str],
+    revision: object,
+) -> list[dict[str, object]]:
+    """The invocation notifications: what was skipped, capped, merged, mislabeled or unverified.
+
+    The sentences of `merged` (one_per_site) are disclosed at level note, those
+    of `unrecognized` (unrecognized_cwes) at level warning. `symlinks` names
+    the root-level symbolic links the scan's extent left out unfollowed.
+    """
+    note = sarif.notification
+    skipped = shape.get("skipped_components")
+    notes = [
+        note("coverage/skipped-component", "note", f"Skipped component {s['name']}: {s['reason']}")
+        for s in (skipped if is_list(skipped) else [])
+        if is_map(s)
+    ]
+    if is_map(revision) and revision.get("sparse") is True:
+        absent = revision.get("not_checked_out_dirs")
+        names = ", ".join(d for d in (absent if is_list(absent) else []) if is_str(d))
+        text = "Sparse checkout: only the checked-out part of the repository was scanned"
+        if names:
+            text += f"; tracked top-level directories not checked out: {names}"
+        notes.append(note("coverage/sparse-checkout", "note", text))
+    unaccounted = shape.get("unaccounted_top_level_dirs")
+    if is_list(unaccounted) and unaccounted:
+        names = ", ".join(d for d in unaccounted if is_str(d))
+        text = f"Top-level directories the accepted partition left unaccounted: {names}"
+        notes.append(note("coverage/unaccounted-top-level-dirs", "note", text))
+    if symlinks:
+        names = ", ".join(symlinks)
+        text = f"Root-level symbolic links not followed, left out of the scan's extent: {names}"
+        notes.append(note("coverage/unfollowed-symlinks", "note", text))
+    if unreviewed := verification["unreviewed_candidate_sites"]:
+        text = f"{unreviewed} candidate site(s) were recorded but never reviewed by the panel"
+        notes.append(note("coverage/unverified-by-cap", "warning", text))
+    if dropped := verification["incomplete_panel_candidates"]:
+        text = (
+            f"{dropped} candidate(s) were dropped without a complete "
+            f"{PANEL_VOTER_COUNT}-voter panel round"
+        )
+        notes.append(note("verification/incomplete-panel", "warning", text))
+    notes += [note("finding/merged", "note", text) for text in merged]
+    notes += [note("cwe/unrecognized", "warning", text) for text in unrecognized]
+    if verification["status"] == "unverified":
+        notes.append(note("verification/unverified", "error", verification["reason"] or ""))
+    return notes
+
+
+def render(run_dir: str, products_dir: str) -> Rendered:
+    """Read the run's records, validate them, build every product, then write them, stamp last."""
+    meta = read_json(run_dir, "scan-meta.json")
+    if not is_map(meta):
+        raise RenderError("scan-meta.json must be a JSON object")
+    findings_in = read_json(run_dir, "findings.json")
+    if not is_list(findings_in):
+        raise RenderError("findings.json must be a JSON array (use [] for no findings)")
+    coverage, coverage_source = read_coverage(run_dir)
+    votes_raw = read_votes(run_dir)
+    votes: JsonMap = {} if votes_raw is None else votes_raw
+    rounds_raw = votes.get("rounds")
+    rounds_by_id: JsonMap = {}
+    if rounds_raw is not None:
+        if not is_map(rounds_raw):
+            kind = type(rounds_raw).__name__
+            msg = f"votes.json 'rounds' must be an object keyed by finding id, not {kind}"
             raise RenderError(msg)
-        seen[finding["id"]] = True
+        rounds_by_id = rounds_raw
+    scan, scan_root, revision, revision_source, model, effort = scan_of(meta)
+    tag = revision_tag(revision)
+    built = [
+        build_finding(raw, i, rounds_by_id, scan_root, scan.prefix, scan.mode == "scan")
+        for i, raw in enumerate(findings_in)
+    ]
+    counted = Counter(f["id"] for f in built)
+    repeated = sorted(finding_id for finding_id, count in counted.items() if count > 1)
+    if repeated:
+        msg = f"findings.json uses these finding ids more than once: {', '.join(repeated)}"
+        raise RenderError(msg)
+    sources = {
+        path: text
+        for path in {f["file"] for f in built}
+        if (text := read_source(scan_root, path)) is not None
+    }
+    findings, merged = one_per_site(built, scan, sources)
 
     markdown_path = os.path.join(run_dir, "CLAUDE-SECURITY-RESULTS.md")
     if not os.path.isfile(markdown_path):
@@ -548,104 +594,130 @@ def render(run_dir: str, products_dir: str) -> tuple[list[Finding], Verification
             "report before running this script."
         )
     with open(markdown_path, encoding="utf-8", newline="") as handle:
-        markdown = handle.read()
+        try:
+            markdown = handle.read()
+        except UnicodeDecodeError as error:
+            msg = f"CLAUDE-SECURITY-RESULTS.md is not valid UTF-8: {error}"
+            raise RenderError(msg) from error
 
-    counts: dict[str, int] = dict.fromkeys(SEVERITIES, 0)
-    for finding in findings:
-        counts[str(finding.get("severity", ""))] += 1
-
-    verification = verification_summary(findings, votes_map, votes_present=votes_present)
-    revision: object = meta.get("revision") or {}
-    tag = revision_tag(revision)
-
-    atomic_write(
-        os.path.join(products_dir, "CLAUDE-SECURITY-RESULTS.jsonl"),
-        "".join(jsonl_line(f) + "\n" for f in findings),
-    )
-    markdown_out = os.path.join(products_dir, "CLAUDE-SECURITY-RESULTS.md")
-    if os.path.realpath(markdown_path) != os.path.realpath(markdown_out):
-        atomic_write(markdown_out, markdown)
-        os.unlink(markdown_path)
-
+    counts = Counter(f["severity"] for f in findings)
+    verification = verification_summary(findings, votes, votes_present=votes_raw is not None)
+    shape = run_shape(coverage, coverage_source, effort, scan_root)
     stamp: dict[str, object] = {
         "generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
-        "scan_root": meta.get("scan_root"),
-        "products_dir": products_dir,
-        "mode": meta.get("mode"),
-        "scope": meta.get("scope") or [],
+        "scan_id": str(scan.id),
+        "mode": scan.mode,
+        "scan_prefix": scan.prefix,
+        "scope": list(scan.scope),
         "revision": revision,
-        "revision_source": meta.get("revision_source") or "self-reported",
-        "model": meta.get("model"),
-        "effort": meta.get("effort"),
-        "run_shape": run_shape(coverage, coverage_source, meta.get("effort")),
+        "revision_source": revision_source,
+        "model": model,
+        "effort": effort,
+        "run_shape": shape,
         "findings": {
             "total": len(findings),
+            "critical": counts["CRITICAL"],
             "high": counts["HIGH"],
             "medium": counts["MEDIUM"],
             "low": counts["LOW"],
         },
         "verification": verification,
     }
+
+    jsonl = jsonl_text(findings)
+    run_properties = {k: v for k, v in stamp.items() if k != "model" or v is not None}
+    panels = {
+        f["id"]: panel for f in findings if (panel := panel_complete(rounds_by_id.get(f["id"])))
+    }
+    unrecognized = unrecognized_cwes(findings)
+    for text in merged + unrecognized:
+        sys.stderr.write(f"render_report.py: {text}\n")
+    symlinks = coverage_texts(meta.get("unfollowed_symlinks"), 200)
+    notifications = notifications_of(shape, verification, merged, unrecognized, symlinks, revision)
+    sarif_log = sarif.log(
+        findings, scan, plugin.version(), run_properties, panels, sources, notifications
+    )
+    sarif_doc = strictjson.text(sarif_log, indent=2) + "\n"
     for stale in os.listdir(products_dir):
         if stale.startswith(REVISION_PREFIX) and stale.endswith(".json"):
             os.unlink(os.path.join(products_dir, stale))
-    atomic_write(
-        os.path.join(products_dir, f"{REVISION_PREFIX}{tag}.json"),
-        json.dumps(stamp, indent=2) + "\n",
-    )
+    with open(os.path.join(products_dir, JSONL_NAME), "w", encoding="utf-8", newline="\n") as out:
+        out.write(jsonl)
+    with open(os.path.join(products_dir, SARIF_NAME), "w", encoding="utf-8", newline="\n") as out:
+        out.write(sarif_doc)
+    markdown_out = os.path.join(products_dir, "CLAUDE-SECURITY-RESULTS.md")
+    relocated = os.path.realpath(markdown_path) != os.path.realpath(markdown_out)
+    if relocated:
+        with open(markdown_out, "w", encoding="utf-8", newline="\n") as out:
+            out.write(markdown)
+    stamp_path = os.path.join(products_dir, f"{REVISION_PREFIX}{tag}.json")
+    with open(stamp_path, "w", encoding="utf-8", newline="\n") as out:
+        out.write(strictjson.text(stamp, indent=2) + "\n")
+    if relocated:
+        os.unlink(markdown_path)
 
-    return findings, verification, tag
+    return Rendered(findings, verification, tag)
 
 
 def remove_run_dir(run_dir: str, products_dir: str) -> str:
     """Remove the scan's run directory once rendered; returns a one-line status."""
     target = os.path.normpath(os.path.abspath(run_dir))
-    if os.path.basename(target) != RUN_DIR_NAME:
-        return f"kept {run_dir} (not a {RUN_DIR_NAME} run directory)"
+    if os.path.basename(target) != plugin.RUN_DIR_NAME:
+        return f"kept {run_dir} (not a {plugin.RUN_DIR_NAME} run directory)"
     if os.path.realpath(target) == os.path.realpath(products_dir):
         return f"kept {run_dir} (it holds the products)"
     try:
         shutil.rmtree(target)
     except OSError as error:
-        detail = error.args[0] if error.args else error
+        detail = console.removal_failure_detail(error)
         return f"WARNING: could not remove run directory {run_dir}: {detail}"
     return f"removed run directory {run_dir}"
 
 
-def main(argv: list[str]) -> int:
-    products_dir: str | None = None
-    args = list(argv)
-    if len(args) == 3 and args[1] == "--products-dir":
-        products_dir = args.pop(2)
-        args.pop(1)
-    if len(args) != 1:
-        die("usage: render_report.py <run-dir> [--products-dir <dir>]")
-    run_dir = args[0]
-    if not os.path.isdir(run_dir):
-        die(f"not a directory: {run_dir}")
-    products_dir = products_dir or run_dir
-    if not os.path.isdir(products_dir):
-        die(f"products directory is not a directory: {products_dir}")
-    try:
-        findings, verification, tag = render(run_dir, products_dir)
-    except RenderError as error:
-        die(str(error))
-    except OSError as error:
-        die(f"could not read or write the report's files: {error}")
-    removal = remove_run_dir(run_dir, products_dir)
-    print(
-        f"wrote CLAUDE-SECURITY-RESULTS.jsonl ({len(findings)} finding"
-        f"{'' if len(findings) == 1 else 's'}) and {REVISION_PREFIX}{tag}.json "
-        f"into {products_dir}"
+def argument_parser() -> argparse.ArgumentParser:
+    """The command line: which run directory to render, and where its products go."""
+    parser = argparse.ArgumentParser(
+        prog="render_report.py",
+        description="Render a scan's machine-readable artifacts from its run directory.",
     )
-    print(f"stamp: {REVISION_PREFIX}{tag}.json")
-    print(f"verification.status: {verification.get('status')}")
-    reason = verification.get("reason")
-    if reason:
+    parser.add_argument("run_dir", help="the run directory holding the scan's records")
+    parser.add_argument(
+        "--products-dir", help="where the products are written (default: the run directory)"
+    )
+    return parser
+
+
+def main(argv: list[str]) -> int:
+    parser = argument_parser()
+    args = parser.parse_args(argv, namespace=Args())
+    if not os.path.isdir(args.run_dir):
+        parser.error(f"not a directory: {args.run_dir}")
+    products_dir = args.products_dir or args.run_dir
+    if not os.path.isdir(products_dir):
+        parser.error(f"products directory is not a directory: {products_dir}")
+    try:
+        rendered = render(args.run_dir, products_dir)
+    except (RenderError, FindingError) as error:
+        sys.stderr.write(f"render_report.py: {error}\n")
+        return 1
+    except OSError as error:
+        sys.stderr.write(f"render_report.py: could not read or write the report's files: {error}\n")
+        return 1
+    removal = remove_run_dir(args.run_dir, products_dir)
+    count = len(rendered.findings)
+    stamp_name = f"{REVISION_PREFIX}{rendered.tag}.json"
+    print(
+        f"wrote {JSONL_NAME}, {SARIF_NAME} ({count} finding{'' if count == 1 else 's'}) "
+        f"and {stamp_name} into {products_dir}"
+    )
+    print(f"stamp: {stamp_name}")
+    print(f"verification.status: {rendered.verification['status']}")
+    if reason := rendered.verification["reason"]:
         print(f"verification.reason: {reason}")
     print(removal)
     return 0
 
 
 if __name__ == "__main__":
+    console.tolerate_undecodable_names()
     sys.exit(main(sys.argv[1:]))

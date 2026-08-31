@@ -1,9 +1,9 @@
 {
-  "version": 1,
+  "version": 2,
   "entries": {
-    "[\"npx\",\"-y\",\"chrome-devtools-mcp@latest\",\"--executablePath\",\"/usr/bin/brave-browser\",\"--isolated\"]": {
+    "[\"npx\",\"chrome-devtools-mcp@latest\",\"\"]": {
       "resolvedBin": "/home/badaniya/.npm/_npx/bdd39d12a2040511/node_modules/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js",
-      "resolvedAt": 1786045526860,
+      "resolvedAt": 1787848560820,
       "packageVersion": "1.6.0",
       "isJs": true
     }

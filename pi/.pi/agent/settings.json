@@ -1,7 +1,7 @@
 {
-  "lastChangelogVersion": "0.83.0",
-  "defaultProvider": "github-copilot",
-  "defaultModel": "claude-sonnet-4.6",
+  "lastChangelogVersion": "0.84.4",
+  "defaultProvider": "anthropic",
+  "defaultModel": "claude-opus-5",
   "theme": "pi-catppuccin-mocha",
   "packages": [
     "npm:pi-extmgr",
@@ -36,10 +36,17 @@
   "defaultThinkingLevel": "minimal",
   "hideThinkingBlock": false,
   "enabledModels": [
-    "anthropic/claude-sonnet-4-6",
     "anthropic/claude-fable-5",
     "anthropic/claude-haiku-4-5",
     "anthropic/claude-opus-4-8",
-    "anthropic/claude-sonnet-5"
+    "anthropic/claude-sonnet-5",
+    "anthropic/claude-opus-5",
+    "github-copilot/claude-opus-4.7",
+    "github-copilot/claude-opus-5",
+    "github-copilot/claude-opus-4.8",
+    "github-copilot/gpt-5.6-luna",
+    "github-copilot/gpt-5.6-terra",
+    "github-copilot/gpt-5.6-sol",
+    "github-copilot/claude-sonnet-4.6"
   ]
 }

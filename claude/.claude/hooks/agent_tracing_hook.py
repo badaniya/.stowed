@@ -750,11 +750,6 @@ def process_claude(exporters: List[dict], hook_input: dict) -> int:
         if ep == "claude-vscode": agent_name = "Claude VSCode"; break
         elif ep == "claude": agent_name = "Claude CLI"; break
 
-    # OTEL hook is VSCode-only; CLI sessions use the langfuse-observability plugin
-    if agent_name != "Claude VSCode":
-        log("INFO", "Skipping non-VSCode session (CLI uses langfuse-observability plugin)", agent, session_id)
-        output_and_exit(); return 0
-
     all_turns = group_claude_turns(messages)
     new_turns = all_turns[turn_count:]
     if not new_turns:

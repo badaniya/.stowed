@@ -1,6 +1,6 @@
 name = "Open workspace: NVO-WORKTREE"
 type = "form"
-command = "bash ~/.config/herdr-spreader/nvo-worktree.sh '{{.Value}}'"
+command = "bash ~/.config/herdr-spreader/nvo-worktree-notify.sh '{{.Value}}'"
 
 [form]
 prompt = "Branch, repo, upstream version (e.g. NVO-18043 GoDCApp 25.13.0)"
