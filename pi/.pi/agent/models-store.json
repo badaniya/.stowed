@@ -4,7 +4,7 @@
       {
         "id": "claude-fable-5",
         "name": "Claude Fable 5",
-        "api": "openai-completions",
+        "api": "anthropic-messages",
         "provider": "github-copilot",
         "baseUrl": "https://api.individual.githubcopilot.com",
         "reasoning": true,
@@ -26,15 +26,13 @@
           "Editor-Plugin-Version": "copilot-chat/0.35.0",
           "Copilot-Integration-Id": "vscode-chat"
         },
-        "compat": {
-          "supportsStore": false,
-          "supportsDeveloperRole": false,
-          "supportsReasoningEffort": false
-        },
         "thinkingLevelMap": {
           "off": null,
           "xhigh": "xhigh",
           "max": "max"
+        },
+        "compat": {
+          "forceAdaptiveThinking": true
         }
       },
       {
@@ -1188,9 +1186,9 @@
         }
       }
     ],
-    "checkedAt": 1788186933403,
-    "lastModified": 1787917513000,
-    "etag": "W/\"01366c935f2ca0d954e1fd5ddb582511\""
+    "checkedAt": 1788361547461,
+    "lastModified": 1788352788000,
+    "etag": "W/\"ab9e007ac1d460cb94ead0120accda89\""
   },
   "anthropic": {
     "models": [
@@ -1243,6 +1241,35 @@
               }
             }
           ]
+        }
+      },
+      {
+        "id": "claude-fable-5-1",
+        "name": "Claude Fable 5.1",
+        "api": "anthropic-messages",
+        "provider": "anthropic",
+        "baseUrl": "https://api.anthropic.com",
+        "reasoning": true,
+        "input": [
+          "text",
+          "image"
+        ],
+        "cost": {
+          "input": 10,
+          "output": 50,
+          "cacheRead": 0.25,
+          "cacheWrite": 12.5
+        },
+        "contextWindow": 1000000,
+        "maxTokens": 128000,
+        "thinkingLevelMap": {
+          "off": null,
+          "xhigh": "xhigh",
+          "max": "max"
+        },
+        "compat": {
+          "forceAdaptiveThinking": true,
+          "supportsStrictTools": true
         }
       },
       {
@@ -1565,8 +1592,8 @@
         }
       }
     ],
-    "checkedAt": 1788186932409,
-    "lastModified": 1787141921000,
-    "etag": "W/\"f6c149c048a0e6e85e35ce0a72c1d4ec\""
+    "checkedAt": 1788361546276,
+    "lastModified": 1788352778000,
+    "etag": "W/\"541a8b4b341a1f12b45d755a254b6b10\""
   }
 }
