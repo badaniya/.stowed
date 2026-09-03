@@ -4,19 +4,19 @@
     "frontend-design@claude-plugins-official": [
       {
         "scope": "user",
-        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/frontend-design/ed404106fcd8",
-        "version": "ed404106fcd8",
+        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/frontend-design/0120fb83da5d",
+        "version": "0120fb83da5d",
         "installedAt": "2026-05-14T16:18:03.768Z",
-        "lastUpdated": "2026-08-28T23:13:01.481Z"
+        "lastUpdated": "2026-09-02T18:33:24.529Z"
       }
     ],
     "code-review@claude-plugins-official": [
       {
         "scope": "user",
-        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/code-review/ed404106fcd8",
-        "version": "ed404106fcd8",
+        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/code-review/0120fb83da5d",
+        "version": "0120fb83da5d",
         "installedAt": "2026-05-14T16:18:03.768Z",
-        "lastUpdated": "2026-08-28T23:13:01.481Z"
+        "lastUpdated": "2026-09-02T18:33:24.528Z"
       }
     ],
     "code-simplifier@claude-plugins-official": [
@@ -40,10 +40,10 @@
     "github@claude-plugins-official": [
       {
         "scope": "user",
-        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/github/ed404106fcd8",
-        "version": "ed404106fcd8",
+        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/github/0120fb83da5d",
+        "version": "0120fb83da5d",
         "installedAt": "2026-06-04T15:46:05.709Z",
-        "lastUpdated": "2026-08-28T23:13:01.481Z"
+        "lastUpdated": "2026-09-02T18:33:24.528Z"
       }
     ],
     "gopls-lsp@claude-plugins-official": [
@@ -61,7 +61,7 @@
         "installPath": "/home/badaniya/.stowed/claude/.claude/plugins/cache/context-mode/context-mode/1.0.169",
         "version": "1.0.169",
         "installedAt": "2026-06-04T23:33:31.583Z",
-        "lastUpdated": "2026-08-27T00:52:39.413Z",
+        "lastUpdated": "2026-09-02T18:25:59.703Z",
         "gitCommitSha": "ce54a459b7ea191c3bfeed2759fd22b1a7c4b05e"
       }
     ],

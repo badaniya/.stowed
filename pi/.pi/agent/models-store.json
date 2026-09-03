@@ -1186,7 +1186,7 @@
         }
       }
     ],
-    "checkedAt": 1788361547461,
+    "checkedAt": 1788448277955,
     "lastModified": 1788352788000,
     "etag": "W/\"ab9e007ac1d460cb94ead0120accda89\""
   },
@@ -1262,14 +1262,15 @@
         },
         "contextWindow": 1000000,
         "maxTokens": 128000,
+        "compat": {
+          "supportsMidConvoEffort": true,
+          "forceAdaptiveThinking": true,
+          "supportsStrictTools": true
+        },
         "thinkingLevelMap": {
           "off": null,
           "xhigh": "xhigh",
           "max": "max"
-        },
-        "compat": {
-          "forceAdaptiveThinking": true,
-          "supportsStrictTools": true
         }
       },
       {
@@ -1468,26 +1469,16 @@
         },
         "contextWindow": 1000000,
         "maxTokens": 128000,
-        "thinkingLevelMap": {
-          "xhigh": "xhigh",
-          "max": "max"
-        },
         "compat": {
+          "supportsMidConvoEffort": true,
           "forceAdaptiveThinking": true,
           "supportsTemperature": false,
-          "supportsStrictTools": true,
-          "allowedFallbackModels": [
-            {
-              "provider": "anthropic",
-              "model": "claude-opus-4-8",
-              "cost": {
-                "input": 5,
-                "output": 25,
-                "cacheRead": 0.5,
-                "cacheWrite": 6.25
-              }
-            }
-          ]
+          "supportsStrictTools": true
+        },
+        "thinkingLevelMap": {
+          "off": null,
+          "xhigh": "xhigh",
+          "max": "max"
         }
       },
       {
@@ -1592,8 +1583,8 @@
         }
       }
     ],
-    "checkedAt": 1788361546276,
-    "lastModified": 1788352778000,
-    "etag": "W/\"541a8b4b341a1f12b45d755a254b6b10\""
+    "checkedAt": 1788448277126,
+    "lastModified": 1788432010000,
+    "etag": "W/\"5fdc170fdb3eb24c0e164a059918e474\""
   }
 }
