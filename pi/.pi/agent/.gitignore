@@ -4,3 +4,4 @@ auth.json
 trust.json
 .extmgr-cache
 .update-check
+mcp-cache.json
