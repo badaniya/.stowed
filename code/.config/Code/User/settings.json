@@ -1,4 +1,5 @@
 {
+  "terminal.integrated.enableImages": true,
   "vim.normalModeKeyBindingsNonRecursive": [
     {
       "before": ["g", "r"],

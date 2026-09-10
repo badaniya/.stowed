@@ -1,0 +1,8 @@
+{
+  "env": {
+    "LANGFUSE_SECRET_KEY": "sk-lf-63433fdb-0939-43b2-b36e-216fb7092c96",
+    "LANGFUSE_PUBLIC_KEY": "pk-lf-bc2136b9-fc1c-4c73-8d1c-3168c121bfc2",
+    "LANGFUSE_BASE_URL": "http://10.64.193.238:3000",
+    "LANGFUSE_HOST": "http://10.64.193.238:3000"
+  }
+}

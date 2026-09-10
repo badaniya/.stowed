@@ -1,5 +1,5 @@
 workspaces:
-  - name: NVO-REVIEW
+  - name: NVO-REVIEW - ${WORKSPACE_LABEL}
     root: ~/workspace/badaniya/NVO-REVIEW
     tabs:
       # ── 1 - Agent ────────────────────────────────────────────────────

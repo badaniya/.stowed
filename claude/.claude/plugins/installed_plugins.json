@@ -4,19 +4,19 @@
     "frontend-design@claude-plugins-official": [
       {
         "scope": "user",
-        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/frontend-design/0120fb83da5d",
-        "version": "0120fb83da5d",
+        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/frontend-design/3ea32df27be7",
+        "version": "3ea32df27be7",
         "installedAt": "2026-05-14T16:18:03.768Z",
-        "lastUpdated": "2026-09-02T18:33:24.529Z"
+        "lastUpdated": "2026-09-09T19:13:43.650Z"
       }
     ],
     "code-review@claude-plugins-official": [
       {
         "scope": "user",
-        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/code-review/0120fb83da5d",
-        "version": "0120fb83da5d",
+        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/code-review/3ea32df27be7",
+        "version": "3ea32df27be7",
         "installedAt": "2026-05-14T16:18:03.768Z",
-        "lastUpdated": "2026-09-02T18:33:24.528Z"
+        "lastUpdated": "2026-09-09T19:13:43.651Z"
       }
     ],
     "code-simplifier@claude-plugins-official": [
@@ -40,10 +40,10 @@
     "github@claude-plugins-official": [
       {
         "scope": "user",
-        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/github/0120fb83da5d",
-        "version": "0120fb83da5d",
+        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/github/3ea32df27be7",
+        "version": "3ea32df27be7",
         "installedAt": "2026-06-04T15:46:05.709Z",
-        "lastUpdated": "2026-09-02T18:33:24.528Z"
+        "lastUpdated": "2026-09-09T19:13:43.649Z"
       }
     ],
     "gopls-lsp@claude-plugins-official": [
@@ -61,7 +61,7 @@
         "installPath": "/home/badaniya/.stowed/claude/.claude/plugins/cache/context-mode/context-mode/1.0.169",
         "version": "1.0.169",
         "installedAt": "2026-06-04T23:33:31.583Z",
-        "lastUpdated": "2026-09-02T18:25:59.703Z",
+        "lastUpdated": "2026-09-09T19:06:13.868Z",
         "gitCommitSha": "ce54a459b7ea191c3bfeed2759fd22b1a7c4b05e"
       }
     ],
@@ -78,10 +78,10 @@
     "langfuse-observability@claude-plugins-official": [
       {
         "scope": "user",
-        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/langfuse-observability/1.0.0",
-        "version": "1.0.0",
+        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/langfuse-observability/1.1.0",
+        "version": "1.1.0",
         "installedAt": "2026-06-29T22:42:24.986Z",
-        "lastUpdated": "2026-06-29T22:42:24.986Z",
+        "lastUpdated": "2026-09-09T19:13:45.212Z",
         "gitCommitSha": "4615df55428bdcd8a2095fdea2cbe970b2c5152e"
       }
     ],
