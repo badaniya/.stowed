@@ -77,10 +77,14 @@ plugins=(
     zsh-autosuggestions
     zsh-syntax-highlighting
     zsh-vi-mode
-    last-working-dir-tmux
     urltools
     tmux-xpanes
 )
+
+# Only load tmux-aware plugins when actually inside a tmux session
+if [[ -n "$TMUX" ]]; then
+    plugins+=(last-working-dir-tmux)
+fi
 
 # Syntax highlighting plugin support
 [[ -f $ZSH/custom/plugins/zsh-syntax-highlighting/catppuccin/themes/catppuccin_mocha-zsh-syntax-highlighting.zsh ]] && source $ZSH/custom/plugins/zsh-syntax-highlighting/catppuccin/themes/catppuccin_mocha-zsh-syntax-highlighting.zsh
