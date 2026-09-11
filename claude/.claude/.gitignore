@@ -13,6 +13,7 @@ sessions/
 shell-snapshots/
 state/
 tasks/
+telemetry/
 transcripts/
 .credentials.json
 .last*
