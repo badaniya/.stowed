@@ -522,6 +522,15 @@
       "skillFolderHash": "f5fb1cdb7993b2feee8367e983e9d4d58d2eedd4",
       "installedAt": "2026-05-11T21:57:14.230Z",
       "updatedAt": "2026-05-11T21:57:14.230Z"
+    },
+    "archify": {
+      "source": "tt-a1i/archify",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/tt-a1i/archify.git",
+      "skillPath": "archify/SKILL.md",
+      "skillFolderHash": "a8b3112ee428fbfdf9df371c94d6e07635f89b42",
+      "installedAt": "2026-09-14T20:19:57.558Z",
+      "updatedAt": "2026-09-14T20:19:57.558Z"
     }
   }
 }
