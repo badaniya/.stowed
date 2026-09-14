@@ -386,6 +386,26 @@ curl -fsSL https://github.com/block/goose/releases/download/stable/download_cli.
 rm -rf $HOME/.agents; stow -d $HOME/.stowed agents
 ```
 
+## Installing Optional AI Skills
+
+### 1) SuperPowers - Spec Driven Development
+
+```bash
+# Skill.sh Install and Upgrade
+npx skills add obra/superpowers
+```
+
+### 2) Graphify - Knowledge Graph
+
+```bash
+# Install
+uv tool install graphifyy
+
+# Upgrade
+uv tool upgrade graphifyy
+graphify install --platform agents
+```
+
 ## Linux Development Environment Setup
 
 ### 1) Golang
