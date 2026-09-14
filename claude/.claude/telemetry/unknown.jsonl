@@ -1,2 +1,0 @@
-{"schema_version": 2, "ts": "2026-09-03T22:39:19.523649+00:00", "event": "telemetry_failure", "session_id": "unknown", "host": "badaniya-ubuntu-pc", "user_email": null, "repo": null, "reason": "missing_token", "failure_count": 1, "body_type": "beacon", "http_status": null}
-{"schema_version": 2, "ts": "2026-09-09T23:32:57.559029+00:00", "event": "telemetry_failure", "session_id": "unknown", "host": "badaniya-ubuntu-pc", "user_email": null, "repo": null, "reason": "missing_token", "failure_count": 10, "body_type": "beacon", "http_status": null}
