@@ -406,6 +406,13 @@ uv tool upgrade graphifyy
 graphify install --platform agents
 ```
 
+### 3) codebase-memory-mcp - Knowledge Graph
+
+```bash
+# Install and Upgrade
+curl -fsSL https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/install.sh | bash
+```
+
 ## Linux Development Environment Setup
 
 ### 1) Golang
