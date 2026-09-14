@@ -23,7 +23,7 @@
 "workbench.statusBar.visible": false,
 "pi-vscode.path": "/home/badaniya/.nvm/versions/node/v22.22.2/bin/pi",
 "claudeCode.preferredLocation": "panel",
-"agentTracing.langfuse.autoStart": true,
+"agentTracing.langfuse.autoStart": false,
 "agentTracing.additionalExporters": [],
 "chat.useClaudeHooks": true,
 "chat.viewSessions.orientation": "stacked"
