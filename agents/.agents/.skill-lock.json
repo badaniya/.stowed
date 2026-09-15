@@ -380,13 +380,13 @@
       "updatedAt": "2026-05-10T17:36:09.070Z"
     },
     "herdr": {
-      "source": "ogulcancelik/herdr",
+      "source": "herdrdev/herdr",
       "sourceType": "github",
-      "sourceUrl": "https://github.com/ogulcancelik/herdr.git",
-      "skillPath": "SKILL.md",
-      "skillFolderHash": "552aa8ca223908a2ee3b1058587d4b5a84828e71",
+      "sourceUrl": "https://github.com/herdrdev/herdr.git",
+      "skillPath": "skills/herdr/SKILL.md",
+      "skillFolderHash": "b9dcfddcfa7ce43e2e4cf60e724c519be553f149",
       "installedAt": "2026-07-08T15:54:49.024Z",
-      "updatedAt": "2026-07-08T15:54:49.024Z"
+      "updatedAt": "2026-09-15T18:26:25.336Z"
     },
     "improve-codebase-architecture": {
       "source": "mattpocock/skills",
