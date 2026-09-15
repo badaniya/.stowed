@@ -6,11 +6,16 @@
 """Render an Open Knowledge Format (OKF) bundle as a single self-contained,
 interactive HTML graph (`viz.html`). No backend, no install on the viewing side,
 no data leaves the page — concepts become nodes (coloured by `type`, sized by
-body length), markdown links become edges, and clicking a node opens a wiki-style
-panel with its rendered markdown, outgoing links, and "Cited by" backlinks.
+body length), markdown links and bundle-internal `sources` become edges, and
+clicking a node opens a wiki-style panel with its rendered markdown, OKF v0.2
+provenance/trust/lifecycle metadata, outgoing links, and "Cited by" backlinks.
 
 Features: force/concentric/breadth-first/circle/grid layouts, per-type filter,
 free-text search, neighbour highlight, clickable cross-links and backlinks.
+
+The default layout is force (cose) up to AUTO_COSE_MAX concepts, then the linear
+concentric layout — force-directed cost grows roughly quadratically with node
+count and freezes the page on large bundles. An explicit --layout always wins.
 
 Run:  uv run okf_visualize.py <bundle-dir> [-o viz.html]
 """
@@ -25,6 +30,14 @@ from pathlib import Path
 import yaml
 
 RESERVED = {"index.md", "log.md"}
+# Force (cose) layout froze the page for ~32 s at ~2k concepts (measured in
+# Chrome); the linear layouts load the same bundle in under 2 s. Past this size
+# the default switches to concentric, and the in-page layout picker asks before
+# running force. An explicit --layout (or ?layout=) still wins.
+AUTO_COSE_MAX = 1000
+# Above this the page is slow on any layout (23k concepts measured: ~27 s load,
+# ~650 MB heap) and reads as a hairball — warn and suggest rendering a subtree.
+SCALE_WARN = 5000
 FENCE = re.compile(r"^(```|~~~)")
 LINK = re.compile(r"(?<!\!)\[[^\]]*\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)")
 
@@ -71,14 +84,79 @@ def link_targets(text: str):
     return out
 
 
+def resolve(target: str, path: Path, bundle: Path):
+    """Resolve a link/`sources[].resource` to a concept id, or None if it is not
+    one (an external URL, an asset, a scope descriptor, an escape from the tree)."""
+    t = str(target).split("#", 1)[0]
+    if not t.endswith(".md"):
+        return None
+    if t.startswith("/"):
+        return t.lstrip("/")[:-3]
+    cand = (path.parent / t).resolve()
+    return cand.relative_to(bundle.resolve()).as_posix()[:-3] \
+        if cand.is_relative_to(bundle.resolve()) else None
+
+
+def read_sources(meta: dict, path: Path, bundle: Path):
+    """§5.1 `sources`, flattened for display. `cid` is set when the source is
+    itself a concept in this bundle — that derivation is a real graph edge."""
+    raw = meta.get("sources")
+    out = []
+    if not isinstance(raw, list):
+        return out
+    for src in raw:
+        if not isinstance(src, dict):
+            continue
+        resource = str(src.get("resource", "")).strip()
+        # §5.1 — an entry's own `usage_window` overrides the one written once as a
+        # sibling of `sources`. A count without its window has no units.
+        window = src.get("usage_window", meta.get("usage_window"))
+        out.append({
+            "title": str(src.get("title") or src.get("id") or resource),
+            "resource": resource,
+            "cid": resolve(resource, path, bundle) if resource else None,
+            "author": str(src.get("author", "")),
+            "usage_count": src.get("usage_count"),
+            "usage_window": (f"{window.get('from', '?')}→{window.get('to', '?')}"
+                             if isinstance(window, dict) else ""),
+            "last_modified": str(src.get("last_modified") or ""),
+        })
+    return out
+
+
+def read_trust(meta: dict):
+    """§5.2 `generated` / `verified`, falling back to a v0.1 `timestamp` (§13.1)."""
+    gen = meta.get("generated")
+    if isinstance(gen, dict):
+        generated = {"by": str(gen.get("by", "")), "at": str(gen.get("at", ""))}
+    elif meta.get("timestamp"):
+        generated = {"by": "", "at": str(meta["timestamp"])}
+    else:
+        generated = None
+    ver = meta.get("verified")
+    # a bare mapping is one verification event (§5.2)
+    entries = [ver] if isinstance(ver, dict) else (ver if isinstance(ver, list) else [])
+    verified = [{"by": str(e.get("by", "")), "at": str(e.get("at", ""))}
+                for e in entries if isinstance(e, dict)]
+    return generated, verified
+
+
 def build(bundle: Path):
     nodes, edges, seen = [], [], set()
     files = sorted(p for p in bundle.rglob("*.md") if p.is_file() and p.name not in RESERVED)
     ids = {p.relative_to(bundle).with_suffix("").as_posix() for p in files}
     for p in files:
         cid = p.relative_to(bundle).with_suffix("").as_posix()
-        meta, body = split_frontmatter(p.read_text(encoding="utf-8").lstrip("﻿"))
+        try:
+            raw = p.read_text(encoding="utf-8").lstrip("﻿")
+        except (UnicodeDecodeError, OSError) as exc:
+            print(f"warning: skipping {p.relative_to(bundle)}: cannot read file: {exc}", file=sys.stderr)
+            ids.discard(cid)
+            continue
+        meta, body = split_frontmatter(raw)
         body = body.strip()
+        generated, verified = read_trust(meta)
+        sources = read_sources(meta, p, bundle)
         nodes.append({
             "id": cid,
             "type": str(meta.get("type", "Untyped")),
@@ -87,17 +165,16 @@ def build(bundle: Path):
             "tags": meta.get("tags", []) if isinstance(meta.get("tags"), list) else [],
             "group": cid.split("/")[0] if "/" in cid else "(root)",
             "sz": max(24, min(70, 24 + len(body) // 200)),
+            "status": str(meta.get("status", "")),
+            "stale_after": str(meta.get("stale_after") or ""),
+            "generated": generated,
+            "verified": verified,
+            "sources": sources,
             "body": body[:8000],
         })
-        for t in link_targets(body):
-            t = t.split("#", 1)[0]
-            if not t.endswith(".md"):
-                continue
-            if t.startswith("/"):
-                tgt = t.lstrip("/")[:-3]
-            else:
-                tgt = (p.parent / t).resolve().relative_to(bundle.resolve()).as_posix()[:-3] \
-                    if (p.parent / t).resolve().is_relative_to(bundle.resolve()) else None
+        targets = link_targets(body) + [s["resource"] for s in sources if s["cid"]]
+        for t in targets:
+            tgt = resolve(t, p, bundle)
             if tgt and tgt in ids and tgt != cid and (cid, tgt) not in seen:
                 seen.add((cid, tgt))
                 edges.append({"source": cid, "target": tgt})
@@ -114,11 +191,16 @@ HTML = r"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 __OGIMAGE__
 <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.2/dist/cytoscape.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked@14/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.4.12/dist/purify.min.js" integrity="sha384-piCcpDdJ7qVeK4Tv8Z6Hpcr3ZBIgP16TxQTPVfsLFdZ5uDgwc3Y8Ho7oUnqf12qu" crossorigin="anonymous"></script>
 <style>
  :root{--bg:#0e0f13;--panel:#16181f;--line:#262a35;--fg:#e6e8ee;--mut:#9aa3b2;--accent:#8ab4ff}
  *{box-sizing:border-box} html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);
    font:14px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
- #app{display:grid;grid-template-columns:1fr 400px;height:100vh}
+ /* The row must be stated. Left implicit it sizes to `auto`, i.e. to the tallest
+    item — a long concept body then stretched #side past the viewport and the page
+    grew its own scrollbar on top of the panel's, which in turn forced a spurious
+    horizontal one. Pinning the row to 100% keeps the panel scrolling inside. */
+ #app{display:grid;grid-template-columns:1fr 400px;grid-template-rows:100%;height:100vh}
  #cy{width:100%;height:100%}
  #side{border-left:1px solid var(--line);background:var(--panel);overflow:auto;padding:18px}
  header{position:absolute;top:0;left:0;padding:14px 18px;z-index:5;pointer-events:none}
@@ -135,6 +217,15 @@ __OGIMAGE__
    font-size:11px;font-weight:600;color:#0e0f13} .desc{color:var(--mut);margin:8px 0 12px}
  .tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
  .tag{background:#1d2230;border:1px solid var(--line);border-radius:6px;padding:1px 8px;font-size:11px;color:var(--mut)}
+ .meta{margin:10px 0;font-size:12px;color:var(--mut)} .meta div{padding:1px 0} .meta b{color:var(--fg);font-weight:600}
+ .sig{color:var(--mut)}
+ .badges{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+ .badge{border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600;border:1px solid}
+ .t-unverified{color:#9aa3b2;border-color:#3a4150;background:#1d2230}
+ .t-machine{color:#8ab4ff;border-color:#2b4570;background:#141c2b}
+ .t-human{color:#4ade80;border-color:#276b45;background:#12211a}
+ .b-stale{color:#fca5a5;border-color:#7f2b2b;background:#241416}
+ .b-deprecated{color:#fbbf24;border-color:#7a5312;background:#241d10}
  .rel{margin:10px 0} .rel h4{margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut)}
  .rel a{display:block;color:var(--accent);cursor:pointer;font-size:13px;padding:1px 0;text-decoration:none}
  .rel a:hover{text-decoration:underline}
@@ -145,7 +236,7 @@ __OGIMAGE__
  .src{pointer-events:auto;color:var(--accent);margin-left:10px;text-decoration:none} .src:hover{text-decoration:underline}
 </style></head><body>
 <div id="app"><div id="cy"></div><div id="side"><p class="empty">Click a concept to inspect it.</p></div></div>
-<header><h1>__NAME__</h1><div class="sub">__N__ concepts · __E__ links · OKF v0.1__LINK__</div></header>
+<header><h1>__NAME__</h1><div class="sub">__N__ concepts · __E__ links · OKF v0.2__LINK__</div></header>
 <div id="bar">
  <input id="search" placeholder="search concepts…">
  <select id="type"><option value="">all types</option></select>
@@ -178,16 +269,60 @@ const cy=cytoscape({container:document.getElementById('cy'),minZoom:.2,maxZoom:1
  ],
  layout:{name:'__LAYOUT__',animate:false,nodeRepulsion:9000,idealEdgeLength:90,padding:40}});
 const side=document.getElementById('side');
-const esc=s=>(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const esc=s=>(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function relList(title,arr){if(!arr.length)return'';
  return `<div class="rel"><h4>${title}</h4>${arr.map(id=>`<a data-go="${esc(id)}">${esc((byId[id]||{}).title||id)}</a>`).join('')}</div>`;}
+// §5.3 — the trust tier is derived, never stored: no `verified` is unverified,
+// `verified` by non-`human:` actors only is machine-confirmed, and any `human:`
+// actor makes it human-reviewed. The exact lowercase prefix is the whole key.
+// §5.5 — a concept is stale when today >= stale_after; both are YYYY-MM-DD, so
+// a string compare is the whole comparison. Advisory signals, not access control.
+const TODAY=new Date().toISOString().slice(0,10);
+function trustTier(n){const v=n.verified||[];
+ if(!v.length)return['t-unverified','unverified'];
+ return v.some(e=>(e.by||'').startsWith('human:'))?['t-human','human-reviewed']
+                                                  :['t-machine','machine-confirmed'];}
+function badges(n){const [cls,label]=trustTier(n),out=[`<span class="badge ${cls}">${label}</span>`];
+ if(n.stale_after&&TODAY>=n.stale_after)out.push(`<span class="badge b-stale">stale since ${esc(n.stale_after)}</span>`);
+ if(n.status==='deprecated')out.push('<span class="badge b-deprecated">deprecated</span>');
+ return `<div class="badges">${out.join('')}</div>`;}
+// OKF v0.2 trust (§5.2) + lifecycle (§5.4/§5.5). A v0.1 `timestamp` arrives here
+// as generated.at with an empty `by`, so legacy bundles still show a date.
+function metaBlock(n){const g=n.generated||{},rows=[];
+ if(n.status)rows.push(`<div>status <b>${esc(n.status)}</b></div>`);
+ if(g.at||g.by)rows.push(`<div>generated${g.at?` <b>${esc(g.at)}</b>`:''}${g.by?` by ${esc(g.by)}`:''}</div>`);
+ (n.verified||[]).forEach(v=>rows.push(`<div>verified${v.at?` <b>${esc(v.at)}</b>`:''}${v.by?` by ${esc(v.by)}`:''}</div>`));
+ if(n.stale_after)rows.push(`<div>stale after <b>${esc(n.stale_after)}</b></div>`);
+ return rows.length?`<div class="meta">${rows.join('')}</div>`:'';}
+// Provenance (§5.1). A source may be another concept (graph link), an external
+// URL, or a scope descriptor that is not followable at all.
+function srcList(n){const s=n.sources||[];if(!s.length)return'';
+ return `<div class="rel"><h4>Sources</h4>${s.map(x=>{
+  const used=x.usage_count!=null?`used ${x.usage_count}×${x.usage_window?` (${x.usage_window})`:''}`:'';
+  const sig=[x.author,used,x.last_modified].filter(Boolean).join(' · ');
+  const label=esc(x.title||x.resource)+(sig?` <span class="sig">(${esc(sig)})</span>`:'');
+  if(x.cid&&byId[x.cid])return `<a data-go="${esc(x.cid)}">${label}</a>`;
+  if(/^https?:\/\//i.test(x.resource))return `<a href="${esc(x.resource)}" target="_blank" rel="noopener">${label}</a>`;
+  return `<span class="empty">${label}</span>`;}).join('')}</div>`;}
+// Resolve an in-body markdown link href to a concept id, mirroring build()'s
+// resolution: strip #anchor, require .md, absolute strips leading /, relative
+// resolves against the current concept's dir. Returns null if it's not a concept.
+function resolveHref(cid,href){let t=(href||'').split('#')[0];if(!t.endsWith('.md'))return null;
+ let tgt;if(t[0]==='/'){tgt=t.replace(/^\/+/,'').slice(0,-3);}
+ else{const base=cid.split('/').slice(0,-1);
+  for(const seg of t.slice(0,-3).split('/')){if(seg===''||seg==='.')continue;
+   if(seg==='..'){if(!base.length)return null;base.pop();}else base.push(seg);}
+  tgt=base.join('/');}
+ return byId[tgt]?tgt:null;}
 function show(id){const n=byId[id];if(!n)return;const c=color[n.type];
  side.innerHTML=`<span class="type" style="background:${c}">${esc(n.type)}</span>
  <h2>${esc(n.title)}</h2><div class="desc">${esc(n.description)||'<span class=empty>no description</span>'}</div>
  <div class="tags">${(n.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
- ${relList('Links to',outL[id])}${relList('Cited by',inL[id])}
- <div class="body">${n.body?marked.parse(n.body):'<span class=empty>empty body</span>'}</div>`;
- side.querySelectorAll('[data-go]').forEach(a=>a.onclick=()=>select(a.getAttribute('data-go')));}
+ ${badges(n)}${metaBlock(n)}${srcList(n)}${relList('Links to',outL[id])}${relList('Cited by',inL[id])}
+ <div class="body">${n.body?DOMPurify.sanitize(marked.parse(n.body)):'<span class=empty>empty body</span>'}</div>`;
+ side.querySelectorAll('[data-go]').forEach(a=>a.onclick=()=>select(a.getAttribute('data-go')));
+ side.querySelectorAll('.body a[href]').forEach(a=>{const tgt=resolveHref(id,a.getAttribute('href'));
+  if(tgt)a.onclick=e=>{e.preventDefault();select(tgt);};});}
 function select(id){const ele=cy.getElementById(id);if(!ele.length)return;show(id);
  cy.elements().removeClass('hl').addClass('dim');const nb=ele.closedNeighborhood();nb.removeClass('dim');ele.addClass('hl');
  cy.animate({center:{eles:ele},duration:250});
@@ -195,21 +330,24 @@ function select(id){const ele=cy.getElementById(id);if(!ele.length)return;show(i
 cy.on('tap','node',e=>select(e.target.id()));
 cy.on('tap',e=>{if(e.target===cy)cy.elements().removeClass('dim hl');});
 function applyFilter(){const q=document.getElementById('search').value.toLowerCase();const ty=document.getElementById('type').value;
- cy.nodes().forEach(n=>{const d=n.data();
+ cy.batch(()=>cy.nodes().forEach(n=>{const d=n.data();
   const m=(!q||(d.title+' '+d.type+' '+d.description+' '+(d.tags||[]).join(' ')).toLowerCase().includes(q))
         &&(!ty||d.type===ty)&&!off.has(d.type);
-  n.style('display',m?'element':'none');});}
-document.getElementById('search').oninput=applyFilter;
+  n.style('display',m?'element':'none');}));}
+let debounce;
+document.getElementById('search').oninput=()=>{clearTimeout(debounce);debounce=setTimeout(applyFilter,150);};
 document.getElementById('type').oninput=applyFilter;
 const tysel=document.getElementById('type');types.forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=t;tysel.appendChild(o);});
-document.getElementById('layout').onchange=e=>{cy.layout({name:e.target.value,animate:true,padding:40,
- nodeRepulsion:9000,idealEdgeLength:90}).run();};
+let curLayout='__LAYOUT__';
+document.getElementById('layout').onchange=e=>{const v=e.target.value;
+ if(v==='cose'&&NODES.length>__COSEMAX__&&!confirm(`force layout on ${NODES.length} concepts can freeze this tab — run anyway?`)){e.target.value=curLayout;return;}
+ curLayout=v;cy.layout({name:v,animate:true,padding:40,nodeRepulsion:9000,idealEdgeLength:90}).run();};
 document.getElementById('legend').innerHTML=types.map(t=>`<span class="chip" data-t="${esc(t)}"><span class="dot" style="background:${color[t]}"></span>${esc(t)} (${NODES.filter(n=>n.type===t).length})</span>`).join('');
 document.querySelectorAll('#legend .chip').forEach(ch=>ch.onclick=()=>{const t=ch.getAttribute('data-t');
  if(off.has(t)){off.delete(t);ch.classList.remove('off');}else{off.add(t);ch.classList.add('off');}applyFilter();});
 document.getElementById('layout').value='__LAYOUT__';
 const Q=new URLSearchParams(location.search),QL=Q.get('layout'),QS=Q.get('select');
-if(QL&&[...document.querySelectorAll('#layout option')].some(o=>o.value===QL)){document.getElementById('layout').value=QL;cy.layout({name:QL,animate:false,padding:40,nodeRepulsion:9000,idealEdgeLength:90}).run();}
+if(QL&&[...document.querySelectorAll('#layout option')].some(o=>o.value===QL)){document.getElementById('layout').value=QL;curLayout=QL;cy.layout({name:QL,animate:false,padding:40,nodeRepulsion:9000,idealEdgeLength:90}).run();}
 function fromHash(){try{const h=decodeURIComponent((location.hash||'').slice(1));if(h&&byId[h])select(h);}catch(e){}}
 addEventListener('hashchange',fromHash);
 if(QS&&byId[QS])select(QS);else fromHash();
@@ -217,8 +355,21 @@ if(QS&&byId[QS])select(QS);else fromHash();
 
 
 def render(bundle: Path, out: Path, title: str | None = None, link: str | None = None,
-           layout: str = "cose", og_image: str | None = None):
+           layout: str | None = None, og_image: str | None = None,
+           max_nodes: int | None = None):
     nodes, edges = build(bundle)
+    if max_nodes is not None and len(nodes) > max_nodes:
+        sys.exit(f"error: {len(nodes)} concepts exceeds --max-nodes {max_nodes}")
+    if layout is None:
+        layout = "cose" if len(nodes) <= AUTO_COSE_MAX else "concentric"
+        if layout != "cose":
+            print(f"note: {len(nodes)} concepts > {AUTO_COSE_MAX} — using the linear 'concentric' "
+                  "layout (force freezes the page at this size; pass --layout cose to override)",
+                  file=sys.stderr)
+    if len(nodes) > SCALE_WARN:
+        print(f"warning: {len(nodes)} concepts — the page will load slowly and read as a hairball; "
+              f"consider rendering a subtree, e.g. okf_visualize.py {bundle}/<subdir>",
+              file=sys.stderr)
     name = title or f"{bundle.resolve().parent.name}/{bundle.name}"
     src = f' <a class="src" href="{link}" target="_blank" rel="noopener">source ↗</a>' if link else ""
     aesc = lambda s: (s or "").replace("&", "&amp;").replace('"', "&quot;").replace("<", "&lt;").replace(">", "&gt;")
@@ -227,6 +378,7 @@ def render(bundle: Path, out: Path, title: str | None = None, link: str | None =
     og_img = (f'<meta property="og:image" content="{aesc(og_image)}">\n'
               f'<meta name="twitter:image" content="{aesc(og_image)}">') if og_image else ""
     subs = {"__NAME__": name, "__LINK__": src, "__LAYOUT__": layout,
+            "__COSEMAX__": str(AUTO_COSE_MAX),
             "__OGTITLE__": og_title, "__OGDESC__": og_desc, "__OGIMAGE__": og_img,
             "__N__": str(len(nodes)), "__E__": str(len(edges)),
             "__NODES__": json_for_script(nodes), "__EDGES__": json_for_script(edges)}
@@ -238,15 +390,31 @@ def render(bundle: Path, out: Path, title: str | None = None, link: str | None =
     return len(nodes), len(edges)
 
 
+def _force_utf8_stdio() -> None:
+    """Reconfigure stdout/stderr to UTF-8 so status lines never crash on a
+    cp1252 (default Windows) console. `errors="replace"` is a fallback."""
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            try:
+                reconfigure(encoding="utf-8", errors="replace")
+            except (ValueError, OSError):
+                pass
+
+
 def main() -> int:
+    _force_utf8_stdio()
     ap = argparse.ArgumentParser(description="Render an OKF bundle as a self-contained HTML graph.")
     ap.add_argument("bundle", type=Path)
     ap.add_argument("-o", "--out", type=Path, default=None)
     ap.add_argument("-t", "--title", default=None, help="graph title (default: parent/bundle dir name)")
     ap.add_argument("-l", "--link", default=None, help="optional source URL shown in the header")
-    ap.add_argument("--layout", default="cose",
+    ap.add_argument("--layout", default=None,
                     choices=["cose", "concentric", "breadthfirst", "circle", "grid"],
-                    help="initial graph layout (default: cose)")
+                    help=f"initial graph layout (default: cose, or concentric above {AUTO_COSE_MAX} "
+                         "concepts — force layout freezes the page on large bundles)")
+    ap.add_argument("--max-nodes", type=int, default=None,
+                    help="refuse to render bundles with more concepts than this (useful in CI)")
     ap.add_argument("--og-image", default=None,
                     help="absolute URL for the social-preview image (og:image / twitter:image)")
     args = ap.parse_args()
@@ -255,7 +423,7 @@ def main() -> int:
         return 2
     out = args.out or (args.bundle / "viz.html")
     n, e = render(args.bundle, out, title=args.title, link=args.link, layout=args.layout,
-                  og_image=args.og_image)
+                  og_image=args.og_image, max_nodes=args.max_nodes)
     print(f"rendered {n} concepts, {e} links -> {out}")
     return 0
 

@@ -531,6 +531,42 @@
       "skillFolderHash": "a8b3112ee428fbfdf9df371c94d6e07635f89b42",
       "installedAt": "2026-09-14T20:19:57.558Z",
       "updatedAt": "2026-09-14T20:19:57.558Z"
+    },
+    "backfill": {
+      "source": "scaccogatto/okf-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/scaccogatto/okf-skills.git",
+      "skillPath": "skills/backfill/SKILL.md",
+      "skillFolderHash": "b0149a3fe235a7b91fc451d67334a43fe41e7f2f",
+      "installedAt": "2026-09-15T18:34:01.703Z",
+      "updatedAt": "2026-09-15T18:34:01.703Z"
+    },
+    "okf": {
+      "source": "scaccogatto/okf-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/scaccogatto/okf-skills.git",
+      "skillPath": "skills/okf/SKILL.md",
+      "skillFolderHash": "3fb742c8b60ac32000c7b3a71b0b1e62474f67a2",
+      "installedAt": "2026-09-15T18:34:01.705Z",
+      "updatedAt": "2026-09-15T18:34:01.705Z"
+    },
+    "validate": {
+      "source": "scaccogatto/okf-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/scaccogatto/okf-skills.git",
+      "skillPath": "skills/validate/SKILL.md",
+      "skillFolderHash": "7089e600b15e7b6ded9f80429b0265aecfdd40d5",
+      "installedAt": "2026-09-15T18:34:01.714Z",
+      "updatedAt": "2026-09-15T18:34:01.714Z"
+    },
+    "visualize": {
+      "source": "scaccogatto/okf-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/scaccogatto/okf-skills.git",
+      "skillPath": "skills/visualize/SKILL.md",
+      "skillFolderHash": "33aba1f1b95d00d880e184218f3dff48a7dcdbb4",
+      "installedAt": "2026-09-15T18:34:01.715Z",
+      "updatedAt": "2026-09-15T18:34:01.715Z"
     }
   }
 }

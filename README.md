@@ -406,11 +406,32 @@ uv tool upgrade graphifyy
 graphify install --platform agents
 ```
 
-### 3) codebase-memory-mcp - Knowledge Graph
+### 3) Codebase-memory-mcp - Knowledge Graph
 
 ```bash
 # Install and Upgrade
 curl -fsSL https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/install.sh | bash
+```
+
+### 4) Herdr - Terminal Multiplexer for AI Agents
+
+```bash
+# Install and Upgrade
+npx skills add herdrdev/herdr --skill herdr -g
+```
+
+### 5) OKF (Open Knowledge Format) - LLM Wiki Based Knowledge Graph
+
+```bash
+# Install and Upgrade
+npx skills add scaccogatto/okf-skills -g
+```
+
+### 6) Archify - Architecture Diagram Generator
+
+```bash
+# Install and Upgrade
+npx skills add tt-a1i/archify -g
 ```
 
 ## Linux Development Environment Setup
