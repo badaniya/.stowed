@@ -1,0 +1,7 @@
+name = "Close & remove: NVO-HARNESS-WORKTREE"
+type = "form"
+command = "bash ~/.config/herdr-spreader/nvo-harness-worktree-remove-notify.sh '{{.Value}}'"
+
+[form]
+prompt = "JIRA# to close and remove (add ' --force' to discard unpushed/dirty changes)"
+placeholder = "JIRA# [--force]"

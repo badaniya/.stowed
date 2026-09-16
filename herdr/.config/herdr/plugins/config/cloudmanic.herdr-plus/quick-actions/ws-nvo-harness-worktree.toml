@@ -1,0 +1,7 @@
+name = "Open workspace: NVO-HARNESS-WORKTREE"
+type = "form"
+command = "bash ~/.config/herdr-spreader/nvo-harness-worktree-notify.sh '{{.Value}}'"
+
+[form]
+prompt = "JIRA#, upstream version (e.g. NVO-15650 25.16.0)"
+placeholder = "JIRA# upstream-version"
