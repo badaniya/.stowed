@@ -1,6 +1,7 @@
 workspaces:
   - name: "${WORKSPACE_NAME}"
     root: ${WORKTREE_DIR}
+    focus: true
     tabs:
       # ── 1 - Agent ────────────────────────────────────────────────────
       # Claude Code, already cd'd into the new worktree on its own branch

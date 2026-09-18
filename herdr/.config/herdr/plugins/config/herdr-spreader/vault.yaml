@@ -1,6 +1,7 @@
 workspaces:
   - name: VAULT
     root: ~/vaults/work
+    focus: true
     tabs:
       - label: 1 - Notes
         panes:

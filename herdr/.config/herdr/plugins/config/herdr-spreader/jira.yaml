@@ -1,6 +1,7 @@
 workspaces:
   - name: JIRA
     root: ~/workspace/badaniya
+    focus: true
     tabs:
       - label: 1 - JIRA
         panes:

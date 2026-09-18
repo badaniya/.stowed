@@ -26,13 +26,14 @@
           "Editor-Plugin-Version": "copilot-chat/0.35.0",
           "Copilot-Integration-Id": "vscode-chat"
         },
+        "compat": {
+          "supportsMidConvoSystemMessages": true,
+          "forceAdaptiveThinking": true
+        },
         "thinkingLevelMap": {
           "off": null,
           "xhigh": "xhigh",
           "max": "max"
-        },
-        "compat": {
-          "forceAdaptiveThinking": true
         }
       },
       {
@@ -60,13 +61,14 @@
           "Editor-Plugin-Version": "copilot-chat/0.35.0",
           "Copilot-Integration-Id": "vscode-chat"
         },
+        "compat": {
+          "supportsMidConvoSystemMessages": true,
+          "forceAdaptiveThinking": true
+        },
         "thinkingLevelMap": {
           "off": null,
           "xhigh": "xhigh",
           "max": "max"
-        },
-        "compat": {
-          "forceAdaptiveThinking": true
         }
       },
       {
@@ -158,14 +160,15 @@
           "Editor-Plugin-Version": "copilot-chat/0.35.0",
           "Copilot-Integration-Id": "vscode-chat"
         },
+        "compat": {
+          "supportsMidConvoSystemMessages": true,
+          "forceAdaptiveThinking": true,
+          "supportsTemperature": false
+        },
         "thinkingLevelMap": {
           "xhigh": "xhigh",
           "max": "max",
           "minimal": "low"
-        },
-        "compat": {
-          "forceAdaptiveThinking": true,
-          "supportsTemperature": false
         }
       },
       {
@@ -193,14 +196,15 @@
           "Editor-Plugin-Version": "copilot-chat/0.35.0",
           "Copilot-Integration-Id": "vscode-chat"
         },
+        "compat": {
+          "supportsMidConvoSystemMessages": true,
+          "forceAdaptiveThinking": true,
+          "supportsTemperature": false
+        },
         "thinkingLevelMap": {
           "xhigh": "xhigh",
           "max": "max",
           "minimal": "low"
-        },
-        "compat": {
-          "forceAdaptiveThinking": true,
-          "supportsTemperature": false
         }
       },
       {
@@ -513,7 +517,9 @@
           "max": null
         },
         "compat": {
-          "supportsOpenAIGrammarTools": true
+          "supportsOpenAIGrammarTools": true,
+          "supportsMidConvoSystemMessages": true,
+          "supportsAdditionalTools": true
         }
       },
       {
@@ -551,7 +557,9 @@
           "max": null
         },
         "compat": {
-          "supportsOpenAIGrammarTools": true
+          "supportsOpenAIGrammarTools": true,
+          "supportsMidConvoSystemMessages": true,
+          "supportsAdditionalTools": true
         }
       },
       {
@@ -632,7 +640,9 @@
           "max": null
         },
         "compat": {
-          "supportsOpenAIGrammarTools": true
+          "supportsOpenAIGrammarTools": true,
+          "supportsMidConvoSystemMessages": true,
+          "supportsAdditionalTools": true
         }
       },
       {
@@ -679,7 +689,9 @@
           "max": "max"
         },
         "compat": {
-          "supportsOpenAIGrammarTools": true
+          "supportsOpenAIGrammarTools": true,
+          "supportsMidConvoSystemMessages": true,
+          "supportsAdditionalTools": true
         }
       },
       {
@@ -726,7 +738,9 @@
           "max": "max"
         },
         "compat": {
-          "supportsOpenAIGrammarTools": true
+          "supportsOpenAIGrammarTools": true,
+          "supportsMidConvoSystemMessages": true,
+          "supportsAdditionalTools": true
         }
       },
       {
@@ -773,7 +787,9 @@
           "max": "max"
         },
         "compat": {
-          "supportsOpenAIGrammarTools": true
+          "supportsOpenAIGrammarTools": true,
+          "supportsMidConvoSystemMessages": true,
+          "supportsAdditionalTools": true
         }
       },
       {
@@ -820,7 +836,9 @@
           "max": "max"
         },
         "compat": {
-          "supportsOpenAIGrammarTools": true
+          "supportsOpenAIGrammarTools": true,
+          "supportsMidConvoSystemMessages": true,
+          "supportsAdditionalTools": true
         }
       },
       {
@@ -970,7 +988,8 @@
         "compat": {
           "supportsStore": false,
           "supportsDeveloperRole": false,
-          "supportsReasoningEffort": false
+          "supportsReasoningEffort": false,
+          "supportsMidConvoSystemMessages": true
         }
       },
       {
@@ -1043,9 +1062,9 @@
         }
       }
     ],
-    "checkedAt": 1789593704663,
-    "lastModified": 1788867863000,
-    "etag": "W/\"6921ae004baf0a792a1fa6e168e3b7be\""
+    "checkedAt": 1789758655948,
+    "lastModified": 1789648040000,
+    "etag": "W/\"60c904cf5eca94ecd0f94d3a4b4223de\""
   },
   "anthropic": {
     "models": [
@@ -1068,12 +1087,9 @@
         },
         "contextWindow": 1000000,
         "maxTokens": 128000,
-        "thinkingLevelMap": {
-          "off": null,
-          "xhigh": "xhigh",
-          "max": "max"
-        },
         "compat": {
+          "supportsMidConvoSystemMessages": true,
+          "supportsMidConvoToolChanges": true,
           "forceAdaptiveThinking": true,
           "supportsStrictTools": true,
           "allowedFallbackModels": [
@@ -1098,6 +1114,11 @@
               }
             }
           ]
+        },
+        "thinkingLevelMap": {
+          "off": null,
+          "xhigh": "xhigh",
+          "max": "max"
         }
       },
       {
@@ -1121,6 +1142,8 @@
         "maxTokens": 128000,
         "compat": {
           "supportsMidConvoEffort": true,
+          "supportsMidConvoSystemMessages": true,
+          "supportsMidConvoToolChanges": true,
           "forceAdaptiveThinking": true,
           "supportsStrictTools": true
         },
@@ -1297,14 +1320,16 @@
         },
         "contextWindow": 1000000,
         "maxTokens": 128000,
-        "thinkingLevelMap": {
-          "xhigh": "xhigh",
-          "max": "max"
-        },
         "compat": {
+          "supportsMidConvoSystemMessages": true,
+          "supportsMidConvoToolChanges": true,
           "forceAdaptiveThinking": true,
           "supportsTemperature": false,
           "supportsStrictTools": true
+        },
+        "thinkingLevelMap": {
+          "xhigh": "xhigh",
+          "max": "max"
         }
       },
       {
@@ -1328,6 +1353,8 @@
         "maxTokens": 128000,
         "compat": {
           "supportsMidConvoEffort": true,
+          "supportsMidConvoSystemMessages": true,
+          "supportsMidConvoToolChanges": true,
           "forceAdaptiveThinking": true,
           "supportsTemperature": false,
           "supportsStrictTools": true
@@ -1440,8 +1467,8 @@
         }
       }
     ],
-    "checkedAt": 1789593704686,
-    "lastModified": 1788432010000,
-    "etag": "W/\"5fdc170fdb3eb24c0e164a059918e474\""
+    "checkedAt": 1789758655926,
+    "lastModified": 1789648031000,
+    "etag": "W/\"55c75c28bdf0cb4bb15080d80f87acb3\""
   }
 }

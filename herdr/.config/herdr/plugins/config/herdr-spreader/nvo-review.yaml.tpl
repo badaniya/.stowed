@@ -1,6 +1,7 @@
 workspaces:
   - name: NVO-REVIEW - ${WORKSPACE_LABEL}
     root: ~/workspace/badaniya/NVO-REVIEW
+    focus: true
     tabs:
       # ── 1 - Agent ────────────────────────────────────────────────────
       # pi agent for the review session — lands in the repo root on the branch

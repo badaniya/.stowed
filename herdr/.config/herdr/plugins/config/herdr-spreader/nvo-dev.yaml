@@ -1,6 +1,7 @@
 workspaces:
   - name: NVO-DEV
     root: ~/workspace/badaniya/NVO-DEV
+    focus: true
     tabs:
       - label: 1 - Build
         panes:
