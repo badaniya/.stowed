@@ -1,0 +1,148 @@
+[
+  {
+    "id": "test_001",
+    "name": "Web Homepage H1 Review",
+    "scenario": "Review an H1 headline for a website homepage",
+    "input": "extreme networks is reinventing networking through Extreme Platform ONE",
+    "expected_output": "Should identify: (1) incorrect capitalization - 'extreme networks' should be 'Extreme Networks'; (2) H1 should use Title Case formatting; (3) first reference to Extreme Platform ONE™ needs superscript TM and full name used",
+    "corrected": "Extreme Networks is Reinventing Networking Through Extreme Platform ONE™"
+  },
+  {
+    "id": "test_002",
+    "name": "Email Subject Line",
+    "scenario": "Review email subject line for compliance",
+    "input": "Your Organization Can Achieve Zero Trust Security in Just 30 Days With Extreme Platform ONE",
+    "expected_output": "Should identify: (1) subject lines should be Sentence case, not Title Case; (2) potential absolute statement risk - 'in just 30 days' may need hedging; (3) Extreme Platform ONE™ needs superscript TM on first reference",
+    "corrected": "Your organization can achieve zero trust security more quickly with Extreme Platform ONE™"
+  },
+  {
+    "id": "test_003",
+    "name": "Product Name Compliance",
+    "scenario": "Check for correct use of Extreme Platform ONE in marketing copy",
+    "input": "Manage your network with EP1 and experience the power of platformization. The platform provides visibility across all devices.",
+    "expected_output": "Should identify: (1) 'EP1' is forbidden - must use full name 'Extreme Platform ONE™'; (2) distinguish between 'platformization' (approach, lowercase) and 'Extreme Platform ONE' (branded product); (3) 'the platform' may be ambiguous - could use 'workspace' or 'Extreme Platform ONE' for clarity",
+    "corrected": "Manage your network with Extreme Platform ONE™ and experience the power of platformization. The workspace provides visibility across all devices."
+  },
+  {
+    "id": "test_004",
+    "name": "Inclusive Language Check",
+    "scenario": "Identify and correct non-inclusive language in technical documentation",
+    "input": "Our whitelist feature prevents unauthorized access by using a blacklist of known threats. The master controller manages all slave devices in the network.",
+    "expected_output": "Should identify non-inclusive terms: (1) 'whitelist' → 'permit list'; (2) 'blacklist' → 'deny list'; (3) 'master' → 'primary' or 'controller'; (4) 'slave' → 'agent' or 'client'",
+    "corrected": "Our permit list feature prevents unauthorized access by using a deny list of known threats. The primary controller manages all agent devices in the network."
+  },
+  {
+    "id": "test_005",
+    "name": "Absolute Statement Compliance",
+    "scenario": "Identify legal risks from absolute statements",
+    "input": "Extreme Platform ONE eliminates all security threats and guarantees 100% uptime for your network infrastructure.",
+    "expected_output": "Should flag: (1) 'eliminates all security threats' - too absolute, needs hedging with 'can help', 'may reduce'; (2) 'guarantees 100% uptime' - creates Legal risk, should use 'helps improve', 'can increase'",
+    "corrected": "Extreme Platform ONE™ can help reduce security threats and may increase uptime for your network infrastructure."
+  },
+  {
+    "id": "test_006",
+    "name": "Number Formatting",
+    "scenario": "Check proper formatting of numbers, percentages, units",
+    "input": "Our customers achieved a 45% improvement in network efficiency, managing over 5,000 devices across 250 locations worldwide. Speeds up to 400Gbps.",
+    "expected_output": "Should identify: (1) percentages look correct (45%); (2) numbers over 10 correct (5,000 devices); (3) spacing issue - should be '400 Gbps' not '400Gbps' (per NIST/ISO guidelines)"
+  },
+  {
+    "id": "test_007",
+    "name": "Date & Time Formatting",
+    "scenario": "Verify correct date and time formatting for US audience",
+    "input": "Join us on March 5th, 2026 at 2:30pm PST for our webinar.",
+    "expected_output": "Should identify: (1) 'March 5th' - remove ordinal suffix, use 'March 5'; (2) '2:30pm' - should be '2:30 p.m.' (with space and periods); (3) 'PST' is acceptable but verify DST - if summer, should be 'PDT'",
+    "corrected": "Join us on March 5, 2026 at 2:30 p.m. PDT for our webinar."
+  },
+  {
+    "id": "test_008",
+    "name": "Em Dash & Punctuation",
+    "scenario": "Check proper em dash usage and avoid AI-generated appearance",
+    "input": "Our solution - which is used by tens of thousands of customers - helps networks become more secure and efficient.",
+    "expected_output": "Should identify: (1) excessive em dash use suggests AI generation, could simplify; (2) em dashes should have no spaces (— not — or - ); (3) could use commas or parentheses instead for readability"
+  },
+  {
+    "id": "test_009",
+    "name": "Brand Company Reference",
+    "scenario": "Check correct use of company name and pronoun",
+    "input": "Extreme Networks' innovative platform helps their customers manage networks more effectively.",
+    "expected_output": "Should identify: (1) avoid possessive plural 'Extreme Networks'' - rephrase; (2) use 'it' not 'their' when referring to company - 'helps its customers' or rephrase; (3) first reference to Extreme - looks correct; (4) subsequent reference should be 'Extreme' not 'Extreme Networks'"
+  },
+  {
+    "id": "test_010",
+    "name": "Contractions & Tone",
+    "scenario": "Check appropriate use of contractions for conversational tone",
+    "input": "You can't manage your network effectively if you're using outdated tools. Let's show you what's possible when you've got the right platform.",
+    "expected_output": "Should identify: (1) common contractions correct (can't, you're, let's, what's, you've); (2) tone is appropriately conversational for marketing copy; (3) usage acceptable for clarity and audience engagement"
+  },
+  {
+    "id": "test_011",
+    "name": "Customer Quote Validation",
+    "scenario": "Check customer quote usage for compliance",
+    "input": "According to a recent unnamed customer, 'Extreme's platform is the best solution we've ever implemented and it's absolutely the most secure option available.'",
+    "expected_output": "Should flag: (1) 'unnamed customer' - needs approval and proper attribution; (2) 'best solution' and 'most secure' - absolute statements need substantiation; (3) avoid possessive 'Extreme's' if possible; (4) quote requires Customer Programs collaboration"
+  },
+  {
+    "id": "test_012",
+    "name": "Technical Terminology",
+    "scenario": "Check proper use of networking/technical terms",
+    "input": "Deploy our on-prem solution with auto discovery to manage all end points across your multi-vendor infrastructure with 24-7 support.",
+    "expected_output": "Should identify: (1) 'on-prem' - use 'on-premises' instead; (2) 'auto discovery' - should be 'auto-discovery' (hyphenated); (3) 'end points' - should be 'endpoint' (one word); (4) 'multi-vendor' - correct; (5) '24-7' - correct usage"
+  },
+  {
+    "id": "test_013",
+    "name": "List Formatting & Grammar",
+    "scenario": "Check proper list formatting and grammatical parallelism",
+    "input": "Our platform offers:\n• Centralized management of your entire network.\n• You can see real-time visibility.\n• Automating security and compliance tasks.\n• Report generation is simplified.",
+    "expected_output": "Should identify grammatical non-parallelism: (1) first item is noun phrase; (2) second starts with pronoun; (3) third starts with gerund; (4) fourth is passive. All should follow same structure. Corrected: all should start with imperative verbs or all be noun phrases"
+  },
+  {
+    "id": "test_014",
+    "name": "Serial Comma (Oxford Comma)",
+    "scenario": "Check appropriate use of Oxford comma",
+    "input": "The solution helps IT teams, security professionals and network administrators collaborate more effectively.",
+    "expected_output": "Grammatically ambiguous without Oxford comma - could interpret as 'security professionals and network administrators' being a single group. Should include comma before 'and': 'IT teams, security professionals, and network administrators'"
+  },
+  {
+    "id": "test_015",
+    "name": "Colloquialisms & Vague Language",
+    "scenario": "Identify and remove colloquialisms that won't localize well",
+    "input": "Don't let your network go out on a limb. We've got your back and we're ready to hit the ground running with a best-in-class solution that knocks it out of the park.",
+    "expected_output": "Should identify multiple colloquialisms: 'go out on a limb', 'we've got your back', 'hit the ground running', 'best-in-class', 'knocks it out of the park' - replace with precise, professional language that translates well"
+  },
+  {
+    "id": "test_016",
+    "name": "Agent ONE Product Name",
+    "scenario": "Verify correct usage of Extreme Agent ONE trademark",
+    "input": "Use Agent ONE Coworker to automate routine tasks. Our Extreme Agent 1 operator provides intelligent automation.",
+    "expected_output": "Should identify: (1) first reference needs full name 'Extreme Agent ONE™' with superscript TM; (2) 'Agent 1' should be 'Agent ONE' (spelled out); (3) 'Extreme Agent 1 operator' - should be 'Extreme Agent ONE™ Operator'"
+  },
+  {
+    "id": "test_017",
+    "name": "ExtremeCloud Terminology",
+    "scenario": "Check proper capitalization of ExtremeCloud vs. cloud-managed",
+    "input": "Deploy through the extreme cloud platform or use our cloud managed network solution for on-premises infrastructure.",
+    "expected_output": "Should identify: (1) 'extreme cloud' should be 'ExtremeCloud' (one word, proper capitalization); (2) 'cloud managed' should be 'cloud-managed' when used as compound modifier before noun"
+  },
+  {
+    "id": "test_018",
+    "name": "Sentence Case vs. Title Case",
+    "scenario": "Check appropriate capitalization for web H2 subheading",
+    "input": "Manage Security, Improve Compliance, And Reduce Costs Across Your Entire Infrastructure",
+    "expected_output": "H2 subheading should use Sentence case, not Title Case. Corrected: 'Manage security, improve compliance, and reduce costs across your entire infrastructure'"
+  },
+  {
+    "id": "test_019",
+    "name": "Button Copy Formatting",
+    "scenario": "Check button copy for correct Title Case and length",
+    "input": "Click Here To Download Our Comprehensive Guide About How To Manage Network Security Issues More Effectively",
+    "expected_output": "Should identify: (1) button copy should be max 3 words; (2) should follow 'Verb + Article + Noun' pattern; (3) current copy is 13 words - too long. Corrected: 'Download the Report' or 'Get the Guide'"
+  },
+  {
+    "id": "test_020",
+    "name": "AI-Powered vs. AI-Native",
+    "scenario": "Verify correct descriptor for AI capabilities",
+    "input": "Our AI-native platform leverages machine learning to provide intelligent automation.",
+    "expected_output": "Should identify: 'AI-native' is not approved terminology. Should use 'AI-powered' instead. Corrected: 'Our AI-powered platform...'"
+  }
+]
