@@ -1,5 +1,5 @@
 {
-  "lastUpdated": 1789759720540,
+  "lastUpdated": 1789764582784,
   "skills": [
     {
       "skillId": "morning",
@@ -58,14 +58,6 @@
       "updatedAt": "2026-09-14T21:00:33.306681Z"
     },
     {
-      "skillId": "skill_01A3moCuwSGYV9usdXrk8sDe",
-      "name": "m365-meeting-summary",
-      "description": "Pull meeting data from the Microsoft 365 connector and produce a meeting summary. ALWAYS use this skill when the user asks to summarize a meeting, recap a call, get meeting notes, find action items or decisions from a meeting, \"catch me up\" on a meeting they missed, or asks \"what happened in\" a named meeting — even if they don't say the word \"summary\". Also use for multi-meeting requests like \"recap all my meetings yesterday\", prep briefs on upcoming meetings, or when the user says \"write up notes from my standup\", \"what were the action items from yesterday's planning call\", \"recap the client sync and send it to the team\", or \"summarize my 1:1 with Dana\". Requires the Microsoft 365 connector (outlook_calendar_search, read_resource, chat_message_search, outlook_email_search).",
-      "source": "plugin",
-      "updatedAt": "2026-07-08T23:34:27.381673Z",
-      "backingPluginId": "plugin_01J3bKQ9W4GgDfGZ3dEYsXoU"
-    },
-    {
       "skillId": "skill_01GavvXXQehCUa84rUHdfCLL",
       "name": "funnel-review-prep",
       "description": "Prepare weekly funnel review briefings for executive leadership (CEO, CFO, SVP Sales) aligned to the 13-week quarterly cycle. Use for: funnel health, weekly review prep, CQ/NQ/NQ+1 outlook, deal slips, win linearity, conversion trends, AOP tracking, pipeline anomalies, or exec funnel/pipeline call prep. DO NOT USE for: single opportunity or account lookups (use sales-ai-assistant), ad-hoc bookings pulls without meeting context (use sales-ai-assistant), renewals or churn in isolation (use churn-data-services-analyst), Extreme product or competitive questions (use extreme-kb-research). SCOPE: single-metric question → run only the relevant Section 5 block (2-4 tool calls); full briefing request (prep for funnel call, weekly funnel review, funnel health analysis) → run all core sections plus rotating deep-dive (~15-25 tool calls).",
@@ -81,12 +73,12 @@
       "backingPluginId": "plugin_01WBu34S7PKLBuizF76abP8n"
     },
     {
-      "skillId": "skill_017mCegPY2zrEm9T9wnsyj7K",
-      "name": "sales-ai-assistant",
-      "description": "Extreme Networks sales-productivity assistant covering Salesforce data (accounts, opportunities, contacts, quotes, cases, knowledge articles), pricing and EOS/EOSL lifecycle lookups via Snowflake, sales funnel/pipeline/bookings analytics, Jira issue and CFD triage, TAM case rollups, and email drafting. ALWAYS use this skill when the user asks about a customer account, opportunity, pipeline, quote, support case, knowledge article, SKU price, list price, end-of-sale or end-of-service date, replacement SKU, bookings, forecast, Jira ticket, or asks to draft/send an email — even if they don't name a tool. Also use for account research/summaries, opportunity analysis, and creating Salesforce records. For pure Extreme product/program/competitive knowledge questions with no CRM/pricing/Jira component, defer to the extreme-kb-research skill instead.",
+      "skillId": "skill_01A3moCuwSGYV9usdXrk8sDe",
+      "name": "m365-meeting-summary",
+      "description": "Pull meeting data from the Microsoft 365 connector and produce a meeting summary. ALWAYS use this skill when the user asks to summarize a meeting, recap a call, get meeting notes, find action items or decisions from a meeting, \"catch me up\" on a meeting they missed, or asks \"what happened in\" a named meeting — even if they don't say the word \"summary\". Also use for multi-meeting requests like \"recap all my meetings yesterday\", prep briefs on upcoming meetings, or when the user says \"write up notes from my standup\", \"what were the action items from yesterday's planning call\", \"recap the client sync and send it to the team\", or \"summarize my 1:1 with Dana\". Requires the Microsoft 365 connector (outlook_calendar_search, read_resource, chat_message_search, outlook_email_search).",
       "source": "plugin",
-      "updatedAt": "2026-08-28T00:01:56.836580Z",
-      "backingPluginId": "plugin_018NMU51ibDrS7yEZtK3DRpL"
+      "updatedAt": "2026-07-08T23:34:27.381673Z",
+      "backingPluginId": "plugin_01J3bKQ9W4GgDfGZ3dEYsXoU"
     },
     {
       "skillId": "skill_013Sy12qF15MrDpWc276UdNh",
@@ -95,6 +87,14 @@
       "source": "plugin",
       "updatedAt": "2026-08-28T00:01:51.701696Z",
       "backingPluginId": "plugin_01G3CekrUDM8BpXaj6MGcVx1"
+    },
+    {
+      "skillId": "skill_017mCegPY2zrEm9T9wnsyj7K",
+      "name": "sales-ai-assistant",
+      "description": "Extreme Networks sales-productivity assistant covering Salesforce data (accounts, opportunities, contacts, quotes, cases, knowledge articles), pricing and EOS/EOSL lifecycle lookups via Snowflake, sales funnel/pipeline/bookings analytics, Jira issue and CFD triage, TAM case rollups, and email drafting. ALWAYS use this skill when the user asks about a customer account, opportunity, pipeline, quote, support case, knowledge article, SKU price, list price, end-of-sale or end-of-service date, replacement SKU, bookings, forecast, Jira ticket, or asks to draft/send an email — even if they don't name a tool. Also use for account research/summaries, opportunity analysis, and creating Salesforce records. For pure Extreme product/program/competitive knowledge questions with no CRM/pricing/Jira component, defer to the extreme-kb-research skill instead.",
+      "source": "plugin",
+      "updatedAt": "2026-08-28T00:01:56.836580Z",
+      "backingPluginId": "plugin_018NMU51ibDrS7yEZtK3DRpL"
     },
     {
       "skillId": "skill_018QVz8M9Mkrm4WGWnyrw6cv",

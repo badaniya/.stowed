@@ -26,5 +26,6 @@
 "agentTracing.langfuse.autoStart": false,
 "agentTracing.additionalExporters": [],
 "chat.useClaudeHooks": true,
-"chat.viewSessions.orientation": "stacked"
+"chat.viewSessions.orientation": "stacked",
+"claudeCode.hideOnboarding": true
 }
