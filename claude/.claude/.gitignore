@@ -2,11 +2,13 @@ backups/
 cache/
 context-mode/
 downloads/
+feedback/
 file-history/
 hooks/.langfuse_config.json
 image-cache/
 jobs/
 paste-cache/
+plugins/synced/
 projects/
 session-env/
 sessions/
@@ -20,6 +22,7 @@ transcripts/
 daemon*
 history.jsonl
 plugin-catalog-cache.json
+policy-limits.json.stamp.json
 mcp-needs-auth-cache.json
 remote-settings.json
 settings.json.bak
