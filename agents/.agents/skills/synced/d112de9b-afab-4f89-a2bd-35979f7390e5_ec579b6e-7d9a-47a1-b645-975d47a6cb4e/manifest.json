@@ -1,5 +1,5 @@
 {
-  "lastUpdated": 1789764582784,
+  "lastUpdated": 1789850006670,
   "skills": [
     {
       "skillId": "morning",
@@ -47,8 +47,9 @@
       "skillId": "skill_01QvcqgjnRPYt3fiRkyT7JL5",
       "name": "extreme-kb-research",
       "description": "Use ONLY for questions about Extreme Networks' own products and programs — (1) Extreme product questions (XIQ, Platform ONE, ExtremeSwitching/Wireless hardware like 4000/5420/5520/5720/7520/7720, AP4000, licensing, CUID), (2) troubleshooting Extreme products, (3) comparing Extreme products vs. competitors (Cisco, HPE/Aruba, Juniper), (4) Extreme program details (partner programs, E-Rate, Enterprise Agreement, sales plays, K-12/stadium verticals). Trigger even for short keyword queries like \"5520 features\" or \"what is CUID.\" Do NOT use for general questions or non-Extreme products (Oracle, Salesforce, Claude, Workato, Snowflake, Microsoft, etc.) even if the user works at Extreme. Mandates the Workato KB Search MCP tool (Extreme_Knowledgebase_Query) as the exclusive research source — never web search — with MANDATORY sources and citations (inline links plus a Sources section) on EVERY response with no exceptions, and a total response time under 30 seconds.",
-      "source": "custom",
-      "updatedAt": "2026-07-02T21:38:21.960937Z"
+      "source": "plugin",
+      "updatedAt": "2026-07-02T21:38:21.960820Z",
+      "backingPluginId": "plugin_01HVvGuMZwswFJkcAc9y3EcJ"
     },
     {
       "skillId": "pptx",
@@ -62,7 +63,8 @@
       "name": "funnel-review-prep",
       "description": "Prepare weekly funnel review briefings for executive leadership (CEO, CFO, SVP Sales) aligned to the 13-week quarterly cycle. Use for: funnel health, weekly review prep, CQ/NQ/NQ+1 outlook, deal slips, win linearity, conversion trends, AOP tracking, pipeline anomalies, or exec funnel/pipeline call prep. DO NOT USE for: single opportunity or account lookups (use sales-ai-assistant), ad-hoc bookings pulls without meeting context (use sales-ai-assistant), renewals or churn in isolation (use churn-data-services-analyst), Extreme product or competitive questions (use extreme-kb-research). SCOPE: single-metric question → run only the relevant Section 5 block (2-4 tool calls); full briefing request (prep for funnel call, weekly funnel review, funnel health analysis) → run all core sections plus rotating deep-dive (~15-25 tool calls).",
       "source": "custom",
-      "updatedAt": "2026-08-05T05:09:03.369524Z"
+      "updatedAt": "2026-08-05T05:09:03.369524Z",
+      "backingPluginId": "plugin_01JDi5jCGkzA8N2FVJAdSfcv"
     },
     {
       "skillId": "skill_015g3xXDFRGssqf1YqCTgjvD",
