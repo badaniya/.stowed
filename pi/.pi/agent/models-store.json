@@ -44,7 +44,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "claude-fable-5.1",
@@ -89,7 +90,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "claude-haiku-4.5",
@@ -128,7 +130,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "claude-opus-4.7",
@@ -173,7 +176,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "claude-opus-4.8",
@@ -219,7 +223,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "claude-opus-5",
@@ -265,7 +270,59 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
+      },
+      {
+        "id": "claude-opus-5.5",
+        "name": "Claude Opus 5.5",
+        "api": "anthropic-messages",
+        "provider": "github-copilot",
+        "baseUrl": "https://api.individual.githubcopilot.com",
+        "reasoning": true,
+        "input": [
+          "text",
+          "image"
+        ],
+        "cost": {
+          "input": 4,
+          "output": 20,
+          "cacheRead": 0.2,
+          "cacheWrite": 5
+        },
+        "contextWindow": 1000000,
+        "maxTokens": 128000,
+        "headers": {
+          "User-Agent": "GitHubCopilotChat/0.35.0",
+          "Editor-Version": "vscode/1.107.0",
+          "Editor-Plugin-Version": "copilot-chat/0.35.0",
+          "Copilot-Integration-Id": "vscode-chat"
+        },
+        "compat": {
+          "supportsMidConvoSystemMessages": true,
+          "forceAdaptiveThinking": true,
+          "supportsTemperature": false
+        },
+        "thinkingLevelMap": {
+          "off": null,
+          "minimal": null,
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
+          "xhigh": "xhigh",
+          "max": "max"
+        },
+        "inputLimits": {
+          "images": {
+            "resize": {
+              "maxWidth": 2000,
+              "maxHeight": 2000,
+              "maxBytes": 4718592,
+              "jpegQuality": 80
+            }
+          }
+        },
+        "type": "chat"
       },
       {
         "id": "claude-sonnet-4.6",
@@ -308,7 +365,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "claude-sonnet-5",
@@ -351,7 +409,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "gemini-3.5-flash",
@@ -393,7 +452,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "gemini-3.6-flash",
@@ -435,7 +495,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "gemini-3.7-flash",
@@ -477,7 +538,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "gemini-3.8-flash",
@@ -519,7 +581,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "gpt-5-mini",
@@ -567,7 +630,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "gpt-5.3-codex",
@@ -615,7 +679,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "gpt-5.4",
@@ -674,7 +739,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "gpt-5.4-mini",
@@ -724,7 +790,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "gpt-5.4-nano",
@@ -768,7 +835,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "gpt-5.5",
@@ -827,7 +895,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "gpt-5.6-luna",
@@ -886,7 +955,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "gpt-5.6-sol",
@@ -945,7 +1015,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "gpt-5.6-terra",
@@ -1004,7 +1075,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "gpt-6-astra",
@@ -1032,7 +1104,7 @@
             }
           ]
         },
-        "contextWindow": 1050000,
+        "contextWindow": 1000000,
         "maxTokens": 128000,
         "headers": {
           "User-Agent": "GitHubCopilotChat/0.35.0",
@@ -1063,7 +1135,128 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
+      },
+      {
+        "id": "gpt-6-luna",
+        "name": "GPT-6 Luna",
+        "api": "openai-responses",
+        "provider": "github-copilot",
+        "baseUrl": "https://api.individual.githubcopilot.com",
+        "reasoning": true,
+        "input": [
+          "text",
+          "image"
+        ],
+        "cost": {
+          "input": 0.1,
+          "output": 0.5,
+          "cacheRead": 0.01,
+          "cacheWrite": 0.125,
+          "tiers": [
+            {
+              "inputTokensAbove": 272000,
+              "input": 0.2,
+              "output": 0.75,
+              "cacheRead": 0.02,
+              "cacheWrite": 0.25
+            }
+          ]
+        },
+        "contextWindow": 1000000,
+        "maxTokens": 128000,
+        "headers": {
+          "User-Agent": "GitHubCopilotChat/0.35.0",
+          "Editor-Version": "vscode/1.107.0",
+          "Editor-Plugin-Version": "copilot-chat/0.35.0",
+          "Copilot-Integration-Id": "vscode-chat"
+        },
+        "thinkingLevelMap": {
+          "off": "none",
+          "minimal": null,
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
+          "xhigh": "xhigh",
+          "max": "max"
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true,
+          "supportsMidConvoSystemMessages": true,
+          "supportsAdditionalTools": true
+        },
+        "inputLimits": {
+          "images": {
+            "resize": {
+              "maxWidth": 2000,
+              "maxHeight": 2000,
+              "maxBytes": 4718592,
+              "jpegQuality": 80
+            }
+          }
+        },
+        "type": "chat"
+      },
+      {
+        "id": "gpt-6-sol",
+        "name": "GPT-6 Sol",
+        "api": "openai-responses",
+        "provider": "github-copilot",
+        "baseUrl": "https://api.individual.githubcopilot.com",
+        "reasoning": true,
+        "input": [
+          "text",
+          "image"
+        ],
+        "cost": {
+          "input": 2,
+          "output": 10,
+          "cacheRead": 0.2,
+          "cacheWrite": 2.5,
+          "tiers": [
+            {
+              "inputTokensAbove": 272000,
+              "input": 4,
+              "output": 15,
+              "cacheRead": 0.4,
+              "cacheWrite": 5
+            }
+          ]
+        },
+        "contextWindow": 1000000,
+        "maxTokens": 128000,
+        "headers": {
+          "User-Agent": "GitHubCopilotChat/0.35.0",
+          "Editor-Version": "vscode/1.107.0",
+          "Editor-Plugin-Version": "copilot-chat/0.35.0",
+          "Copilot-Integration-Id": "vscode-chat"
+        },
+        "thinkingLevelMap": {
+          "off": "none",
+          "minimal": null,
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
+          "xhigh": "xhigh",
+          "max": "max"
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true,
+          "supportsMidConvoSystemMessages": true,
+          "supportsAdditionalTools": true
+        },
+        "inputLimits": {
+          "images": {
+            "resize": {
+              "maxWidth": 2000,
+              "maxHeight": 2000,
+              "maxBytes": 4718592,
+              "jpegQuality": 80
+            }
+          }
+        },
+        "type": "chat"
       },
       {
         "id": "grok-4.5",
@@ -1117,7 +1310,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "grok-4.6",
@@ -1171,7 +1365,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "grok-4.7",
@@ -1225,7 +1420,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "kimi-k2.7-code",
@@ -1267,7 +1463,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "kimi-k3",
@@ -1310,7 +1507,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "mai-code-1-flash-picker",
@@ -1344,7 +1542,8 @@
           "high": "high",
           "xhigh": null,
           "max": null
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "mai-code-1.1-flash",
@@ -1389,12 +1588,13 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       }
     ],
-    "checkedAt": 1790033514041,
-    "lastModified": 1790028925000,
-    "etag": "W/\"24b66abcad97b614697067a946da0b04\""
+    "checkedAt": 1790266367246,
+    "lastModified": 1790253614000,
+    "etag": "W/\"8caa77f1a79ebcd0d84fb8c5c79b5dbb\""
   },
   "anthropic": {
     "models": [
@@ -1465,7 +1665,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "claude-fable-5-1",
@@ -1513,7 +1714,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "claude-haiku-4-5",
@@ -1552,7 +1754,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "claude-haiku-4-5-20251001",
@@ -1591,7 +1794,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "claude-opus-4-5",
@@ -1630,7 +1834,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "claude-opus-4-5-20251101",
@@ -1669,7 +1874,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "claude-opus-4-6",
@@ -1712,7 +1918,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "claude-opus-4-7",
@@ -1757,7 +1964,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "claude-opus-4-8",
@@ -1804,7 +2012,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "claude-opus-5",
@@ -1853,7 +2062,62 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
+      },
+      {
+        "id": "claude-opus-5-5",
+        "name": "Claude Opus 5.5",
+        "api": "anthropic-messages",
+        "provider": "anthropic",
+        "baseUrl": "https://api.anthropic.com",
+        "reasoning": true,
+        "input": [
+          "text",
+          "image"
+        ],
+        "cost": {
+          "input": 4,
+          "output": 20,
+          "cacheRead": 0.2,
+          "cacheWrite": 5
+        },
+        "contextWindow": 1000000,
+        "maxTokens": 128000,
+        "thinkingLevelMap": {
+          "off": null,
+          "minimal": null,
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
+          "xhigh": "xhigh",
+          "max": "max"
+        },
+        "compat": {
+          "supportsMidConvoEffort": true,
+          "supportsMidConvoSystemMessages": true,
+          "supportsMidConvoToolChanges": true,
+          "forceAdaptiveThinking": true,
+          "supportsTemperature": false,
+          "supportsStrictTools": true
+        },
+        "promptCache": {
+          "short": 300,
+          "long": 3600
+        },
+        "inputLimits": {
+          "maxRequestBytes": 33554432,
+          "images": {
+            "maxPerRequest": 600,
+            "resize": {
+              "maxWidth": 2000,
+              "maxHeight": 2000,
+              "maxBytes": 4718592,
+              "jpegQuality": 80
+            }
+          }
+        },
+        "type": "chat"
       },
       {
         "id": "claude-sonnet-4-5",
@@ -1892,7 +2156,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "claude-sonnet-4-5-20250929",
@@ -1931,7 +2196,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "claude-sonnet-4-6",
@@ -1974,7 +2240,8 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       },
       {
         "id": "claude-sonnet-5",
@@ -2018,11 +2285,12 @@
               "jpegQuality": 80
             }
           }
-        }
+        },
+        "type": "chat"
       }
     ],
-    "checkedAt": 1790033514046,
-    "lastModified": 1789986562000,
-    "etag": "W/\"54f3f6273cd5d9d87c4dc66edae02f57\""
+    "checkedAt": 1790266367257,
+    "lastModified": 1790253596000,
+    "etag": "W/\"6f3aa1a70db379098bbdda6d0286153f\""
   }
 }

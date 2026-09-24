@@ -528,9 +528,9 @@
       "sourceType": "github",
       "sourceUrl": "https://github.com/tt-a1i/archify.git",
       "skillPath": "archify/SKILL.md",
-      "skillFolderHash": "a8b3112ee428fbfdf9df371c94d6e07635f89b42",
+      "skillFolderHash": "68f9fae4d0b4a17c5cd8cba9682e7306f879d4bb",
       "installedAt": "2026-09-14T20:19:57.558Z",
-      "updatedAt": "2026-09-14T20:19:57.558Z"
+      "updatedAt": "2026-09-24T16:14:15.351Z"
     },
     "backfill": {
       "source": "scaccogatto/okf-skills",
@@ -567,6 +567,15 @@
       "skillFolderHash": "33aba1f1b95d00d880e184218f3dff48a7dcdbb4",
       "installedAt": "2026-09-15T18:34:01.715Z",
       "updatedAt": "2026-09-15T18:34:01.715Z"
+    },
+    "archify-review": {
+      "source": "tt-a1i/archify",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/tt-a1i/archify.git",
+      "skillPath": ".agents/skills/archify-review/SKILL.md",
+      "skillFolderHash": "cd88f8830b8452dde849fdb792b4abd04ebf2cf1",
+      "installedAt": "2026-09-24T16:14:15.353Z",
+      "updatedAt": "2026-09-24T16:14:15.353Z"
     }
   }
 }
