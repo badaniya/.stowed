@@ -298,7 +298,19 @@ nix-env -iA nixpkgs.tuicr
 curl -fsSL tuicr.dev/install.sh | sh
 ```
 
-### 9) Image and Diagram Markdown Support in Neovim
+### 9) GH Dash - Terminal TUI for Git Hub PRs
+
+```bash
+# gh CLI dependency
+
+# Install
+gh extension install dlvhdr/gh-dash
+
+# Upgrade
+gh extension upgrade dlvhdr/gh-dash
+```
+
+### 10) Image and Diagram Markdown Support in Neovim
 
 ```bash
 # Nix dependency
@@ -306,7 +318,7 @@ nix-env -iA nixpkgs.imagemagick
 nix-env -iA nixpkgs.mermaid-cli
 ```
 
-### 10) Kulala format conversion - Openapi to http
+### 11) Kulala format conversion - Openapi to http
 
 ```bash
 npm install -g @mistweaverco/kulala-fmt

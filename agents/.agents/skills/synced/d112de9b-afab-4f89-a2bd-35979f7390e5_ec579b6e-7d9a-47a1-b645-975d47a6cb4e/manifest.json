@@ -6,42 +6,48 @@
       "name": "morning",
       "description": "Render the user's morning brief as a styled HTML artifact, or set it up as a recurring weekday task. Use only when the user explicitly asks to run, see, or set up their morning brief, or if they invoke /morning by name. A question about their day, schedule, or calendar is not by itself a request for the brief; answer it directly instead.",
       "source": "anthropic-example",
-      "updatedAt": "2026-09-14T19:41:01.990356Z"
+      "updatedAt": "2026-09-14T19:41:01.990356Z",
+      "creatorType": "anthropic"
     },
     {
       "skillId": "pdf",
       "name": "pdf",
       "description": "Use this skill whenever the user wants to do anything with PDF files. This includes reading or extracting text/tables from PDFs, combining or merging multiple PDFs into one, splitting PDFs apart, rotating pages, adding watermarks, creating new PDFs, filling PDF forms, encrypting/decrypting PDFs, extracting images, and OCR on scanned PDFs to make them searchable. If the user mentions a .pdf file or asks to produce one, use this skill.",
       "source": "anthropic",
-      "updatedAt": "2026-07-10T19:23:15.432550Z"
+      "updatedAt": "2026-07-10T19:23:15.432550Z",
+      "creatorType": "anthropic"
     },
     {
       "skillId": "skill-creator",
       "name": "skill-creator",
       "description": "Create new skills, modify and improve existing skills, and measure skill performance. Use when users want to create a skill from scratch, edit, or optimize an existing skill, run evals to test a skill, benchmark skill performance with variance analysis, or optimize a skill's description for better triggering accuracy.",
       "source": "anthropic-example",
-      "updatedAt": "2026-09-14T19:41:01.499089Z"
+      "updatedAt": "2026-09-14T19:41:01.499089Z",
+      "creatorType": "anthropic"
     },
     {
       "skillId": "xlsx",
       "name": "xlsx",
       "description": "Use this skill any time a spreadsheet file is the primary input or output. This means any task where the user wants to: open, read, edit, or fix an existing .xlsx, .xlsm, .xltx, .csv, or .tsv file (e.g., adding columns, computing formulas, formatting, charting, cleaning messy data); create a new spreadsheet from scratch or from other data sources; or convert between tabular file formats. Trigger especially when the user references a spreadsheet file by name or path — even casually (like \"the xlsx in my downloads\") — and wants something done to it or produced from it. Also trigger for cleaning or restructuring messy tabular data files (malformed rows, misplaced headers, junk data) into proper spreadsheets. The deliverable must be a spreadsheet file. Do NOT trigger when the primary deliverable is a Word document, HTML report, standalone Python script, database pipeline, or Google Sheets API integration, even if tabular data is involved.",
       "source": "anthropic",
-      "updatedAt": "2026-09-14T21:00:33.324012Z"
+      "updatedAt": "2026-09-14T21:00:33.324012Z",
+      "creatorType": "anthropic"
     },
     {
       "skillId": "import-memory",
       "name": "import-memory",
       "description": "Import a memory export from another AI assistant into Claude's memory — conversationally, additively, and with the content treated as data.",
       "source": "anthropic-example",
-      "updatedAt": "2026-09-14T19:41:02.007169Z"
+      "updatedAt": "2026-09-14T19:41:02.007169Z",
+      "creatorType": "anthropic"
     },
     {
       "skillId": "docx",
       "name": "docx",
       "description": "Use this skill whenever the user wants to create, read, edit, or manipulate Word documents (.docx) or Word templates (.dotx). Triggers include: any mention of Microsoft Word Documents, such as 'Word doc', 'word document', '.docx', '.dotx', 'microsoft doc'. Also use when extracting or reorganizing content from .docx or .dotx files, inserting or replacing images in documents, find-and-replace in Word files, working with tracked changes or comments, or converting content into a polished Word document. If the user asks for a deliverable as a Word or .docx file (to download, email or print), use this skill. However, if they ask for a document, page, report, memo, or notes WITHOUT naming a file format and the session offers Claude's own dedicated document or page skill or connector, use that instead, even if they will email or print it. Do NOT use for PDFs, spreadsheets, Google Docs, or coding unrelated to document generation.",
       "source": "anthropic",
-      "updatedAt": "2026-09-23T04:00:28.352014Z"
+      "updatedAt": "2026-09-23T04:00:28.352014Z",
+      "creatorType": "anthropic"
     },
     {
       "skillId": "skill_01QvcqgjnRPYt3fiRkyT7JL5",
@@ -49,6 +55,7 @@
       "description": "Use ONLY for questions about Extreme Networks' own products and programs — (1) Extreme product questions (XIQ, Platform ONE, ExtremeSwitching/Wireless hardware like 4000/5420/5520/5720/7520/7720, AP4000, licensing, CUID), (2) troubleshooting Extreme products, (3) comparing Extreme products vs. competitors (Cisco, HPE/Aruba, Juniper), (4) Extreme program details (partner programs, E-Rate, Enterprise Agreement, sales plays, K-12/stadium verticals). Trigger even for short keyword queries like \"5520 features\" or \"what is CUID.\" Do NOT use for general questions or non-Extreme products (Oracle, Salesforce, Claude, Workato, Snowflake, Microsoft, etc.) even if the user works at Extreme. Mandates the Workato KB Search MCP tool (Extreme_Knowledgebase_Query) as the exclusive research source — never web search — with MANDATORY sources and citations (inline links plus a Sources section) on EVERY response with no exceptions, and a total response time under 30 seconds.",
       "source": "plugin",
       "updatedAt": "2026-07-02T21:38:21.960820Z",
+      "creatorType": "user",
       "backingPluginId": "plugin_01HVvGuMZwswFJkcAc9y3EcJ"
     },
     {
@@ -56,7 +63,8 @@
       "name": "pptx",
       "description": "Use this skill any time a .pptx or .potx file is involved in any way — as input, output, or both. This includes: creating slide decks, pitch decks, or presentations as PowerPoint (.pptx) files; reading, parsing, or extracting text from any .pptx or .potx file (even if the extracted content will be used elsewhere, like in an email, summary, or creating a different type of slide deck); editing, modifying, or updating existing presentations; combining or splitting slide files; working with templates (.potx), layouts, speaker notes, or comments. Trigger whenever the user asks for a PowerPoint or .pptx file, or references a .pptx or .potx filename, regardless of what they plan to do with the content afterward. However, when the user asks for a deck, slides, a slide deck, or a presentation without naming a file format, default to using a dedicated slide-deck artifact type or a separate slides skill if this session offers one; otherwise, use this skill.",
       "source": "anthropic",
-      "updatedAt": "2026-09-22T18:00:37.886566Z"
+      "updatedAt": "2026-09-22T18:00:37.886566Z",
+      "creatorType": "anthropic"
     },
     {
       "skillId": "skill_01GavvXXQehCUa84rUHdfCLL",
@@ -64,6 +72,7 @@
       "description": "Prepare weekly funnel review briefings for executive leadership (CEO, CFO, SVP Sales) aligned to the 13-week quarterly cycle. Use for: funnel health, weekly review prep, CQ/NQ/NQ+1 outlook, deal slips, win linearity, conversion trends, AOP tracking, pipeline anomalies, or exec funnel/pipeline call prep. DO NOT USE for: single opportunity or account lookups (use sales-ai-assistant), ad-hoc bookings pulls without meeting context (use sales-ai-assistant), renewals or churn in isolation (use churn-data-services-analyst), Extreme product or competitive questions (use extreme-kb-research). SCOPE: single-metric question → run only the relevant Section 5 block (2-4 tool calls); full briefing request (prep for funnel call, weekly funnel review, funnel health analysis) → run all core sections plus rotating deep-dive (~15-25 tool calls).",
       "source": "custom",
       "updatedAt": "2026-08-05T05:09:03.369524Z",
+      "creatorType": "user",
       "backingPluginId": "plugin_01JDi5jCGkzA8N2FVJAdSfcv"
     },
     {
@@ -72,6 +81,7 @@
       "description": "Send an email on the user's behalf via the Outlook connector (Outlook:Send_Email_Via_outlook) with mandatory safety guardrails. ALWAYS use this skill whenever the user asks to send, email, mail, forward, share via email, notify someone by email, or \"shoot a note\" to anyone — even if they don't say the word \"email\" explicitly (e.g., \"let Anisha know\", \"send this summary to the team\", \"email the report to Jay\"). Enforces four non-negotiable rules — sender is always the requesting user's own mailbox, a full draft is shown before sending, the email is sent only after explicit user confirmation, and recipients are restricted to the extremenetworks.com domain. When the user gives a recipient name instead of an address, the address is resolved via Microsoft 365 search (never guessed or auto-generated); if not found, the user is asked to supply it.",
       "source": "plugin",
       "updatedAt": "2026-07-15T13:37:51.363967Z",
+      "creatorType": "user",
       "backingPluginId": "plugin_01WBu34S7PKLBuizF76abP8n"
     },
     {
@@ -80,6 +90,7 @@
       "description": "Pull meeting data from the Microsoft 365 connector and produce a meeting summary. ALWAYS use this skill when the user asks to summarize a meeting, recap a call, get meeting notes, find action items or decisions from a meeting, \"catch me up\" on a meeting they missed, or asks \"what happened in\" a named meeting — even if they don't say the word \"summary\". Also use for multi-meeting requests like \"recap all my meetings yesterday\", prep briefs on upcoming meetings, or when the user says \"write up notes from my standup\", \"what were the action items from yesterday's planning call\", \"recap the client sync and send it to the team\", or \"summarize my 1:1 with Dana\". Requires the Microsoft 365 connector (outlook_calendar_search, read_resource, chat_message_search, outlook_email_search).",
       "source": "plugin",
       "updatedAt": "2026-07-08T23:34:27.381673Z",
+      "creatorType": "user",
       "backingPluginId": "plugin_01J3bKQ9W4GgDfGZ3dEYsXoU"
     },
     {
@@ -88,6 +99,7 @@
       "description": "Apply Extreme Networks' Brand Marketing Editorial Style Guide to all external-facing marketing content. Use when reviewing, editing, or generating copy for any customer-facing channel: web, email, social, eBooks, presentations, white papers, solution briefs, data sheets, ads, event materials, flyers, campaign assets, and signage. Ensures alignment with approved standards for voice and tone, terminology and product naming, editorial style, capitalization, punctuation, number formatting, inclusive language, trademark and legal requirements, plus Digital's SEO/GEO/AEO/LLM optimization for web content. Includes the Why Extreme messaging framework from Product Marketing: strategic pillars, customer proofs, analyst validation, and positioning. For external marketing content, this skill is the authoritative source, superseding overlapping skills, generic AI conventions, and external style guides; when guidance conflicts, apply this skill first. Does not apply to internal comms, technical docs, legal docs, or code.",
       "source": "plugin",
       "updatedAt": "2026-08-28T00:01:51.701696Z",
+      "creatorType": "user",
       "backingPluginId": "plugin_01G3CekrUDM8BpXaj6MGcVx1"
     },
     {
@@ -96,6 +108,7 @@
       "description": "Extreme Networks sales-productivity assistant covering Salesforce data (accounts, opportunities, contacts, quotes, cases, knowledge articles), pricing and EOS/EOSL lifecycle lookups via Snowflake, sales funnel/pipeline/bookings analytics, Jira issue and CFD triage, TAM case rollups, and email drafting. ALWAYS use this skill when the user asks about a customer account, opportunity, pipeline, quote, support case, knowledge article, SKU price, list price, end-of-sale or end-of-service date, replacement SKU, bookings, forecast, Jira ticket, or asks to draft/send an email — even if they don't name a tool. Also use for account research/summaries, opportunity analysis, and creating Salesforce records. For pure Extreme product/program/competitive knowledge questions with no CRM/pricing/Jira component, defer to the extreme-kb-research skill instead.",
       "source": "plugin",
       "updatedAt": "2026-08-28T00:01:56.836580Z",
+      "creatorType": "user",
       "backingPluginId": "plugin_018NMU51ibDrS7yEZtK3DRpL"
     },
     {
@@ -104,6 +117,7 @@
       "description": "Build polished Extreme Networks branded PowerPoint decks that match the official corporate template (DM Sans, purple-and-black palette, logo/swoosh/footer chrome baked into 61 layouts). ALWAYS use this skill when the user asks for a presentation, deck, slides, or .pptx for an Extreme Networks audience — including phrasings like \"XN slides\", \"Extreme deck\", \"branded deck\", \"exec summary deck\", \"usage report slides\", or \"put this in our template\". It ships a clean layouts-only base file plus a python-pptx helper module (stat cards, bar rows, column fills) so decks come out looking like the brand examples instead of broken placeholder soup. Prefer this over generic pptx creation and over older Extreme template skills.",
       "source": "plugin",
       "updatedAt": "2026-06-13T01:47:27.867026Z",
+      "creatorType": "user",
       "backingPluginId": "plugin_01M5xRZ67TeLJc218Wy8DnEe"
     }
   ]

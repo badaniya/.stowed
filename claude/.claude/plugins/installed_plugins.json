@@ -4,21 +4,21 @@
     "frontend-design@claude-plugins-official": [
       {
         "scope": "user",
-        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/frontend-design/db467cc56673",
-        "version": "db467cc56673",
+        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/frontend-design/8286e2db0113",
+        "version": "8286e2db0113",
         "installedAt": "2026-05-14T16:18:03.768Z",
-        "lastUpdated": "2026-09-22T22:19:14.203Z",
-        "gitCommitSha": "db467cc56673fc963ca418b4165c688dfbe77007"
+        "lastUpdated": "2026-09-24T20:00:31.177Z",
+        "gitCommitSha": "8286e2db0113d3e0a124af3345a8fd15ab93937d"
       }
     ],
     "code-review@claude-plugins-official": [
       {
         "scope": "user",
-        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/code-review/db467cc56673",
-        "version": "db467cc56673",
+        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/code-review/8286e2db0113",
+        "version": "8286e2db0113",
         "installedAt": "2026-05-14T16:18:03.768Z",
-        "lastUpdated": "2026-09-22T22:19:14.203Z",
-        "gitCommitSha": "db467cc56673fc963ca418b4165c688dfbe77007"
+        "lastUpdated": "2026-09-24T20:00:31.178Z",
+        "gitCommitSha": "8286e2db0113d3e0a124af3345a8fd15ab93937d"
       }
     ],
     "code-simplifier@claude-plugins-official": [
@@ -43,11 +43,11 @@
     "github@claude-plugins-official": [
       {
         "scope": "user",
-        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/github/db467cc56673",
-        "version": "db467cc56673",
+        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/github/8286e2db0113",
+        "version": "8286e2db0113",
         "installedAt": "2026-06-04T15:46:05.709Z",
-        "lastUpdated": "2026-09-22T22:19:14.204Z",
-        "gitCommitSha": "db467cc56673fc963ca418b4165c688dfbe77007"
+        "lastUpdated": "2026-09-24T20:00:31.177Z",
+        "gitCommitSha": "8286e2db0113d3e0a124af3345a8fd15ab93937d"
       }
     ],
     "gopls-lsp@claude-plugins-official": [
@@ -65,7 +65,7 @@
         "installPath": "/home/badaniya/.stowed/claude/.claude/plugins/cache/context-mode/context-mode/1.0.169",
         "version": "1.0.169",
         "installedAt": "2026-06-04T23:33:31.583Z",
-        "lastUpdated": "2026-09-18T22:41:32.878Z",
+        "lastUpdated": "2026-09-24T18:41:59.221Z",
         "gitCommitSha": "ce54a459b7ea191c3bfeed2759fd22b1a7c4b05e"
       }
     ],
