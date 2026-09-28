@@ -4,12 +4,6 @@
       "command": "context-mode",
       "directTools": true
     },
-    "codegraph": {
-      "command": "codegraph serve --mcp",
-      "lifecycle": "lazy",
-      "idleTimeout": 10,
-      "requestTimeoutMs": 30000
-    },
     "chrome-devtools": {
       "command": "npx",
       "args": [
