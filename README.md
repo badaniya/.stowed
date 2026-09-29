@@ -38,6 +38,7 @@ This repository is used to store all dot-config files for various shells and edi
 - imagemagick
 - mermaid-cli
 - kubecolor (kubectl)
+- tuxedo
 
 **Stowed Optional AI Terminal Tools:**
 
@@ -84,7 +85,7 @@ rm -rf $HOME/.config/ghostty; rm -rf $HOME/.bash*; rm -rf $HOME/.zsh*; rm -rf $H
 
 ```bash
 # Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
-rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/mise; rm -rf $HOME/.config/worktrunk; rm -rf $HOME/.config/gh-dash; rm -rf $HOME/.config/gitui; rm -rf $HOME/.config/lazygit; rm -rf $HOME/.config/hunk; rm -rf $HOME/.config/tuicr; stow -d $HOME/.stowed tmuxinator mise worktrunk gh-dash gitui lazygit hunk tuicr
+rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/mise; rm -rf $HOME/.config/worktrunk; rm -rf $HOME/.config/gh-dash; rm -rf $HOME/.config/gitui; rm -rf $HOME/.config/lazygit; rm -rf $HOME/.config/hunk; rm -rf $HOME/.config/tuicr; rm -rf $HOME/.config/tuxedo; stow -d $HOME/.stowed tmuxinator mise worktrunk gh-dash gitui lazygit hunk tuicr tuxedo
 ```
 
 ### 5) Run Stow Command to Establish Symlinks to the Repository for Optional AI Terminal Tools
@@ -325,6 +326,13 @@ npm install -g @mistweaverco/kulala-fmt
 # or
 # Nix dependency
 nix-env -iA nixpkgs.kulala-fmt
+```
+
+### 12) Tuxedo - TUI Todo List
+
+```bash
+# Rust cargo dependency
+cargo install --git https://github.com/webstonehq/tuxedo
 ```
 
 ## Installing Optional Stowed AI Terminal Tools
