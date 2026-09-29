@@ -413,6 +413,52 @@
         "type": "chat"
       },
       {
+        "id": "claude-sonnet-5.5",
+        "name": "Claude Sonnet 5.5",
+        "api": "anthropic-messages",
+        "provider": "github-copilot",
+        "baseUrl": "https://api.individual.githubcopilot.com",
+        "reasoning": true,
+        "input": [
+          "text",
+          "image"
+        ],
+        "cost": {
+          "input": 2,
+          "output": 10,
+          "cacheRead": 0.2,
+          "cacheWrite": 2.5
+        },
+        "contextWindow": 1000000,
+        "maxTokens": 128000,
+        "headers": {
+          "User-Agent": "GitHubCopilotChat/0.35.0",
+          "Editor-Version": "vscode/1.107.0",
+          "Editor-Plugin-Version": "copilot-chat/0.35.0",
+          "Copilot-Integration-Id": "vscode-chat"
+        },
+        "compat": {
+          "supportsMidConvoSystemMessages": true,
+          "forceAdaptiveThinking": true,
+          "supportsTemperature": false
+        },
+        "thinkingLevelMap": {
+          "xhigh": "xhigh",
+          "max": "max"
+        },
+        "inputLimits": {
+          "images": {
+            "resize": {
+              "maxWidth": 2000,
+              "maxHeight": 2000,
+              "maxBytes": 4718592,
+              "jpegQuality": 80
+            }
+          }
+        },
+        "type": "chat"
+      },
+      {
         "id": "gemini-3.5-flash",
         "name": "Gemini 3.5 Flash",
         "api": "openai-completions",
@@ -1592,9 +1638,9 @@
         "type": "chat"
       }
     ],
-    "checkedAt": 1790603981570,
-    "lastModified": 1790253614000,
-    "etag": "W/\"8caa77f1a79ebcd0d84fb8c5c79b5dbb\""
+    "checkedAt": 1790698636627,
+    "lastModified": 1790685835000,
+    "etag": "W/\"a8bbc17c52f64ce946eb364942dd676e\""
   },
   "anthropic": {
     "models": [
@@ -2287,10 +2333,64 @@
           }
         },
         "type": "chat"
+      },
+      {
+        "id": "claude-sonnet-5-5",
+        "name": "Claude Sonnet 5.5",
+        "api": "anthropic-messages",
+        "provider": "anthropic",
+        "baseUrl": "https://api.anthropic.com",
+        "reasoning": true,
+        "input": [
+          "text",
+          "image"
+        ],
+        "cost": {
+          "input": 2,
+          "output": 10,
+          "cacheRead": 0.2,
+          "cacheWrite": 2.5
+        },
+        "contextWindow": 1000000,
+        "maxTokens": 128000,
+        "thinkingLevelMap": {
+          "off": null,
+          "minimal": null,
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
+          "xhigh": "xhigh",
+          "max": "max"
+        },
+        "compat": {
+          "supportsMidConvoEffort": true,
+          "supportsMidConvoSystemMessages": true,
+          "supportsMidConvoToolChanges": true,
+          "forceAdaptiveThinking": true,
+          "supportsTemperature": false,
+          "supportsStrictTools": true
+        },
+        "promptCache": {
+          "short": 300,
+          "long": 3600
+        },
+        "inputLimits": {
+          "maxRequestBytes": 33554432,
+          "images": {
+            "maxPerRequest": 600,
+            "resize": {
+              "maxWidth": 2000,
+              "maxHeight": 2000,
+              "maxBytes": 4718592,
+              "jpegQuality": 80
+            }
+          }
+        },
+        "type": "chat"
       }
     ],
-    "checkedAt": 1790603978792,
-    "lastModified": 1790253596000,
-    "etag": "W/\"6f3aa1a70db379098bbdda6d0286153f\""
+    "checkedAt": 1790698636607,
+    "lastModified": 1790621272000,
+    "etag": "W/\"71c17a51b322391f0f80077152bb3748\""
   }
 }
