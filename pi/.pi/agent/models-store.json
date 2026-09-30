@@ -1305,6 +1305,66 @@
         "type": "chat"
       },
       {
+        "id": "gpt-6.1-sol",
+        "name": "GPT-6.1 Sol",
+        "api": "openai-responses",
+        "provider": "github-copilot",
+        "baseUrl": "https://api.individual.githubcopilot.com",
+        "reasoning": true,
+        "input": [
+          "text",
+          "image"
+        ],
+        "cost": {
+          "input": 2,
+          "output": 10,
+          "cacheRead": 0.1,
+          "cacheWrite": 2.5,
+          "tiers": [
+            {
+              "inputTokensAbove": 272000,
+              "input": 4,
+              "output": 15,
+              "cacheRead": 0.2,
+              "cacheWrite": 5
+            }
+          ]
+        },
+        "contextWindow": 1050000,
+        "maxTokens": 128000,
+        "headers": {
+          "User-Agent": "GitHubCopilotChat/0.35.0",
+          "Editor-Version": "vscode/1.107.0",
+          "Editor-Plugin-Version": "copilot-chat/0.35.0",
+          "Copilot-Integration-Id": "vscode-chat"
+        },
+        "thinkingLevelMap": {
+          "off": null,
+          "minimal": null,
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
+          "xhigh": "xhigh",
+          "max": "max"
+        },
+        "compat": {
+          "supportsOpenAIGrammarTools": true,
+          "supportsMidConvoSystemMessages": true,
+          "supportsAdditionalTools": true
+        },
+        "inputLimits": {
+          "images": {
+            "resize": {
+              "maxWidth": 2000,
+              "maxHeight": 2000,
+              "maxBytes": 4718592,
+              "jpegQuality": 80
+            }
+          }
+        },
+        "type": "chat"
+      },
+      {
         "id": "grok-4.5",
         "name": "Grok 4.5",
         "api": "openai-responses",
@@ -1638,9 +1698,9 @@
         "type": "chat"
       }
     ],
-    "checkedAt": 1790698636627,
-    "lastModified": 1790685835000,
-    "etag": "W/\"a8bbc17c52f64ce946eb364942dd676e\""
+    "checkedAt": 1790783385104,
+    "lastModified": 1790706948000,
+    "etag": "W/\"9341aaefcb2a362055499f32c3b044ba\""
   },
   "anthropic": {
     "models": [
@@ -2389,8 +2449,8 @@
         "type": "chat"
       }
     ],
-    "checkedAt": 1790698636607,
-    "lastModified": 1790621272000,
-    "etag": "W/\"71c17a51b322391f0f80077152bb3748\""
+    "checkedAt": 1790783384100,
+    "lastModified": 1790706929000,
+    "etag": "W/\"3442ece5a2e978b487a859a8a172062c\""
   }
 }
