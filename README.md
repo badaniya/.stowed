@@ -388,24 +388,21 @@ curl -fsSL https://opencode.ai/install | bash
 ### 6) Pi - A fully customizable AI coding agent for the terminal
 
 ```bash
-npm install -g @mariozechner/pi-coding-agent
-pi install npm:pi-extmgr
-pi install npm:lsp-pi
-pi install npm:pi-lens
-pi install npm:@narumitw/pi-btw
-pi install npm:@tintinweb/pi-subagents
-pi install npm:pi-mcp-adapter
-pi install npm:@langfuse/pi-observability-plugin
-pi install npm:context-mode
-pi install npm:pi-read-map
-pi install npm:pi-shell-completions
-pi install npm:pi-screenshots-picker
-pi install npm:pi-markdown-preview
-pi install npm:pi-which-key
-pi install npm:@aliou/pi-guardrails
-pi install npm:@marckrenn/pi-sub-share
-pi install npm:@marckrenn/pi-sub-core
-pi install npm:@marckrenn/pi-sub-bar
+npm install -g @mariozechner/pi-coding-agent        # Pi installation
+pi install npm:@tintinweb/pi-subagents              # Claude code-like subagents
+pi install npm:pi-mcp-adapter                       # MCP server support
+pi install npm:@aliou/pi-guardrails                 # Prompt user for dangerous shell commands
+pi install npm:@eiei114/pi-sub-bar                  # Pi customized statusline with provider LLM usage stats
+pi install npm:@narumitw/pi-btw                     # Claude code-like by-the-way support
+pi install npm:@schovest/pi-goal                    # Claude code-like goal support (background monitoring)
+pi install npm:@langfuse/pi-observability-plugin    # Langfuse agent turn observabilty
+pi install npm:context-mode                         # MCP proxy for shell command memory and token optimization
+pi install npm:@narumitw/pi-lsp                     # Language Server Provider code navigation
+pi install npm:pi-lens                              # File linting tracking and agent feedback
+pi install npm:pi-read-map                          # Large file parsing
+pi install npm:pi-markdown-preview                  # Markdown rendering support
+pi install npm:pi-claude-auth                       # Claude code LLM model access
+pi install npm:pi-free                              # Free LLM model access
 ```
 
 ### 7) Goose - An AI coding assistant for the terminal
