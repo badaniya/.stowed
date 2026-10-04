@@ -2,5 +2,6 @@
 *.log
 session.json
 session-history.json
+session-snapshots/
 plugins/config/cloudmanic.herdr-plus/projects
 plugins/config/usagebar/update-check-state.json
