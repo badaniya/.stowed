@@ -1,0 +1,54 @@
+{
+  "$schema": "https://opencode.ai/v2/cli.json",
+  "theme": {
+    "name": "catppuccin"
+  },
+  "keybinds": {
+    "leader": "ctrl+x",
+    "app.exit": "ctrl+c,<leader>q",
+    "command.palette.show": "ctrl+p",
+    "prompt.editor": "<leader>e",
+    "theme.switch": "<leader>t",
+    "session.sidebar.toggle": "<leader>b",
+    "opencode.status": "<leader>s",
+    "session.export": "<leader>x",
+    "session.new": "<leader>n",
+    "session.list": "<leader>l",
+    "session.timeline": "<leader>g",
+    "session.share": "none",
+    "session.unshare": "none",
+    "session.interrupt": "escape",
+    "session.compact": "<leader>c",
+    "model.list": "<leader>m",
+    "model.cycle_recent": "f2",
+    "model.cycle_recent_reverse": "shift+f2",
+    "agent.list": "<leader>a",
+    "agent.cycle": "tab",
+    "agent.cycle.reverse": "shift+tab",
+    "session.page.up": "ctrl+b,pageup",
+    "session.page.down": "ctrl+f,pagedown",
+    "session.half.page.up": "ctrl+u",
+    "session.half.page.down": "ctrl+d",
+    "session.first": "ctrl+g,home",
+    "session.last": "ctrl+e,end",
+    "messages.copy": "<leader>y",
+    "session.undo": "<leader>u",
+    "session.redo": "<leader>r",
+    "prompt.clear": "ctrl+c",
+    "prompt.paste": "ctrl+v",
+    "input.submit": "enter",
+    "input.newline": "shift+enter",
+    "prompt.history.previous": "up",
+    "prompt.history.next": "down"
+  },
+  "diffs": {
+    "wrap": "word"
+  },
+  "session": {
+    "sidebar": "hide",
+    "scrollbar": false,
+    "thinking": "show"
+  },
+  "animations": true,
+  "plugins": ["./herdr-opencode"]
+}

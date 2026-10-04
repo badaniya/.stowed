@@ -1,7 +1,7 @@
 {
-  "lastChangelogVersion": "0.99.1",
+  "lastChangelogVersion": "1.0.2",
   "defaultProvider": "github-copilot",
-  "defaultModel": "claude-sonnet-5",
+  "defaultModel": "github-copilot/claude-sonnet-5",
   "theme": "pi-catppuccin-mocha",
   "packages": [
     "npm:pi-extmgr",
@@ -38,19 +38,20 @@
   "defaultThinkingLevel": "minimal",
   "hideThinkingBlock": false,
   "enabledModels": [
-    "anthropic/claude-fable-5",
-    "anthropic/claude-haiku-4-5",
-    "anthropic/claude-sonnet-5",
-    "anthropic/claude-opus-5",
-    "github-copilot/claude-sonnet-5",
-    "github-copilot/gemini-3.7-flash",
-    "anthropic/claude-fable-5-1",
+    "github-copilot/claude-fable-5",
+    "github-copilot/claude-fable-5.1",
     "github-copilot/claude-haiku-4.5",
-    "anthropic/claude-sonnet-5-5",
+    "github-copilot/claude-sonnet-5",
+    "github-copilot/claude-sonnet-5.5",
+    "github-copilot/claude-opus-5",
     "github-copilot/claude-opus-5.5",
+    "github-copilot/gemini-3.7-flash",
     "github-copilot/gemini-3.8-flash",
     "github-copilot/gpt-6-astra",
     "github-copilot/gpt-6-luna",
     "github-copilot/gpt-6-sol"
+  ],
+  "extensions": [
+    "-builtin:mcp"
   ]
 }

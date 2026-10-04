@@ -16,7 +16,7 @@
   "agent": {
     "build": {
       "mode": "primary",
-      "model": "github-copilot/claude-opus-4.6",
+      "model": "github-copilot/claude-sonnet-5.5",
       "tools": {
         "write": true,
         "edit": true,
@@ -25,7 +25,7 @@
     },
     "plan": {
       "mode": "primary",
-      "model": "github-copilot/claude-opus-4.6",
+      "model": "github-copilot/claude-opus-5.5",
       "tools": {
         "write": false,
         "edit": false,
@@ -33,43 +33,26 @@
         "mcphub*": false
       }
     },
-    "nvo-developer": {
-      "mode": "primary",
-      "model": "github-copilot/claude-sonnet-4.6"
-    },
-    "nvo-eval": {
-      "mode": "primary",
-      "model": "github-copilot/claude-sonnet-4.6",
-      "tools": {
-        "bash": false,
-        "interactive_bash": false,
-        "edit": false,
-        "write": false,
-        "webfetch": false
-      }
-    }
   },
   "mcp": {
-    "codebase-memory-mcp": {
-      "type": "local",
-      "command": [ "/home/badaniya/.local/bin/codebase-memory-mcp" ],
-      "enabled": true
+    "timeout": { "startup": 120000, "catalog": 120000 },
+    "servers": {
+      "codebase-memory-mcp": {
+        "type": "local",
+        "command": ["/home/badaniya/.local/bin/codebase-memory-mcp"],
+        "timeout": { "startup": 120000, "catalog": 120000 }
+      },
+      "chrome-devtools-brave": {
+        "type": "local",
+        "command": ["npx", "-y", "chrome-devtools-mcp@latest", "--executablePath", "/usr/bin/brave-browser", "--isolated"]
+      }
     },
-    "chrome-devtools-brave": {
-      "type": "local",
-      "command": [ "npx", "-y", "chrome-devtools-mcp@latest", "--executablePath", "/usr/bin/brave-browser", "--isolated" ],
-      "enabled": true
-    }
+    "codebase-memory-mcp": {"command":["/home/badaniya/.local/bin/codebase-memory-mcp"],"type":"local"}
   },
-  "plugin": [
-    //"oh-my-openagent@latest",
-    "opencode-antigravity-auth@latest",
-    "@ramtinj95/opencode-tokenscope@latest",
-    //"@tarquinen/opencode-dcp@latest",
-    "context-mode",
+  "plugins": [
+    //"context-mode", // disabled: V1-only server() export fails V2 loader err_d1713d67, latest 1.0.169 has no V2 setup
     "superpowers@git+https://github.com/obra/superpowers.git",
-    "/home/badaniya/workspace/badaniya/node_modules/opencode-plugin-langfuse/dist/index.js",
-    "./plugins/caveman/plugin.js"
+    "@langfuse/opencode-observability-plugin@latest",
   ],
   "experimental": {
     "openTelemetry": true

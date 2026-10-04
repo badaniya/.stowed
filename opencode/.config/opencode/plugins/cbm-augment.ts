@@ -83,3 +83,78 @@ export const CodebaseMemory = async (ctx) => {
   };
 };
 // codebase-memory-mcp:end
+// Owned wrapper (outside managed block): V2 API.
+// V1 `server()` kept for backwards compat; V2 reads `id` + `setup()`.
+async function setup(ctx) {
+  // Guard: V1 also invokes default.setup with a partial ctx lacking
+  // tool/session domains (observed pattern, see superpowers plugin).
+  if (!ctx || !ctx.tool || typeof ctx.tool.hook !== 'function') return;
+  const dir = ctx.location?.directory;
+  const seen = new Set();
+  try {
+    await ctx.tool.hook('execute.after', async (event) => {
+      try {
+        const toolName = event?.tool ?? event?.toolID ?? event?.name;
+        const sessionID = event?.sessionID;
+        const pieces = [];
+        if (typeof sessionID === 'string' && !seen.has(sessionID)) {
+          seen.add(sessionID);
+          pieces.push(await augment({ hook_event_name: 'SessionStart', cwd: dir }));
+        }
+        const norm = typeof toolName === 'string' ? toolName.toLowerCase() : '';
+        const input = event?.input ?? event?.args ?? {};
+        if (norm === 'grep' || norm === 'glob' || norm === 'list') {
+          pieces.push(await augment({
+            hook_event_name: 'PreToolUse',
+            tool_name: norm === 'grep' ? 'Grep' : 'Glob',
+            tool_input: input,
+            cwd: dir,
+          }));
+        } else if (norm === 'read') {
+          const filePath = input?.filePath ?? input?.file_path ?? input?.path ?? input?.file;
+          if (typeof filePath === 'string' && filePath) {
+            pieces.push(await augment({
+              hook_event_name: 'PostToolUse',
+              tool_name: 'Read',
+              tool_input: { file_path: filePath },
+              cwd: dir,
+            }));
+          }
+        }
+        const extra = pieces.filter(Boolean).join('\n');
+        if (extra) {
+          const r = event?.result;
+          if (r && typeof r.output === 'string') r.output += '\n' + extra;
+          else if (typeof event?.output === 'string') event.output += '\n' + extra;
+          else if (r && typeof r.content === 'string') r.content += '\n' + extra;
+        }
+      } catch (err) {
+        console.error('[cbm-augment] execute.after hook failed:', err);
+      }
+    });
+  } catch (err) {
+    console.error('[cbm-augment] tool hook registration failed:', err);
+  }
+  try {
+    if (ctx.session && typeof ctx.session.hook === 'function') {
+      await ctx.session.hook('compaction', async (event) => {
+        try {
+          const note = await augment({ hook_event_name: 'SessionStart', cwd: dir });
+          if (note && Array.isArray(event?.messages)) {
+            event.messages.push({ role: 'user', content: [{ type: 'text', text: note }] });
+          }
+        } catch (err) {
+          console.error('[cbm-augment] compaction hook failed:', err);
+        }
+      });
+    }
+  } catch (err) {
+    console.error('[cbm-augment] compaction hook registration failed:', err);
+  }
+}
+
+export default {
+  id: 'cbm-augment',
+  setup,
+  server: CodebaseMemory,
+};
