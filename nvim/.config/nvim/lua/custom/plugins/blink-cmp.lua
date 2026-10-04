@@ -59,7 +59,6 @@ return {
     -- elsewhere in your config, without redefining it, due to `opts_extend`
     sources = {
       default = {
-        'avante',
         'lsp',
         'path',
         'snippets',
@@ -74,9 +73,6 @@ return {
           'snippets',
           'dadbod',
           'buffer',
-        },
-        codecompanion = {
-          'codecompanion',
         },
       },
       providers = {
@@ -135,13 +131,6 @@ return {
               end
               return in_spell_capture
             end,
-          },
-        },
-        avante = {
-          module = 'blink-cmp-avante',
-          name = 'Avante',
-          opts = {
-            -- options for blink-cmp-avante
           },
         },
       },
