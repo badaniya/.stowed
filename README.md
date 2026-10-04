@@ -481,6 +481,27 @@ curl -sSfL https://raw.githubusercontent.com/securego/gosec/master/install.sh | 
 # gotestsum:
 go install gotest.tools/gotestsum@latest
 ```
+### 2) Herdr
+
+```bash
+# 1) Install herdr
+curl -fsSL https://herdr.dev/install.sh | sh
+
+# 2) Install herdr plugins - from GitHub / the herdr plugin marketplace:
+herdr plugin install --yes ntindle/herdr-resurrect
+herdr plugin install --yes paulbkim-dev/vim-herdr-navigation
+herdr plugin install --yes cloudmanic/herdr-plus
+herdr plugin install --yes yuk1ty/herdr-spreader
+herdr plugin install --yes hotchpotch/herdr-tiny-fingers
+herdr plugin install --yes ChmaraX/herdr-nvim
+herdr plugin install --yes smarzban/herdr-file-viewer
+herdr plugin install --yes persiyanov/herdr-reviewr
+herdr plugin install --yes furuhashin/herdr-synchronize-panes
+herdr plugin install --yes senna-lang/herdr-agent-usage
+herdr plugin install --yes Davidcreador/herdr-token-dashboard
+herdr plugin install --yes ezcorp-org/herdr-pc-ram-and-cpu-usage-overlay
+herdr plugin install --yes ogulcancelik/herdr-browser
+```
 
 ## How to Use These Stowed Shell/Editor Tools
 
