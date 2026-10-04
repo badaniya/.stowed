@@ -38,9 +38,9 @@ return {
       desc = 'Herdr-nvim [S]ubmit',
     },
     {
-      '<leader>ar',
+      '<leader>ai',
       ':Herdr ref<CR>',
-      desc = 'Herdr-nvim [r]ef',
+      desc = 'Herdr-nvim reference l[i]ne',
     },
   },
 }
