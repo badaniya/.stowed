@@ -42,13 +42,12 @@ This repository is used to store all dot-config files for various shells and edi
 
 **Stowed Optional AI Terminal Tools:**
 
+- herdr
 - claude
 - copilot-cli
 - opencode
 - pi
 - goose
-- mcphub (NeoVIM MCP servers hub)
-- vectorcode (vector DB)
 - agents (centralized skills for AI tools)
 
 ## How To Use GNU Stow
@@ -351,6 +350,21 @@ curl -fsSL https://herdr.dev/install.sh | sh
 # or
 # Mise dependency
 mise use -g herdr
+
+# 2) Install herdr plugins - from GitHub / the herdr plugin marketplace:
+herdr plugin install --yes ntindle/herdr-resurrect
+herdr plugin install --yes paulbkim-dev/vim-herdr-navigation
+herdr plugin install --yes cloudmanic/herdr-plus
+herdr plugin install --yes yuk1ty/herdr-spreader
+herdr plugin install --yes hotchpotch/herdr-tiny-fingers
+herdr plugin install --yes ChmaraX/herdr-nvim
+herdr plugin install --yes smarzban/herdr-file-viewer
+herdr plugin install --yes persiyanov/herdr-reviewr
+herdr plugin install --yes furuhashin/herdr-synchronize-panes
+herdr plugin install --yes senna-lang/herdr-agent-usage
+herdr plugin install --yes Davidcreador/herdr-token-dashboard
+herdr plugin install --yes ezcorp-org/herdr-pc-ram-and-cpu-usage-overlay
+herdr plugin install --yes ogulcancelik/herdr-browser
 ```
 
 ### 3) Claude Code - Anthropic's AI coding agent for the terminal
@@ -376,17 +390,18 @@ curl -fsSL https://opencode.ai/install | bash
 ```bash
 npm install -g @mariozechner/pi-coding-agent
 pi install npm:pi-extmgr
-pi install npm:oh-pi
 pi install npm:lsp-pi
+pi install npm:pi-lens
+pi install npm:@narumitw/pi-btw
+pi install npm:@tintinweb/pi-subagents
 pi install npm:pi-mcp-adapter
+pi install npm:@langfuse/pi-observability-plugin
+pi install npm:context-mode
 pi install npm:pi-read-map
-pi install npm:pi-teams
 pi install npm:pi-shell-completions
-pi install npm:pi-super-curl
 pi install npm:pi-screenshots-picker
 pi install npm:pi-markdown-preview
 pi install npm:pi-which-key
-pi install npm:visual-explainer
 pi install npm:@aliou/pi-guardrails
 pi install npm:@marckrenn/pi-sub-share
 pi install npm:@marckrenn/pi-sub-core
@@ -480,27 +495,6 @@ curl -sSfL https://raw.githubusercontent.com/securego/gosec/master/install.sh | 
 
 # gotestsum:
 go install gotest.tools/gotestsum@latest
-```
-### 2) Herdr
-
-```bash
-# 1) Install herdr
-curl -fsSL https://herdr.dev/install.sh | sh
-
-# 2) Install herdr plugins - from GitHub / the herdr plugin marketplace:
-herdr plugin install --yes ntindle/herdr-resurrect
-herdr plugin install --yes paulbkim-dev/vim-herdr-navigation
-herdr plugin install --yes cloudmanic/herdr-plus
-herdr plugin install --yes yuk1ty/herdr-spreader
-herdr plugin install --yes hotchpotch/herdr-tiny-fingers
-herdr plugin install --yes ChmaraX/herdr-nvim
-herdr plugin install --yes smarzban/herdr-file-viewer
-herdr plugin install --yes persiyanov/herdr-reviewr
-herdr plugin install --yes furuhashin/herdr-synchronize-panes
-herdr plugin install --yes senna-lang/herdr-agent-usage
-herdr plugin install --yes Davidcreador/herdr-token-dashboard
-herdr plugin install --yes ezcorp-org/herdr-pc-ram-and-cpu-usage-overlay
-herdr plugin install --yes ogulcancelik/herdr-browser
 ```
 
 ## How to Use These Stowed Shell/Editor Tools
