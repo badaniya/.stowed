@@ -346,25 +346,25 @@ nix-env -iA nixpkgs.nodejs_22
 ### 2) Herdr - An AI based terminal multiplexer - Multi agent harness observability
 
 ```bash
-curl -fsSL https://herdr.dev/install.sh | sh
+curl -fsSL https://herdr.dev/install.sh | sh                                  # Herdr installation
 # or
 # Mise dependency
 mise use -g herdr
 
 # 2) Install herdr plugins - from GitHub / the herdr plugin marketplace:
-herdr plugin install --yes ntindle/herdr-resurrect
-herdr plugin install --yes paulbkim-dev/vim-herdr-navigation
-herdr plugin install --yes cloudmanic/herdr-plus
-herdr plugin install --yes yuk1ty/herdr-spreader
-herdr plugin install --yes hotchpotch/herdr-tiny-fingers
-herdr plugin install --yes ChmaraX/herdr-nvim
-herdr plugin install --yes smarzban/herdr-file-viewer
-herdr plugin install --yes persiyanov/herdr-reviewr
-herdr plugin install --yes furuhashin/herdr-synchronize-panes
-herdr plugin install --yes senna-lang/herdr-agent-usage
-herdr plugin install --yes Davidcreador/herdr-token-dashboard
-herdr plugin install --yes ezcorp-org/herdr-pc-ram-and-cpu-usage-overlay
-herdr plugin install --yes ogulcancelik/herdr-browser
+herdr plugin install ntindle/herdr-resurrect --yes                            # Save and restore workspace sessions on restart
+herdr plugin install paulbkim-dev/vim-herdr-navigation --yes                  # Vim keyboard navigation on herdr workspace panes
+herdr plugin install cloudmanic/herdr-plus --yes                              # Herdr launcher to create customized actions
+herdr plugin install yuk1ty/herdr-spreader --yes                              # Custom herdr workspace layout creator (tmuxinator-like)
+herdr plugin install hotchpotch/herdr-tiny-fingers --yes                      # Fingers to quickly copy regex pattern text (tmux-fingers-like)
+herdr plugin install ChmaraX/herdr-nvim --yes                                 # Nvim sidepane launcher for any AI coding agent with nvim comment/copy integration
+herdr plugin install smarzban/herdr-file-viewer --yes                         # File viewer sidepane for any AI coding agent
+herdr plugin install persiyanov/herdr-reviewr --yes                           # File reviewer sidepane for any AI coding agent
+herdr plugin install furuhashin/herdr-synchronize-panes --yes                 # Broadcast a single command to all panes in a herdr workspace
+herdr plugin install senna-lang/herdr-agent-usage --yes                       # AI token usage for any AI coding agent
+herdr plugin install Davidcreador/herdr-token-dashboard --yes                 # AI dashboard for token usage for any AI coding agent
+herdr plugin install ezcorp-org/herdr-pc-ram-and-cpu-usage-overlay --yes      # CPU and memory stats for a herdr workspace
+herdr plugin install ogulcancelik/herdr-browser --yes                         # Web browser in the terminal (experimental)
 ```
 
 ### 3) Claude Code - Anthropic's AI coding agent for the terminal

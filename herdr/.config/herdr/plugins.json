@@ -135,7 +135,7 @@
       "repo": "herdr-nvim",
       "resolved_commit": "5e849b5377fd409d2fd4be159c9c9fa36c251f7a",
       "managed_path": "/home/badaniya/.config/herdr/plugins/github/chmarax.herdr-nvim-178624809c23",
-      "installed_unix_ms": 1791080964006
+      "installed_unix_ms": 1791213784256
     }
   },
   {
@@ -802,42 +802,6 @@
       "resolved_commit": "2927dcf2bc95fe53a7143c040bbdcbcf804d65ed",
       "managed_path": "/home/badaniya/.config/herdr/plugins/github/hotchpotch.herdr-tiny-fingers-5596606cf4bb",
       "installed_unix_ms": 1791080171696
-    }
-  },
-  {
-    "plugin_id": "mochi",
-    "name": "mochi",
-    "version": "6",
-    "min_herdr_version": "0.8.0",
-    "description": "Shows your agents on mochi's Live Activity on your iPhone. Installed by the mochi app.",
-    "manifest_path": "/home/badaniya/.mochi/herdr-plugin/herdr-plugin.toml",
-    "plugin_root": "/home/badaniya/.mochi/herdr-plugin",
-    "enabled": true,
-    "platforms": [
-      "macos",
-      "linux"
-    ],
-    "startup": [
-      {
-        "command": [
-          "sh",
-          "-c",
-          "exec sh \"$HOME/.mochi/herdr-plugin/hook.sh\" watch"
-        ]
-      }
-    ],
-    "events": [
-      {
-        "on": "pane.agent_status_changed",
-        "command": [
-          "sh",
-          "-c",
-          "exec sh \"$HOME/.mochi/herdr-plugin/hook.sh\""
-        ]
-      }
-    ],
-    "source": {
-      "kind": "local"
     }
   },
   {
