@@ -30,7 +30,7 @@ import {
   resolveRepoLabel,
   toneToSemanticColor,
   type MetadataPart,
-} from './statusline-format';
+} from './lib/statusline-format';
 
 export default function (pi: ExtensionAPI) {
   pi.on('session_start', (_event: SessionStartEvent, ctx: ExtensionContext) => {
@@ -82,8 +82,8 @@ export default function (pi: ExtensionAPI) {
 
           const metadataText = metadataParts.map(colorize).join(' ');
           const healthText = healthStatuses
-            .map((s) => theme.fg(toneToSemanticColor(s.tone), s.label))
-            .join(theme.fg('dim', ' | '));
+            .map((s) => theme.fg(toneToSemanticColor(s.tone), `● ${s.label}`))
+            .join(theme.fg('dim', ' │ '));
 
           const layout = chooseFooterLayout(width, metadataParts, healthStatuses);
 

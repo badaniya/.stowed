@@ -408,12 +408,12 @@ export function metadataPlainWidth(parts: readonly MetadataPart[]): number {
   return textWidth + (parts.length - 1);
 }
 
-/** Code-point width of the health row if joined with " | " separators, before coloring. */
+/** Code-point width of `● <label>` health entries joined with " │ ", before coloring. */
 export function healthPlainWidth(statuses: readonly CompactStatus[]): number {
   if (statuses.length === 0) {
     return 0;
   }
-  const textWidth = statuses.reduce((sum, s) => sum + Array.from(s.label).length, 0);
+  const textWidth = statuses.reduce((sum, s) => sum + Array.from(s.label).length + 2, 0);
   return textWidth + (statuses.length - 1) * 3;
 }
 

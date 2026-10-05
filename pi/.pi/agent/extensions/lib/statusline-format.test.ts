@@ -467,13 +467,14 @@ test('metadataPlainWidth: empty array is zero', () => {
   strictEqual(metadataPlainWidth([]), 0);
 });
 
-test('healthPlainWidth: sums label widths plus " | " separators', () => {
+test('healthPlainWidth: accounts for colored-dot prefixes and " │ " separators', () => {
   const statuses: CompactStatus[] = [
     { label: 'Langfuse', tone: 'muted' },
     { label: 'MCP 2', tone: 'success' },
     { label: 'LSP', tone: 'muted' },
   ];
-  strictEqual(healthPlainWidth(statuses), 8 + 5 + 3 + 2 * 3);
+  // Each rendered status is "● <label>"; two separators are " │ ".
+  strictEqual(healthPlainWidth(statuses), 8 + 5 + 3 + 2 * 3 + 3 * 2);
 });
 
 test('healthPlainWidth: empty array is zero', () => {
@@ -488,7 +489,7 @@ test('chooseFooterLayout: delegates to chooseLayout using computed widths', () =
     { label: 'MCP', tone: 'muted' },
     { label: 'LSP', tone: 'muted' },
   ];
-  // metadataWidth=70, healthWidth = 8+3+3 + 2*3 = 20 -> required 70+3+20=93
-  strictEqual(chooseFooterLayout(93, parts, statuses), 'single');
-  strictEqual(chooseFooterLayout(92, parts, statuses), 'stacked');
+  // metadataWidth=70; healthWidth = labels 14 + dots 6 + separators 6 = 26.
+  strictEqual(chooseFooterLayout(99, parts, statuses), 'single');
+  strictEqual(chooseFooterLayout(98, parts, statuses), 'stacked');
 });
