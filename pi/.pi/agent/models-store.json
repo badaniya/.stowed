@@ -46,7 +46,7 @@
         }
       }
     ],
-    "checkedAt": 1791235002888
+    "checkedAt": 1791235033116
   },
   "github-copilot": {
     "models": [
@@ -2694,7 +2694,7 @@
         }
       }
     ],
-    "checkedAt": 1791235003041
+    "checkedAt": 1791235033267
   },
   "fastrouter": {
     "models": [
@@ -2965,7 +2965,7 @@
         }
       }
     ],
-    "checkedAt": 1791235003065
+    "checkedAt": 1791235033292
   },
   "anthropic": {
     "models": [
