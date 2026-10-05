@@ -46,7 +46,7 @@
         }
       }
     ],
-    "checkedAt": 1791217277197
+    "checkedAt": 1791225660944
   },
   "github-copilot": {
     "models": [
@@ -1788,7 +1788,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M46DS5HNJ5GDJEQ6JZW48GKK",
+          "X-Task-ID": "01M46NVC53297HYDDRTR2HMF66",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -1827,7 +1827,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M46DS5HNJ5GDJEQ6JZW48GKK",
+          "X-Task-ID": "01M46NVC53297HYDDRTR2HMF66",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -1875,56 +1875,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M46DS5HNJ5GDJEQ6JZW48GKK",
-          "X-PLATFORM": "Visual Studio Code",
-          "X-PLATFORM-VERSION": "1.109.3",
-          "X-CLIENT-TYPE": "VSCode Extension",
-          "X-CLIENT-VERSION": "4.1.10",
-          "X-CORE-VERSION": "4.1.10",
-          "X-Is-Multiroot": "false",
-          "User-Agent": "Cline/4.1.10"
-        },
-        "compat": {
-          "supportsDeveloperRole": false
-        }
-      },
-      {
-        "id": "qwen/qwen3.8-27b:free",
-        "name": "Qwen3.8 27B (free) (Cline) [CI: 68.1]",
-        "reasoning": true,
-        "input": [
-          "text",
-          "image"
-        ],
-        "cost": {
-          "input": 0,
-          "output": 0,
-          "cacheRead": 0,
-          "cacheWrite": 0
-        },
-        "contextWindow": 262144,
-        "maxTokens": 235929,
-        "_pricingKnown": true,
-        "thinkingLevelMap": {
-          "off": "none",
-          "minimal": null,
-          "low": "low",
-          "medium": "medium",
-          "high": null,
-          "xhigh": "xhigh"
-        },
-        "modelsDev": {
-          "id": "Qwen/Qwen3.8-27B",
-          "name": "Qwen3.8 27B",
-          "family": "qwen"
-        },
-        "api": "openai-completions",
-        "provider": "cline",
-        "baseUrl": "https://api.cline.bot/api/v1",
-        "headers": {
-          "HTTP-Referer": "https://cline.bot",
-          "X-Title": "Cline",
-          "X-Task-ID": "01M46DS5HNJ5GDJEQ6JZW48GKK",
+          "X-Task-ID": "01M46NVC53297HYDDRTR2HMF66",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -1964,7 +1915,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M46DS5HNJ5GDJEQ6JZW48GKK",
+          "X-Task-ID": "01M46NVC53297HYDDRTR2HMF66",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2004,7 +1955,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M46DS5HNJ5GDJEQ6JZW48GKK",
+          "X-Task-ID": "01M46NVC53297HYDDRTR2HMF66",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2044,7 +1995,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M46DS5HNJ5GDJEQ6JZW48GKK",
+          "X-Task-ID": "01M46NVC53297HYDDRTR2HMF66",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2085,7 +2036,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M46DS5HNJ5GDJEQ6JZW48GKK",
+          "X-Task-ID": "01M46NVC53297HYDDRTR2HMF66",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2133,7 +2084,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M46DS5HNJ5GDJEQ6JZW48GKK",
+          "X-Task-ID": "01M46NVC53297HYDDRTR2HMF66",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2182,7 +2133,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M46DS5HNJ5GDJEQ6JZW48GKK",
+          "X-Task-ID": "01M46NVC53297HYDDRTR2HMF66",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2222,7 +2173,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M46DS5HNJ5GDJEQ6JZW48GKK",
+          "X-Task-ID": "01M46NVC53297HYDDRTR2HMF66",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2262,7 +2213,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M46DS5HNJ5GDJEQ6JZW48GKK",
+          "X-Task-ID": "01M46NVC53297HYDDRTR2HMF66",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2303,7 +2254,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M46DS5HNJ5GDJEQ6JZW48GKK",
+          "X-Task-ID": "01M46NVC53297HYDDRTR2HMF66",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2343,7 +2294,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M46DS5HNJ5GDJEQ6JZW48GKK",
+          "X-Task-ID": "01M46NVC53297HYDDRTR2HMF66",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2384,7 +2335,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M46DS5HNJ5GDJEQ6JZW48GKK",
+          "X-Task-ID": "01M46NVC53297HYDDRTR2HMF66",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2425,7 +2376,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M46DS5HNJ5GDJEQ6JZW48GKK",
+          "X-Task-ID": "01M46NVC53297HYDDRTR2HMF66",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2466,7 +2417,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M46DS5HNJ5GDJEQ6JZW48GKK",
+          "X-Task-ID": "01M46NVC53297HYDDRTR2HMF66",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2507,7 +2458,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M46DS5HNJ5GDJEQ6JZW48GKK",
+          "X-Task-ID": "01M46NVC53297HYDDRTR2HMF66",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2548,7 +2499,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M46DS5HNJ5GDJEQ6JZW48GKK",
+          "X-Task-ID": "01M46NVC53297HYDDRTR2HMF66",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2588,7 +2539,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M46DS5HNJ5GDJEQ6JZW48GKK",
+          "X-Task-ID": "01M46NVC53297HYDDRTR2HMF66",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2628,56 +2579,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M46DS5HNJ5GDJEQ6JZW48GKK",
-          "X-PLATFORM": "Visual Studio Code",
-          "X-PLATFORM-VERSION": "1.109.3",
-          "X-CLIENT-TYPE": "VSCode Extension",
-          "X-CLIENT-VERSION": "4.1.10",
-          "X-CORE-VERSION": "4.1.10",
-          "X-Is-Multiroot": "false",
-          "User-Agent": "Cline/4.1.10"
-        },
-        "compat": {
-          "supportsDeveloperRole": false
-        }
-      },
-      {
-        "id": "stealth/space-bunny-alpha",
-        "name": "space-bunny-alpha (Cline)",
-        "reasoning": true,
-        "input": [
-          "text",
-          "image"
-        ],
-        "cost": {
-          "input": 0,
-          "output": 0,
-          "cacheRead": 0,
-          "cacheWrite": 0
-        },
-        "contextWindow": 1000000,
-        "maxTokens": 65536,
-        "_pricingKnown": true,
-        "thinkingLevelMap": {
-          "off": null,
-          "minimal": null,
-          "low": "low",
-          "medium": "medium",
-          "high": "high",
-          "xhigh": "xhigh"
-        },
-        "modelsDev": {
-          "id": "stealth/space-bunny-alpha",
-          "name": "Space Bunny Alpha",
-          "family": "alpha"
-        },
-        "api": "openai-completions",
-        "provider": "cline",
-        "baseUrl": "https://api.cline.bot/api/v1",
-        "headers": {
-          "HTTP-Referer": "https://cline.bot",
-          "X-Title": "Cline",
-          "X-Task-ID": "01M46DS5HNJ5GDJEQ6JZW48GKK",
+          "X-Task-ID": "01M46NVC53297HYDDRTR2HMF66",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2732,7 +2634,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M46DS5HNJ5GDJEQ6JZW48GKK",
+          "X-Task-ID": "01M46NVC53297HYDDRTR2HMF66",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2778,7 +2680,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M46DS5HNJ5GDJEQ6JZW48GKK",
+          "X-Task-ID": "01M46NVC53297HYDDRTR2HMF66",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2792,7 +2694,7 @@
         }
       }
     ],
-    "checkedAt": 1791217199124
+    "checkedAt": 1791225661101
   },
   "fastrouter": {
     "models": [
@@ -3063,7 +2965,7 @@
         }
       }
     ],
-    "checkedAt": 1791217199149
+    "checkedAt": 1791225661165
   },
   "anthropic": {
     "models": [

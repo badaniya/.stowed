@@ -4,17 +4,22 @@
   "defaultModel": "muse-spark-1.3-contributor-free",
   "theme": "pi-catppuccin-mocha",
   "packages": [
+    "npm:pi-markdown-preview",
+    {
+      "source": "npm:@aliou/pi-guardrails",
+      "extensions": [
+        "+src/index.ts"
+      ]
+    },
     "npm:pi-claude-auth",
+    "npm:@tintinweb/pi-subagents",
     "npm:pi-lens",
     "npm:@eiei114/pi-sub-bar",
     "npm:pi-free",
     "npm:@narumitw/pi-btw",
-    "npm:@langfuse/pi-observability-plugin",
-    "npm:billion-context",
-    "npm:pi-mcp-adapter",
-    "npm:pi-markdown-preview",
-    "npm:@gotgenes/pi-subagents",
-    "npm:@narumitw/pi-goal"
+    "npm:@schovest/pi-goal",
+    "npm:@narumitw/pi-lsp",
+    "npm:@langfuse/pi-observability-plugin"
   ],
   "defaultThinkingLevel": "minimal",
   "hideThinkingBlock": false,
@@ -24,6 +29,7 @@
     "anthropic/claude-haiku-4-5",
     "anthropic/claude-sonnet-5",
     "anthropic/claude-opus-5",
+    "github-copilot/claude-sonnet-5",
     "github-copilot/gemini-3.7-flash",
     "github-copilot/claude-haiku-4.5",
     "github-copilot/claude-sonnet-5.5",
@@ -36,7 +42,13 @@
     "cline/nvidia/nemotron-3.5-content-safety:free",
     "cline/openrouter/free",
     "fastrouter/nvidia/nemotron-3-super:free",
-    "cline/nvidia/nemotron-3-ultra-550b-a55b:free"
+    "cline/nvidia/nemotron-3-ultra-550b-a55b:free",
+    "opencode-free/jev-1.13-free",
+    "opencode-free/nemotron-3-ultra-free",
+    "opencode-free/muse-spark-1.3-contributor-free",
+    "opencode-free/mimo-v2.6-flash-free",
+    "cline/cline-free/muse-spark-1.3-contributor",
+    "cline/cline-free/mimo-v2.6-flash"
   ],
   "extensions": [
     "-builtin:mcp"
