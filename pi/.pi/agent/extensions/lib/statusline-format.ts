@@ -360,14 +360,19 @@ export interface MetadataInput {
 
 /**
  * Build the ordered metadata parts for the footer's first row:
- * model, token usage, cost (if non-zero), context percent (if known),
- * elapsed time, repository, then effort level (if known).
+ * model, effort level (if known), token usage, cost (if non-zero),
+ * context percent (if known), elapsed time, then repository.
  */
 export function buildMetadataParts(input: MetadataInput): MetadataPart[] {
   const parts: MetadataPart[] = [];
 
   if (input.modelId) {
     parts.push({ text: input.modelId, color: 'accent' });
+  }
+
+  const effortText = formatEffort(input.effort);
+  if (effortText !== undefined) {
+    parts.push({ text: effortText, color: 'muted' });
   }
 
   parts.push({ text: formatTokenUsage(input.tokenInput, input.tokenOutput), color: 'syntaxType' });
@@ -389,11 +394,6 @@ export function buildMetadataParts(input: MetadataInput): MetadataPart[] {
     const label =
       input.repoMaxWidth !== undefined ? shortenRepository(input.repoLabel, input.repoMaxWidth) : input.repoLabel;
     parts.push({ text: label, color: 'accent' });
-  }
-
-  const effortText = formatEffort(input.effort);
-  if (effortText !== undefined) {
-    parts.push({ text: effortText, color: 'muted' });
   }
 
   return parts;
