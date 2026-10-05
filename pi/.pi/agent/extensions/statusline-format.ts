@@ -24,22 +24,22 @@ function classifyTone(value: string): StatusTone {
   }
 
   // Error patterns: error, fail, disconnected, refused
-  if (/error|fail|disconnected|refused/i.test(lower)) {
+  if (/error|fail|disconnected|refused/.test(lower)) {
     return 'error';
   }
 
   // Warning patterns: warn, degraded, unknown
-  if (/warn|degraded|unknown/i.test(lower)) {
+  if (/warn|degraded|unknown/.test(lower)) {
     return 'warning';
   }
 
   // LSP/pi-lens Active: pattern is info tone
-  if (/active:/i.test(lower)) {
+  if (/active:/.test(lower)) {
     return 'info';
   }
 
   // Success patterns: trace sent, enabled, connected, active
-  if (/trace\s+sent|enabled|connected|active/i.test(lower)) {
+  if (/trace\s+sent|enabled|connected|active/.test(lower)) {
     return 'success';
   }
 
@@ -58,13 +58,14 @@ function extractMcpCount(value: string): number | undefined {
 
 /**
  * Count comma-separated names after "Active:" pattern.
- * Returns the count of items, or undefined if pattern not found.
+ * Returns the count of items, or undefined if pattern not found or no names.
  */
 function countLspNames(value: string): number | undefined {
-  const match = value.match(/Active:\s*(.+)/i);
+  const lower = value.toLowerCase();
+  const match = lower.match(/active:\s*(.+)/);
   if (!match) return undefined;
   const names = match[1].split(',').map((s) => s.trim()).filter((s) => s.length > 0);
-  return names.length;
+  return names.length > 0 ? names.length : undefined;
 }
 
 /**
@@ -87,8 +88,9 @@ function compactSingle(normKey: string, value: string | undefined): CompactStatu
   }
 
   if (normKey === 'lsp') {
+    // countLspNames returns undefined if no names found (including whitespace-only)
     const count = value ? countLspNames(value) : undefined;
-    const label = count !== undefined ? `LSP ${count}` : 'LSP';
+    const label = count !== undefined && count > 0 ? `LSP ${count}` : 'LSP';
     return { label, tone };
   }
 
@@ -157,23 +159,31 @@ export function chooseLayout(
  * Get a code-point-safe suffix of a string.
  * Uses Array.from() to iterate code points, then takes from the end.
  */
-function getCodePointSuffix(str: string, maxLength: number): string {
+function getCodePointSuffix(str: string, maxCodePoints: number): string {
   const codePoints = Array.from(str);
-  if (codePoints.length <= maxLength) {
+  if (codePoints.length <= maxCodePoints) {
     return str;
   }
-  return codePoints.slice(-maxLength).join('');
+  return codePoints.slice(-maxCodePoints).join('');
 }
 
 /**
- * Shorten a repository path to fit within maxWidth.
+ * Get the code-point width of a string.
+ */
+function codePointWidth(str: string): number {
+  return Array.from(str).length;
+}
+
+/**
+ * Shorten a repository path to fit within maxWidth (measured in code points).
  * Strategy:
  * 1. Return original if it fits.
  * 2. Retain last two slash segments under …/ prefix.
  * 3. Fall back to … + code-point-safe suffix if needed.
  */
 export function shortenRepository(repository: string, maxWidth: number): string {
-  if (repository.length <= maxWidth) {
+  const repoWidth = codePointWidth(repository);
+  if (repoWidth <= maxWidth) {
     return repository;
   }
 
@@ -181,40 +191,66 @@ export function shortenRepository(repository: string, maxWidth: number): string 
 
   // Try …/last/two/segments
   if (parts.length >= 2) {
-    const last = parts[parts.length - 1];
-    const secondLast = parts[parts.length - 2];
-    const twoSegment = `…/${secondLast}/${last}`;
-    if (twoSegment.length <= maxWidth) {
-      return twoSegment;
+    const last = parts.at(-1);
+    const secondLast = parts.at(-2);
+    if (last && secondLast) {
+      const twoSegment = `…/${secondLast}/${last}`;
+      if (codePointWidth(twoSegment) <= maxWidth) {
+        return twoSegment;
+      }
     }
   }
 
   // Fall back to … plus a code-point-safe suffix
-  // Ensure we leave room for … and at least one character
-  const maxSuffix = Math.max(1, maxWidth - 1);
+  const ellipsis = '…';
+  const maxSuffix = Math.max(1, maxWidth - codePointWidth(ellipsis));
   const suffix = getCodePointSuffix(repository, maxSuffix);
-  const result = `…${suffix}`;
+  const result = `${ellipsis}${suffix}`;
   // Trim the final result to maxWidth, code-point-safe
-  const resultCodePoints = Array.from(result);
-  return resultCodePoints.slice(0, maxWidth).join('');
+  const resultWidth = codePointWidth(result);
+  if (resultWidth <= maxWidth) {
+    return result;
+  }
+  const codePoints = Array.from(result);
+  return codePoints.slice(0, maxWidth).join('');
 }
 
 /**
- * Format a count: 0-999 as-is, 1000+ with K/M suffixes.
- * e.g., 1500 -> "1.5K", 2500000 -> "2.5M"
+ * Format a count: 0-999 as-is, 1000+ with K/M/B suffixes.
+ * e.g., 1500 -> "1.5K", 2500000 -> "2.5M", 1500000000 -> "1.5B"
+ * Never emits "1000.0<K|M|B>"; if rounding would produce that, steps to next unit.
+ * Negative values return their string representation.
  */
 export function formatCount(value: number): string {
+  // Below 1000 (including negative)
   if (value < 1000) {
-    return String(value);
+    return String(Math.floor(value));
   }
 
+  // K range: 1000-999999
   if (value < 1000000) {
     const k = value / 1000;
-    const formatted = k % 1 === 0 ? String(k) : k.toFixed(1);
+    // Check if rounded value would be >= 1000; if so, emit 1M
+    if (Math.round(k) >= 1000) {
+      return '1M';
+    }
+    const formatted = k % 1 === 0 ? String(Math.floor(k)) : k.toFixed(1);
     return `${formatted}K`;
   }
 
-  const m = value / 1000000;
-  const formatted = m % 1 === 0 ? String(m) : m.toFixed(1);
-  return `${formatted}M`;
+  // M range: 1000000-999999999
+  if (value < 1000000000) {
+    const m = value / 1000000;
+    // Check if rounded value would be >= 1000; if so, emit 1B
+    if (Math.round(m) >= 1000) {
+      return '1B';
+    }
+    const formatted = m % 1 === 0 ? String(Math.floor(m)) : m.toFixed(1);
+    return `${formatted}M`;
+  }
+
+  // B range: 1000000000+
+  const b = value / 1000000000;
+  const formatted = b % 1 === 0 ? String(Math.floor(b)) : b.toFixed(1);
+  return `${formatted}B`;
 }

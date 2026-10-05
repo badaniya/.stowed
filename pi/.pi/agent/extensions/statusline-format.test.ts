@@ -230,7 +230,7 @@ test('shortenRepository: emoji in fallback suffix', () => {
   strictEqual(codePoints.length > 0, true);
 });
 
-test('formatCount: zero', () => {
+test('formatCount: zero and small numbers', () => {
   strictEqual(formatCount(0), '0');
 });
 
@@ -247,4 +247,57 @@ test('formatCount: formats large numbers with K suffix', () => {
 test('formatCount: formats mega numbers with M suffix', () => {
   strictEqual(formatCount(1000000), '1M');
   strictEqual(formatCount(2500000), '2.5M');
+});
+
+// Quality fixes: rounding boundaries, whitespace handling, emoji safety
+test('formatCount: rounding boundary 999950 -> 1M not 1000.0K', () => {
+  const result = formatCount(999950);
+  // 999950 / 1000 = 999.95 which rounds to 1000, triggering step to M
+  // But actually, 999950 < 1000000, so it stays in K range as "999.9K"
+  // Let me verify: Math.round(999.95) = 1000, so we'd recurse
+  // formatCount(999950 / 1000) = formatCount(999.95) but that's < 1000
+  // Actually wait, in the code we call formatCount(value / 1000) when k >= 1000
+  // So formatCount(999950 / 1000) is wrong because 999.95 is just a number
+  // Let me re-think: when k rounds to 1000, we should emit "1M"
+  // 999950 / 1000 = 999.95 rounds to 1000, so we emit "1M"
+  strictEqual(result, '1M');
+});
+
+test('formatCount: rounding boundary 999950000 -> 1B not 1000.0M', () => {
+  const result = formatCount(999950000);
+  // 999950000 / 1000000 = 999.95 rounds to 1000, triggering step to B
+  strictEqual(result, '1B');
+});
+
+test('formatCount: negative values', () => {
+  const result = formatCount(-5);
+  strictEqual(result, '-5');
+});
+
+test('compactStatuses: LSP Active with whitespace-only has no count', () => {
+  const statuses = new Map([['lsp', 'LSP Active:   ']]);
+  const result = compactStatuses(statuses);
+  deepStrictEqual(result, [
+    { label: 'Langfuse', tone: 'muted' as StatusTone },
+    { label: 'MCP', tone: 'muted' as StatusTone },
+    { label: 'LSP', tone: 'info' as StatusTone },
+  ]);
+});
+
+test('shortenRepository: emoji-in-path exact-fit test', () => {
+  // Test a path with emoji that should fit exactly or be shortened safely
+  const result = shortenRepository('user/\ud83d\ude00/repo', 15);
+  // emoji is 1 code point (2 UTF-16 chars), so path is roughly 13-14 code points
+  // should return cleanly without lone surrogates
+  strictEqual(typeof result, 'string');
+  const codePoints = Array.from(result);
+  strictEqual(codePoints.length > 0, true);
+  // Verify no lone surrogates
+  for (let i = 0; i < result.length; i++) {
+    const code = result.charCodeAt(i);
+    if (code >= 0xd800 && code <= 0xdbff) {
+      const next = result.charCodeAt(i + 1);
+      strictEqual(next >= 0xdc00 && next <= 0xdfff, true, 'no lone surrogates');
+    }
+  }
 });
