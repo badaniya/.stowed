@@ -1,9 +1,5 @@
 {
   "mcpServers": {
-    "context-mode": {
-      "command": "context-mode",
-      "exposure": "direct"
-    },
     "chrome-devtools": {
       "command": "npx",
       "args": [
