@@ -7,6 +7,18 @@ import {
   chooseLayout,
   shortenRepository,
   formatCount,
+  toneToSemanticColor,
+  formatTokenUsage,
+  formatCost,
+  formatContextPercent,
+  contextPercentTone,
+  formatEffort,
+  formatElapsed,
+  resolveRepoLabel,
+  buildMetadataParts,
+  metadataPlainWidth,
+  healthPlainWidth,
+  chooseFooterLayout,
 } from './statusline-format';
 
 // compactStatuses tests
@@ -295,4 +307,188 @@ test('formatCount: zero and negative values', () => {
   strictEqual(formatCount(-1), '-1');
   strictEqual(formatCount(-100), '-100');
   strictEqual(formatCount(-999), '-999');
+});
+
+// toneToSemanticColor tests
+test('toneToSemanticColor: maps each tone to a valid theme token', () => {
+  strictEqual(toneToSemanticColor('success'), 'success');
+  strictEqual(toneToSemanticColor('warning'), 'warning');
+  strictEqual(toneToSemanticColor('error'), 'error');
+  strictEqual(toneToSemanticColor('info'), 'accent');
+  strictEqual(toneToSemanticColor('muted'), 'muted');
+});
+
+// formatTokenUsage tests
+test('formatTokenUsage: formats input/output with arrows via formatCount', () => {
+  strictEqual(formatTokenUsage(0, 0), '\u21910 \u21930');
+  strictEqual(formatTokenUsage(1500, 2500000), '\u21911.5K \u21932.5M');
+});
+
+// formatCost tests
+test('formatCost: omits when zero', () => {
+  strictEqual(formatCost(0), undefined);
+});
+
+test('formatCost: formats to 3 decimal places', () => {
+  strictEqual(formatCost(1.2), '$1.200');
+  strictEqual(formatCost(0.0051), '$0.005');
+});
+
+// formatContextPercent tests
+test('formatContextPercent: undefined/null yields undefined', () => {
+  strictEqual(formatContextPercent(undefined), undefined);
+  strictEqual(formatContextPercent(null), undefined);
+});
+
+test('formatContextPercent: rounds to whole number', () => {
+  strictEqual(formatContextPercent(42.4), '42%');
+  strictEqual(formatContextPercent(42.5), '43%');
+});
+
+// contextPercentTone tests
+test('contextPercentTone: boundaries at 70 and 90', () => {
+  strictEqual(contextPercentTone(0), 'success');
+  strictEqual(contextPercentTone(69), 'success');
+  strictEqual(contextPercentTone(70), 'warning');
+  strictEqual(contextPercentTone(89), 'warning');
+  strictEqual(contextPercentTone(90), 'error');
+  strictEqual(contextPercentTone(100), 'error');
+});
+
+// formatEffort tests
+test('formatEffort: undefined yields undefined, otherwise "effort:<level>"', () => {
+  strictEqual(formatEffort(undefined), undefined);
+  strictEqual(formatEffort('high'), 'effort:high');
+});
+
+// formatElapsed tests
+test('formatElapsed: omits hours segment when zero', () => {
+  strictEqual(formatElapsed(0), '\u231a0m');
+  strictEqual(formatElapsed(59999), '\u231a0m');
+  strictEqual(formatElapsed(60000), '\u231a1m');
+});
+
+test('formatElapsed: includes hours segment when non-zero', () => {
+  strictEqual(formatElapsed(3600000), '\u231a1h0m');
+  strictEqual(formatElapsed(3660000), '\u231a1h1m');
+  strictEqual(formatElapsed(7320000), '\u231a2h2m');
+});
+
+test('formatElapsed: negative values clamp to zero', () => {
+  strictEqual(formatElapsed(-500), '\u231a0m');
+});
+
+// resolveRepoLabel tests
+test('resolveRepoLabel: basename with branch', () => {
+  strictEqual(resolveRepoLabel('/home/user/project', 'main'), 'project (main)');
+});
+
+test('resolveRepoLabel: basename without branch', () => {
+  strictEqual(resolveRepoLabel('/home/user/project', null), 'project');
+  strictEqual(resolveRepoLabel('/home/user/project', undefined), 'project');
+});
+
+test('resolveRepoLabel: trailing slash handled', () => {
+  strictEqual(resolveRepoLabel('/home/user/project/', 'dev'), 'project (dev)');
+});
+
+// buildMetadataParts tests
+test('buildMetadataParts: full order model, tokens, cost, context, elapsed, repo, effort', () => {
+  const parts = buildMetadataParts({
+    modelId: 'claude-sonnet',
+    tokenInput: 100,
+    tokenOutput: 200,
+    cost: 0.5,
+    contextPercent: 42,
+    effort: 'high',
+    elapsedMs: 60000,
+    repoLabel: 'project (main)',
+  });
+  deepStrictEqual(parts, [
+    { text: 'claude-sonnet', color: 'accent' },
+    { text: '\u2191100 \u2193200', color: 'syntaxType' },
+    { text: '$0.500', color: 'warning' },
+    { text: '42%', color: 'success' },
+    { text: '\u231a1m', color: 'dim' },
+    { text: 'project (main)', color: 'accent' },
+    { text: 'effort:high', color: 'muted' },
+  ]);
+});
+
+test('buildMetadataParts: omits cost when zero, effort when undefined, model when absent', () => {
+  const parts = buildMetadataParts({
+    tokenInput: 0,
+    tokenOutput: 0,
+    cost: 0,
+    contextPercent: undefined,
+    elapsedMs: 0,
+  });
+  deepStrictEqual(parts, [
+    { text: '\u21910 \u21930', color: 'syntaxType' },
+    { text: '\u231a0m', color: 'dim' },
+  ]);
+});
+
+test('buildMetadataParts: high context percent gets error tone', () => {
+  const parts = buildMetadataParts({
+    tokenInput: 0,
+    tokenOutput: 0,
+    cost: 0,
+    contextPercent: 95,
+    elapsedMs: 0,
+  });
+  strictEqual(parts.some((p) => p.text === '95%' && p.color === 'error'), true);
+});
+
+test('buildMetadataParts: shortens repoLabel when repoMaxWidth is given', () => {
+  const parts = buildMetadataParts({
+    tokenInput: 0,
+    tokenOutput: 0,
+    cost: 0,
+    elapsedMs: 0,
+    repoLabel: 'badaniya/GoDCApp/NVO-13662 (main)',
+    repoMaxWidth: 10,
+  });
+  const repoPart = parts.find((p) => p.color === 'accent');
+  strictEqual(repoPart !== undefined, true);
+  strictEqual(Array.from(repoPart!.text).length <= 10, true);
+});
+
+// metadataPlainWidth / healthPlainWidth tests
+test('metadataPlainWidth: sums text widths plus single-space separators', () => {
+  const parts = [
+    { text: 'ab', color: 'accent' as const },
+    { text: 'cde', color: 'dim' as const },
+  ];
+  strictEqual(metadataPlainWidth(parts), 2 + 3 + 1);
+});
+
+test('metadataPlainWidth: empty array is zero', () => {
+  strictEqual(metadataPlainWidth([]), 0);
+});
+
+test('healthPlainWidth: sums label widths plus " | " separators', () => {
+  const statuses: CompactStatus[] = [
+    { label: 'Langfuse', tone: 'muted' },
+    { label: 'MCP 2', tone: 'success' },
+    { label: 'LSP', tone: 'muted' },
+  ];
+  strictEqual(healthPlainWidth(statuses), 8 + 5 + 3 + 2 * 3);
+});
+
+test('healthPlainWidth: empty array is zero', () => {
+  strictEqual(healthPlainWidth([]), 0);
+});
+
+// chooseFooterLayout tests
+test('chooseFooterLayout: delegates to chooseLayout using computed widths', () => {
+  const parts = [{ text: '0123456789'.repeat(7), color: 'accent' as const }]; // 70 chars
+  const statuses: CompactStatus[] = [
+    { label: 'Langfuse', tone: 'muted' },
+    { label: 'MCP', tone: 'muted' },
+    { label: 'LSP', tone: 'muted' },
+  ];
+  // metadataWidth=70, healthWidth = 8+3+3 + 2*3 = 20 -> required 70+3+20=93
+  strictEqual(chooseFooterLayout(93, parts, statuses), 'single');
+  strictEqual(chooseFooterLayout(92, parts, statuses), 'stacked');
 });

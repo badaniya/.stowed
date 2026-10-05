@@ -256,3 +256,172 @@ export function formatCount(value: number): string {
   const formatted = b % 1 === 0 ? String(Math.floor(b)) : b.toFixed(1);
   return `${formatted}B`;
 }
+
+/**
+ * Semantic color names used by the custom footer. Each is a valid pi Theme
+ * `ThemeColor` token (never a hard-coded ANSI value); the runtime extension
+ * passes these straight into `theme.fg(color, text)`.
+ */
+export type SemanticColor = 'accent' | 'success' | 'warning' | 'error' | 'muted' | 'dim' | 'syntaxType';
+
+/**
+ * Map a health-status tone to a semantic theme color.
+ * There is no dedicated "info" theme token, so info maps to 'accent'.
+ */
+export function toneToSemanticColor(tone: StatusTone): SemanticColor {
+  switch (tone) {
+    case 'success':
+      return 'success';
+    case 'warning':
+      return 'warning';
+    case 'error':
+      return 'error';
+    case 'info':
+      return 'accent';
+    case 'muted':
+    default:
+      return 'muted';
+  }
+}
+
+/** Format aggregated token usage as "↑<input> ↓<output>" using formatCount. */
+export function formatTokenUsage(input: number, output: number): string {
+  return `↑${formatCount(input)} ↓${formatCount(output)}`;
+}
+
+/** Format aggregated cost, omitting it entirely when zero. */
+export function formatCost(cost: number): string | undefined {
+  if (cost === 0) {
+    return undefined;
+  }
+  return `$${cost.toFixed(3)}`;
+}
+
+/** Format context usage percent, rounded to a whole number. Undefined/null yields undefined. */
+export function formatContextPercent(percent: number | null | undefined): string | undefined {
+  if (percent === null || percent === undefined) {
+    return undefined;
+  }
+  return `${Math.round(percent)}%`;
+}
+
+/** Classify context percent into a tone: green below 70, warning 70-89, error 90+. */
+export function contextPercentTone(percent: number): 'success' | 'warning' | 'error' {
+  if (percent >= 90) {
+    return 'error';
+  }
+  if (percent >= 70) {
+    return 'warning';
+  }
+  return 'success';
+}
+
+/** Format the thinking/effort level as "effort:<level>". Undefined input yields undefined. */
+export function formatEffort(level: string | undefined): string | undefined {
+  return level ? `effort:${level}` : undefined;
+}
+
+/** Format elapsed milliseconds as "⌚<Nh><Nm>", omitting the hours segment when zero. */
+export function formatElapsed(elapsedMs: number): string {
+  const totalMinutes = Math.max(0, Math.floor(elapsedMs / 60000));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return hours > 0 ? `⌚${hours}h${minutes}m` : `⌚${minutes}m`;
+}
+
+/**
+ * Resolve the repository label: "<basename> (<branch>)" when a branch is known,
+ * otherwise just the working directory basename.
+ */
+export function resolveRepoLabel(cwd: string, branch: string | null | undefined): string {
+  const segments = cwd.split('/').filter((s) => s.length > 0);
+  const base = segments.length > 0 ? segments.at(-1)! : cwd;
+  return branch ? `${base} (${branch})` : base;
+}
+
+/** A single colored segment of the metadata row. */
+export interface MetadataPart {
+  text: string;
+  color: SemanticColor;
+}
+
+export interface MetadataInput {
+  modelId?: string;
+  tokenInput: number;
+  tokenOutput: number;
+  cost: number;
+  contextPercent?: number | null;
+  effort?: string;
+  elapsedMs: number;
+  repoLabel?: string;
+  /** When provided, repoLabel is shortened to fit this code-point width via shortenRepository. */
+  repoMaxWidth?: number;
+}
+
+/**
+ * Build the ordered metadata parts for the footer's first row:
+ * model, token usage, cost (if non-zero), context percent (if known),
+ * elapsed time, repository, then effort level (if known).
+ */
+export function buildMetadataParts(input: MetadataInput): MetadataPart[] {
+  const parts: MetadataPart[] = [];
+
+  if (input.modelId) {
+    parts.push({ text: input.modelId, color: 'accent' });
+  }
+
+  parts.push({ text: formatTokenUsage(input.tokenInput, input.tokenOutput), color: 'syntaxType' });
+
+  const costText = formatCost(input.cost);
+  if (costText !== undefined) {
+    parts.push({ text: costText, color: 'warning' });
+  }
+
+  const pctText = formatContextPercent(input.contextPercent);
+  if (pctText !== undefined) {
+    const pct = Math.round(input.contextPercent as number);
+    parts.push({ text: pctText, color: contextPercentTone(pct) });
+  }
+
+  parts.push({ text: formatElapsed(input.elapsedMs), color: 'dim' });
+
+  if (input.repoLabel) {
+    const label =
+      input.repoMaxWidth !== undefined ? shortenRepository(input.repoLabel, input.repoMaxWidth) : input.repoLabel;
+    parts.push({ text: label, color: 'accent' });
+  }
+
+  const effortText = formatEffort(input.effort);
+  if (effortText !== undefined) {
+    parts.push({ text: effortText, color: 'muted' });
+  }
+
+  return parts;
+}
+
+/** Code-point width of the metadata row if joined with single spaces, before coloring. */
+export function metadataPlainWidth(parts: readonly MetadataPart[]): number {
+  if (parts.length === 0) {
+    return 0;
+  }
+  const textWidth = parts.reduce((sum, p) => sum + Array.from(p.text).length, 0);
+  return textWidth + (parts.length - 1);
+}
+
+/** Code-point width of the health row if joined with " | " separators, before coloring. */
+export function healthPlainWidth(statuses: readonly CompactStatus[]): number {
+  if (statuses.length === 0) {
+    return 0;
+  }
+  const textWidth = statuses.reduce((sum, s) => sum + Array.from(s.label).length, 0);
+  return textWidth + (statuses.length - 1) * 3;
+}
+
+/** Convenience wrapper: choose single/stacked layout directly from metadata parts and health statuses. */
+export function chooseFooterLayout(
+  width: number,
+  metadataParts: readonly MetadataPart[],
+  healthStatuses: readonly CompactStatus[],
+): 'single' | 'stacked' {
+  return chooseLayout(width, metadataPlainWidth(metadataParts), healthPlainWidth(healthStatuses));
+}
