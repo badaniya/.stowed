@@ -395,7 +395,7 @@ test('resolveRepoLabel: trailing slash handled', () => {
 });
 
 // buildMetadataParts tests
-test('buildMetadataParts: full order model, effort, tokens, cost, context, elapsed, repo', () => {
+test('buildMetadataParts: full order model, effort, context, tokens, cost, elapsed, repo', () => {
   const parts = buildMetadataParts({
     modelId: 'claude-sonnet',
     tokenInput: 100,
@@ -409,9 +409,9 @@ test('buildMetadataParts: full order model, effort, tokens, cost, context, elaps
   deepStrictEqual(parts, [
     { text: 'claude-sonnet', color: 'accent' },
     { text: 'effort:high', color: 'muted' },
+    { text: '42%', color: 'success' },
     { text: '\u2191100 \u2193200', color: 'syntaxType' },
     { text: '$0.500', color: 'warning' },
-    { text: '42%', color: 'success' },
     { text: '\u231a1m', color: 'dim' },
     { text: 'project (main)', color: 'accent' },
   ]);

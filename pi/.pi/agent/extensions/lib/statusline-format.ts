@@ -360,8 +360,8 @@ export interface MetadataInput {
 
 /**
  * Build the ordered metadata parts for the footer's first row:
- * model, effort level (if known), token usage, cost (if non-zero),
- * context percent (if known), elapsed time, then repository.
+ * model, effort level (if known), context percent (if known), token usage,
+ * cost (if non-zero), elapsed time, then repository.
  */
 export function buildMetadataParts(input: MetadataInput): MetadataPart[] {
   const parts: MetadataPart[] = [];
@@ -375,17 +375,17 @@ export function buildMetadataParts(input: MetadataInput): MetadataPart[] {
     parts.push({ text: effortText, color: 'muted' });
   }
 
+  const pctText = formatContextPercent(input.contextPercent);
+  if (pctText !== undefined) {
+    const pct = Math.round(input.contextPercent as number);
+    parts.push({ text: pctText, color: contextPercentTone(pct) });
+  }
+
   parts.push({ text: formatTokenUsage(input.tokenInput, input.tokenOutput), color: 'syntaxType' });
 
   const costText = formatCost(input.cost);
   if (costText !== undefined) {
     parts.push({ text: costText, color: 'warning' });
-  }
-
-  const pctText = formatContextPercent(input.contextPercent);
-  if (pctText !== undefined) {
-    const pct = Math.round(input.contextPercent as number);
-    parts.push({ text: pctText, color: contextPercentTone(pct) });
   }
 
   parts.push({ text: formatElapsed(input.elapsedMs), color: 'dim' });
