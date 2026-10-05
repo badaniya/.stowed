@@ -1,0 +1,2 @@
+name = "Open workspace: NG-AIO-msreepada-vm"
+command = "bash ~/.config/herdr-spreader/ng-aio-msreepada-vm.sh"

@@ -1747,8 +1747,8 @@
         "type": "chat"
       }
     ],
-    "checkedAt": 1791166227736,
-    "lastModified": 1791044221000,
+    "checkedAt": 1790783385104,
+    "lastModified": 1790706948000,
     "etag": "W/\"9341aaefcb2a362055499f32c3b044ba\""
   },
   "cline": {
@@ -3063,6 +3063,8 @@
         }
       }
     ],
-    "checkedAt": 1791166760145
+    "checkedAt": 1790955897174,
+    "lastModified": 1790706929000,
+    "etag": "W/\"3442ece5a2e978b487a859a8a172062c\""
   }
 }

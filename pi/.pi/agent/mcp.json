@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "context-mode": {
+      "command": "context-mode",
+      "exposure": "direct"
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest",
+        "--executablePath",
+        "/usr/bin/brave-browser",
+        "--isolated"
+      ],
+      "exposure": "direct"
+    },
+    "codebase-memory-mcp": {
+      "command": "/home/badaniya/.local/bin/codebase-memory-mcp",
+      "exposure": "direct"
+    }
+  }
+}
