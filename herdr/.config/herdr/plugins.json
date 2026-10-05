@@ -805,6 +805,42 @@
     }
   },
   {
+    "plugin_id": "mochi",
+    "name": "mochi",
+    "version": "6",
+    "min_herdr_version": "0.8.0",
+    "description": "Shows your agents on mochi's Live Activity on your iPhone. Installed by the mochi app.",
+    "manifest_path": "/home/badaniya/.mochi/herdr-plugin/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.mochi/herdr-plugin",
+    "enabled": true,
+    "platforms": [
+      "macos",
+      "linux"
+    ],
+    "startup": [
+      {
+        "command": [
+          "sh",
+          "-c",
+          "exec sh \"$HOME/.mochi/herdr-plugin/hook.sh\" watch"
+        ]
+      }
+    ],
+    "events": [
+      {
+        "on": "pane.agent_status_changed",
+        "command": [
+          "sh",
+          "-c",
+          "exec sh \"$HOME/.mochi/herdr-plugin/hook.sh\""
+        ]
+      }
+    ],
+    "source": {
+      "kind": "local"
+    }
+  },
+  {
     "plugin_id": "ntindle.herdr-resurrect",
     "name": "herdr-resurrect",
     "version": "0.2.0",

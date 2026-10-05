@@ -198,11 +198,14 @@ if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)
 which mise >/dev/null && eval "$(~/.local/bin/mise activate zsh)"
 
 # bun completions
-[ -s "/home/badaniya/.bun/_bun" ] && source "/home/badaniya/.bun/_bun"
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
 # Added by codebase-memory-mcp install
-export PATH="/home/badaniya/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
+
+# Pi
+export PATH="$HOME/.pi/agent/bin:$PATH"

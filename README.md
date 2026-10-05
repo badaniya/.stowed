@@ -388,7 +388,8 @@ curl -fsSL https://opencode.ai/install | bash
 ### 6) Pi - A fully customizable AI coding agent for the terminal
 
 ```bash
-npm install -g @mariozechner/pi-coding-agent        # Pi installation
+curl -fsSL https://pi.dev/install.sh | sh           # Pi installation
+
 pi install npm:@tintinweb/pi-subagents              # Claude code-like subagents
 pi install npm:pi-mcp-adapter                       # MCP server support
 pi install npm:@aliou/pi-guardrails                 # Prompt user for dangerous shell commands
