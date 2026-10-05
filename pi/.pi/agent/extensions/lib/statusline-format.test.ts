@@ -321,9 +321,9 @@ test('toneToSemanticColor: maps each tone to a valid theme token', () => {
 });
 
 // formatTokenUsage tests
-test('formatTokenUsage: renders input then output with directional arrows', () => {
-  strictEqual(formatTokenUsage(0, 0), '\u21930 \u21910');
-  strictEqual(formatTokenUsage(1500, 2500000), '\u21931.5K \u21912.5M');
+test('formatTokenUsage: renders input upward and output downward', () => {
+  strictEqual(formatTokenUsage(0, 0), '\u21910 \u21930');
+  strictEqual(formatTokenUsage(1500, 2500000), '\u21911.5K \u21932.5M');
 });
 
 // formatCost tests
@@ -410,7 +410,7 @@ test('buildMetadataParts: full order model, effort, context, tokens, cost, elaps
     { text: 'claude-sonnet', color: 'accent' },
     { text: 'high', color: 'muted', attachToPrevious: true },
     { text: '42%', color: 'success' },
-    { text: '\u2193100 \u2191200', color: 'syntaxType' },
+    { text: '\u2191100 \u2193200', color: 'syntaxType' },
     { text: '$0.500', color: 'warning' },
     { text: '\u231a1m', color: 'dim' },
     { text: 'project (main)', color: 'accent' },
@@ -426,7 +426,7 @@ test('buildMetadataParts: omits cost when zero, effort when undefined, model whe
     elapsedMs: 0,
   });
   deepStrictEqual(parts, [
-    { text: '\u21930 \u21910', color: 'syntaxType' },
+    { text: '\u21910 \u21930', color: 'syntaxType' },
     { text: '\u231a0m', color: 'dim' },
   ]);
 });
