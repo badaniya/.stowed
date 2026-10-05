@@ -7,7 +7,7 @@
  * that logic to pi's ExtensionAPI/ExtensionUIContext.
  *
  * First row (wide/"single" layout): model, effort level, context %, token
- * totals, cost, elapsed time, repo path, then " │ " and the Langfuse/MCP/LSP
+ * totals, cost, elapsed time, repo path, then " │ " and the LSP/MCP/Langfuse
  * health block. On narrow widths ("stacked" layout) metadata is line 1 and
  * health is line 2. chooseFooterLayout (lib/statusline-format.ts) decides which.
  */
@@ -49,6 +49,12 @@ export default function (pi: ExtensionAPI) {
       const unsubscribe = footerData.onBranchChange(() => tui.requestRender());
 
       const colorize = (part: MetadataPart): string => theme.fg(part.color, part.text);
+      const metadataSeparator = (part: MetadataPart, index: number): string => {
+        if (index === 0) {
+          return '';
+        }
+        return theme.fg('dim', part.attachToPrevious ? ' ' : ' │ ');
+      };
 
       return {
         dispose: unsubscribe,
@@ -82,7 +88,7 @@ export default function (pi: ExtensionAPI) {
 
           const healthStatuses = compactStatuses(footerData.getExtensionStatuses());
 
-          const metadataText = metadataParts.map(colorize).join(theme.fg('dim', ' │ '));
+          const metadataText = metadataParts.map((part, index) => `${metadataSeparator(part, index)}${colorize(part)}`).join('');
           const healthText = healthStatuses
             .map((s) => theme.fg(toneToSemanticColor(s.tone), `● ${s.label}`))
             .join(theme.fg('dim', ' │ '));

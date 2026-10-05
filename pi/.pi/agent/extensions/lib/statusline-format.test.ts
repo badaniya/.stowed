@@ -32,9 +32,9 @@ test('compactStatuses: healthy known strings', () => {
   ]);
   const result = compactStatuses(statuses);
   deepStrictEqual(result, [
-    { label: 'Langfuse', tone: 'success' as StatusTone },
-    { label: 'MCP 2', tone: 'success' as StatusTone },
     { label: 'LSP 2', tone: 'info' as StatusTone },
+    { label: 'MCP 2', tone: 'success' as StatusTone },
+    { label: 'Langfuse', tone: 'success' as StatusTone },
   ]);
 });
 
@@ -47,9 +47,9 @@ test('compactStatuses: spec example - trace sent, mcp with count, pi-lens with n
   const result = compactStatuses(statuses);
   strictEqual(result.length, 3);
   deepStrictEqual(result, [
-    { label: 'Langfuse', tone: 'success' as StatusTone },
-    { label: 'MCP 2', tone: 'success' as StatusTone },
     { label: 'LSP 5', tone: 'info' as StatusTone },
+    { label: 'MCP 2', tone: 'success' as StatusTone },
+    { label: 'Langfuse', tone: 'success' as StatusTone },
   ]);
 });
 
@@ -57,9 +57,9 @@ test('compactStatuses: always emits 3 entries even with partial input', () => {
   const statuses = new Map([['mcp', 'error: connection refused']]);
   const result = compactStatuses(statuses);
   deepStrictEqual(result, [
-    { label: 'Langfuse', tone: 'muted' as StatusTone },
-    { label: 'MCP', tone: 'error' as StatusTone },
     { label: 'LSP', tone: 'muted' as StatusTone },
+    { label: 'MCP', tone: 'error' as StatusTone },
+    { label: 'Langfuse', tone: 'muted' as StatusTone },
   ]);
 });
 
@@ -71,9 +71,9 @@ test('compactStatuses: error pattern classification', () => {
   ]);
   const result = compactStatuses(statuses);
   deepStrictEqual(result, [
-    { label: 'Langfuse', tone: 'error' as StatusTone },
-    { label: 'MCP', tone: 'error' as StatusTone },
     { label: 'LSP', tone: 'error' as StatusTone },
+    { label: 'MCP', tone: 'error' as StatusTone },
+    { label: 'Langfuse', tone: 'error' as StatusTone },
   ]);
 });
 
@@ -85,9 +85,9 @@ test('compactStatuses: warning pattern classification', () => {
   ]);
   const result = compactStatuses(statuses);
   deepStrictEqual(result, [
-    { label: 'Langfuse', tone: 'warning' as StatusTone },
-    { label: 'MCP', tone: 'warning' as StatusTone },
     { label: 'LSP', tone: 'warning' as StatusTone },
+    { label: 'MCP', tone: 'warning' as StatusTone },
+    { label: 'Langfuse', tone: 'warning' as StatusTone },
   ]);
 });
 
@@ -99,9 +99,9 @@ test('compactStatuses: classifies by pattern without service name mention', () =
   ]);
   const result = compactStatuses(statuses);
   deepStrictEqual(result, [
-    { label: 'Langfuse', tone: 'success' as StatusTone },
-    { label: 'MCP', tone: 'success' as StatusTone },
     { label: 'LSP', tone: 'success' as StatusTone },
+    { label: 'MCP', tone: 'success' as StatusTone },
+    { label: 'Langfuse', tone: 'success' as StatusTone },
   ]);
 });
 
@@ -113,9 +113,9 @@ test('compactStatuses: keys are matched case-insensitively', () => {
   ]);
   const result = compactStatuses(statuses);
   deepStrictEqual(result, [
-    { label: 'Langfuse', tone: 'success' as StatusTone },
-    { label: 'MCP 1', tone: 'success' as StatusTone },
     { label: 'LSP 1', tone: 'info' as StatusTone },
+    { label: 'MCP 1', tone: 'success' as StatusTone },
+    { label: 'Langfuse', tone: 'success' as StatusTone },
   ]);
 });
 
@@ -123,9 +123,9 @@ test('compactStatuses: mcp with numeric count', () => {
   const statuses = new Map([['mcp', 'MCP: 3']]);
   const result = compactStatuses(statuses);
   deepStrictEqual(result, [
-    { label: 'Langfuse', tone: 'muted' as StatusTone },
-    { label: 'MCP 3', tone: 'success' as StatusTone },
     { label: 'LSP', tone: 'muted' as StatusTone },
+    { label: 'MCP 3', tone: 'success' as StatusTone },
+    { label: 'Langfuse', tone: 'muted' as StatusTone },
   ]);
 });
 
@@ -133,31 +133,31 @@ test('compactStatuses: lsp counts comma-separated names', () => {
   const statuses = new Map([['lsp', 'LSP Active: python, rust, go, javascript']]);
   const result = compactStatuses(statuses);
   deepStrictEqual(result, [
-    { label: 'Langfuse', tone: 'muted' as StatusTone },
-    { label: 'MCP', tone: 'muted' as StatusTone },
     { label: 'LSP 4', tone: 'info' as StatusTone },
+    { label: 'MCP', tone: 'muted' as StatusTone },
+    { label: 'Langfuse', tone: 'muted' as StatusTone },
   ]);
 });
 
-test('compactStatuses: output order is always langfuse-mcp-lsp', () => {
+test('compactStatuses: output order is always lsp-mcp-langfuse', () => {
   const statuses = new Map([
     ['lsp', 'LSP Active: xyz'],
     ['mcp', 'MCP: 1'],
     ['langfuse', 'Langfuse'],
   ]);
   const result = compactStatuses(statuses);
-  strictEqual(result[0].label, 'Langfuse');
+  strictEqual(result[0].label, 'LSP 1');
   strictEqual(result[1].label, 'MCP 1');
-  strictEqual(result[2].label, 'LSP 1');
+  strictEqual(result[2].label, 'Langfuse');
 });
 
 test('compactStatuses: pi-lens fallback when lsp absent', () => {
   const statuses = new Map([['pi-lens', 'LSP Active: rust, python']]);
   const result = compactStatuses(statuses);
   deepStrictEqual(result, [
-    { label: 'Langfuse', tone: 'muted' as StatusTone },
-    { label: 'MCP', tone: 'muted' as StatusTone },
     { label: 'LSP 2', tone: 'info' as StatusTone },
+    { label: 'MCP', tone: 'muted' as StatusTone },
+    { label: 'Langfuse', tone: 'muted' as StatusTone },
   ]);
 });
 
@@ -167,8 +167,8 @@ test('compactStatuses: lsp key takes precedence over pi-lens fallback', () => {
     ['pi-lens', 'LSP Active: python, rust'],
   ]);
   const result = compactStatuses(statuses);
-  strictEqual(result[2].label, 'LSP 1');
-  strictEqual(result[2].tone, 'info');
+  strictEqual(result[0].label, 'LSP 1');
+  strictEqual(result[0].tone, 'info');
 });
 
 test('compactStatuses: case variations in pi-lens key', () => {
@@ -176,9 +176,9 @@ test('compactStatuses: case variations in pi-lens key', () => {
 ;
   const result = compactStatuses(statuses);
   deepStrictEqual(result, [
-    { label: 'Langfuse', tone: 'muted' as StatusTone },
-    { label: 'MCP', tone: 'muted' as StatusTone },
     { label: 'LSP 1', tone: 'info' as StatusTone },
+    { label: 'MCP', tone: 'muted' as StatusTone },
+    { label: 'Langfuse', tone: 'muted' as StatusTone },
   ]);
 });
 
@@ -187,19 +187,19 @@ test('compactStatuses: LSP Active with whitespace yields no count', () => {
 ;
   const result = compactStatuses(statuses);
   deepStrictEqual(result, [
-    { label: 'Langfuse', tone: 'muted' as StatusTone },
-    { label: 'MCP', tone: 'muted' as StatusTone },
     { label: 'LSP', tone: 'info' as StatusTone },
+    { label: 'MCP', tone: 'muted' as StatusTone },
+    { label: 'Langfuse', tone: 'muted' as StatusTone },
   ]);
 });
 
 test('compactStatuses: empty map emits muted for all services', () => {
-  const statuses = new Map([]);
+  const statuses = new Map<string, string>();
   const result = compactStatuses(statuses);
   deepStrictEqual(result, [
-    { label: 'Langfuse', tone: 'muted' as StatusTone },
-    { label: 'MCP', tone: 'muted' as StatusTone },
     { label: 'LSP', tone: 'muted' as StatusTone },
+    { label: 'MCP', tone: 'muted' as StatusTone },
+    { label: 'Langfuse', tone: 'muted' as StatusTone },
   ]);
 });
 
@@ -358,9 +358,9 @@ test('contextPercentTone: boundaries at 70 and 90', () => {
 });
 
 // formatEffort tests
-test('formatEffort: undefined yields undefined, otherwise "effort:<level>"', () => {
+test('formatEffort: undefined yields undefined, otherwise the level label', () => {
   strictEqual(formatEffort(undefined), undefined);
-  strictEqual(formatEffort('high'), 'effort:high');
+  strictEqual(formatEffort('high'), 'high');
 });
 
 // formatElapsed tests
@@ -408,7 +408,7 @@ test('buildMetadataParts: full order model, effort, context, tokens, cost, elaps
   });
   deepStrictEqual(parts, [
     { text: 'claude-sonnet', color: 'accent' },
-    { text: 'effort:high', color: 'muted' },
+    { text: 'high', color: 'muted', attachToPrevious: true },
     { text: '42%', color: 'success' },
     { text: '\u2193100 \u2191200', color: 'syntaxType' },
     { text: '$0.500', color: 'warning' },
@@ -463,6 +463,15 @@ test('metadataPlainWidth: sums text widths plus " │ " separators', () => {
     { text: 'cde', color: 'dim' as const },
   ];
   strictEqual(metadataPlainWidth(parts), 2 + 3 + 3);
+});
+
+test('metadataPlainWidth: uses one space for an attached effort level', () => {
+  const parts = [
+    { text: 'model', color: 'accent' as const },
+    { text: 'high', color: 'muted' as const, attachToPrevious: true as const },
+    { text: '42%', color: 'success' as const },
+  ];
+  strictEqual(metadataPlainWidth(parts), 5 + 1 + 4 + 3 + 3);
 });
 
 test('metadataPlainWidth: empty array is zero', () => {

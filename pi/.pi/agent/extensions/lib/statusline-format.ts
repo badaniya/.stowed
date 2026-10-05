@@ -112,7 +112,7 @@ function findKeyByNorm(statuses: ReadonlyMap<string, string>, normKey: string): 
 
 /**
  * Convert a map of statuses into a compact, stably-ordered array.
- * Always returns exactly 3 entries: Langfuse, MCP, LSP (in that order).
+ * Always returns exactly 3 entries: LSP, MCP, Langfuse (in that order).
  * Keys are matched case-insensitively.
  * For LSP, tries 'lsp' first, then 'pi-lens' as fallback.
  * Absent integrations produce entries with muted tone.
@@ -120,9 +120,9 @@ function findKeyByNorm(statuses: ReadonlyMap<string, string>, normKey: string): 
 export function compactStatuses(statuses: ReadonlyMap<string, string>): CompactStatus[] {
   // Always emit exactly 3 entries in fixed order
   const serviceSpecs: Array<{ normKey: string; fallback?: string }> = [
-    { normKey: 'langfuse' },
-    { normKey: 'mcp' },
     { normKey: 'lsp', fallback: 'pi-lens' },
+    { normKey: 'mcp' },
+    { normKey: 'langfuse' },
   ];
 
   const result: CompactStatus[] = [];
@@ -316,9 +316,9 @@ export function contextPercentTone(percent: number): 'success' | 'warning' | 'er
   return 'success';
 }
 
-/** Format the thinking/effort level as "effort:<level>". Undefined input yields undefined. */
+/** Format the thinking/effort level. Undefined input yields undefined. */
 export function formatEffort(level: string | undefined): string | undefined {
-  return level ? `effort:${level}` : undefined;
+  return level;
 }
 
 /** Format elapsed milliseconds as "⌚<Nh><Nm>", omitting the hours segment when zero. */
@@ -335,7 +335,7 @@ export function formatElapsed(elapsedMs: number): string {
  */
 export function resolveRepoLabel(cwd: string, branch: string | null | undefined): string {
   const segments = cwd.split('/').filter((s) => s.length > 0);
-  const base = segments.length > 0 ? segments.at(-1)! : cwd;
+  const base = segments.at(-1) ?? cwd;
   return branch ? `${base} (${branch})` : base;
 }
 
@@ -343,6 +343,8 @@ export function resolveRepoLabel(cwd: string, branch: string | null | undefined)
 export interface MetadataPart {
   text: string;
   color: SemanticColor;
+  /** Join with a preceding segment using one space instead of " │ ". */
+  attachToPrevious?: true;
 }
 
 export interface MetadataInput {
@@ -372,7 +374,7 @@ export function buildMetadataParts(input: MetadataInput): MetadataPart[] {
 
   const effortText = formatEffort(input.effort);
   if (effortText !== undefined) {
-    parts.push({ text: effortText, color: 'muted' });
+    parts.push({ text: effortText, color: 'muted', attachToPrevious: input.modelId ? true : undefined });
   }
 
   const pctText = formatContextPercent(input.contextPercent);
@@ -399,13 +401,19 @@ export function buildMetadataParts(input: MetadataInput): MetadataPart[] {
   return parts;
 }
 
-/** Code-point width of the metadata row if joined with " │ ", before coloring. */
-export function metadataPlainWidth(parts: readonly MetadataPart[]): number {
-  if (parts.length === 0) {
+function metadataSeparatorWidth(part: MetadataPart, index: number): number {
+  if (index === 0) {
     return 0;
   }
-  const textWidth = parts.reduce((sum, p) => sum + Array.from(p.text).length, 0);
-  return textWidth + (parts.length - 1) * 3;
+  return part.attachToPrevious ? 1 : 3;
+}
+
+/** Code-point width of the metadata row, before coloring. */
+export function metadataPlainWidth(parts: readonly MetadataPart[]): number {
+  return parts.reduce(
+    (sum, part, index) => sum + Array.from(part.text).length + metadataSeparatorWidth(part, index),
+    0,
+  );
 }
 
 /** Spaces required to right-align health after its leading " │ " separator. */
