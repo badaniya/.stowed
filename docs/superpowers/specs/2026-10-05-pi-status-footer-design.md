@@ -21,6 +21,7 @@ The directory group is:
 - `󰉋` is the Nerd Font folder/home-style marker for the current working directory.
 - `󰊢` is the Nerd Font Git marker for the branch.
 - Icons and separators use Pi's `dim` semantic theme color so they appear light gray in the active palette.
+- The duration uses Pi's `muted` semantic theme color, matching the thinking-effort label rather than the dim separators/icons.
 - The path and branch retain distinct semantic colors for readability.
 - The branch icon and branch label are omitted when no branch is available.
 
