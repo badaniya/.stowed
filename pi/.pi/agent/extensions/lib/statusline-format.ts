@@ -284,9 +284,9 @@ export function toneToSemanticColor(tone: StatusTone): SemanticColor {
   }
 }
 
-/** Format aggregated token usage as "↑<input> ↓<output>" using formatCount. */
+/** Format aggregated token usage as "↓<input> ↑<output>" using formatCount. */
 export function formatTokenUsage(input: number, output: number): string {
-  return `↑${formatCount(input)} ↓${formatCount(output)}`;
+  return `↓${formatCount(input)} ↑${formatCount(output)}`;
 }
 
 /** Format aggregated cost, omitting it entirely when zero. */
