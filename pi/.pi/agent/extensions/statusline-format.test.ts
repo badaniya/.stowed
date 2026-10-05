@@ -154,7 +154,8 @@ test('shortenRepository: returns original when it fits', () => {
 
 test('shortenRepository: shortens to …/last/two/segments at width 20', () => {
   const result = shortenRepository('badaniya/GoDCApp/NVO-13662', 20);
-  strictEqual(result, '…/GoDCApp/NVO-13662');
+  const expected = '…/GoDCApp/NVO-13662';
+  strictEqual(result, expected);
 });
 
 test('shortenRepository: fallback to … with safe suffix when necessary', () => {
@@ -185,4 +186,70 @@ test('formatCount: formats large numbers with K suffix', () => {
 test('formatCount: formats mega numbers with M suffix', () => {
   strictEqual(formatCount(1000000), '1M');
   strictEqual(formatCount(2500000), '2.5M');
+});
+
+// Regression tests: case-insensitive keys
+test('compactStatuses: capitalized key Langfuse', () => {
+  const statuses = new Map([['Langfuse', 'Langfuse enabled']]);
+  const result = compactStatuses(statuses);
+  deepStrictEqual(result, [{ label: 'Langfuse', tone: 'success' as StatusTone }]);
+});
+
+test('compactStatuses: uppercase key MCP', () => {
+  const statuses = new Map([['MCP', 'MCP: 2']]);
+  const result = compactStatuses(statuses);
+  deepStrictEqual(result, [{ label: 'MCP 2', tone: 'success' as StatusTone }]);
+});
+
+test('compactStatuses: mixed-case key LsP', () => {
+  const statuses = new Map([['LsP', 'LSP Active: server']]);
+  const result = compactStatuses(statuses);
+  deepStrictEqual(result, [{ label: 'LSP 1', tone: 'info' as StatusTone }]);
+});
+
+// Regression tests: pi-lens fallback for LSP
+test('compactStatuses: pi-lens fallback when lsp absent', () => {
+  const statuses = new Map([['pi-lens', 'LSP Active: rust, python']]);
+  const result = compactStatuses(statuses);
+  deepStrictEqual(result, [{ label: 'LSP 2', tone: 'info' as StatusTone }]);
+});
+
+test('compactStatuses: lsp takes precedence over pi-lens', () => {
+  const statuses = new Map([
+    ['lsp', 'LSP Active: go'],
+    ['pi-lens', 'LSP Active: python, rust'],
+  ]);
+  const result = compactStatuses(statuses);
+  strictEqual(result[0].label, 'LSP 1');
+});
+
+test('compactStatuses: capitalized pi-lens key', () => {
+  const statuses = new Map([['Pi-Lens', 'LSP Active: typescript']]);
+  const result = compactStatuses(statuses);
+  deepStrictEqual(result, [{ label: 'LSP 1', tone: 'info' as StatusTone }]);
+});
+
+// Regression test: code-point safety with emoji
+test('shortenRepository: emoji safety (no lone surrogates)', () => {
+  const result = shortenRepository('a/b/c/d/😀x', 3);
+  // Must be code-point safe: no lone surrogates
+  strictEqual(result.length > 0, true);
+  // Check that it doesn't have lone surrogates
+  for (let i = 0; i < result.length; i++) {
+    const code = result.charCodeAt(i);
+    // High surrogate without low surrogate is bad
+    if (code >= 0xd800 && code <= 0xdbff) {
+      const next = result.charCodeAt(i + 1);
+      strictEqual(next >= 0xdc00 && next <= 0xdfff, true, 'high surrogate must be followed by low surrogate');
+    }
+  }
+});
+
+test('shortenRepository: emoji in fallback suffix', () => {
+  // Verify output is valid UTF-16 string
+  const result = shortenRepository('🎉/emoji/test/path', 10);
+  strictEqual(typeof result, 'string');
+  // Can be converted to array of code points without errors
+  const codePoints = Array.from(result);
+  strictEqual(codePoints.length > 0, true);
 });

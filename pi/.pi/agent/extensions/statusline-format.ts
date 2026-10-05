@@ -18,7 +18,7 @@ function mentionsService(value: string, key: string): boolean {
   // Match the service name or its variations
   if (key === 'langfuse') return /langfuse/i.test(lower);
   if (key === 'mcp') return /mcp/i.test(lower) || /trace\s+sent/i.test(lower);
-  if (key === 'lsp') return /lsp/i.test(lower);
+  if (key === 'lsp' || key === 'pi-lens') return /lsp|pi-lens/i.test(lower);
   return false;
 }
 
@@ -91,43 +91,66 @@ function countLspNames(value: string): number | undefined {
  * For MCP: label "MCP" or "MCP <count>" if count present
  * For LSP: label "LSP" or "LSP <count>" if Active: pattern with names
  */
-function compactSingle(key: string, value: string): CompactStatus {
-  const keyLower = key.toLowerCase();
-  const tone = classifyTone(value, key);
+function compactSingle(normKey: string, value: string): CompactStatus {
+  const tone = classifyTone(value, normKey);
 
-  if (keyLower === 'langfuse') {
+  if (normKey === 'langfuse') {
     return { label: 'Langfuse', tone };
   }
 
-  if (keyLower === 'mcp') {
+  if (normKey === 'mcp') {
     const count = extractMcpCount(value);
     const label = count !== undefined ? `MCP ${count}` : 'MCP';
     return { label, tone };
   }
 
-  if (keyLower === 'lsp') {
+  if (normKey === 'lsp') {
     const count = countLspNames(value);
     const label = count !== undefined ? `LSP ${count}` : 'LSP';
     return { label, tone };
   }
 
   // Fallback (shouldn't happen with expected keys)
-  return { label: key, tone };
+  return { label: normKey, tone };
+}
+
+/**
+ * Find a map key matching the given normalized key, case-insensitively.
+ */
+function findKeyByNorm(statuses: ReadonlyMap<string, string>, normKey: string): string | undefined {
+  for (const key of statuses.keys()) {
+    if (key.toLowerCase() === normKey.toLowerCase()) {
+      return key;
+    }
+  }
+  return undefined;
 }
 
 /**
  * Convert a map of statuses into a compact, stably-ordered array.
  * Stable order: Langfuse, MCP, LSP.
+ * Keys are matched case-insensitively.
+ * For LSP, tries 'lsp' first, then 'pi-lens' as fallback.
  */
 export function compactStatuses(statuses: ReadonlyMap<string, string>): CompactStatus[] {
   const result: CompactStatus[] = [];
 
-  // Stable order: only include keys that are present in the map
-  const keys = ['langfuse', 'mcp', 'lsp'];
-  for (const key of keys) {
-    const value = statuses.get(key);
-    if (value !== undefined) {
-      result.push(compactSingle(key, value));
+  // Stable order: langfuse, mcp, lsp (with pi-lens fallback for lsp)
+  const serviceSpecs: Array<{ normKey: string; fallback?: string }> = [
+    { normKey: 'langfuse' },
+    { normKey: 'mcp' },
+    { normKey: 'lsp', fallback: 'pi-lens' },
+  ];
+
+  for (const spec of serviceSpecs) {
+    let mapKey = findKeyByNorm(statuses, spec.normKey);
+    if (!mapKey && spec.fallback) {
+      mapKey = findKeyByNorm(statuses, spec.fallback);
+    }
+
+    if (mapKey) {
+      const value = statuses.get(mapKey)!;
+      result.push(compactSingle(spec.normKey, value));
     }
   }
 
@@ -149,11 +172,23 @@ export function chooseLayout(
 }
 
 /**
+ * Get a code-point-safe suffix of a string.
+ * Uses Array.from() to iterate code points, then takes from the end.
+ */
+function getCodePointSuffix(str: string, maxLength: number): string {
+  const codePoints = Array.from(str);
+  if (codePoints.length <= maxLength) {
+    return str;
+  }
+  return codePoints.slice(-maxLength).join('');
+}
+
+/**
  * Shorten a repository path to fit within maxWidth.
  * Strategy:
  * 1. Return original if it fits.
  * 2. Retain last two slash segments under …/ prefix.
- * 3. Fall back to … + safe suffix if needed.
+ * 3. Fall back to … + code-point-safe suffix if needed.
  */
 export function shortenRepository(repository: string, maxWidth: number): string {
   if (repository.length <= maxWidth) {
@@ -172,12 +207,14 @@ export function shortenRepository(repository: string, maxWidth: number): string 
     }
   }
 
-  // Fall back to … plus a safe suffix
+  // Fall back to … plus a code-point-safe suffix
   // Ensure we leave room for … and at least one character
   const maxSuffix = Math.max(1, maxWidth - 1);
-  const suffix = repository.slice(-maxSuffix);
-  const result = `…${suffix}`.slice(0, maxWidth);
-  return result;
+  const suffix = getCodePointSuffix(repository, maxSuffix);
+  const result = `…${suffix}`;
+  // Trim the final result to maxWidth, code-point-safe
+  const resultCodePoints = Array.from(result);
+  return resultCodePoints.slice(0, maxWidth).join('');
 }
 
 /**
