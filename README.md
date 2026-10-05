@@ -390,7 +390,7 @@ curl -fsSL https://opencode.ai/install | bash
 ```bash
 curl -fsSL https://pi.dev/install.sh | sh           # Pi installation
 
-pi install npm:@gotgenes/pi-subagents               # Claude code-like subagents
+pi install npm:@quintinshaw/pi-dynamic-workflows    # Claude code-like dynamic workflows and subagents
 pi install npm:pi-mcp-adapter                       # MCP server support (lazyloading vs. native pi mcp support)
 pi install npm:@aliou/pi-guardrails                 # Prompt user for dangerous shell commands
 pi install npm:@eiei114/pi-sub-bar                  # Pi customized statusline with provider LLM usage stats

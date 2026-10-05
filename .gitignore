@@ -12,7 +12,6 @@ goose/**/*.bak*
 goose/**/*.yaml
 goose/**/history.txt
 
-
 # Dependencies
 **/node_modules/
 
@@ -30,3 +29,4 @@ pi/.pi/agent/.update-check
 pi-session-*.html
 **/skills/*/tmp/.sisyphus/
 agents/.agents/skills/dev-browser/tmp/
+.superpowers/

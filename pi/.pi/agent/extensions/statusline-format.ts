@@ -230,8 +230,9 @@ export function formatCount(value: number): string {
   // K range: 1000-999999
   if (value < 1000000) {
     const k = value / 1000;
-    // Check if rounded value would be >= 1000; if so, emit 1M
-    if (Math.round(k) >= 1000) {
+    // Check if k rounded to 1 decimal would be >= 1000; if so, step to M
+    // This happens when k >= 999.95
+    if (k >= 999.95) {
       return '1M';
     }
     const formatted = k % 1 === 0 ? String(Math.floor(k)) : k.toFixed(1);
@@ -241,8 +242,9 @@ export function formatCount(value: number): string {
   // M range: 1000000-999999999
   if (value < 1000000000) {
     const m = value / 1000000;
-    // Check if rounded value would be >= 1000; if so, emit 1B
-    if (Math.round(m) >= 1000) {
+    // Check if m rounded to 1 decimal would be >= 1000; if so, step to B
+    // This happens when m >= 999.95
+    if (m >= 999.95) {
       return '1B';
     }
     const formatted = m % 1 === 0 ? String(Math.floor(m)) : m.toFixed(1);

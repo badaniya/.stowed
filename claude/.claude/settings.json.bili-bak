@@ -1,0 +1,191 @@
+{
+  "env": {
+    "AGENT_TRACING_ENABLED": "true",
+    "CC_LANGFUSE_DEBUG": "true",
+    "LANGFUSE_BASE_URL": "http://10.64.193.238:3000",
+    "LANGFUSE_HOST": "http://localhost:3000",
+    "LANGFUSE_USER_ID": "badaniya",
+    "TRACE_TO_LANGFUSE": "true",
+    "LANGFUSE_PUBLIC_KEY": "pk-lf-bc2136b9-fc1c-4c73-8d1c-3168c121bfc2",
+    "LANGFUSE_SECRET_KEY": "sk-lf-63433fdb-0939-43b2-b36e-216fb7092c96"
+  },
+  "permissions": {
+    "allow": [
+      "Read(/home/**)",
+      "Bash(tmux send-keys -t teleport-console *)"
+    ],
+    "defaultMode": "auto"
+  },
+  "model": "sonnet",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"/home/badaniya/.claude/hooks/context-mode-cache-heal.mjs\""
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/home/badaniya/.claude/hooks/herdr-agent-state.sh' session",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/cbm-session-reminder"
+          }
+        ]
+      },
+      {
+        "matcher": "resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/cbm-session-reminder"
+          }
+        ]
+      },
+      {
+        "matcher": "clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/cbm-session-reminder"
+          }
+        ]
+      },
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/cbm-session-reminder"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/agent_tracing_hook.py"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Grep|Glob",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/cbm-code-discovery-gate",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/cbm-subagent-reminder"
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/statusline-command.sh"
+  },
+  "enabledPlugins": {
+    "code-review@claude-plugins-official": false,
+    "code-simplifier@claude-plugins-official": false,
+    "context-mode@context-mode": true,
+    "frontend-design@claude-plugins-official": false,
+    "gopls-lsp@claude-plugins-official": true,
+    "langfuse-observability@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true,
+    "chrome-devtools-mcp@chrome-devtools-plugins": true,
+    "github@claude-plugins-official": false
+  },
+  "extraKnownMarketplaces": {
+    "context-mode": {
+      "source": {
+        "source": "github",
+        "repo": "mksglu/context-mode"
+      }
+    },
+    "langfuse-observability": {
+      "source": {
+        "source": "github",
+        "repo": "langfuse/Claude-Observability-Plugin"
+      }
+    },
+    "chrome-devtools-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "ChromeDevTools/chrome-devtools-mcp"
+      }
+    }
+  },
+  "outputStyle": "Concise",
+  "effortLevel": "medium",
+  "autoCompactWindow": 500000,
+  "skipDangerousModePermissionPrompt": true,
+  "theme": "dark",
+  "skipAutoPermissionPrompt": true,
+  "autoMode": {
+    "allow": [
+      "$defaults",
+      "Bash(herdr:*) — routine non-standard CLI, 145× in-project and 35× in shell history, no denial evidence"
+    ],
+    "soft_deny": [
+      "$defaults",
+      "Bash(*prod/Dockerfile*) — writes under scripts/golang/prod/ treated as production-adjacent IaC/deploy surface",
+      "Bash(cat Common/etc/database/decrypt_credentials.sh) and similar reads of decrypt_credentials.sh — sensitive credential-handling script"
+    ],
+    "environment": [
+      "### Org-wide",
+      "**Organization**: Extreme Networks (github.extremenetworks.com — GHE host)",
+      "**Cloud provider(s)**: None configured",
+      "**Repository visibility**: assume private (GHE host github.extremenetworks.com; not queryable via gh from here)",
+      "**Internal sharing / snippet hosting**: None configured — treat public paste/gist services as outside the trust boundary",
+      "**Secrets management**: None configured",
+      "**Default / protected branches**: Default branch `campus_fabric` (repo_facts); protected-branch status not queryable here — treat as protected pending confirmation",
+      "**CI/CD deploy targets**: None configured",
+      "**Network posture**: None configured",
+      "**Host containment**: None configured — assume Claude Code runs on an ordinary developer machine with open internet",
+      "**Source control**: origin — https://github.extremenetworks.com/Engineering/GoDCApp (this repo's remote only)",
+      "**Trusted internal domains**: nhweb.labs.extremenetworks.com (repo working host, contacted 7×)",
+      "**Trusted cloud buckets**: None configured",
+      "**Key internal services**: nexus-aws.aerohive.com (package registry host, config scan)",
+      "**Internal package registry**: nexus-aws.aerohive.com",
+      "**Sensitive data locations & audiences**: Common/etc/database/decrypt_credentials.sh, Common/etc/rbac/permissions.yaml, scripts/redis/users_acl_rbac.conf, scripts/redis/Dockerfile.rbac, scripts/golang/prod/Dockerfile, scripts/golang/prod/README.md, scripts/deploy/helm/* — share only with audiences cleared at the [named+specifics] bar",
+      "**Data retention / declassification**: None configured",
+      "**Sensitive remote targets**: scripts/golang/prod/Dockerfile, scripts/golang/prod/README.md, and any namespace/host/container with `prod` or `production` as a whole name segment",
+      "**Protected deployment namespaces / environments**: None configured — fall back to the Sensitive remote targets heuristic",
+      "**Protected IaC scopes**: Common/etc/rbac/permissions.yaml, scripts/redis/users_acl_rbac.conf, scripts/redis/Dockerfile.rbac, scripts/jenkins-pipelines/util/helm_install.sh, scripts/jenkins-pipelines/util/helm_update.sh, scripts/deploy/helm/* — plus any IAM/RBAC/networking/quota/node-pool resource carrying `prod`/`production` as a whole name segment",
+      "### User-specific",
+      "**Primary use of Claude Code**: software development (GoDCApp/NVO — Network Virtualization Overlay service, Go-based, per README/build structure)",
+      "**Trusted repo**: /home/badaniya/workspace/badaniya/NVO-REVIEW/GoDCApp/NVO and its origin remote https://github.extremenetworks.com/Engineering/GoDCApp",
+      "**Org-specific CLIs**: herdr (145× in-project, 35× shell history), tsh (130× shell history), pi (138× shell history), tkl (19× shell history) — routine under this project's working context",
+      "routine under Common/, Network/, Edge/, Scheduler/, uinvo/, scripts/jenkins-pipelines/ prefixes (this repo's own module layout)"
+    ]
+  }
+}
