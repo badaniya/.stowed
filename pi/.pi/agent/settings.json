@@ -1,26 +1,16 @@
 {
-  "lastChangelogVersion": "1.0.2",
+  "lastChangelogVersion": "1.0.3",
   "defaultProvider": "opencode-free",
   "defaultModel": "muse-spark-1.3-contributor-free",
   "theme": "pi-catppuccin-mocha",
   "packages": [
-    "npm:pi-extmgr",
     "npm:pi-markdown-preview",
-    "npm:oh-pi",
     {
       "source": "npm:@aliou/pi-guardrails",
       "extensions": [
         "+src/index.ts"
       ]
     },
-    "npm:pi-read-map",
-    "npm:pi-super-curl",
-    "npm:pi-shell-completions",
-    "npm:visual-explainer",
-    "npm:pi-which-key",
-    "npm:pi-screenshots-picker",
-    "npm:context-mode",
-    "npm:pi-langfuse",
     "npm:pi-claude-auth",
     "npm:@tintinweb/pi-subagents",
     "npm:pi-lens",
@@ -28,7 +18,8 @@
     "npm:pi-free",
     "npm:@narumitw/pi-btw",
     "npm:@schovest/pi-goal",
-    "npm:@narumitw/pi-lsp"
+    "npm:@narumitw/pi-lsp",
+    "npm:@langfuse/pi-observability-plugin"
   ],
   "defaultThinkingLevel": "minimal",
   "hideThinkingBlock": false,

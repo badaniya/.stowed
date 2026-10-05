@@ -391,19 +391,18 @@ curl -fsSL https://opencode.ai/install | bash
 curl -fsSL https://pi.dev/install.sh | sh           # Pi installation
 
 pi install npm:@tintinweb/pi-subagents              # Claude code-like subagents
-pi install npm:pi-mcp-adapter                       # MCP server support
+pi install npm:pi-mcp-adapter                       # MCP server support (lazyloading vs. native pi mcp support)
 pi install npm:@aliou/pi-guardrails                 # Prompt user for dangerous shell commands
 pi install npm:@eiei114/pi-sub-bar                  # Pi customized statusline with provider LLM usage stats
 pi install npm:@narumitw/pi-btw                     # Claude code-like by-the-way support
 pi install npm:@schovest/pi-goal                    # Claude code-like goal support (background monitoring)
 pi install npm:@langfuse/pi-observability-plugin    # Langfuse agent turn observabilty
-pi install npm:context-mode                         # MCP proxy for shell command memory and token optimization
+npm install -g billion-context                      # Proxy for compression and token optimization
 pi install npm:@narumitw/pi-lsp                     # Language Server Provider code navigation
 pi install npm:pi-lens                              # File linting tracking and agent feedback
-pi install npm:pi-read-map                          # Large file parsing
 pi install npm:pi-markdown-preview                  # Markdown rendering support
-pi install npm:pi-claude-auth                       # Claude code LLM model access
-pi install npm:pi-free                              # Free LLM model access
+pi install npm:pi-claude-auth                       # Claude code LLM access
+pi install npm:pi-free                              # Free LLM access
 ```
 
 ### 7) Goose - An AI coding assistant for the terminal
