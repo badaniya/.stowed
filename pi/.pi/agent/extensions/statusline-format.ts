@@ -11,39 +11,16 @@ export interface CompactStatus {
 }
 
 /**
- * Check if a value mentions the service name corresponding to the key.
+ * Classify a status string based on its content patterns.
+ * Classification is independent of which service the key represents.
+ * Empty value defaults to muted.
  */
-function mentionsService(value: string, key: string): boolean {
+function classifyTone(value: string): StatusTone {
   const lower = value.toLowerCase();
-  // Match the service name or its variations
-  if (key === 'langfuse') return /langfuse/i.test(lower);
-  if (key === 'mcp') return /mcp/i.test(lower) || /trace\s+sent/i.test(lower);
-  if (key === 'lsp' || key === 'pi-lens') return /lsp|pi-lens/i.test(lower);
-  return false;
-}
-
-/**
- * Classify a status string and return its tone.
- * Value must mention the service name (or be a special pattern like "trace sent" for MCP).
- * If it doesn't, return muted.
- */
-function classifyTone(value: string, key: string): StatusTone {
-  const lower = value.toLowerCase();
-  const keyLower = key.toLowerCase();
 
   // Empty value is muted
   if (value.length === 0) {
     return 'muted';
-  }
-
-  // Value must mention the service name to be classified
-  if (!mentionsService(value, keyLower)) {
-    return 'muted';
-  }
-
-  // For LSP, check for "Active:" pattern (info tone)
-  if (keyLower === 'lsp' && /active:/i.test(lower)) {
-    return 'info';
   }
 
   // Error patterns: error, fail, disconnected, refused
@@ -56,17 +33,22 @@ function classifyTone(value: string, key: string): StatusTone {
     return 'warning';
   }
 
+  // LSP/pi-lens Active: pattern is info tone
+  if (/active:/i.test(lower)) {
+    return 'info';
+  }
+
   // Success patterns: trace sent, enabled, connected, active
   if (/trace\s+sent|enabled|connected|active/i.test(lower)) {
     return 'success';
   }
 
-  // Service name mentioned but no specific pattern -> healthy (success)
+  // If value is present and no error/warning/info pattern matched -> assume success
   return 'success';
 }
 
 /**
- * Extract count from MCP: <n> pattern.
+ * Extract count from pattern like "MCP: 2" or "📡 MCP: 2 servers".
  * Returns the number if found, undefined if not present.
  */
 function extractMcpCount(value: string): number | undefined {
@@ -75,11 +57,11 @@ function extractMcpCount(value: string): number | undefined {
 }
 
 /**
- * Count comma-separated names after LSP Active:
+ * Count comma-separated names after "Active:" pattern.
  * Returns the count of items, or undefined if pattern not found.
  */
 function countLspNames(value: string): number | undefined {
-  const match = value.match(/LSP\s+Active:\s*(.+)/i);
+  const match = value.match(/Active:\s*(.+)/i);
   if (!match) return undefined;
   const names = match[1].split(',').map((s) => s.trim()).filter((s) => s.length > 0);
   return names.length;
@@ -91,21 +73,21 @@ function countLspNames(value: string): number | undefined {
  * For MCP: label "MCP" or "MCP <count>" if count present
  * For LSP: label "LSP" or "LSP <count>" if Active: pattern with names
  */
-function compactSingle(normKey: string, value: string): CompactStatus {
-  const tone = classifyTone(value, normKey);
+function compactSingle(normKey: string, value: string | undefined): CompactStatus {
+  const tone = classifyTone(value || '');
 
   if (normKey === 'langfuse') {
     return { label: 'Langfuse', tone };
   }
 
   if (normKey === 'mcp') {
-    const count = extractMcpCount(value);
+    const count = value ? extractMcpCount(value) : undefined;
     const label = count !== undefined ? `MCP ${count}` : 'MCP';
     return { label, tone };
   }
 
   if (normKey === 'lsp') {
-    const count = countLspNames(value);
+    const count = value ? countLspNames(value) : undefined;
     const label = count !== undefined ? `LSP ${count}` : 'LSP';
     return { label, tone };
   }
@@ -128,19 +110,20 @@ function findKeyByNorm(statuses: ReadonlyMap<string, string>, normKey: string): 
 
 /**
  * Convert a map of statuses into a compact, stably-ordered array.
- * Stable order: Langfuse, MCP, LSP.
+ * Always returns exactly 3 entries: Langfuse, MCP, LSP (in that order).
  * Keys are matched case-insensitively.
  * For LSP, tries 'lsp' first, then 'pi-lens' as fallback.
+ * Absent integrations produce entries with muted tone.
  */
 export function compactStatuses(statuses: ReadonlyMap<string, string>): CompactStatus[] {
-  const result: CompactStatus[] = [];
-
-  // Stable order: langfuse, mcp, lsp (with pi-lens fallback for lsp)
+  // Always emit exactly 3 entries in fixed order
   const serviceSpecs: Array<{ normKey: string; fallback?: string }> = [
     { normKey: 'langfuse' },
     { normKey: 'mcp' },
     { normKey: 'lsp', fallback: 'pi-lens' },
   ];
+
+  const result: CompactStatus[] = [];
 
   for (const spec of serviceSpecs) {
     let mapKey = findKeyByNorm(statuses, spec.normKey);
@@ -148,10 +131,9 @@ export function compactStatuses(statuses: ReadonlyMap<string, string>): CompactS
       mapKey = findKeyByNorm(statuses, spec.fallback);
     }
 
-    if (mapKey) {
-      const value = statuses.get(mapKey)!;
-      result.push(compactSingle(spec.normKey, value));
-    }
+    // Always emit an entry, using value if found or undefined if not
+    const value = mapKey ? statuses.get(mapKey) : undefined;
+    result.push(compactSingle(spec.normKey, value));
   }
 
   return result;

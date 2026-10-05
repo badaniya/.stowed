@@ -23,6 +23,30 @@ test('compactStatuses: healthy known strings', () => {
   ]);
 });
 
+test('compactStatuses: spec example 1 - trace sent, mcp with emoji, pi-lens with multiple names', () => {
+  const statuses = new Map([
+    ['langfuse', '✓ (trace sent)'],
+    ['mcp', '📡 MCP: 2 servers enabled'],
+    ['pi-lens', 'LSP Active: bash, html, ast-grep, typos, opengrep'],
+  ]);
+  const result = compactStatuses(statuses);
+  deepStrictEqual(result, [
+    { label: 'Langfuse', tone: 'success' as StatusTone },
+    { label: 'MCP 2', tone: 'success' as StatusTone },
+    { label: 'LSP 5', tone: 'info' as StatusTone },
+  ]);
+});
+
+test('compactStatuses: always 3 entries, mcp only with error', () => {
+  const statuses = new Map([['mcp', 'error: connection refused']]);
+  const result = compactStatuses(statuses);
+  deepStrictEqual(result, [
+    { label: 'Langfuse', tone: 'muted' as StatusTone },
+    { label: 'MCP', tone: 'error' as StatusTone },
+    { label: 'LSP', tone: 'muted' as StatusTone },
+  ]);
+});
+
 test('compactStatuses: error strings map to error tone', () => {
   const statuses = new Map([
     ['langfuse', 'Langfuse error'],
@@ -51,25 +75,25 @@ test('compactStatuses: warning strings map to warning tone', () => {
   ]);
 });
 
-test('compactStatuses: malformed/unrecognized values map to muted tone', () => {
+test('compactStatuses: values without service mention are classified by pattern only', () => {
   const statuses = new Map([
-    ['langfuse', ''],
-    ['mcp', 'unknown entry'],
-    ['lsp', 'does not match'],
+    ['langfuse', 'connected'],
+    ['mcp', 'active'],
+    ['lsp', 'enabled'],
   ]);
   const result = compactStatuses(statuses);
   deepStrictEqual(result, [
-    { label: 'Langfuse', tone: 'muted' as StatusTone },
-    { label: 'MCP', tone: 'muted' as StatusTone },
-    { label: 'LSP', tone: 'muted' as StatusTone },
+    { label: 'Langfuse', tone: 'success' as StatusTone },
+    { label: 'MCP', tone: 'success' as StatusTone },
+    { label: 'LSP', tone: 'success' as StatusTone },
   ]);
 });
 
 test('compactStatuses: case-insensitive matching', () => {
   const statuses = new Map([
-    ['langfuse', 'LANGFUSE ENABLED'],
-    ['mcp', 'MCP: 1'],
-    ['lsp', 'LSP ACTIVE: plugin1'],
+    ['Langfuse', 'LANGFUSE ENABLED'],
+    ['MCP', 'MCP: 1'],
+    ['LsP', 'LSP ACTIVE: plugin1'],
   ]);
   const result = compactStatuses(statuses);
   deepStrictEqual(result, [
@@ -82,36 +106,20 @@ test('compactStatuses: case-insensitive matching', () => {
 test('compactStatuses: mcp extraction', () => {
   const statuses = new Map([['mcp', 'MCP: 3']]);
   const result = compactStatuses(statuses);
-  deepStrictEqual(result, [{ label: 'MCP 3', tone: 'success' as StatusTone }]);
+  deepStrictEqual(result, [
+    { label: 'Langfuse', tone: 'muted' as StatusTone },
+    { label: 'MCP 3', tone: 'success' as StatusTone },
+    { label: 'LSP', tone: 'muted' as StatusTone },
+  ]);
 });
 
 test('compactStatuses: lsp counting comma-separated names', () => {
   const statuses = new Map([['lsp', 'LSP Active: python, rust, go, javascript']]);
   const result = compactStatuses(statuses);
-  deepStrictEqual(result, [{ label: 'LSP 4', tone: 'info' as StatusTone }]);
-});
-
-test('compactStatuses: bare keyword patterns (no key name) not recognized', () => {
-  const statuses = new Map([
-    ['langfuse', 'connected'],
-    ['mcp', 'active'],
-  ]);
-  const result = compactStatuses(statuses);
   deepStrictEqual(result, [
     { label: 'Langfuse', tone: 'muted' as StatusTone },
     { label: 'MCP', tone: 'muted' as StatusTone },
-  ]);
-});
-
-test('compactStatuses: service-name-prefixed success patterns', () => {
-  const statuses = new Map([
-    ['langfuse', 'Langfuse connected'],
-    ['mcp', 'MCP active'],
-  ]);
-  const result = compactStatuses(statuses);
-  deepStrictEqual(result, [
-    { label: 'Langfuse', tone: 'success' as StatusTone },
-    { label: 'MCP', tone: 'success' as StatusTone },
+    { label: 'LSP 4', tone: 'info' as StatusTone },
   ]);
 });
 
@@ -125,6 +133,35 @@ test('compactStatuses: stable order is langfuse, mcp, lsp', () => {
   strictEqual(result[0].label, 'Langfuse');
   strictEqual(result[1].label, 'MCP 1');
   strictEqual(result[2].label, 'LSP 1');
+});
+
+test('compactStatuses: pi-lens fallback when lsp absent', () => {
+  const statuses = new Map([['pi-lens', 'LSP Active: rust, python']]);
+  const result = compactStatuses(statuses);
+  deepStrictEqual(result, [
+    { label: 'Langfuse', tone: 'muted' as StatusTone },
+    { label: 'MCP', tone: 'muted' as StatusTone },
+    { label: 'LSP 2', tone: 'info' as StatusTone },
+  ]);
+});
+
+test('compactStatuses: lsp takes precedence over pi-lens', () => {
+  const statuses = new Map([
+    ['lsp', 'LSP Active: go'],
+    ['pi-lens', 'LSP Active: python, rust'],
+  ]);
+  const result = compactStatuses(statuses);
+  strictEqual(result[2].label, 'LSP 1');
+});
+
+test('compactStatuses: capitalized pi-lens key', () => {
+  const statuses = new Map([['Pi-Lens', 'LSP Active: typescript']]);
+  const result = compactStatuses(statuses);
+  deepStrictEqual(result, [
+    { label: 'Langfuse', tone: 'muted' as StatusTone },
+    { label: 'MCP', tone: 'muted' as StatusTone },
+    { label: 'LSP 1', tone: 'info' as StatusTone },
+  ]);
 });
 
 test('chooseLayout: single when metadata + 3 + health <= width', () => {
@@ -169,67 +206,6 @@ test('shortenRepository: handles single segment', () => {
   strictEqual(result.length <= 10, true);
 });
 
-test('formatCount: zero', () => {
-  strictEqual(formatCount(0), '0');
-});
-
-test('formatCount: formats positive integers', () => {
-  strictEqual(formatCount(5), '5');
-  strictEqual(formatCount(42), '42');
-});
-
-test('formatCount: formats large numbers with K suffix', () => {
-  strictEqual(formatCount(1000), '1K');
-  strictEqual(formatCount(1500), '1.5K');
-});
-
-test('formatCount: formats mega numbers with M suffix', () => {
-  strictEqual(formatCount(1000000), '1M');
-  strictEqual(formatCount(2500000), '2.5M');
-});
-
-// Regression tests: case-insensitive keys
-test('compactStatuses: capitalized key Langfuse', () => {
-  const statuses = new Map([['Langfuse', 'Langfuse enabled']]);
-  const result = compactStatuses(statuses);
-  deepStrictEqual(result, [{ label: 'Langfuse', tone: 'success' as StatusTone }]);
-});
-
-test('compactStatuses: uppercase key MCP', () => {
-  const statuses = new Map([['MCP', 'MCP: 2']]);
-  const result = compactStatuses(statuses);
-  deepStrictEqual(result, [{ label: 'MCP 2', tone: 'success' as StatusTone }]);
-});
-
-test('compactStatuses: mixed-case key LsP', () => {
-  const statuses = new Map([['LsP', 'LSP Active: server']]);
-  const result = compactStatuses(statuses);
-  deepStrictEqual(result, [{ label: 'LSP 1', tone: 'info' as StatusTone }]);
-});
-
-// Regression tests: pi-lens fallback for LSP
-test('compactStatuses: pi-lens fallback when lsp absent', () => {
-  const statuses = new Map([['pi-lens', 'LSP Active: rust, python']]);
-  const result = compactStatuses(statuses);
-  deepStrictEqual(result, [{ label: 'LSP 2', tone: 'info' as StatusTone }]);
-});
-
-test('compactStatuses: lsp takes precedence over pi-lens', () => {
-  const statuses = new Map([
-    ['lsp', 'LSP Active: go'],
-    ['pi-lens', 'LSP Active: python, rust'],
-  ]);
-  const result = compactStatuses(statuses);
-  strictEqual(result[0].label, 'LSP 1');
-});
-
-test('compactStatuses: capitalized pi-lens key', () => {
-  const statuses = new Map([['Pi-Lens', 'LSP Active: typescript']]);
-  const result = compactStatuses(statuses);
-  deepStrictEqual(result, [{ label: 'LSP 1', tone: 'info' as StatusTone }]);
-});
-
-// Regression test: code-point safety with emoji
 test('shortenRepository: emoji safety (no lone surrogates)', () => {
   const result = shortenRepository('a/b/c/d/😀x', 3);
   // Must be code-point safe: no lone surrogates
@@ -252,4 +228,23 @@ test('shortenRepository: emoji in fallback suffix', () => {
   // Can be converted to array of code points without errors
   const codePoints = Array.from(result);
   strictEqual(codePoints.length > 0, true);
+});
+
+test('formatCount: zero', () => {
+  strictEqual(formatCount(0), '0');
+});
+
+test('formatCount: formats positive integers', () => {
+  strictEqual(formatCount(5), '5');
+  strictEqual(formatCount(42), '42');
+});
+
+test('formatCount: formats large numbers with K suffix', () => {
+  strictEqual(formatCount(1000), '1K');
+  strictEqual(formatCount(1500), '1.5K');
+});
+
+test('formatCount: formats mega numbers with M suffix', () => {
+  strictEqual(formatCount(1000000), '1M');
+  strictEqual(formatCount(2500000), '2.5M');
 });
