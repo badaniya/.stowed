@@ -27,7 +27,9 @@ import {
   buildMetadataParts,
   chooseFooterLayout,
   compactStatuses,
+  footerGap,
   resolveRepoLabel,
+  rightAlignPadding,
   toneToSemanticColor,
   type MetadataPart,
 } from './lib/statusline-format';
@@ -80,7 +82,7 @@ export default function (pi: ExtensionAPI) {
 
           const healthStatuses = compactStatuses(footerData.getExtensionStatuses());
 
-          const metadataText = metadataParts.map(colorize).join(' ');
+          const metadataText = metadataParts.map(colorize).join(theme.fg('dim', ' │ '));
           const healthText = healthStatuses
             .map((s) => theme.fg(toneToSemanticColor(s.tone), `● ${s.label}`))
             .join(theme.fg('dim', ' │ '));
@@ -90,10 +92,14 @@ export default function (pi: ExtensionAPI) {
           // Degrade gracefully: if metadata alone already fills the width, drop the
           // health block rather than emit a malformed/truncated " │ " separator.
           if (layout !== 'single' || visibleWidth(metadataText) >= width) {
-            return [truncateToWidth(metadataText, width), truncateToWidth(healthText, width)];
+            const truncatedHealth = truncateToWidth(healthText, width);
+            return [
+              truncateToWidth(metadataText, width),
+              `${rightAlignPadding(width, visibleWidth(truncatedHealth))}${truncatedHealth}`,
+            ];
           }
 
-          const line = `${metadataText}${theme.fg('dim', ' │ ')}${healthText}`;
+          const line = `${metadataText}${footerGap(width, visibleWidth(metadataText), visibleWidth(healthText))}${theme.fg('dim', ' │ ')}${healthText}`;
           return [truncateToWidth(line, width)];
         },
       };

@@ -399,13 +399,23 @@ export function buildMetadataParts(input: MetadataInput): MetadataPart[] {
   return parts;
 }
 
-/** Code-point width of the metadata row if joined with single spaces, before coloring. */
+/** Code-point width of the metadata row if joined with " │ ", before coloring. */
 export function metadataPlainWidth(parts: readonly MetadataPart[]): number {
   if (parts.length === 0) {
     return 0;
   }
   const textWidth = parts.reduce((sum, p) => sum + Array.from(p.text).length, 0);
-  return textWidth + (parts.length - 1);
+  return textWidth + (parts.length - 1) * 3;
+}
+
+/** Spaces required to right-align health after its leading " │ " separator. */
+export function footerGap(width: number, metadataWidth: number, healthWidth: number): string {
+  return ' '.repeat(Math.max(0, width - metadataWidth - 3 - healthWidth));
+}
+
+/** Spaces required to right-align a standalone row. */
+export function rightAlignPadding(width: number, contentWidth: number): string {
+  return ' '.repeat(Math.max(0, width - contentWidth));
 }
 
 /** Code-point width of `● <label>` health entries joined with " │ ", before coloring. */

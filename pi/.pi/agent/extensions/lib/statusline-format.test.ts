@@ -19,6 +19,8 @@ import {
   metadataPlainWidth,
   healthPlainWidth,
   chooseFooterLayout,
+  footerGap,
+  rightAlignPadding,
 } from './statusline-format';
 
 // compactStatuses tests
@@ -455,16 +457,28 @@ test('buildMetadataParts: shortens repoLabel when repoMaxWidth is given', () => 
 });
 
 // metadataPlainWidth / healthPlainWidth tests
-test('metadataPlainWidth: sums text widths plus single-space separators', () => {
+test('metadataPlainWidth: sums text widths plus " │ " separators', () => {
   const parts = [
     { text: 'ab', color: 'accent' as const },
     { text: 'cde', color: 'dim' as const },
   ];
-  strictEqual(metadataPlainWidth(parts), 2 + 3 + 1);
+  strictEqual(metadataPlainWidth(parts), 2 + 3 + 3);
 });
 
 test('metadataPlainWidth: empty array is zero', () => {
   strictEqual(metadataPlainWidth([]), 0);
+});
+
+test('footerGap: right-aligns health after the metadata-to-health separator', () => {
+  strictEqual(footerGap(80, 30, 20), ' '.repeat(27));
+  strictEqual(footerGap(53, 30, 20), '');
+  strictEqual(footerGap(52, 30, 20), '');
+});
+
+test('rightAlignPadding: aligns a standalone health row to the terminal edge', () => {
+  strictEqual(rightAlignPadding(80, 20), ' '.repeat(60));
+  strictEqual(rightAlignPadding(20, 20), '');
+  strictEqual(rightAlignPadding(19, 20), '');
 });
 
 test('healthPlainWidth: accounts for colored-dot prefixes and " │ " separators', () => {
