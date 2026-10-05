@@ -3,6 +3,6 @@ workspaces:
     root: ~/.stowed
     focus: true
     tabs:
-      - label: 1 - Config
+      - label: 1 - Agent
         panes:
-          - command: nvim
+          - command: pi
