@@ -4,7 +4,6 @@
   "defaultModel": "gpt-5.6-terra",
   "theme": "pi-catppuccin-mocha",
   "packages": [
-    "npm:@gotgenes/pi-subagents",
     "npm:pi-mcp-adapter",
     "npm:@eiei114/pi-sub-bar",
     "npm:@narumitw/pi-btw",
@@ -14,7 +13,8 @@
     "npm:billion-context",
     "npm:pi-markdown-preview",
     "npm:pi-claude-auth",
-    "npm:pi-free"
+    "npm:pi-free",
+    "npm:@quintinshaw/pi-dynamic-workflows"
   ],
   "defaultThinkingLevel": "minimal",
   "hideThinkingBlock": false,

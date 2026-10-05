@@ -2,6 +2,7 @@ tasks/
 teams/
 cache/
 context-mode/
+workflows/
 free-telemetry.json
 free.json
 free.log
