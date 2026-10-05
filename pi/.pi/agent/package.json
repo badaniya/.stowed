@@ -1,5 +1,11 @@
 {
   "dependencies": {
     "vscode-languageserver-protocol": "^3.17.3"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-ai": "1.0.3",
+    "@earendil-works/pi-coding-agent": "1.0.3",
+    "@earendil-works/pi-tui": "1.0.3",
+    "typescript": "5.9.3"
   }
 }

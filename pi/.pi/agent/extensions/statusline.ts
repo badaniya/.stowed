@@ -3,13 +3,13 @@
  *
  * Installs automatically on session_start (TUI mode only) and restores the
  * built-in footer on session_shutdown. All layout/formatting logic is pure
- * and lives in ./statusline-format.ts (tested there); this file only wires
+ * and lives in ./lib/statusline-format.ts (tested there); this file only wires
  * that logic to pi's ExtensionAPI/ExtensionUIContext.
  *
- * First row (wide/"single" layout): model, token totals, cost, context %,
- * elapsed time, repo path, effort level, then " │ " and the Langfuse/MCP/LSP
+ * First row (wide/"single" layout): model, effort level, context %, token
+ * totals, cost, elapsed time, repo path, then " │ " and the Langfuse/MCP/LSP
  * health block. On narrow widths ("stacked" layout) metadata is line 1 and
- * health is line 2. chooseFooterLayout (statusline-format.ts) decides which.
+ * health is line 2. chooseFooterLayout (lib/statusline-format.ts) decides which.
  */
 
 import type { AssistantMessage } from '@earendil-works/pi-ai';
@@ -32,7 +32,7 @@ import {
   rightAlignPadding,
   toneToSemanticColor,
   type MetadataPart,
-} from './lib/statusline-format';
+} from './lib/statusline-format.ts';
 
 export default function (pi: ExtensionAPI) {
   pi.on('session_start', (_event: SessionStartEvent, ctx: ExtensionContext) => {
