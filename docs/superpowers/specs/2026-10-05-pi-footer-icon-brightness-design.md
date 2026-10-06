@@ -6,7 +6,7 @@ Make the Nerd Font directory (`󰉋`), Git branch (`󰊢`), elapsed-time icon, a
 
 ## Approved approach
 
-Change the directory and Git icon metadata parts in `pi/.pi/agent/extensions/lib/statusline-format.ts` from the semantic `dim` color to `muted`. Replace the emoji watch (`⌚`) in `formatElapsed()` with Nerd Font Material Design `clock-outline` (`󰅐`, `U+F0150`). Replace the health block's filled-circle indicator (`●`) in `pi/.pi/agent/extensions/statusline.ts` with Nerd Font Material Design `circle-medium` (`󰧞`, `U+F09DE`).
+Change the directory and Git icon metadata parts in `pi/.pi/agent/extensions/lib/statusline-format.ts` from the semantic `dim` color to `muted`. Replace the emoji watch (`⌚`) in `formatElapsed()` with Nerd Font Material Design `clock-outline` (`󰅐`, `U+F0150`). Replace the health block's filled-circle indicator (`●`) in `pi/.pi/agent/extensions/statusline.ts` with the smaller Nerd Font filled-circle glyph (``, `U+F444`).
 
 `muted` resolves to Catppuccin Mocha `overlay0` (`#6c7086`) in `pi/.pi/agent/themes/pi-catppuccin-mocha.json`, making the directory and Git icons brighter than their current `dim` / `surface1` (`#45475a`) appearance. `󰅐` is a monochrome Nerd Font glyph, so it honors its existing semantic footer color instead of rendering as a color emoji. Semantic tokens keep the footer compatible with alternative Pi themes.
 
@@ -14,7 +14,7 @@ Change the directory and Git icon metadata parts in `pi/.pi/agent/extensions/lib
 
 - Update the two icon color values in `buildMetadataParts()`.
 - Replace `⌚` with `󰅐` in `formatElapsed()`.
-- Replace `●` with `󰧞` in the health-status renderer.
+- Replace `●` with `` in the health-status renderer.
 - Update formatter tests to assert `muted` for the directory and Git icons, `󰅐` for elapsed time, and unchanged one-column health-width accounting.
 - Run focused formatter tests and strict TypeScript validation.
 
