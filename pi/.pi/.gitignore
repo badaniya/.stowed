@@ -3,6 +3,7 @@ teams/
 cache/
 context-mode/
 workflows/
+acp.log
 free-telemetry.json
 free.json
 free.log
