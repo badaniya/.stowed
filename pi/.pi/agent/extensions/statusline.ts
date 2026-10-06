@@ -6,9 +6,8 @@
  * and lives in ./lib/statusline-format.ts (tested there); this file only wires
  * that logic to pi's ExtensionAPI/ExtensionUIContext.
  *
- * First row (wide/"single" layout): model, effort level, context %, token
- * totals, cost, elapsed time, repo path, then " │ " and the LSP/MCP/Langfuse
- * health block. On narrow widths ("stacked" layout) metadata is line 1 and
+ * First row (wide/"single" layout): model/effort, context/token/cost/duration,
+ * directory/branch, then " │ " and the LSP/MCP/Langfuse health block. On narrow widths ("stacked" layout) metadata is line 1 and
  * health is line 2. chooseFooterLayout (lib/statusline-format.ts) decides which.
  */
 
@@ -28,7 +27,6 @@ import {
   chooseFooterLayout,
   compactStatuses,
   footerGap,
-  resolveRepoLabel,
   rightAlignPadding,
   toneToSemanticColor,
   type MetadataPart,
@@ -73,7 +71,7 @@ export default function (pi: ExtensionAPI) {
             }
           }
 
-          const repoLabel = resolveRepoLabel(ctx.cwd, footerData.getGitBranch());
+          const branch = footerData.getGitBranch();
 
           const metadataParts = buildMetadataParts({
             modelId: ctx.model?.id,
@@ -83,7 +81,8 @@ export default function (pi: ExtensionAPI) {
             contextPercent: ctx.getContextUsage()?.percent,
             effort: ctx.thinkingLevel,
             elapsedMs: Date.now() - startedAt,
-            repoLabel,
+            directory: ctx.cwd,
+            branch,
             repoMaxWidth: Math.max(10, Math.floor(width / 3)),
           });
 

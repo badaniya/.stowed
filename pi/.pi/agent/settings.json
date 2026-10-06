@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "1.0.3",
+  "lastChangelogVersion": "1.0.4",
   "defaultProvider": "github-copilot",
   "defaultModel": "gpt-5.6-terra",
   "theme": "pi-catppuccin-mocha",
@@ -16,7 +16,7 @@
     "npm:pi-free",
     "npm:@quintinshaw/pi-dynamic-workflows"
   ],
-  "defaultThinkingLevel": "minimal",
+  "defaultThinkingLevel": "medium",
   "hideThinkingBlock": false,
   "enabledModels": [
     "anthropic/claude-fable-5",

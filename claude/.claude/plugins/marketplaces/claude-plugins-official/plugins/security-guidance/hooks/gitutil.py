@@ -44,6 +44,13 @@ SAFE_GIT_CONFIG = (
     ("core.hooksPath", "/dev/null"),
 )
 
+# The hook's git runs in the background beside the session's own git. Without
+# this, `git status` holds .git/index.lock while it writes back a refreshed
+# index: a concurrent `git add` fails, and a timeout kill leaves the lock.
+SAFE_GIT_ENV = {
+    "GIT_OPTIONAL_LOCKS": "0",
+}
+
 
 def git_config_env(pairs, base=None):
     base = os.environ if base is None else base
@@ -61,6 +68,7 @@ def git_config_env(pairs, base=None):
 
 def apply_safe_git_env():
     os.environ.update(git_config_env(SAFE_GIT_CONFIG))
+    os.environ.update(SAFE_GIT_ENV)
 
 
 def _git_rev_parse_head(cwd):
@@ -131,6 +139,85 @@ def _diff_pathspec(cwd, paths):
     return ["--"] + rel if rel else []
 
 
+_TEMP_INDEX_PREFIX = "security_hook_idx_"
+# A live copy is in use for under a minute (a couple of bounded git calls), so
+# anything this old belongs to a run that was killed.
+_TEMP_INDEX_STALE_S = 1800
+# Unlinking index-sized files is slow; a large backlog drains over several
+# calls instead of stalling one hook past its timeout.
+_SWEEP_BUDGET_S = 2
+
+
+def _sweep_stale_indexes(dirpath, uid):
+    """Delete index copies in `dirpath` that a killed run left behind. Only
+    regular files owned by `uid` (None: no ownership check) are touched.
+
+    Age is the newer of mtime and ctime: a copy keeps .git/index's mtime,
+    which may be days old, so mtime alone would delete a file that another
+    running hook is still using."""
+    import stat
+    import time
+    cutoff = time.time() - _TEMP_INDEX_STALE_S
+    deadline = time.monotonic() + _SWEEP_BUDGET_S
+    try:
+        names = os.listdir(dirpath)
+    except OSError:
+        return
+    for name in names:
+        if not name.startswith(_TEMP_INDEX_PREFIX):
+            continue
+        p = os.path.join(dirpath, name)
+        try:
+            st = os.lstat(p)
+            if not stat.S_ISREG(st.st_mode):
+                continue
+            if uid is not None and st.st_uid != uid:
+                continue
+            if max(st.st_mtime, st.st_ctime) < cutoff:
+                os.unlink(p)
+                if time.monotonic() > deadline:
+                    return
+        except OSError:
+            pass
+
+
+def _hook_tmpdir():
+    """Private per-user directory for throwaway index copies, or None to use
+    the bare temp dir.
+
+    An index copy can be hundreds of MB and a killed hook cannot clean up, so
+    copies live in one 0700 directory and anything stale is swept on entry,
+    here and in the bare temp dir. The name is predictable and the temp dir
+    may be shared, so anything that is not a real directory we own is
+    refused. Windows has no uid and its temp dir is already per-user."""
+    import stat
+    import tempfile
+    base = tempfile.gettempdir()
+    uid = os.getuid() if hasattr(os, "getuid") else None
+    _sweep_stale_indexes(base, uid)
+    if uid is None:
+        return None
+    d = os.path.join(base, f"claude-security-guidance-{uid}")
+    try:
+        os.mkdir(d, 0o700)
+    except FileExistsError:
+        pass
+    except OSError:
+        return None
+    try:
+        st = os.lstat(d)
+    except OSError:
+        return None
+    if not stat.S_ISDIR(st.st_mode) or st.st_uid != uid:
+        return None
+    try:
+        os.chmod(d, 0o700)
+    except OSError:
+        pass
+    _sweep_stale_indexes(d, uid)
+    return d
+
+
 @contextlib.contextmanager
 def _temp_index(cwd, untracked_paths=None):
     """Yield an env dict pointing GIT_INDEX_FILE at a throwaway copy of the
@@ -143,7 +230,12 @@ def _temp_index(cwd, untracked_paths=None):
     in untracked count). The default `add -N .` stats every file in the
     worktree — slow in large repos vs fast targeted scan. v2 callers
     already know the untracked set from `git status --porcelain`, so they
-    pass it; v1 keeps the whole-tree scan since it has no prior list."""
+    pass it; v1 keeps the whole-tree scan since it has no prior list.
+
+    Cleanup removes `<tmp_index>*`, not just the copy: git writes
+    `<index>.lock` and `<index>.stash.<pid>` next to the index it is given and
+    cannot remove them itself when a subprocess timeout kills it."""
+    import glob
     import shutil
     import tempfile
 
@@ -152,9 +244,14 @@ def _temp_index(cwd, untracked_paths=None):
         yield None
         return
 
-    tmp_fd, tmp_index = tempfile.mkstemp(prefix="security_hook_idx_")
+    tmp_fd, tmp_index = tempfile.mkstemp(prefix=_TEMP_INDEX_PREFIX,
+                                         dir=_hook_tmpdir())
     os.close(tmp_fd)
     try:
+        # copy2, not copyfile: the copy must keep .git/index's mtime. Git
+        # re-reads any file whose mtime is not older than the index file's;
+        # with a fresh mtime it would miss a same-size edit made in the same
+        # second as the last index write.
         shutil.copy2(real_index, tmp_index)
         env = {**os.environ, "GIT_INDEX_FILE": tmp_index}
         if untracked_paths is None:
@@ -182,10 +279,11 @@ def _temp_index(cwd, untracked_paths=None):
             )
         yield env
     finally:
-        try:
-            os.unlink(tmp_index)
-        except OSError:
-            pass
+        for p in glob.glob(glob.escape(tmp_index) + "*"):
+            try:
+                os.unlink(p)
+            except OSError:
+                pass
 
 
 def _git_toplevel(cwd):
@@ -400,9 +498,12 @@ def _git_name_only(cwd, base, include_untracked=False):
         return {p for p in stdout.split("\0") if p}
 
     try:
-        if not include_untracked:
+        # A work-tree diff rewrites the index under <index>.lock when entries
+        # are stat-stale (mtime changed, content same), GIT_OPTIONAL_LOCKS or
+        # not, so it runs on a throwaway copy; an a..b range never opens it.
+        if not include_untracked and ".." in base:
             return _run(None)
-        with _temp_index(cwd) as env:
+        with _temp_index(cwd, None if include_untracked else []) as env:
             return _run(env)
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError, ValueError) as e:
         debug_log(f"_git_name_only({base!r}) error: {e}")

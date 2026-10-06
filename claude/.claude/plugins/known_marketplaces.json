@@ -5,15 +5,7 @@
       "repo": "anthropics/claude-plugins-official"
     },
     "installLocation": "/home/badaniya/.claude/plugins/marketplaces/claude-plugins-official",
-    "lastUpdated": "2026-10-05T15:15:32.542Z"
-  },
-  "context-mode": {
-    "source": {
-      "source": "github",
-      "repo": "mksglu/context-mode"
-    },
-    "installLocation": "/home/badaniya/.claude/plugins/marketplaces/context-mode",
-    "lastUpdated": "2026-06-04T23:33:14.382Z"
+    "lastUpdated": "2026-10-06T01:45:38.914Z"
   },
   "langfuse-observability": {
     "source": {
@@ -30,5 +22,13 @@
     },
     "installLocation": "/home/badaniya/.claude/plugins/marketplaces/chrome-devtools-plugins",
     "lastUpdated": "2026-07-27T16:43:16.223Z"
+  },
+  "context-mode": {
+    "source": {
+      "source": "github",
+      "repo": "mksglu/context-mode"
+    },
+    "installLocation": "/home/badaniya/.claude/plugins/marketplaces/context-mode",
+    "lastUpdated": "2026-10-06T01:45:28.542Z"
   }
 }

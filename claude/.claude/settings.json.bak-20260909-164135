@@ -20,14 +20,6 @@
   "hooks": {
     "SessionStart": [
       {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"/home/badaniya/.claude/hooks/context-mode-cache-heal.mjs\""
-          }
-        ]
-      },
-      {
         "matcher": "*",
         "hooks": [
           {
@@ -126,7 +118,6 @@
   "enabledPlugins": {
     "code-review@claude-plugins-official": false,
     "code-simplifier@claude-plugins-official": false,
-    "context-mode@context-mode": true,
     "frontend-design@claude-plugins-official": false,
     "gopls-lsp@claude-plugins-official": true,
     "langfuse-observability@claude-plugins-official": true,
@@ -135,12 +126,6 @@
     "github@claude-plugins-official": false
   },
   "extraKnownMarketplaces": {
-    "context-mode": {
-      "source": {
-        "source": "github",
-        "repo": "mksglu/context-mode"
-      }
-    },
     "langfuse-observability": {
       "source": {
         "source": "github",
