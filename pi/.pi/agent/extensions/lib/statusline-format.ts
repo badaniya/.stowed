@@ -257,12 +257,23 @@ export function formatCount(value: number): string {
   return `${formatted}B`;
 }
 
+import type { Color } from '@earendil-works/pi-tui';
+
 /**
  * Semantic color names used by the custom footer. Each is a valid pi Theme
  * `ThemeColor` token (never a hard-coded ANSI value); the runtime extension
- * passes these straight into `theme.fg(color, text)`.
+ * passes these straight into `theme.style(text, { fg: color })`.
  */
 export type SemanticColor = 'accent' | 'success' | 'warning' | 'error' | 'muted' | 'dim' | 'syntaxType';
+
+export const FOOTER_METADATA_COLORS = {
+  model: { kind: 'rgb', r: 250, g: 179, b: 135 },
+  effort: { kind: 'rgb', r: 203, g: 166, b: 247 },
+  directory: { kind: 'rgb', r: 137, g: 180, b: 250 },
+  branch: { kind: 'rgb', r: 180, g: 190, b: 254 },
+} as const satisfies Record<'model' | 'effort' | 'directory' | 'branch', Color>;
+
+export type MetadataColor = SemanticColor | Color;
 
 /**
  * Map a health-status tone to a semantic theme color.
@@ -321,12 +332,12 @@ export function formatEffort(level: string | undefined): string | undefined {
   return level;
 }
 
-/** Format elapsed milliseconds as "󰅐<Nh><Nm>", omitting the hours segment when zero. */
+/** Format elapsed milliseconds as "󰥔 <Nh><Nm>", omitting the hours segment when zero. */
 export function formatElapsed(elapsedMs: number): string {
   const totalMinutes = Math.max(0, Math.floor(elapsedMs / 60000));
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
-  return hours > 0 ? `󰅐${hours}h${minutes}m` : `󰅐${minutes}m`;
+  return hours > 0 ? `󰥔 ${hours}h${minutes}m` : `󰥔 ${minutes}m`;
 }
 
 /**
@@ -342,7 +353,7 @@ export function resolveRepoLabel(cwd: string, branch: string | null | undefined)
 /** A single colored segment of the metadata row. */
 export interface MetadataPart {
   text: string;
-  color: SemanticColor;
+  color: MetadataColor;
   /** Join with a preceding segment using one space instead of " │ ". */
   attachToPrevious?: true;
 }
@@ -369,12 +380,16 @@ export function buildMetadataParts(input: MetadataInput): MetadataPart[] {
   const parts: MetadataPart[] = [];
 
   if (input.modelId) {
-    parts.push({ text: input.modelId, color: 'accent' });
+    parts.push({ text: input.modelId, color: FOOTER_METADATA_COLORS.model });
   }
 
   const effortText = formatEffort(input.effort);
   if (effortText !== undefined) {
-    parts.push({ text: effortText, color: 'muted', attachToPrevious: input.modelId ? true : undefined });
+    parts.push({
+      text: effortText,
+      color: FOOTER_METADATA_COLORS.effort,
+      attachToPrevious: input.modelId ? true : undefined,
+    });
   }
 
   const pctText = formatContextPercent(input.contextPercent);
@@ -400,11 +415,11 @@ export function buildMetadataParts(input: MetadataInput): MetadataPart[] {
     const directory =
       input.repoMaxWidth !== undefined ? shortenRepository(input.directory, input.repoMaxWidth) : input.directory;
     parts.push({ text: '󰉋', color: 'muted' });
-    parts.push({ text: directory, color: 'accent', attachToPrevious: true });
+    parts.push({ text: directory, color: FOOTER_METADATA_COLORS.directory, attachToPrevious: true });
 
     if (input.branch) {
       parts.push({ text: '󰊢', color: 'muted', attachToPrevious: true });
-      parts.push({ text: input.branch, color: 'success', attachToPrevious: true });
+      parts.push({ text: input.branch, color: FOOTER_METADATA_COLORS.branch, attachToPrevious: true });
     }
   }
 

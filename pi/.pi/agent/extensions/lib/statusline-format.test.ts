@@ -19,6 +19,7 @@ import {
   chooseFooterLayout,
   footerGap,
   rightAlignPadding,
+  FOOTER_METADATA_COLORS,
 } from './statusline-format.ts';
 import type { StatusTone, CompactStatus } from './statusline-format.ts';
 
@@ -364,19 +365,19 @@ test('formatEffort: undefined yields undefined, otherwise the level label', () =
 
 // formatElapsed tests
 test('formatElapsed: omits hours segment when zero', () => {
-  strictEqual(formatElapsed(0), '󰅐0m');
-  strictEqual(formatElapsed(59999), '󰅐0m');
-  strictEqual(formatElapsed(60000), '󰅐1m');
+  strictEqual(formatElapsed(0), '󰥔 0m');
+  strictEqual(formatElapsed(59999), '󰥔 0m');
+  strictEqual(formatElapsed(60000), '󰥔 1m');
 });
 
 test('formatElapsed: includes hours segment when non-zero', () => {
-  strictEqual(formatElapsed(3600000), '󰅐1h0m');
-  strictEqual(formatElapsed(3660000), '󰅐1h1m');
-  strictEqual(formatElapsed(7320000), '󰅐2h2m');
+  strictEqual(formatElapsed(3600000), '󰥔 1h0m');
+  strictEqual(formatElapsed(3660000), '󰥔 1h1m');
+  strictEqual(formatElapsed(7320000), '󰥔 2h2m');
 });
 
 test('formatElapsed: negative values clamp to zero', () => {
-  strictEqual(formatElapsed(-500), '󰅐0m');
+  strictEqual(formatElapsed(-500), '󰥔 0m');
 });
 
 // resolveRepoLabel tests
@@ -407,16 +408,16 @@ test('buildMetadataParts: groups metadata and renders directory and branch as ic
     branch: 'main',
   });
   deepStrictEqual(parts, [
-    { text: 'claude-sonnet', color: 'accent' },
-    { text: 'high', color: 'muted', attachToPrevious: true },
+    { text: 'claude-sonnet', color: FOOTER_METADATA_COLORS.model },
+    { text: 'high', color: FOOTER_METADATA_COLORS.effort, attachToPrevious: true },
     { text: '42%', color: 'success' },
     { text: '\u2191100 \u2193200', color: 'syntaxType', attachToPrevious: true },
     { text: '$0.500', color: 'warning', attachToPrevious: true },
-    { text: '󰅐1m', color: 'muted', attachToPrevious: true },
+    { text: '󰥔 1m', color: 'muted', attachToPrevious: true },
     { text: '󰉋', color: 'muted' },
-    { text: 'project', color: 'accent', attachToPrevious: true },
+    { text: 'project', color: FOOTER_METADATA_COLORS.directory, attachToPrevious: true },
     { text: '󰊢', color: 'muted', attachToPrevious: true },
-    { text: 'main', color: 'success', attachToPrevious: true },
+    { text: 'main', color: FOOTER_METADATA_COLORS.branch, attachToPrevious: true },
   ]);
 });
 
@@ -430,9 +431,9 @@ test('buildMetadataParts: omits both branch icon and label when branch is absent
   });
   deepStrictEqual(parts, [
     { text: '\u21910 \u21930', color: 'syntaxType' },
-    { text: '󰅐0m', color: 'muted', attachToPrevious: true },
+    { text: '󰥔 0m', color: 'muted', attachToPrevious: true },
     { text: '󰉋', color: 'muted' },
-    { text: 'project', color: 'accent', attachToPrevious: true },
+    { text: 'project', color: FOOTER_METADATA_COLORS.directory, attachToPrevious: true },
   ]);
 });
 
@@ -447,11 +448,11 @@ test('buildMetadataParts: retains the compact grouping when cost and directory a
     elapsedMs: 60000,
   });
   deepStrictEqual(parts, [
-    { text: 'claude-sonnet', color: 'accent' },
-    { text: 'high', color: 'muted', attachToPrevious: true },
+    { text: 'claude-sonnet', color: FOOTER_METADATA_COLORS.model },
+    { text: 'high', color: FOOTER_METADATA_COLORS.effort, attachToPrevious: true },
     { text: '42%', color: 'success' },
     { text: '\u2191100 \u2193200', color: 'syntaxType', attachToPrevious: true },
-    { text: '󰅐1m', color: 'muted', attachToPrevious: true },
+    { text: '󰥔 1m', color: 'muted', attachToPrevious: true },
   ]);
 });
 
@@ -465,7 +466,7 @@ test('buildMetadataParts: omits cost and keeps token and duration together witho
   });
   deepStrictEqual(parts, [
     { text: '\u21910 \u21930', color: 'syntaxType' },
-    { text: '󰅐0m', color: 'muted', attachToPrevious: true },
+    { text: '󰥔 0m', color: 'muted', attachToPrevious: true },
   ]);
 });
 
@@ -489,7 +490,7 @@ test('buildMetadataParts: shortens directory when repoMaxWidth is given', () => 
     directory: 'badaniya/GoDCApp/NVO-13662',
     repoMaxWidth: 10,
   });
-  const directoryPart = parts.find((p) => p.text !== '󰉋' && p.color === 'accent');
+  const directoryPart = parts.find((p) => p.text !== '󰉋' && p.color === FOOTER_METADATA_COLORS.directory);
   strictEqual(directoryPart !== undefined, true);
   strictEqual(Array.from(directoryPart!.text).length <= 10, true);
 });
