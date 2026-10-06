@@ -1,0 +1,86 @@
+{
+	"schemaVersion": 1,
+	"version": "1.0.4",
+	"sourceCommit": "7c10bd4337495ee613f2224843ecdf349b80d1df",
+	"publishedAt": "2026-10-05T22:03:28.937Z",
+	"packages": [
+		{
+			"name": "@earendil-works/pi-agent-core",
+			"version": "1.0.4",
+			"tarball": "https://registry.npmjs.org/@earendil-works/pi-agent-core/-/pi-agent-core-1.0.4.tgz",
+			"integrity": "sha512-/xGICE+N/+G9N7KfYFSxlE8G8fQcBlLHKiY+j1Ehz9vvb1zhvGneWosFK56d2qmA5oteafeG7yKr2nqU4ed9ig=="
+		},
+		{
+			"name": "@earendil-works/pi-ai",
+			"version": "1.0.4",
+			"tarball": "https://registry.npmjs.org/@earendil-works/pi-ai/-/pi-ai-1.0.4.tgz",
+			"integrity": "sha512-/Eu5R0gfor6wcmRcVyOmulUiZmsHJ0bKu5wXXnpCoSHF3y4FnW4fgnjRlLjNza8NJWXdvW5Uew90Zukx7Sh2rw=="
+		},
+		{
+			"name": "@earendil-works/chord",
+			"version": "1.0.4",
+			"tarball": "https://registry.npmjs.org/@earendil-works/chord/-/chord-1.0.4.tgz",
+			"integrity": "sha512-d2JZw2utoa/reoSmL07O71wsXiMDhIlnnxTb4LCNV+Oq8Evj2rGLvjVuYrlXZGbXUr0IDNfvd1RT/utCY1UhkQ=="
+		},
+		{
+			"name": "@earendil-works/pi-client",
+			"version": "1.0.4",
+			"tarball": "https://registry.npmjs.org/@earendil-works/pi-client/-/pi-client-1.0.4.tgz",
+			"integrity": "sha512-c+hB+VE+K+2990do99wk4m+R7RvRt7A/Wb9JOHWM3c+vCFqZqo8VdU65a+P/hUZp2cVhoxFnzFZsDf9yqaGvUA=="
+		},
+		{
+			"name": "@earendil-works/pi-codemode",
+			"version": "1.0.4",
+			"tarball": "https://registry.npmjs.org/@earendil-works/pi-codemode/-/pi-codemode-1.0.4.tgz",
+			"integrity": "sha512-e198pjBsdEQJ/RCjJ9ZeYIjRaQYWUgtoZbPCmJ57auuOsiRsBXeSZ1aiWtTah0/7gx97WIOD1XqHvgRU0gOXtg=="
+		},
+		{
+			"name": "@earendil-works/pi-coding-agent",
+			"version": "1.0.4",
+			"tarball": "https://registry.npmjs.org/@earendil-works/pi-coding-agent/-/pi-coding-agent-1.0.4.tgz",
+			"integrity": "sha512-+956nfMFHr5lDUVY/2Q4k+YzojzBuCaBXFgj0eSlXVGr7QVliVddKdc1Pz6yVg1dOlJQmb67doOVrlMsIcIdaw=="
+		},
+		{
+			"name": "@earendil-works/pi-durable",
+			"version": "1.0.4",
+			"tarball": "https://registry.npmjs.org/@earendil-works/pi-durable/-/pi-durable-1.0.4.tgz",
+			"integrity": "sha512-i22unyhavxrTF/KS/JcBOKprQRgepufOIztnqBKZXJCWbEHsXDzcINtjmmBSbFB/3S+4FWIl3eJ5FMbRe33Ybg=="
+		},
+		{
+			"name": "@earendil-works/pi-env",
+			"version": "1.0.4",
+			"tarball": "https://registry.npmjs.org/@earendil-works/pi-env/-/pi-env-1.0.4.tgz",
+			"integrity": "sha512-eEM43OTPobEnR57S5JJ8CxOU0/CFhdH70QCDkMf+Ly39Aw48fINgVLw55IVSo/SK1teR7K5OwQELQDr1IeFaYA=="
+		},
+		{
+			"name": "@earendil-works/pi-mcp",
+			"version": "1.0.4",
+			"tarball": "https://registry.npmjs.org/@earendil-works/pi-mcp/-/pi-mcp-1.0.4.tgz",
+			"integrity": "sha512-I6SqOqrKED+XrjkkFIXY7Ze38QtXtjojPJlQsJ2v5soCPV4QI1bNxXDwQaqzZ2a+6pNN8meWrRw1qkSMbPy9QQ=="
+		},
+		{
+			"name": "@earendil-works/pi-protocol",
+			"version": "1.0.4",
+			"tarball": "https://registry.npmjs.org/@earendil-works/pi-protocol/-/pi-protocol-1.0.4.tgz",
+			"integrity": "sha512-GJ1ieSJdguV3VaO5fXD+LEm6w1Rx0HKk7P1g8I6ZelmiGpmQAYOneUZaCUhAz5BeC6FpyUFzBb+AOo0Npfxtvw=="
+		},
+		{
+			"name": "@earendil-works/pi-server",
+			"version": "1.0.4",
+			"tarball": "https://registry.npmjs.org/@earendil-works/pi-server/-/pi-server-1.0.4.tgz",
+			"integrity": "sha512-9kQipVdjVMhprBzw/plrimPPDETNfFD7E2N8n1LBoLS7rcX+5js2hmUBJZPddmFnxNQgFeAgTgFH8bsCiWmlqw=="
+		},
+		{
+			"name": "@earendil-works/pi-telemetry",
+			"version": "1.0.4",
+			"tarball": "https://registry.npmjs.org/@earendil-works/pi-telemetry/-/pi-telemetry-1.0.4.tgz",
+			"integrity": "sha512-DL2eXXtnL5/VQkuQd97fL57GXTG1/zKHtMmDsrv8tGeJ5EgYYTWvzy44dqbYL0lD0Z22v/NOwqU3PHO75HVrqA=="
+		},
+		{
+			"name": "@earendil-works/pi-tui",
+			"version": "1.0.4",
+			"tarball": "https://registry.npmjs.org/@earendil-works/pi-tui/-/pi-tui-1.0.4.tgz",
+			"integrity": "sha512-TgvDJohtxvG3XWQID5w6bwEyBocywdG0F9yHZtP+Ywvtiq9RgeSMbeB8quUobk7/4ko6IvFOQo45AqIqNVr8Rg=="
+		}
+	]
+}
