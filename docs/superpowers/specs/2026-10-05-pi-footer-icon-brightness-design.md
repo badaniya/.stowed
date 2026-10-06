@@ -10,6 +10,14 @@ Keep directory and Git icon metadata parts in `pi/.pi/agent/extensions/lib/statu
 
 `muted` resolves to Catppuccin Mocha `overlay0` (`#6c7086`) in `pi/.pi/agent/themes/pi-catppuccin-mocha.json`, retaining the brighter icon treatment. The model uses peach `#fab387` (`{ kind: 'rgb', r: 250, g: 179, b: 135 }`); effort uses mauve `#cba6f7` (`{ kind: 'rgb', r: 203, g: 166, b: 247 }`); the directory label uses blue `#89b4fa` (`{ kind: 'rgb', r: 137, g: 180, b: 250 }`); and the Git branch label uses lavender `#b4befe` (`{ kind: 'rgb', r: 180, g: 190, b: 254 }`). The extension must render those labels with `theme.style(..., { fg: color })`, because `theme.fg()` accepts only named theme tokens and the built-in token set has no lavender role. The four direct colors are deliberately confined to these requested footer labels; the theme JSON is not changed.
 
+## Layout contract
+
+This is a color-and-glyph-only refinement. Preserve the existing footer ordering and grouping exactly:
+
+`model effort │ context ↑input ↓output $cost 󰥔 duration │ 󰉋 PWD 󰊢 branch` → right-aligned `│ health`
+
+In particular, do not add, remove, or move metadata separators; do not regroup token, cost, and duration segments; retain the large gap that right-aligns the health block; and retain `attachToPrevious` behavior except for the one space inside `󰥔 <duration>`.
+
 ## Scope
 
 - Retain the two `muted` icon colors in `buildMetadataParts()`.
@@ -22,7 +30,7 @@ Keep directory and Git icon metadata parts in `pi/.pi/agent/extensions/lib/statu
 
 ## Non-goals
 
-- Do not change footer layout, metadata separators, directory/Git icon glyphs, health tones, or the Catppuccin palette.
+- Do not change footer layout, metadata ordering/grouping, metadata separators, right-aligned health gap, directory/Git icon glyphs, health tones, or the Catppuccin palette.
 - Do not change global theme roles. The only hard-coded RGB values are the user-requested directory and branch label colors.
 
 ## Validation
@@ -30,4 +38,4 @@ Keep directory and Git icon metadata parts in `pi/.pi/agent/extensions/lib/statu
 1. The formatter test asserts both directory/Git icon parts have `color: 'muted'`; elapsed output is `󰥔 <duration>`; model, effort, directory, and branch colors equal the exact typed RGB values for `#fab387`, `#cba6f7`, `#89b4fa`, and `#b4befe`; and health indicator width remains one column.
 2. `node --experimental-strip-types --test extensions/lib/statusline-format.test.ts` passes.
 3. `npx tsc --noEmit --project tsconfig.json` exits successfully.
-4. After `pi --reload`, the live footer visibly shows the solid clock with a space, blue PWD, and lavender branch.
+4. After `pi --reload`, the live footer visibly preserves the established metadata grouping and right-aligned health block while showing the solid clock with a space, peach model, mauve effort, blue PWD, and lavender branch.
