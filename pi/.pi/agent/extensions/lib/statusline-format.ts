@@ -321,12 +321,12 @@ export function formatEffort(level: string | undefined): string | undefined {
   return level;
 }
 
-/** Format elapsed milliseconds as "⌚<Nh><Nm>", omitting the hours segment when zero. */
+/** Format elapsed milliseconds as "󰅐<Nh><Nm>", omitting the hours segment when zero. */
 export function formatElapsed(elapsedMs: number): string {
   const totalMinutes = Math.max(0, Math.floor(elapsedMs / 60000));
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
-  return hours > 0 ? `⌚${hours}h${minutes}m` : `⌚${minutes}m`;
+  return hours > 0 ? `󰅐${hours}h${minutes}m` : `󰅐${minutes}m`;
 }
 
 /**

@@ -1,8 +1,6 @@
 import { test } from 'node:test';
 import { strictEqual, deepStrictEqual } from 'node:assert';
 import {
-  StatusTone,
-  CompactStatus,
   compactStatuses,
   chooseLayout,
   shortenRepository,
@@ -21,7 +19,8 @@ import {
   chooseFooterLayout,
   footerGap,
   rightAlignPadding,
-} from './statusline-format';
+} from './statusline-format.ts';
+import type { StatusTone, CompactStatus } from './statusline-format.ts';
 
 // compactStatuses tests
 test('compactStatuses: healthy known strings', () => {
@@ -365,19 +364,19 @@ test('formatEffort: undefined yields undefined, otherwise the level label', () =
 
 // formatElapsed tests
 test('formatElapsed: omits hours segment when zero', () => {
-  strictEqual(formatElapsed(0), '\u231a0m');
-  strictEqual(formatElapsed(59999), '\u231a0m');
-  strictEqual(formatElapsed(60000), '\u231a1m');
+  strictEqual(formatElapsed(0), '󰅐0m');
+  strictEqual(formatElapsed(59999), '󰅐0m');
+  strictEqual(formatElapsed(60000), '󰅐1m');
 });
 
 test('formatElapsed: includes hours segment when non-zero', () => {
-  strictEqual(formatElapsed(3600000), '\u231a1h0m');
-  strictEqual(formatElapsed(3660000), '\u231a1h1m');
-  strictEqual(formatElapsed(7320000), '\u231a2h2m');
+  strictEqual(formatElapsed(3600000), '󰅐1h0m');
+  strictEqual(formatElapsed(3660000), '󰅐1h1m');
+  strictEqual(formatElapsed(7320000), '󰅐2h2m');
 });
 
 test('formatElapsed: negative values clamp to zero', () => {
-  strictEqual(formatElapsed(-500), '\u231a0m');
+  strictEqual(formatElapsed(-500), '󰅐0m');
 });
 
 // resolveRepoLabel tests
@@ -412,7 +411,7 @@ test('buildMetadataParts: full order model, effort, context, tokens, cost, elaps
     { text: '42%', color: 'success' },
     { text: '\u2191100 \u2193200', color: 'syntaxType' },
     { text: '$0.500', color: 'warning' },
-    { text: '\u231a1m', color: 'dim' },
+    { text: '󰅐1m', color: 'dim' },
     { text: 'project (main)', color: 'accent' },
   ]);
 });
@@ -427,7 +426,7 @@ test('buildMetadataParts: omits cost when zero, effort when undefined, model whe
   });
   deepStrictEqual(parts, [
     { text: '\u21910 \u21930', color: 'syntaxType' },
-    { text: '\u231a0m', color: 'dim' },
+    { text: '󰅐0m', color: 'dim' },
   ]);
 });
 
