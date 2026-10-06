@@ -394,7 +394,7 @@ test('resolveRepoLabel: trailing slash handled', () => {
 });
 
 // buildMetadataParts tests
-test('buildMetadataParts: full order model, effort, context, tokens, cost, elapsed, repo', () => {
+test('buildMetadataParts: groups metadata and renders directory and branch as icon-label pairs', () => {
   const parts = buildMetadataParts({
     modelId: 'claude-sonnet',
     tokenInput: 100,
@@ -403,20 +403,59 @@ test('buildMetadataParts: full order model, effort, context, tokens, cost, elaps
     contextPercent: 42,
     effort: 'high',
     elapsedMs: 60000,
-    repoLabel: 'project (main)',
+    directory: 'project',
+    branch: 'main',
   });
   deepStrictEqual(parts, [
     { text: 'claude-sonnet', color: 'accent' },
     { text: 'high', color: 'muted', attachToPrevious: true },
     { text: '42%', color: 'success' },
-    { text: '\u2191100 \u2193200', color: 'syntaxType' },
-    { text: '$0.500', color: 'warning' },
-    { text: '󰅐1m', color: 'dim' },
-    { text: 'project (main)', color: 'accent' },
+    { text: '\u2191100 \u2193200', color: 'syntaxType', attachToPrevious: true },
+    { text: '$0.500', color: 'warning', attachToPrevious: true },
+    { text: '󰅐1m', color: 'muted', attachToPrevious: true },
+    { text: '󰉋', color: 'muted' },
+    { text: 'project', color: 'accent', attachToPrevious: true },
+    { text: '󰊢', color: 'muted', attachToPrevious: true },
+    { text: 'main', color: 'success', attachToPrevious: true },
   ]);
 });
 
-test('buildMetadataParts: omits cost when zero, effort when undefined, model when absent', () => {
+test('buildMetadataParts: omits both branch icon and label when branch is absent', () => {
+  const parts = buildMetadataParts({
+    tokenInput: 0,
+    tokenOutput: 0,
+    cost: 0,
+    elapsedMs: 0,
+    directory: 'project',
+  });
+  deepStrictEqual(parts, [
+    { text: '\u21910 \u21930', color: 'syntaxType' },
+    { text: '󰅐0m', color: 'muted', attachToPrevious: true },
+    { text: '󰉋', color: 'muted' },
+    { text: 'project', color: 'accent', attachToPrevious: true },
+  ]);
+});
+
+test('buildMetadataParts: retains the compact grouping when cost and directory are absent', () => {
+  const parts = buildMetadataParts({
+    modelId: 'claude-sonnet',
+    tokenInput: 100,
+    tokenOutput: 200,
+    cost: 0,
+    contextPercent: 42,
+    effort: 'high',
+    elapsedMs: 60000,
+  });
+  deepStrictEqual(parts, [
+    { text: 'claude-sonnet', color: 'accent' },
+    { text: 'high', color: 'muted', attachToPrevious: true },
+    { text: '42%', color: 'success' },
+    { text: '\u2191100 \u2193200', color: 'syntaxType', attachToPrevious: true },
+    { text: '󰅐1m', color: 'muted', attachToPrevious: true },
+  ]);
+});
+
+test('buildMetadataParts: omits cost and keeps token and duration together without optional groups', () => {
   const parts = buildMetadataParts({
     tokenInput: 0,
     tokenOutput: 0,
@@ -426,7 +465,7 @@ test('buildMetadataParts: omits cost when zero, effort when undefined, model whe
   });
   deepStrictEqual(parts, [
     { text: '\u21910 \u21930', color: 'syntaxType' },
-    { text: '󰅐0m', color: 'dim' },
+    { text: '󰅐0m', color: 'muted', attachToPrevious: true },
   ]);
 });
 
@@ -441,18 +480,18 @@ test('buildMetadataParts: high context percent gets error tone', () => {
   strictEqual(parts.some((p) => p.text === '95%' && p.color === 'error'), true);
 });
 
-test('buildMetadataParts: shortens repoLabel when repoMaxWidth is given', () => {
+test('buildMetadataParts: shortens directory when repoMaxWidth is given', () => {
   const parts = buildMetadataParts({
     tokenInput: 0,
     tokenOutput: 0,
     cost: 0,
     elapsedMs: 0,
-    repoLabel: 'badaniya/GoDCApp/NVO-13662 (main)',
+    directory: 'badaniya/GoDCApp/NVO-13662',
     repoMaxWidth: 10,
   });
-  const repoPart = parts.find((p) => p.color === 'accent');
-  strictEqual(repoPart !== undefined, true);
-  strictEqual(Array.from(repoPart!.text).length <= 10, true);
+  const directoryPart = parts.find((p) => p.text !== '󰉋' && p.color === 'accent');
+  strictEqual(directoryPart !== undefined, true);
+  strictEqual(Array.from(directoryPart!.text).length <= 10, true);
 });
 
 // metadataPlainWidth / healthPlainWidth tests

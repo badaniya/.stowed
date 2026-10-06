@@ -355,15 +355,15 @@ export interface MetadataInput {
   contextPercent?: number | null;
   effort?: string;
   elapsedMs: number;
-  repoLabel?: string;
-  /** When provided, repoLabel is shortened to fit this code-point width via shortenRepository. */
+  directory?: string;
+  branch?: string | null;
+  /** When provided, directory is shortened to fit this code-point width via shortenRepository. */
   repoMaxWidth?: number;
 }
 
 /**
  * Build the ordered metadata parts for the footer's first row:
- * model, effort level (if known), context percent (if known), token usage,
- * cost (if non-zero), elapsed time, then repository.
+ * model/effort, context/token usage/cost/duration, then directory and branch icon-label pairs.
  */
 export function buildMetadataParts(input: MetadataInput): MetadataPart[] {
   const parts: MetadataPart[] = [];
@@ -383,19 +383,29 @@ export function buildMetadataParts(input: MetadataInput): MetadataPart[] {
     parts.push({ text: pctText, color: contextPercentTone(pct) });
   }
 
-  parts.push({ text: formatTokenUsage(input.tokenInput, input.tokenOutput), color: 'syntaxType' });
+  parts.push({
+    text: formatTokenUsage(input.tokenInput, input.tokenOutput),
+    color: 'syntaxType',
+    ...(pctText !== undefined ? { attachToPrevious: true } : {}),
+  });
 
   const costText = formatCost(input.cost);
   if (costText !== undefined) {
-    parts.push({ text: costText, color: 'warning' });
+    parts.push({ text: costText, color: 'warning', attachToPrevious: true });
   }
 
-  parts.push({ text: formatElapsed(input.elapsedMs), color: 'dim' });
+  parts.push({ text: formatElapsed(input.elapsedMs), color: 'muted', attachToPrevious: true });
 
-  if (input.repoLabel) {
-    const label =
-      input.repoMaxWidth !== undefined ? shortenRepository(input.repoLabel, input.repoMaxWidth) : input.repoLabel;
-    parts.push({ text: label, color: 'accent' });
+  if (input.directory) {
+    const directory =
+      input.repoMaxWidth !== undefined ? shortenRepository(input.directory, input.repoMaxWidth) : input.directory;
+    parts.push({ text: '󰉋', color: 'muted' });
+    parts.push({ text: directory, color: 'accent', attachToPrevious: true });
+
+    if (input.branch) {
+      parts.push({ text: '󰊢', color: 'muted', attachToPrevious: true });
+      parts.push({ text: input.branch, color: 'success', attachToPrevious: true });
+    }
   }
 
   return parts;
