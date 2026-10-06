@@ -90,7 +90,7 @@ export default function (pi: ExtensionAPI) {
 
           const metadataText = metadataParts.map((part, index) => `${metadataSeparator(part, index)}${colorize(part)}`).join('');
           const healthText = healthStatuses
-            .map((s) => theme.fg(toneToSemanticColor(s.tone), `● ${s.label}`))
+            .map((s) => theme.fg(toneToSemanticColor(s.tone), ` ${s.label}`))
             .join(theme.fg('dim', ' │ '));
 
           const layout = chooseFooterLayout(width, metadataParts, healthStatuses);
