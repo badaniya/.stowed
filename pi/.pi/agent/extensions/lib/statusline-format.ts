@@ -174,6 +174,12 @@ function codePointWidth(str: string): number {
   return Array.from(str).length;
 }
 
+/** Return the final two non-empty path segments, or the only segment when fewer exist. */
+export function compactFooterPath(path: string): string {
+  const segments = path.split('/').filter((segment) => segment.length > 0);
+  return segments.slice(-2).join('/') || path;
+}
+
 /**
  * Shorten a repository path to fit within maxWidth (measured in code points).
  * Strategy:
@@ -414,8 +420,9 @@ export function buildMetadataParts(input: MetadataInput): MetadataPart[] {
   parts.push({ text: formatElapsed(input.elapsedMs), color: 'muted', attachToPrevious: true });
 
   if (input.directory) {
+    const compactDirectory = compactFooterPath(input.directory);
     const directory =
-      input.repoMaxWidth !== undefined ? shortenRepository(input.directory, input.repoMaxWidth) : input.directory;
+      input.repoMaxWidth !== undefined ? shortenRepository(compactDirectory, input.repoMaxWidth) : compactDirectory;
     parts.push({ text: '󰉋', color: 'muted' });
     parts.push({ text: directory, color: FOOTER_METADATA_COLORS.directory, bold: true, attachToPrevious: true });
 

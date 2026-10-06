@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import { strictEqual, deepStrictEqual } from 'node:assert';
 import {
   compactStatuses,
+  compactFooterPath,
   chooseLayout,
   shortenRepository,
   formatCount,
@@ -394,6 +395,16 @@ test('resolveRepoLabel: trailing slash handled', () => {
   strictEqual(resolveRepoLabel('/home/user/project/', 'dev'), 'project (dev)');
 });
 
+test('compactFooterPath: retains the final two non-empty segments', () => {
+  strictEqual(compactFooterPath('/home/badaniya/workspace/badaniya/NVO-20036/GoDCApp'), 'NVO-20036/GoDCApp');
+  strictEqual(compactFooterPath('/tmp/project'), 'tmp/project');
+});
+
+test('compactFooterPath: preserves a single segment and ignores trailing slashes', () => {
+  strictEqual(compactFooterPath('project'), 'project');
+  strictEqual(compactFooterPath('/home/user/project/'), 'user/project');
+});
+
 // footer metadata palette tests
 test('FOOTER_METADATA_COLORS: uses the approved immutable Catppuccin RGB palette', () => {
   deepStrictEqual(FOOTER_METADATA_COLORS, {
@@ -442,13 +453,13 @@ test('buildMetadataParts: omits both branch icon and label when branch is absent
     tokenOutput: 0,
     cost: 0,
     elapsedMs: 0,
-    directory: 'project',
+    directory: '/home/badaniya/workspace/badaniya/NVO-20036/GoDCApp',
   });
   deepStrictEqual(parts, [
     { text: '\u21910 \u21930', color: 'syntaxType' },
     { text: '󰥔 0m', color: 'muted', attachToPrevious: true },
     { text: '󰉋', color: 'muted' },
-    { text: 'project', color: FOOTER_METADATA_COLORS.directory, bold: true, attachToPrevious: true },
+    { text: 'NVO-20036/GoDCApp', color: FOOTER_METADATA_COLORS.directory, bold: true, attachToPrevious: true },
   ]);
 });
 
@@ -502,7 +513,7 @@ test('buildMetadataParts: shortens directory when repoMaxWidth is given', () => 
     tokenOutput: 0,
     cost: 0,
     elapsedMs: 0,
-    directory: 'badaniya/GoDCApp/NVO-13662',
+    directory: '/home/badaniya/workspace/badaniya/NVO-20036/GoDCApp',
     repoMaxWidth: 10,
   });
   const directoryPart = parts.find((p) => p.color === FOOTER_METADATA_COLORS.directory);
