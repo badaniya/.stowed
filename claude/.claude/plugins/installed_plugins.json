@@ -79,5 +79,6 @@
         "gitCommitSha": "dd2661c764c82da28e352030ec7fe56998471ed4"
       }
     ]
-  }
+  },
+  "enabledPlugins": {}
 }
