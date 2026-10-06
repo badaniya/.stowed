@@ -23,7 +23,9 @@ return {
           go_list_args = { '-tags=ci_jenkins' },
           dap_go_opts = {
             delve = {
-              build_flags = { '-tags=ci_jenkins' },
+              -- nvim-dap-go and Delve's DAP launch request require one string;
+              -- an array is valid for `go test` arguments but not `buildFlags`.
+              build_flags = '-tags=ci_jenkins',
             },
           },
 

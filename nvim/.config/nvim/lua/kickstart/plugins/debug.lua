@@ -74,6 +74,65 @@ return {
       },
     }
 
+    -- nvim-dap-go starts `dlv dap` from Neovim's process directory. Herdr's
+    -- headless Neovim server starts in ~/.stowed, outside any Go module. In
+    -- addition, neotest-golang supplies the test package as a relative path.
+    -- Resolve it against the loaded test buffer, then start Delve at its module
+    -- root so both direct DAP and neotest launches compile correctly.
+    local function resolve_go_program(program)
+      if type(program) ~= 'string' then
+        return program
+      end
+      if vim.fn.fnamemodify(program, ':p') == vim.fs.normalize(program) then
+        return program
+      end
+
+      local relative_program = vim.fs.normalize(program):gsub('^%./', '')
+      for _, buffer in ipairs(vim.api.nvim_list_bufs()) do
+        local name = vim.api.nvim_buf_get_name(buffer)
+        local directory = name ~= '' and vim.fs.dirname(name) or nil
+        if directory and vim.endswith(vim.fs.normalize(directory), relative_program) then
+          return directory
+        end
+      end
+      return program
+    end
+
+    local function configure_go_adapter()
+      local go_adapter = dap.adapters.go
+      dap.adapters.go = function(callback, config)
+        local program = resolve_go_program(config.program)
+        if program ~= config.program then
+          config.program = program
+        end
+
+        go_adapter(function(adapter)
+          if type(program) == 'string' and adapter.executable then
+            local path = vim.fn.isdirectory(program) == 1 and program or vim.fs.dirname(program)
+            local go_mod = path and vim.fs.find('go.mod', { path = path, upward = true })[1]
+
+            if go_mod then
+              adapter = vim.deepcopy(adapter)
+              adapter.executable = vim.deepcopy(adapter.executable)
+              adapter.executable.cwd = vim.fs.dirname(go_mod)
+            end
+          end
+
+          callback(adapter)
+        end, config)
+      end
+    end
+
+    configure_go_adapter()
+
+    -- neotest-golang calls dap-go.setup for each debug launch. Preserve the
+    -- module-root adapter wrapper after that per-run setup replaces the adapter.
+    local dap_go_setup = dap_go.setup
+    dap_go.setup = function(options)
+      dap_go_setup(options)
+      configure_go_adapter()
+    end
+
     mason_nvim_dap.setup {
       -- Makes a best effort to setup the various debuggers with
       -- reasonable debug configurations
