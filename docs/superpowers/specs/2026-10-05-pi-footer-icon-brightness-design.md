@@ -18,12 +18,17 @@ This is a color-and-glyph-only refinement. Preserve the existing footer ordering
 
 In particular, do not add, remove, or move metadata separators; do not regroup token, cost, and duration segments; retain the large gap that right-aligns the health block; and retain `attachToPrevious` behavior except for the one space inside `󰥔 <duration>`.
 
+## PWD shortening contract
+
+Always render the PWD as its final two non-empty path segments, regardless of available footer width: `/home/badaniya/workspace/badaniya/NVO-20036/GoDCApp` becomes `NVO-20036/GoDCApp`. A one-segment path remains unchanged. The existing terminal-width safeguard may still truncate that two-segment result only when necessary.
+
 ## Scope
 
 - Retain the two `muted` icon colors in `buildMetadataParts()`.
 - Replace `󰅐` with `󰥔` plus one following space in `formatElapsed()`.
 - Represent exact footer metadata colors and weights as typed metadata styles in the formatter and render them through `theme.style()`.
 - Render the model bold in `#fab387`, effort regular in `#cba6f7`, directory label bold in `#b4befe`, and branch label bold in `#cba6f7`.
+- Format the directory label as the final two path segments before applying the existing width safeguard.
 - Retain `` in the health-status renderer.
 - Update formatter tests to assert the exact elapsed format, typed RGB label colors, `muted` icons, and unchanged one-column health-width accounting.
 - Run focused formatter tests and strict TypeScript validation.
@@ -35,7 +40,7 @@ In particular, do not add, remove, or move metadata separators; do not regroup t
 
 ## Validation
 
-1. The formatter test asserts both directory/Git icon parts have `color: 'muted'`; elapsed output is `󰥔 <duration>`; model, effort, directory, and branch styles equal the exact RGB/weight values (bold peach, regular mauve, bold lavender, bold mauve); and health indicator width remains one column.
+1. The formatter test asserts both directory/Git icon parts have `color: 'muted'`; elapsed output is `󰥔 <duration>`; model, effort, directory, and branch styles equal the exact RGB/weight values (bold peach, regular mauve, bold lavender, bold mauve); a directory always reduces to its final two segments before width shortening; and health indicator width remains one column.
 2. `node --experimental-strip-types --test extensions/lib/statusline-format.test.ts` passes.
 3. `npx tsc --noEmit --project tsconfig.json` exits successfully.
 4. After reloading or restarting Pi through its supported interface, the live footer visibly preserves the established metadata grouping and right-aligned health block while showing the solid clock with a space, bold peach model, regular mauve effort, bold lavender PWD, and bold mauve branch.
