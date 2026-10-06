@@ -33,6 +33,16 @@ function classifyTone(value: string): StatusTone {
     return 'warning';
   }
 
+  // Disabled/off patterns: off, no keys, disabled, not configured -> muted (grey, not green)
+  if (/\boff\b|no keys|disabled|not configured|unavailable/.test(lower)) {
+    return 'muted';
+  }
+
+  // Disabled/off patterns: off, no keys, disabled, not configured -> muted (grey, not green)
+  if (/\boff\b|no keys|disabled|not configured|unavailable/.test(lower)) {
+    return 'muted';
+  }
+
   // LSP/pi-lens Active: pattern is info tone
   if (/active:/.test(lower)) {
     return 'info';
