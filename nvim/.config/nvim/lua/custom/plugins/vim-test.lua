@@ -9,8 +9,27 @@ return {
   },
 
   config = function()
-    vim.g['test#strategy'] = vim.env.HERDR_ENV == '1' and 'herdr' or 'vimux'
+    local module_root = require 'custom.vim-test-root'
+
+    _G.ModuleAwareVimTestStrategy = module_root.run_strategy
+    vim.cmd [[
+      function! ModuleAwareVimTestStrategy(command) abort
+        call v:lua.ModuleAwareVimTestStrategy(a:command)
+      endfunction
+      let g:test#custom_strategies.module_aware = function('ModuleAwareVimTestStrategy')
+    ]]
+
+    vim.g['test#strategy'] = 'module_aware'
     vim.g['test#go#runner'] = 'gotest'
+    vim.g['test#project_root'] = module_root.current_buffer_root
+    vim.api.nvim_create_user_command('TestLast', function(options)
+      vim.g.vim_test_replaying_last = true
+      local ok, err = pcall(vim.fn['test#run_last'], vim.fn.split(options.args))
+      vim.g.vim_test_replaying_last = false
+      if not ok then
+        error(err)
+      end
+    end, { nargs = '*', bar = true, force = true })
     vim.g['test#gotest#options'] = '-v -timeout 0 -count 1 -tags ci_jenkins -coverprofile=coverage.out -covermode=atomic -coverpkg=all' -- -v: verbose, -timeout 0: infinite timeout, -count 1: non-cached run always, -tags ci_jenkins: run against CI setup.
   end,
 
