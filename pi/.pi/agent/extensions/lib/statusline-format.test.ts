@@ -400,8 +400,9 @@ test('compactFooterPath: retains the final two non-empty segments', () => {
   strictEqual(compactFooterPath('/tmp/project'), 'tmp/project');
 });
 
-test('compactFooterPath: preserves a single segment and ignores trailing slashes', () => {
+test('compactFooterPath: preserves a single segment, root, and ignores trailing slashes', () => {
   strictEqual(compactFooterPath('project'), 'project');
+  strictEqual(compactFooterPath('/'), '/');
   strictEqual(compactFooterPath('/home/user/project/'), 'user/project');
 });
 
@@ -507,18 +508,19 @@ test('buildMetadataParts: high context percent gets error tone', () => {
   strictEqual(parts.some((p) => p.text === '95%' && p.color === 'error'), true);
 });
 
-test('buildMetadataParts: shortens directory when repoMaxWidth is given', () => {
+test('buildMetadataParts: compacts directory before applying repoMaxWidth', () => {
+  const compactDirectory = 'NVO-20036/GoDCApp';
   const parts = buildMetadataParts({
     tokenInput: 0,
     tokenOutput: 0,
     cost: 0,
     elapsedMs: 0,
     directory: '/home/badaniya/workspace/badaniya/NVO-20036/GoDCApp',
-    repoMaxWidth: 10,
+    repoMaxWidth: Array.from(compactDirectory).length,
   });
   const directoryPart = parts.find((p) => p.color === FOOTER_METADATA_COLORS.directory);
   strictEqual(directoryPart?.bold, true);
-  strictEqual(Array.from(directoryPart!.text).length <= 10, true);
+  strictEqual(directoryPart?.text, compactDirectory);
 });
 
 // metadataPlainWidth / healthPlainWidth tests
