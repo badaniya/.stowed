@@ -266,12 +266,12 @@ import type { Color } from '@earendil-works/pi-tui';
  */
 export type SemanticColor = 'accent' | 'success' | 'warning' | 'error' | 'muted' | 'dim' | 'syntaxType';
 
-export const FOOTER_METADATA_COLORS = {
-  model: { kind: 'rgb', r: 250, g: 179, b: 135 },
-  effort: { kind: 'rgb', r: 203, g: 166, b: 247 },
-  directory: { kind: 'rgb', r: 137, g: 180, b: 250 },
-  branch: { kind: 'rgb', r: 180, g: 190, b: 254 },
-} as const satisfies Record<'model' | 'effort' | 'directory' | 'branch', Color>;
+export const FOOTER_METADATA_COLORS = Object.freeze({
+  model: Object.freeze({ kind: 'rgb', r: 250, g: 179, b: 135 }),
+  effort: Object.freeze({ kind: 'rgb', r: 203, g: 166, b: 247 }),
+  directory: Object.freeze({ kind: 'rgb', r: 137, g: 180, b: 250 }),
+  branch: Object.freeze({ kind: 'rgb', r: 180, g: 190, b: 254 }),
+} satisfies Record<'model' | 'effort' | 'directory' | 'branch', Color>);
 
 export type MetadataColor = SemanticColor | Color;
 

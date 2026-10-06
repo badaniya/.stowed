@@ -394,6 +394,21 @@ test('resolveRepoLabel: trailing slash handled', () => {
   strictEqual(resolveRepoLabel('/home/user/project/', 'dev'), 'project (dev)');
 });
 
+// footer metadata palette tests
+test('FOOTER_METADATA_COLORS: uses the approved immutable Catppuccin RGB palette', () => {
+  deepStrictEqual(FOOTER_METADATA_COLORS, {
+    model: { kind: 'rgb', r: 250, g: 179, b: 135 },
+    effort: { kind: 'rgb', r: 203, g: 166, b: 247 },
+    directory: { kind: 'rgb', r: 137, g: 180, b: 250 },
+    branch: { kind: 'rgb', r: 180, g: 190, b: 254 },
+  });
+  strictEqual(Object.isFrozen(FOOTER_METADATA_COLORS), true);
+  strictEqual(Object.isFrozen(FOOTER_METADATA_COLORS.model), true);
+  strictEqual(Object.isFrozen(FOOTER_METADATA_COLORS.effort), true);
+  strictEqual(Object.isFrozen(FOOTER_METADATA_COLORS.directory), true);
+  strictEqual(Object.isFrozen(FOOTER_METADATA_COLORS.branch), true);
+});
+
 // buildMetadataParts tests
 test('buildMetadataParts: groups metadata and renders directory and branch as icon-label pairs', () => {
   const parts = buildMetadataParts({
