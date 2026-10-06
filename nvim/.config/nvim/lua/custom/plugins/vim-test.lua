@@ -30,7 +30,7 @@ return {
         error(err)
       end
     end, { nargs = '*', bar = true, force = true })
-    vim.g['test#gotest#options'] = '-v -timeout 0 -count 1 -tags ci_jenkins -coverprofile=coverage.out -covermode=atomic -coverpkg=all' -- -v: verbose, -timeout 0: infinite timeout, -count 1: non-cached run always, -tags ci_jenkins: run against CI setup.
+    vim.g['test#go#gotest#options'] = '-v -timeout 0 -count 1 -tags ci_jenkins -coverprofile=coverage.out -covermode=atomic -coverpkg=all' -- -v: verbose, -timeout 0: infinite timeout, -count 1: non-cached run always, -tags ci_jenkins: run against CI setup.
   end,
 
   keys = {

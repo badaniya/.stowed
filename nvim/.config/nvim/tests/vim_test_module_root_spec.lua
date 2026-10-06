@@ -63,4 +63,13 @@ end)
 vim.env.HERDR_ENV = previous_herdr_env
 vim.fn.delete(temp, 'rf')
 assert(ok, err)
+
+local config_root = vim.fn.getcwd()
+vim.opt.rtp:append('/home/badaniya/.local/share/nvim/lazy/vim-test')
+vim.cmd 'runtime plugin/test.vim'
+dofile(config_root .. '/nvim/.config/nvim/lua/custom/plugins/vim-test.lua').config()
+assert_equal(
+  '-v -timeout 0 -count 1 -tags ci_jenkins -coverprofile=coverage.out -covermode=atomic -coverpkg=all',
+  vim.g['test#go#gotest#options']
+)
 print('vim-test module-root resolver tests passed')
