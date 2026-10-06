@@ -399,8 +399,8 @@ test('FOOTER_METADATA_COLORS: uses the approved immutable Catppuccin RGB palette
   deepStrictEqual(FOOTER_METADATA_COLORS, {
     model: { kind: 'rgb', r: 250, g: 179, b: 135 },
     effort: { kind: 'rgb', r: 203, g: 166, b: 247 },
-    directory: { kind: 'rgb', r: 137, g: 180, b: 250 },
-    branch: { kind: 'rgb', r: 180, g: 190, b: 254 },
+    directory: { kind: 'rgb', r: 180, g: 190, b: 254 },
+    branch: { kind: 'rgb', r: 203, g: 166, b: 247 },
   });
   strictEqual(Object.isFrozen(FOOTER_METADATA_COLORS), true);
   strictEqual(Object.isFrozen(FOOTER_METADATA_COLORS.model), true);
@@ -423,16 +423,16 @@ test('buildMetadataParts: groups metadata and renders directory and branch as ic
     branch: 'main',
   });
   deepStrictEqual(parts, [
-    { text: 'claude-sonnet', color: FOOTER_METADATA_COLORS.model },
+    { text: 'claude-sonnet', color: FOOTER_METADATA_COLORS.model, bold: true },
     { text: 'high', color: FOOTER_METADATA_COLORS.effort, attachToPrevious: true },
     { text: '42%', color: 'success' },
     { text: '\u2191100 \u2193200', color: 'syntaxType', attachToPrevious: true },
     { text: '$0.500', color: 'warning', attachToPrevious: true },
     { text: '󰥔 1m', color: 'muted', attachToPrevious: true },
     { text: '󰉋', color: 'muted' },
-    { text: 'project', color: FOOTER_METADATA_COLORS.directory, attachToPrevious: true },
+    { text: 'project', color: FOOTER_METADATA_COLORS.directory, bold: true, attachToPrevious: true },
     { text: '󰊢', color: 'muted', attachToPrevious: true },
-    { text: 'main', color: FOOTER_METADATA_COLORS.branch, attachToPrevious: true },
+    { text: 'main', color: FOOTER_METADATA_COLORS.branch, bold: true, attachToPrevious: true },
   ]);
 });
 
@@ -448,7 +448,7 @@ test('buildMetadataParts: omits both branch icon and label when branch is absent
     { text: '\u21910 \u21930', color: 'syntaxType' },
     { text: '󰥔 0m', color: 'muted', attachToPrevious: true },
     { text: '󰉋', color: 'muted' },
-    { text: 'project', color: FOOTER_METADATA_COLORS.directory, attachToPrevious: true },
+    { text: 'project', color: FOOTER_METADATA_COLORS.directory, bold: true, attachToPrevious: true },
   ]);
 });
 
@@ -463,7 +463,7 @@ test('buildMetadataParts: retains the compact grouping when cost and directory a
     elapsedMs: 60000,
   });
   deepStrictEqual(parts, [
-    { text: 'claude-sonnet', color: FOOTER_METADATA_COLORS.model },
+    { text: 'claude-sonnet', color: FOOTER_METADATA_COLORS.model, bold: true },
     { text: 'high', color: FOOTER_METADATA_COLORS.effort, attachToPrevious: true },
     { text: '42%', color: 'success' },
     { text: '\u2191100 \u2193200', color: 'syntaxType', attachToPrevious: true },
@@ -505,8 +505,8 @@ test('buildMetadataParts: shortens directory when repoMaxWidth is given', () => 
     directory: 'badaniya/GoDCApp/NVO-13662',
     repoMaxWidth: 10,
   });
-  const directoryPart = parts.find((p) => p.text !== '󰉋' && p.color === FOOTER_METADATA_COLORS.directory);
-  strictEqual(directoryPart !== undefined, true);
+  const directoryPart = parts.find((p) => p.color === FOOTER_METADATA_COLORS.directory);
+  strictEqual(directoryPart?.bold, true);
   strictEqual(Array.from(directoryPart!.text).length <= 10, true);
 });
 

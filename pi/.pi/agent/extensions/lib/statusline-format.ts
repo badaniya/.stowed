@@ -269,8 +269,8 @@ export type SemanticColor = 'accent' | 'success' | 'warning' | 'error' | 'muted'
 export const FOOTER_METADATA_COLORS = Object.freeze({
   model: Object.freeze({ kind: 'rgb', r: 250, g: 179, b: 135 }),
   effort: Object.freeze({ kind: 'rgb', r: 203, g: 166, b: 247 }),
-  directory: Object.freeze({ kind: 'rgb', r: 137, g: 180, b: 250 }),
-  branch: Object.freeze({ kind: 'rgb', r: 180, g: 190, b: 254 }),
+  directory: Object.freeze({ kind: 'rgb', r: 180, g: 190, b: 254 }),
+  branch: Object.freeze({ kind: 'rgb', r: 203, g: 166, b: 247 }),
 } satisfies Record<'model' | 'effort' | 'directory' | 'branch', Color>);
 
 export type MetadataColor = SemanticColor | Color;
@@ -354,6 +354,8 @@ export function resolveRepoLabel(cwd: string, branch: string | null | undefined)
 export interface MetadataPart {
   text: string;
   color: MetadataColor;
+  /** Render this metadata text in bold without affecting adjacent separators or icons. */
+  bold?: true;
   /** Join with a preceding segment using one space instead of " │ ". */
   attachToPrevious?: true;
 }
@@ -380,7 +382,7 @@ export function buildMetadataParts(input: MetadataInput): MetadataPart[] {
   const parts: MetadataPart[] = [];
 
   if (input.modelId) {
-    parts.push({ text: input.modelId, color: FOOTER_METADATA_COLORS.model });
+    parts.push({ text: input.modelId, color: FOOTER_METADATA_COLORS.model, bold: true });
   }
 
   const effortText = formatEffort(input.effort);
@@ -415,11 +417,11 @@ export function buildMetadataParts(input: MetadataInput): MetadataPart[] {
     const directory =
       input.repoMaxWidth !== undefined ? shortenRepository(input.directory, input.repoMaxWidth) : input.directory;
     parts.push({ text: '󰉋', color: 'muted' });
-    parts.push({ text: directory, color: FOOTER_METADATA_COLORS.directory, attachToPrevious: true });
+    parts.push({ text: directory, color: FOOTER_METADATA_COLORS.directory, bold: true, attachToPrevious: true });
 
     if (input.branch) {
       parts.push({ text: '󰊢', color: 'muted', attachToPrevious: true });
-      parts.push({ text: input.branch, color: FOOTER_METADATA_COLORS.branch, attachToPrevious: true });
+      parts.push({ text: input.branch, color: FOOTER_METADATA_COLORS.branch, bold: true, attachToPrevious: true });
     }
   }
 

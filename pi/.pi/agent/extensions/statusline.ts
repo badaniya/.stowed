@@ -48,7 +48,8 @@ export default function (pi: ExtensionAPI) {
     } => {
       const unsubscribe = footerData.onBranchChange(() => tui.requestRender());
 
-      const colorize = (part: MetadataPart): string => theme.style(part.text, { fg: part.color });
+      const colorize = (part: MetadataPart): string =>
+        theme.style(part.text, { fg: part.color, bold: part.bold });
       const metadataSeparator = (part: MetadataPart, index: number): string => {
         if (index === 0) {
           return '';
