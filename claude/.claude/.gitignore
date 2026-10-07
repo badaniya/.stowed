@@ -19,11 +19,13 @@ transcripts/
 .credentials.json
 .last*
 daemon*
+gh-pr-status-cache.json
 history.jsonl
 plugin-catalog-cache.json
 policy-limits.json.stamp.json
 mcp-needs-auth-cache.json
 remote-settings.json
-settings.json.bak
+settings.json*
+settings.local.json
 stats-cache.json
 herdr-usagebar/opencode-go-web.json
