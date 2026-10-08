@@ -433,7 +433,7 @@
         "url": "https://github.com/aws/agent-toolkit-for-aws.git",
         "path": "plugins/aws-core",
         "ref": "main",
-        "sha": "0d6167ad2e6dfb858098c4162fe74d04c975532f"
+        "sha": "34b3eccfd8b619ea0cb4ba04a9be9dfefebd94e7"
       },
       "homepage": "https://github.com/aws/agent-toolkit-for-aws"
     },
@@ -1576,7 +1576,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/figma/mcp-server-guide.git",
-        "sha": "172920731eedf414e9b22ae60017d9a5b6c9f81f"
+        "sha": "f0493295acf5f7cbdebcbcc483c06de814420cb1"
       },
       "homepage": "https://github.com/figma/mcp-server-guide"
     },
@@ -1937,7 +1937,7 @@
         "url": "https://github.com/incident-io/skills.git",
         "path": "plugins/incident-io",
         "ref": "main",
-        "sha": "443f47164eda1f93108ebd908843925f681954ef"
+        "sha": "c8e50a4a7a06a5c9abb20ec08ddfc85bad6d61b8"
       },
       "homepage": "https://incident.io"
     },
@@ -3484,7 +3484,7 @@
     {
       "name": "security-guidance",
       "description": "Security review for Claude-generated code. Pattern-based warnings on edits, LLM-powered diff review on Stop, and an agentic commit reviewer that catches injection, XSS, SSRF, hardcoded secrets, and 25+ other vulnerability classes.",
-      "version": "2.0.10",
+      "version": "2.0.11",
       "author": {
         "name": "Anthropic",
         "email": "support@anthropic.com"

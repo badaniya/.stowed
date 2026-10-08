@@ -30,9 +30,11 @@ def tmproot(tmp_path, monkeypatch):
 
 
 def _leftovers(root):
+    """Everything left under `root` but the slot files, which stay."""
     return sorted(
         os.path.join(dirpath, f)
         for dirpath, _, files in os.walk(root) for f in files
+        if not (f.startswith("slot") and f.endswith(".lock"))
     )
 
 
@@ -41,6 +43,10 @@ def _index_copies_left(root):
     also start the detached SDK bootstrap, which uses the temp dir too."""
     return [p for p in _leftovers(root)
             if os.path.basename(p).startswith(gitutil._TEMP_INDEX_PREFIX)]
+
+
+def _leftovers_of_copies(root):
+    return _index_copies_left(root)
 
 
 def _index_litter(git_dir):
@@ -194,21 +200,44 @@ class TestReadOnlyGitLeavesTheRealIndexAlone:
         (repo / "b.py").write_text("b = 2\n")
         _make_stat_stale(repo / "app.py")
         before = _index_sig(repo / ".git")
+        head = git(repo, "rev-parse", "HEAD").strip()
         gitutil.apply_safe_git_env()
-        assert gitutil._git_name_only(str(repo), "HEAD") == {"b.py"}
+        # app.py: stat changed, content did not. The name list may hold it,
+        # the review set must not.
+        assert "b.py" in gitutil._git_name_only(str(repo), "HEAD")
+        paths, _, _, _, _ = diffstate.compute_v2_review_set(str(repo), head, head)
+        assert paths == [os.path.join(os.path.realpath(repo), "b.py")]
         assert _index_sig(repo / ".git") == before
         assert _leftovers(tmproot) == []
 
-    def test_range_diff_needs_no_index_copy(self, tmp_path, tmproot, monkeypatch):
-        repo = make_repo(tmp_path / "repo", {"app.py": "x = 1\n"})
+    def test_diffs_need_no_index_copy(self, tmp_path, tmproot, monkeypatch):
+        """Every copy is index-sized, so only `add -N` and stash get one."""
+        repo = make_repo(tmp_path / "repo", {"app.py": "x = 1\n", "b.py": "b = 1\n"})
         first = git(repo, "rev-parse", "HEAD").strip()
         commit_file(repo, "app.py", "x = 2\n")
+        (repo / "b.py").write_text("b = 2\n")
+        _make_stat_stale(repo / "app.py")
+        before = _index_sig(repo / ".git")
 
         def no_copy(*a, **kw):
-            raise AssertionError("range diff copied the index")
+            raise AssertionError("copied the index")
 
         monkeypatch.setattr(gitutil, "_temp_index", no_copy)
         assert gitutil._git_name_only(str(repo), f"{first}..HEAD") == {"app.py"}
+        assert "b.py" in gitutil._git_name_only(str(repo), "HEAD")
+        diff = gitutil.get_git_diff(str(repo), "HEAD", untracked_paths=[])
+        assert "+b = 2" in diff and "app.py" not in diff
+        assert _index_sig(repo / ".git") == before
+
+    def test_untracked_files_still_reach_the_diff(self, tmp_path, tmproot):
+        repo = make_repo(tmp_path / "repo", {"app.py": "x = 1\n"})
+        (repo / "new.py").write_text("n = 1\n")
+        before = _index_sig(repo / ".git")
+        diff = gitutil.get_git_diff(str(repo), "HEAD", untracked_paths=["new.py"])
+        assert "+n = 1" in diff
+        assert gitutil._git_name_only(str(repo), "HEAD", include_untracked=True) == {"new.py"}
+        assert _index_sig(repo / ".git") == before
+        assert _leftovers_of_copies(tmproot) == []
 
 
 @pytest.mark.skipif(os.name == "nt", reason="uses a /bin/sh git shim")
@@ -267,8 +296,7 @@ class TestWholeHook:
         assert {"stash", "status", "diff", "add"} <= {sub[0] for _, _, sub in calls}
         assert [c for c in calls if c[0] != "0"] == []
         for _, index_file, sub in calls:
-            if sub[0] in ("stash", "add") or (
-                    sub[0] == "diff" and not any(".." in a for a in sub)):
+            if sub[0] in ("stash", "add"):
                 assert index_file.startswith(str(tmproot)), sub
         assert _index_sig(repo / ".git") == before
         assert _index_litter(repo / ".git") == []

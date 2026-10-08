@@ -4,21 +4,21 @@
     "frontend-design@claude-plugins-official": [
       {
         "scope": "user",
-        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/frontend-design/6eb6a30bf024",
-        "version": "6eb6a30bf024",
+        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/frontend-design/f713a7c59b72",
+        "version": "f713a7c59b72",
         "installedAt": "2026-05-14T16:18:03.768Z",
-        "lastUpdated": "2026-10-07T13:19:08.753Z",
-        "gitCommitSha": "6eb6a30bf024b182d418d3bbd11f156e360365af"
+        "lastUpdated": "2026-10-08T15:38:29.482Z",
+        "gitCommitSha": "f713a7c59b729741282f9c2d9a04e28e2abbd20c"
       }
     ],
     "code-review@claude-plugins-official": [
       {
         "scope": "user",
-        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/code-review/6eb6a30bf024",
-        "version": "6eb6a30bf024",
+        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/code-review/f713a7c59b72",
+        "version": "f713a7c59b72",
         "installedAt": "2026-05-14T16:18:03.768Z",
-        "lastUpdated": "2026-10-07T13:19:08.755Z",
-        "gitCommitSha": "6eb6a30bf024b182d418d3bbd11f156e360365af"
+        "lastUpdated": "2026-10-08T15:38:29.481Z",
+        "gitCommitSha": "f713a7c59b729741282f9c2d9a04e28e2abbd20c"
       }
     ],
     "code-simplifier@claude-plugins-official": [
@@ -43,11 +43,11 @@
     "github@claude-plugins-official": [
       {
         "scope": "user",
-        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/github/6eb6a30bf024",
-        "version": "6eb6a30bf024",
+        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/github/f713a7c59b72",
+        "version": "f713a7c59b72",
         "installedAt": "2026-06-04T15:46:05.709Z",
-        "lastUpdated": "2026-10-07T13:19:08.754Z",
-        "gitCommitSha": "6eb6a30bf024b182d418d3bbd11f156e360365af"
+        "lastUpdated": "2026-10-08T15:38:29.482Z",
+        "gitCommitSha": "f713a7c59b729741282f9c2d9a04e28e2abbd20c"
       }
     ],
     "gopls-lsp@claude-plugins-official": [
