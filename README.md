@@ -398,7 +398,7 @@ pi install npm:@narumitw/pi-btw                     # Claude code-like by-the-wa
 pi install npm:@narumitw/pi-goal                    # Codex-like/Claude code-like goal support (background monitoring)
 pi install npm:pi-lens                              # LSP linting tracking and agent feedback
 pi install npm:@langfuse/pi-observability-plugin    # Langfuse agent turn observabilty
-pi install npm:billion-context                      # Proxy for compression and token optimization
+# pi install npm:billion-context                      # Proxy for compression and token optimization - (Still a bit rough around the edges).
 pi install npm:pi-markdown-preview                  # Markdown rendering support
 pi install npm:pi-claude-auth                       # Claude code LLM access
 pi install npm:pi-free                              # Free LLM access

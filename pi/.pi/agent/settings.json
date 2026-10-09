@@ -10,7 +10,6 @@
     "npm:@narumitw/pi-goal",
     "npm:@langfuse/pi-observability-plugin",
     "npm:pi-lens",
-    "npm:billion-context",
     "npm:pi-markdown-preview",
     "npm:pi-claude-auth",
     "npm:pi-free",

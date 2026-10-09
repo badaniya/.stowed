@@ -46,7 +46,7 @@
         }
       }
     ],
-    "checkedAt": 1791412242293
+    "checkedAt": 1791580551158
   },
   "github-copilot": {
     "models": [
@@ -169,6 +169,61 @@
         },
         "compat": {
           "supportsEagerToolInputStreaming": false
+        },
+        "inputLimits": {
+          "images": {
+            "resize": {
+              "maxWidth": 2000,
+              "maxHeight": 2000,
+              "maxBytes": 4718592,
+              "jpegQuality": 80
+            }
+          }
+        },
+        "type": "chat"
+      },
+      {
+        "id": "claude-haiku-5.5",
+        "name": "Claude Haiku 5.5",
+        "api": "anthropic-messages",
+        "provider": "github-copilot",
+        "baseUrl": "https://api.individual.githubcopilot.com",
+        "reasoning": true,
+        "input": [
+          "text",
+          "image"
+        ],
+        "cost": {
+          "input": 0.1,
+          "output": 0.5,
+          "cacheRead": 0.01,
+          "cacheWrite": 0.125,
+          "tiers": [
+            {
+              "inputTokensAbove": 100000,
+              "input": 0.5,
+              "output": 2.5,
+              "cacheRead": 0.05,
+              "cacheWrite": 0.625
+            }
+          ]
+        },
+        "contextWindow": 1000000,
+        "maxTokens": 128000,
+        "headers": {
+          "User-Agent": "GitHubCopilotChat/0.35.0",
+          "Editor-Version": "vscode/1.107.0",
+          "Editor-Plugin-Version": "copilot-chat/0.35.0",
+          "Copilot-Integration-Id": "vscode-chat"
+        },
+        "compat": {
+          "supportsMidConvoSystemMessages": true,
+          "forceAdaptiveThinking": true,
+          "supportsTemperature": false
+        },
+        "thinkingLevelMap": {
+          "xhigh": "xhigh",
+          "max": "max"
         },
         "inputLimits": {
           "images": {
@@ -475,7 +530,7 @@
         "cost": {
           "input": 2,
           "output": 10,
-          "cacheRead": 0.2,
+          "cacheRead": 0.1,
           "cacheWrite": 2.5
         },
         "contextWindow": 1000000,
@@ -1747,9 +1802,9 @@
         "type": "chat"
       }
     ],
-    "checkedAt": 1791406500928,
-    "lastModified": 1790706948000,
-    "etag": "W/\"9341aaefcb2a362055499f32c3b044ba\""
+    "checkedAt": 1791490193017,
+    "lastModified": 1791463475000,
+    "etag": "W/\"896d7b376ecab2be20930ae443b3a78c\""
   },
   "cline": {
     "models": [
@@ -1788,7 +1843,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4C7SEQCVZYBABSSB6KNEEC9",
+          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -1827,55 +1882,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4C7SEQCVZYBABSSB6KNEEC9",
-          "X-PLATFORM": "Visual Studio Code",
-          "X-PLATFORM-VERSION": "1.109.3",
-          "X-CLIENT-TYPE": "VSCode Extension",
-          "X-CLIENT-VERSION": "4.1.10",
-          "X-CORE-VERSION": "4.1.10",
-          "X-Is-Multiroot": "false",
-          "User-Agent": "Cline/4.1.10"
-        },
-        "compat": {
-          "supportsDeveloperRole": false
-        }
-      },
-      {
-        "id": "inclusionai/ling-3.0-flash-sante:free",
-        "name": "Ling 3.0 Flash Sante (free) (Cline) [CI: 50.6]",
-        "reasoning": true,
-        "input": [
-          "text"
-        ],
-        "cost": {
-          "input": 0,
-          "output": 0,
-          "cacheRead": 0,
-          "cacheWrite": 0
-        },
-        "contextWindow": 262144,
-        "maxTokens": 32768,
-        "_pricingKnown": true,
-        "thinkingLevelMap": {
-          "off": "none",
-          "minimal": null,
-          "low": "low",
-          "medium": "medium",
-          "high": "high",
-          "xhigh": null
-        },
-        "modelsDev": {
-          "id": "inclusionai/ling-3.0-flash-sante",
-          "name": "Ling 3.0 Flash Sante",
-          "family": "ling"
-        },
-        "api": "openai-completions",
-        "provider": "cline",
-        "baseUrl": "https://api.cline.bot/api/v1",
-        "headers": {
-          "HTTP-Referer": "https://cline.bot",
-          "X-Title": "Cline",
-          "X-Task-ID": "01M4C7SEQCVZYBABSSB6KNEEC9",
+          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -1915,7 +1922,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4C7SEQCVZYBABSSB6KNEEC9",
+          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -1955,7 +1962,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4C7SEQCVZYBABSSB6KNEEC9",
+          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -1995,7 +2002,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4C7SEQCVZYBABSSB6KNEEC9",
+          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2036,7 +2043,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4C7SEQCVZYBABSSB6KNEEC9",
+          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2084,7 +2091,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4C7SEQCVZYBABSSB6KNEEC9",
+          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2133,7 +2140,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4C7SEQCVZYBABSSB6KNEEC9",
+          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2173,7 +2180,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4C7SEQCVZYBABSSB6KNEEC9",
+          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2213,7 +2220,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4C7SEQCVZYBABSSB6KNEEC9",
+          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2254,7 +2261,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4C7SEQCVZYBABSSB6KNEEC9",
+          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2294,7 +2301,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4C7SEQCVZYBABSSB6KNEEC9",
+          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2335,7 +2342,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4C7SEQCVZYBABSSB6KNEEC9",
+          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2376,7 +2383,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4C7SEQCVZYBABSSB6KNEEC9",
+          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2417,7 +2424,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4C7SEQCVZYBABSSB6KNEEC9",
+          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2458,7 +2465,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4C7SEQCVZYBABSSB6KNEEC9",
+          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2499,7 +2506,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4C7SEQCVZYBABSSB6KNEEC9",
+          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2539,7 +2546,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4C7SEQCVZYBABSSB6KNEEC9",
+          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2579,7 +2586,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4C7SEQCVZYBABSSB6KNEEC9",
+          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2593,11 +2600,12 @@
         }
       },
       {
-        "id": "cline-free/solar-mini4",
-        "name": "Solar Mini 4 (Cline)",
+        "id": "cline-free/step-5-preview",
+        "name": "Step 5 Preview (Cline)",
         "reasoning": true,
         "input": [
-          "text"
+          "text",
+          "image"
         ],
         "cost": {
           "input": 0,
@@ -2609,17 +2617,16 @@
         "maxTokens": 65536,
         "_pricingKnown": true,
         "thinkingLevelMap": {
-          "off": "none",
-          "minimal": "minimal",
+          "off": null,
+          "minimal": null,
           "low": "low",
           "medium": "medium",
           "high": "high",
-          "xhigh": "xhigh"
+          "xhigh": null
         },
         "modelsDev": {
-          "id": "upstage/solar-mini4",
-          "name": "Solar Mini 4",
-          "family": "solar"
+          "id": "step-5-preview-free",
+          "name": "Step 5 Preview Free"
         },
         "api": "openai-completions",
         "provider": "cline",
@@ -2627,7 +2634,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4C7SEQCVZYBABSSB6KNEEC9",
+          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2682,7 +2689,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4C7SEQCVZYBABSSB6KNEEC9",
+          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2728,7 +2735,55 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4C7SEQCVZYBABSSB6KNEEC9",
+          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
+          "X-PLATFORM": "Visual Studio Code",
+          "X-PLATFORM-VERSION": "1.109.3",
+          "X-CLIENT-TYPE": "VSCode Extension",
+          "X-CLIENT-VERSION": "4.1.10",
+          "X-CORE-VERSION": "4.1.10",
+          "X-Is-Multiroot": "false",
+          "User-Agent": "Cline/4.1.10"
+        },
+        "compat": {
+          "supportsDeveloperRole": false
+        }
+      },
+      {
+        "id": "cline-free/solar-mini4",
+        "name": "Solar Mini 4 (Cline)",
+        "reasoning": true,
+        "input": [
+          "text"
+        ],
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0
+        },
+        "contextWindow": 1000000,
+        "maxTokens": 65536,
+        "_pricingKnown": true,
+        "thinkingLevelMap": {
+          "off": "none",
+          "minimal": "minimal",
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
+          "xhigh": "xhigh"
+        },
+        "modelsDev": {
+          "id": "upstage/solar-mini4",
+          "name": "Solar Mini 4",
+          "family": "solar"
+        },
+        "api": "openai-completions",
+        "provider": "cline",
+        "baseUrl": "https://api.cline.bot/api/v1",
+        "headers": {
+          "HTTP-Referer": "https://cline.bot",
+          "X-Title": "Cline",
+          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2742,7 +2797,7 @@
         }
       }
     ],
-    "checkedAt": 1791412242443
+    "checkedAt": 1791580551288
   },
   "fastrouter": {
     "models": [
@@ -3013,7 +3068,7 @@
         }
       }
     ],
-    "checkedAt": 1791412242469
+    "checkedAt": 1791580551371
   },
   "anthropic": {
     "models": [
@@ -3206,6 +3261,69 @@
           "maxRequestBytes": 33554432,
           "images": {
             "maxPerRequest": 100,
+            "resize": {
+              "maxWidth": 2000,
+              "maxHeight": 2000,
+              "maxBytes": 4718592,
+              "jpegQuality": 80
+            }
+          }
+        },
+        "type": "chat"
+      },
+      {
+        "id": "claude-haiku-5-5",
+        "name": "Claude Haiku 5.5",
+        "api": "anthropic-messages",
+        "provider": "anthropic",
+        "baseUrl": "https://api.anthropic.com",
+        "reasoning": true,
+        "input": [
+          "text",
+          "image"
+        ],
+        "cost": {
+          "input": 0.1,
+          "output": 0.5,
+          "cacheRead": 0.01,
+          "cacheWrite": 0.125,
+          "tiers": [
+            {
+              "inputTokensAbove": 100000,
+              "input": 0.5,
+              "output": 2.5,
+              "cacheRead": 0.05,
+              "cacheWrite": 0.625
+            }
+          ]
+        },
+        "contextWindow": 1000000,
+        "maxTokens": 128000,
+        "thinkingLevelMap": {
+          "off": null,
+          "minimal": null,
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
+          "xhigh": "xhigh",
+          "max": "max"
+        },
+        "compat": {
+          "supportsMidConvoEffort": true,
+          "supportsMidConvoSystemMessages": true,
+          "supportsMidConvoToolChanges": true,
+          "forceAdaptiveThinking": true,
+          "supportsTemperature": false,
+          "supportsStrictTools": true
+        },
+        "promptCache": {
+          "short": 300,
+          "long": 3600
+        },
+        "inputLimits": {
+          "maxRequestBytes": 33554432,
+          "images": {
+            "maxPerRequest": 600,
             "resize": {
               "maxWidth": 2000,
               "maxHeight": 2000,
@@ -3555,7 +3673,7 @@
           "cacheRead": 0.3,
           "cacheWrite": 3.75
         },
-        "contextWindow": 1000000,
+        "contextWindow": 200000,
         "maxTokens": 64000,
         "compat": {
           "supportsStrictTools": true
@@ -3567,7 +3685,7 @@
         "inputLimits": {
           "maxRequestBytes": 33554432,
           "images": {
-            "maxPerRequest": 600,
+            "maxPerRequest": 100,
             "resize": {
               "maxWidth": 2000,
               "maxHeight": 2000,
@@ -3595,7 +3713,7 @@
           "cacheRead": 0.3,
           "cacheWrite": 3.75
         },
-        "contextWindow": 1000000,
+        "contextWindow": 200000,
         "maxTokens": 64000,
         "compat": {
           "supportsStrictTools": true
@@ -3607,7 +3725,7 @@
         "inputLimits": {
           "maxRequestBytes": 33554432,
           "images": {
-            "maxPerRequest": 600,
+            "maxPerRequest": 100,
             "resize": {
               "maxWidth": 2000,
               "maxHeight": 2000,
@@ -3721,7 +3839,7 @@
         "cost": {
           "input": 2,
           "output": 10,
-          "cacheRead": 0.2,
+          "cacheRead": 0.1,
           "cacheWrite": 2.5
         },
         "contextWindow": 1000000,
@@ -3762,9 +3880,9 @@
         "type": "chat"
       }
     ],
-    "checkedAt": 1791406500984,
-    "lastModified": 1791204284000,
-    "etag": "W/\"3442ece5a2e978b487a859a8a172062c\""
+    "checkedAt": 1791490192858,
+    "lastModified": 1791463452000,
+    "etag": "W/\"aeb01130ecfe86c27a3a141af60eea43\""
   },
   "opencode-go": {
     "models": [

@@ -705,7 +705,7 @@
         "url": "https://github.com/carta/plugins.git",
         "path": "plugins/carta-cap-table",
         "ref": "main",
-        "sha": "6ab81016389cac69e03ed79114d75f31bc8e7bfd"
+        "sha": "43e49ed3c0cae18cbda4cdad94756ac85d50190b"
       },
       "homepage": "https://carta.com"
     },
@@ -721,7 +721,7 @@
         "url": "https://github.com/carta/plugins.git",
         "path": "plugins/carta-crm",
         "ref": "main",
-        "sha": "6ab81016389cac69e03ed79114d75f31bc8e7bfd"
+        "sha": "43e49ed3c0cae18cbda4cdad94756ac85d50190b"
       },
       "homepage": "https://carta.com"
     },
@@ -3484,7 +3484,7 @@
     {
       "name": "security-guidance",
       "description": "Security review for Claude-generated code. Pattern-based warnings on edits, LLM-powered diff review on Stop, and an agentic commit reviewer that catches injection, XSS, SSRF, hardcoded secrets, and 25+ other vulnerability classes.",
-      "version": "2.0.11",
+      "version": "2.0.12",
       "author": {
         "name": "Anthropic",
         "email": "support@anthropic.com"
