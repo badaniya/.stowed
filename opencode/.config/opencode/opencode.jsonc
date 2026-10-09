@@ -49,8 +49,7 @@
   },
   "plugins": [
     "superpowers@git+https://github.com/obra/superpowers.git",
-    "@langfuse/opencode-observability-plugin@latest",
-    "billion-context"
+    "@langfuse/opencode-observability-plugin@latest"
   ],
   "experimental": {
     "openTelemetry": true
