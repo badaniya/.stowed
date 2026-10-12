@@ -46,7 +46,7 @@
         }
       }
     ],
-    "checkedAt": 1791580551158
+    "checkedAt": 1791848137629
   },
   "github-copilot": {
     "models": [
@@ -1802,7 +1802,7 @@
         "type": "chat"
       }
     ],
-    "checkedAt": 1791490193017,
+    "checkedAt": 1791581025245,
     "lastModified": 1791463475000,
     "etag": "W/\"896d7b376ecab2be20930ae443b3a78c\""
   },
@@ -1822,7 +1822,7 @@
           "cacheWrite": 0
         },
         "contextWindow": 262144,
-        "maxTokens": 32768,
+        "maxTokens": 235929,
         "_pricingKnown": true,
         "thinkingLevelMap": {
           "off": "none",
@@ -2797,7 +2797,7 @@
         }
       }
     ],
-    "checkedAt": 1791580551288
+    "checkedAt": 1791848137813
   },
   "fastrouter": {
     "models": [
@@ -3068,7 +3068,7 @@
         }
       }
     ],
-    "checkedAt": 1791580551371
+    "checkedAt": 1791848137863
   },
   "anthropic": {
     "models": [
@@ -3880,7 +3880,7 @@
         "type": "chat"
       }
     ],
-    "checkedAt": 1791490192858,
+    "checkedAt": 1791581025073,
     "lastModified": 1791463452000,
     "etag": "W/\"aeb01130ecfe86c27a3a141af60eea43\""
   },
