@@ -962,32 +962,103 @@ def _is_reviewable_source(file_path):
     return False
 
 
+# A file's section starts at a `diff --git ` line. Inside a section every line
+# of file content carries a `+`, `-` or space prefix, so only a real header can
+# start a line with it; source text that merely contains the words cannot.
+_DIFF_SECTION_RE = re.compile(r'^diff --git ', re.MULTILINE)
+_UNQUOTED_HEADER_RE = re.compile(r'^a/(.+?) b/(.+)$')
+_C_ESCAPES = {
+    'a': b'\a', 'b': b'\b', 'f': b'\f', 'n': b'\n', 'r': b'\r', 't': b'\t',
+    'v': b'\v', '\\': b'\\', '"': b'"',
+}
+
+
+def _read_quoted_path(text, start):
+    """Decode the C-quoted path whose opening quote is at text[start].
+    Returns (path, index after the closing quote), or None if unterminated."""
+    out = bytearray()
+    i = start + 1
+    while i < len(text):
+        c = text[i]
+        if c == '"':
+            return out.decode("utf-8", errors="replace"), i + 1
+        if c == '\\' and i + 1 < len(text):
+            n = text[i + 1]
+            if n in _C_ESCAPES:
+                out += _C_ESCAPES[n]
+                i += 2
+                continue
+            octal = re.match(r'[0-7]{1,3}', text[i + 1:i + 4])
+            if octal:
+                out.append(int(octal.group(0), 8) & 0xFF)
+                i += 1 + len(octal.group(0))
+                continue
+        out += c.encode("utf-8")
+        i += 1
+    return None
+
+
+def _parse_diff_header(header):
+    """(old_path, new_path) from the text after `diff --git `, or None.
+
+    core.quotePath=false keeps non-ASCII names raw, but git still C-quotes a
+    name that contains a double quote, a backslash or a control character:
+    `"a/we\\"ird.py" "b/we\\"ird.py"`. Either side can be quoted on its own.
+    """
+    old = new = None
+    if header.startswith('"'):
+        first = _read_quoted_path(header, 0)
+        if not first:
+            return None
+        old, end = first
+        rest = header[end:].lstrip(' ')
+        if rest.startswith('"'):
+            second = _read_quoted_path(rest, 0)
+            new = second[0] if second else None
+        else:
+            new = rest
+    elif header.endswith('"') and ' "b/' in header:
+        split_at = header.index(' "b/')
+        old = header[:split_at]
+        second = _read_quoted_path(header, split_at + 1)
+        new = second[0] if second else None
+    else:
+        m = _UNQUOTED_HEADER_RE.match(header)
+        return (m.group(1), m.group(2)) if m else None
+    if not old or not new or not old.startswith('a/') or not new.startswith('b/'):
+        return None
+    return old[2:], new[2:]
+
+
+# Section headers that could not be parsed during this hook run; that file is
+# left out of the review. The Stop hook reports the count so a header shape
+# this parser misses shows up in telemetry instead of passing silently.
+_unparsed_diff_headers = set()
+
+
+def _iter_diff_sections(diff_output):
+    """Yield (new_path, lines after the header line) per file section."""
+    for section in _DIFF_SECTION_RE.split(diff_output)[1:]:
+        lines = section.split('\n')
+        paths = _parse_diff_header(lines[0])
+        if paths:
+            yield paths[1] or paths[0], lines[1:]
+        else:
+            _unparsed_diff_headers.add(lines[0])
+
+
 def extract_file_paths_from_diff(diff_output):
     """
     Extract file paths from unified diff output (without content).
     Only includes files with source code extensions.
-    Returns a list of file paths.
     """
     if not diff_output or not diff_output.strip():
         return []
 
-    paths = []
-    file_diffs = diff_output.split("diff --git ")
-
-    for file_diff in file_diffs:
-        if not file_diff.strip():
-            continue
-        lines = file_diff.split('\n')
-        header_match = re.match(r'^a/(.+?) b/(.+)$', lines[0])
-        if not header_match:
-            continue
-        file_path = header_match.group(2) or header_match.group(1) or ''
-        if not _is_reviewable_source(file_path):
-            continue
-        paths.append(file_path)
-
-    return paths
-
+    return [
+        file_path for file_path, _ in _iter_diff_sections(diff_output)
+        if _is_reviewable_source(file_path)
+    ]
 
 
 def parse_diff_into_files(diff_output):
@@ -999,20 +1070,7 @@ def parse_diff_into_files(diff_output):
         return []
 
     files = []
-    file_diffs = diff_output.split("diff --git ")
-
-    for file_diff in file_diffs:
-        if not file_diff.strip():
-            continue
-
-        # Extract filename from first line: "a/path/to/file b/path/to/file"
-        lines = file_diff.split('\n')
-        header_match = re.match(r'^a/(.+?) b/(.+)$', lines[0])
-        if not header_match:
-            continue
-
-        file_path = header_match.group(2) or header_match.group(1) or ''
-
+    for file_path, lines in _iter_diff_sections(diff_output):
         # Filter to source code files only
         if not _is_reviewable_source(file_path):
             continue
@@ -1020,7 +1078,7 @@ def parse_diff_into_files(diff_output):
         # Extract the diff content (from first @@ onwards)
         diff_lines = []
         in_hunks = False
-        for line in lines[1:]:
+        for line in lines:
             if line.startswith('@@'):
                 in_hunks = True
             if in_hunks:

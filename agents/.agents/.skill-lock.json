@@ -528,9 +528,9 @@
       "sourceType": "github",
       "sourceUrl": "https://github.com/tt-a1i/archify.git",
       "skillPath": "archify/SKILL.md",
-      "skillFolderHash": "68f9fae4d0b4a17c5cd8cba9682e7306f879d4bb",
+      "skillFolderHash": "7e1de2b2cf3a9a91823ee5dcc2089c1d96a7e4f1",
       "installedAt": "2026-09-14T20:19:57.558Z",
-      "updatedAt": "2026-09-24T16:14:15.351Z"
+      "updatedAt": "2026-10-14T21:22:03.820Z"
     },
     "backfill": {
       "source": "scaccogatto/okf-skills",

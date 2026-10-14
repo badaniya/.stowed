@@ -125,6 +125,7 @@ from reporesolve import (  # noqa: E402,F401
     toplevel_from_command, repo_containing_commit, scan_roots,
     resolve_repo_root, save_repo_hint, load_repo_hint,
 )
+import gitutil  # noqa: E402  module ref for per-run counters
 import llm  # noqa: E402  module ref for reassignable globals (_last_call_claude_http_error etc.)
 from llm import (  # noqa: E402,F401
     ANTHROPIC_API_KEY, ANTHROPIC_AUTH_TOKEN, HAS_API_CREDENTIALS,
@@ -198,6 +199,10 @@ CONTINUATION_SUFFIX = (
     "response."
 )
 
+# Extra keys emit_metrics appends to every row this invocation emits.
+_TAIL_METRICS: Dict[str, Any] = {}
+
+
 def emit_metrics(
     metrics,
     rewake_summary=None,
@@ -228,31 +233,22 @@ def emit_metrics(
     task-notification one-liner. Must be in the same JSON line as the metrics
     because CC stops scanning stdout after the first {-prefixed line.
 
-    `additional_context` (asyncRewake findings): model-visible guidance text.
-    Delivery channel depends on `hook_event_name` because CC's hook-output
-    contract is NOT symmetric across events:
+    `additional_context` (asyncRewake findings, exit-2 callers only):
+    model-visible guidance text, written to stderr for every event. CC's
+    asyncRewake delivery reads `stderr || stdout` for the model-visible body
+    and only scans stdout JSON for metrics+rewakeSummary — it never reads
+    additionalContext on this path. stdout keeps one valid JSON line so
+    metrics + rewakeSummary survive:
 
-      - PostToolUse (commit-review, push-sweep): surfaced via the modern
-        hookSpecificOutput.additionalContext protocol. `PostToolUse` is a
-        member of CC's hookSpecificOutput discriminated union
-        (coreSchemas.ts), so the JSON validates and metrics/rewakeSummary
-        are consumed. See #1375 / #1783 for why this replaced the legacy
-        stderr + exit(2) shape for PostToolUse.
+      - Stop / SubagentStop: also top-level decision:"block" + reason, for
+        the sync-fallback path (single-shot `claude -p`, where asyncRewake
+        degrades to a sync Stop hook that reads decision/reason). There is
+        no `Stop` member in CC's hookSpecificOutput union, so that field
+        must not be used here.
 
-      - Stop / SubagentStop: there is NO `Stop` member in that union, so
-        emitting hookSpecificOutput{hookEventName:"Stop"} makes the whole
-        line fail isSyncHookJSONOutput validation — which on the asyncRewake
-        path silently drops metrics AND rewakeSummary, and (because the
-        legacy stderr write was removed) leaks the raw JSON to the model as
-        the rewake body. CC's asyncRewake delivery actually reads
-        `stderr || stdout` for the model-visible body and only scans stdout
-        JSON for metrics+rewakeSummary — it never reads additionalContext
-        on this path. So for Stop we use the documented clean pattern:
-        guidance on stderr, valid JSON (metrics + rewakeSummary +
-        top-level decision/reason) on stdout. The top-level decision:"block"
-        + reason also covers the sync-fallback path (single-shot `claude -p`,
-        where asyncRewake degrades to a sync Stop hook that reads
-        decision/reason). See #2159.
+      - PostToolUse (commit-review, push-sweep): stderr only. In the
+        sync-fallback path CC shows the model an exit-2 PostToolUse hook's
+        stderr, so additionalContext would repeat the text.
 
     Empty/None additional_context emits neither channel (back-compat for
     metrics-only callers).
@@ -263,37 +259,39 @@ def emit_metrics(
     surface; systemMessage adds a per-fire override when the static
     rewakeMessage isn't specific enough for the finding being shown.
 
-    `hook_event_name` (used only when additional_context is set): selects the
-    delivery channel above. Defaults to "PostToolUse" (commit-review and
+    `hook_event_name` (used only when additional_context is set): whether to
+    add decision/reason as above. Defaults to "PostToolUse" (commit-review and
     push-sweep are the most common callers); handle_stop_hook passes "Stop".
     """
     head = {}
     if _PV and "pv" not in metrics:
         head["pv"] = _PV
-    head.update(_usage_metrics())
+    usage = _usage_metrics()
+    head.update(usage)
     if head:
         metrics = {**head, **metrics}
+    # Diagnostic keys go last, so they are the first dropped when a row is
+    # over CC's key cap and never displace an existing key.
+    tail = {}
+    if usage or "review_ms" in metrics or metrics.get("review_failed"):
+        # Review rows say whether the plugin's calls went through a gateway,
+        # so the error rate behind gateways can be read per plugin version.
+        cfg = llm.gateway_cfg()
+        if cfg:
+            tail["gateway_cfg"] = cfg
+    tail.update(_TAIL_METRICS)
+    metrics = {**metrics, **{k: v for k, v in tail.items() if k not in metrics}}
     out = {"metrics": metrics}
     if rewake_summary:
         out["rewakeSummary"] = rewake_summary
     if additional_context:
+        # Guidance on stderr, the asyncRewake body channel (`stderr || stdout`).
+        sys.stderr.write(additional_context)
+        sys.stderr.flush()
         if hook_event_name in ("Stop", "SubagentStop"):
-            # Stop is NOT in CC's hookSpecificOutput union — emitting it there
-            # fails schema validation and drops metrics+rewakeSummary (#2159).
-            # Clean pattern: guidance on stderr (the asyncRewake body channel,
-            # delivered via `stderr || stdout`), top-level decision/reason for
-            # the sync-fallback path. stdout JSON stays valid so metrics +
-            # rewakeSummary survive.
-            sys.stderr.write(additional_context)
-            sys.stderr.flush()
+            # Sync-fallback path for Stop reads decision/reason.
             out["decision"] = "block"
             out["reason"] = additional_context
-        else:
-            # PostToolUse et al. — valid union member; modern protocol.
-            out["hookSpecificOutput"] = {
-                "hookEventName": hook_event_name,
-                "additionalContext": additional_context,
-            }
     if system_message:
         out["systemMessage"] = system_message
     print(json.dumps(out), flush=True)
@@ -893,6 +891,17 @@ def _push_section(bash_output):
         section = section[:end]
     return section
 
+def _push_in_output(bash_output):
+    """True when Bash output shows a git push that updated a remote branch."""
+    section = _push_section(bash_output or "")
+    if not section.lstrip("\n").startswith("To "):
+        return False
+    return bool(_PUSH_RANGE_RE.search(section)) or "[new branch]" in section
+
+# Only words the failed-review notice; `gh pr create` alone is not routed to
+# the push review.
+_MAY_PUSH_VIA_GH_RE = re.compile(r"\bgh\s+pr\s+create\b")
+
 def _detect_prev_upstream(repo_root, bash_output):
     """Where the remote was BEFORE this push.
 
@@ -956,6 +965,13 @@ def is_commit_review_enabled():
 
 COMMIT_REVIEW_ENABLED = is_commit_review_enabled()
 
+# Seconds from the start of a commit or push review's race after which
+# neither side waits for the other any longer; well inside Claude Code's
+# 10-minute hook timeout.
+_RACE_MAX_WAIT_S = 480
+# api_error for a race that hit that deadline with no verdict.
+_RACE_TIMED_OUT = -2
+
 def _agentic_review_with_race(
     repo_root: str,
     diff_files: List[Tuple[str, str]],
@@ -965,8 +981,12 @@ def _agentic_review_with_race(
     """Race the agentic reviewer against a delayed single-shot fallback.
 
     Agentic starts at t=0. After SG_AGENTIC_RACE_DELAY_S (default 180s), the
-    single-shot diff reviewer also starts. Whichever finishes first wins. If
-    agentic finishes before the delay elapses, the fallback never runs.
+    single-shot diff reviewer also starts. Whichever finishes first wins,
+    except that a single-shot review with no verdict waits for agentic up to
+    _RACE_MAX_WAIT_S from the start, and that if agentic fails after the
+    fallback started, the fallback's result (or, past the deadline, no
+    verdict) is returned so the caller never starts another review. If agentic
+    finishes before the delay, the fallback never runs.
 
     Metrics added:
       race_winner    : 1 = agentic won, 2 = fallback won (CC accepts only
@@ -974,8 +994,8 @@ def _agentic_review_with_race(
       race_delay_s   : the configured delay
       race_started   : 1 if the fallback was actually launched, else 0
 
-    Only the commit-review handler calls this — external harnesses invoke
-    agentic_review() directly and are unaffected. SG_AGENTIC_NO_RACE=1
+    Only the commit-review and push-sweep handlers call this — external
+    harnesses invoke agentic_review() directly and are unaffected. SG_AGENTIC_NO_RACE=1
     disables the race for any other caller that wants pure agentic.
     """
     import queue as _queue
@@ -988,6 +1008,10 @@ def _agentic_review_with_race(
     delay_s = int(os.environ.get("SG_AGENTIC_RACE_DELAY_S", "180"))
     q: "_queue.Queue[Tuple[str, Any]]" = _queue.Queue(maxsize=1)
     fallback_started = _th.Event()
+    fallback_done = _th.Event()
+    agentic_done = _th.Event()
+    fallback_result: Dict[str, Any] = {}
+    deadline = _t.monotonic() + _RACE_MAX_WAIT_S
 
     def _agentic() -> None:
         try:
@@ -998,32 +1022,130 @@ def _agentic_review_with_race(
             q.put_nowait(("agentic", r))
         except _queue.Full:
             pass
+        agentic_done.set()
 
     def _fallback() -> None:
         _t.sleep(delay_s)
-        if not q.empty():
+        if agentic_done.is_set():
             return  # agentic finished within the delay — never start fallback
         fallback_started.set()
+        result = (None, [], {"agentic": False, "review_failed": True, "api_error": None})
         try:
             g, v = analyze_code_security(
                 diff_files, is_diff=True, previous_findings=previous_findings
             )
-        except Exception as e:  # pragma: no cover
-            g, v = None, []
-        try:
-            q.put_nowait(("fallback", (g, v, {"agentic": False})))
-        except _queue.Full:
+            # Read on this thread: the outcome is per thread.
+            failed = llm.last_review_failed()
+            result = (g, v, {"agentic": False, "review_failed": failed,
+                             "api_error": llm.last_review_status() if failed else None})
+        except Exception:  # pragma: no cover
             pass
+        finally:
+            fallback_result["r"] = result
+            fallback_done.set()
+            if result[2]["review_failed"]:
+                # A failed fallback does not win: the agentic review's inner
+                # CLI may still get a verdict where direct calls cannot.
+                agentic_done.wait(timeout=max(0.0, deadline - _t.monotonic()))
+            try:
+                q.put_nowait(("fallback", result))
+            except _queue.Full:
+                pass
 
     _th.Thread(target=_agentic, daemon=True).start()
     _th.Thread(target=_fallback, daemon=True).start()
 
     winner, (g, v, m) = q.get()
+    if winner == "agentic" and m.get("agentic_fallback") and fallback_started.is_set():
+        # The caller would rerun the single-shot review the fallback has
+        # already started; use its result instead.
+        if fallback_done.wait(timeout=max(0.0, deadline - _t.monotonic())):
+            winner, (g, v, m) = "fallback", fallback_result["r"]
+        else:
+            winner, (g, v, m) = "fallback", (None, [], {
+                "agentic": False, "review_failed": True, "api_error": _RACE_TIMED_OUT})
     m = dict(m)  # don't mutate the callee's metrics dict
     m["race_winner"] = 1 if winner == "agentic" else 2
     m["race_delay_s"] = delay_s
     m["race_started"] = 1 if fallback_started.is_set() else 0
     return g, v, m
+
+def _review_failure_reason(status):
+    """(failure type, reason, likely cause or "") for a review with no verdict.
+
+    `status` is llm.last_review_status(): an HTTP status, -1 for a network
+    error or timeout, None when the reply could not be read; or
+    _RACE_TIMED_OUT.
+    """
+    gateway = (", or an LLM gateway may need its key in ANTHROPIC_CUSTOM_HEADERS"
+               if os.environ.get("ANTHROPIC_BASE_URL") else "")
+    if status == _RACE_TIMED_OUT:
+        return ("timeout", "the review did not finish in time", "")
+    if llm._is_3p_provider():
+        return ("provider", "the review through the cloud provider got no answer",
+                "The plugin's log has the provider's error.")
+    if status == 401:
+        return ("auth", "the API rejected the plugin's credentials (HTTP 401)",
+                f"The sign-in may have expired or been revoked{gateway}.")
+    if status == 403:
+        return ("auth", "the API refused access (HTTP 403)",
+                f"The account may lack access to the review model{gateway}.")
+    if status == 429 or (isinstance(status, int) and status >= 500):
+        return ("busy", f"the API was busy or unavailable (HTTP {status})",
+                "This is usually temporary.")
+    if status == -1:
+        return ("network", "the model could not be reached (network error or timeout)", "")
+    if isinstance(status, int):
+        pinned = os.environ.get("SECURITY_REVIEW_MODEL", "").strip()
+        return ("request", f"the API refused the request (HTTP {status})",
+                f"SECURITY_REVIEW_MODEL ({pinned}) may name a model this account "
+                "cannot use." if pinned else "")
+    return ("reply", "the model's reply could not be read", "")
+
+
+def _exit_review_failed(kind, session_id, metrics, status, pushed="no"):
+    """End a commit ("Commit") or push ("Push") review that got no verdict.
+
+    Never reports the code as clean. Tells Claude once per session for each
+    kind of review and failure; repeats are only logged. `pushed` ("yes",
+    "maybe" or "no"): whether the commit's own command also pushed it. Exits.
+    """
+    failure, reason, cause = _review_failure_reason(status)
+    debug_log(f"{kind} review: got no verdict ({reason}); not marked reviewed")
+    metrics = {"review_failed": True,
+               **({"api_error": status} if status is not None else {}),
+               **metrics, "vulns_found": 0}
+    # A commit its own command pushed gets its own notice: no later push
+    # re-checks it.
+    told_key = f"review_failed:{kind}:{failure}" + (":pushed" if pushed == "yes" else "")
+    if not atomic_check_and_mark_warning(session_id, told_key):
+        emit_metrics(metrics)
+        sys.exit(0)
+    subject = "this push" if kind == "Push" else "this commit"
+    if kind == "Push":
+        after = ("It was for the pushed commits not already reviewed when they "
+                 "were committed, and a later push will not re-check them.")
+    elif pushed == "yes":
+        after = "The same command pushed it, so a later push will not re-check it."
+    elif not PUSH_SWEEP_ENABLED:
+        after = ""
+    elif pushed == "maybe":
+        after = ("If the same command pushed it, a later push will not re-check "
+                 "it; otherwise a later push from Claude Code will.")
+    else:
+        after = "If it is pushed later from Claude Code, the push review will check it."
+    notice = " ".join(part for part in (
+        f"The security review of {subject} did not complete: {reason}.", cause, after,
+        f"Tell the user this in one sentence, and that details are in {DEBUG_LOG_FILE}.",
+    ) if part)
+    # The notice goes on stderr: Claude Code shows Claude an asyncRewake
+    # hook's stderr, else its stdout, which carries the metrics line.
+    sys.stderr.write(PROVENANCE_BANNER + "\n\n" + notice + "\n")
+    sys.stderr.flush()
+    emit_metrics(metrics,
+                 rewake_summary=(f"{kind} security review did not complete: {reason}. "
+                                 f"Log: {DEBUG_LOG_FILE}"))
+    sys.exit(2)
 
 def handle_commit_review_posttooluse(input_data):
     """PostToolUse handler for Bash — reviews git commits for security issues.
@@ -1396,43 +1518,34 @@ def handle_commit_review_posttooluse(input_data):
             repo_root, diff_files, rel_touched, previous_findings
         )
         agentic_metrics.update(_am)
+        if _am.get("child_stderr"):
+            # Lines the inner CLI wrote to stderr during the review: how often
+            # the condition that used to replace the findings body occurs. Not
+            # counted when the single-shot fallback wins the race.
+            _TAIL_METRICS["child_stderr"] = _am["child_stderr"]
+        review_failed = bool(agentic_metrics.get("review_failed"))
+        api_status = agentic_metrics.get("api_error")
         # Fall back to single-shot only on agentic FAILURE (SDK/investigate
         # crash). If agentic completed and returned 0 findings, trust that.
         if agentic_metrics.get("agentic_fallback"):
             concrete_guidance, vulns = analyze_code_security(
                 diff_files, is_diff=True, previous_findings=previous_findings
             )
+            review_failed = llm.last_review_failed()
+            api_status = llm.last_review_status()
     else:
         concrete_guidance, vulns = analyze_code_security(
             diff_files, is_diff=True, previous_findings=previous_findings
         )
-
-    # push-sweep state: record this commit as reviewed (full 40-hex sha) so a
-    # later `git push` can advance its diff base past it. Recorded here — after
-    # the review ran but before any exit path — so it's marked regardless of
-    # whether findings were emitted. `shas` holds abbreviated refs from
-    # `[branch sha]`; resolve to full so set-membership in the push-sweep is
-    # exact. Best-effort; failures here never block the review result.
-    try:
-        full_shas = []
-        for s in shas:
-            # See #2099: drop text=True; decode manually for cp1252 safety.
-            r = subprocess.run(
-                [*GIT_CMD, "rev-parse", "--verify", "-q", s],
-                cwd=repo_root, capture_output=True, timeout=5,
-            )
-            if r.returncode == 0:
-                full_shas.append(r.stdout.decode("utf-8", errors="replace").strip())
-        _append_reviewed_shas(repo_root, full_shas, vulns_found=len(vulns or []))
-    except Exception:
-        pass
+        review_failed = llm.last_review_failed()
+        api_status = llm.last_review_status()
 
     review_ms = int((_time.time() - review_start) * 1000)
     # `survived` is the raw self-refute count BEFORE the high/critical-only
     # severity filter; `survived_after_sev` is the count the user actually
     # sees. Include `survived_after_sev` ONLY when the filter actually
     # dropped candidates — otherwise it's redundant with `survived` and eats
-    # into CC's 10-key emit cap, pushing files_reviewed/review_ms out of the
+    # into CC's metric-key cap, pushing files_reviewed/review_ms out of the
     # emitted metrics.
     #
     # CC accepts only booleans and finite numbers as metric values.
@@ -1467,6 +1580,36 @@ def handle_commit_review_posttooluse(input_data):
         if agentic_metrics.get("agentic") or _fb or _race is not None
         else {}
     )
+
+    if review_failed:
+        # Not marked reviewed, so a later push review from Claude Code still
+        # covers it.
+        _exit_review_failed("Commit", session_id, {
+            **_base, **_agentic_m,
+            "files_reviewed": len(diff_files), "review_ms": review_ms,
+        }, api_status, pushed=(
+            "yes" if _push_in_output(bash_output)
+            else "maybe" if _GIT_PUSH_RE.search(command) or _MAY_PUSH_VIA_GH_RE.search(command)
+            else "no"))
+
+    # push-sweep state: record this commit as reviewed (full 40-hex sha) so a
+    # later `git push` can advance its diff base past it. Recorded only after a
+    # review that got a verdict, whether or not it found anything. `shas` holds abbreviated refs from
+    # `[branch sha]`; resolve to full so set-membership in the push-sweep is
+    # exact. Best-effort; failures here never block the review result.
+    try:
+        full_shas = []
+        for s in shas:
+            # See #2099: drop text=True; decode manually for cp1252 safety.
+            r = subprocess.run(
+                [*GIT_CMD, "rev-parse", "--verify", "-q", s],
+                cwd=repo_root, capture_output=True, timeout=5,
+            )
+            if r.returncode == 0:
+                full_shas.append(r.stdout.decode("utf-8", errors="replace").strip())
+        _append_reviewed_shas(repo_root, full_shas, vulns_found=len(vulns or []))
+    except Exception:
+        pass
 
     if not concrete_guidance:
         debug_log("Commit review: no security issues found")
@@ -1525,9 +1668,8 @@ def handle_commit_review_posttooluse(input_data):
             sev[s] += 1
 
     # Rebuild guidance from new_vulns only — concrete_guidance from the LLM
-    # still lists deduped entries. Pass via additional_context so CC surfaces
-    # the reason via hookSpecificOutput.additionalContext instead of empty
-    # stdout (#1783) / stderr-only "json output validation failed" (#1375).
+    # still lists deduped entries. emit_metrics writes it to stderr, the body
+    # of the asyncRewake notice.
     _commit_guidance = (PROVENANCE_BANNER + "\n\n"
                         + _format_vulns_guidance(new_vulns)
                         + CONTINUATION_SUFFIX + "\n")
@@ -1542,8 +1684,6 @@ def handle_commit_review_posttooluse(input_data):
 
     # exit(2) is preserved per the asyncRewake protocol — it's what CC
     # uses as the "force fix" signal that triggers the rewakeMessage flow.
-    # The stderr.write was removed; additional_context above now carries
-    # the same text via the modern JSON channel. See #1358/#1375/#1783.
     sys.exit(2)
 
 def handle_push_sweep_posttooluse(input_data):
@@ -1796,16 +1936,31 @@ def handle_push_sweep_posttooluse(input_data):
         concrete_guidance, vulns, agentic_metrics = _agentic_review_with_race(
             repo_root, diff_files, rel_touched, previous_findings
         )
+        if agentic_metrics.get("child_stderr"):
+            _TAIL_METRICS["child_stderr"] = agentic_metrics["child_stderr"]
+        review_failed = bool(agentic_metrics.get("review_failed"))
+        api_status = agentic_metrics.get("api_error")
         if agentic_metrics.get("agentic_fallback"):
             concrete_guidance, vulns = analyze_code_security(
                 diff_files, is_diff=True, previous_findings=previous_findings
             )
+            review_failed = llm.last_review_failed()
+            api_status = llm.last_review_status()
     else:
         concrete_guidance, vulns = analyze_code_security(
             diff_files, is_diff=True, previous_findings=previous_findings
         )
+        review_failed = llm.last_review_failed()
+        api_status = llm.last_review_status()
         agentic_metrics = {}
     review_ms = int((_time.time() - review_start) * 1000)
+    if review_failed:
+        # Not marked reviewed. A later push does not re-check these commits:
+        # its range starts from the new upstream.
+        _exit_review_failed("Push", session_id, {
+            **_base, "pushed": len(push_range), "unreviewed": len(tail),
+            "files_reviewed": len(diff_files), "review_ms": review_ms,
+        }, api_status)
 
     # The tail is now covered by this net-diff review.
     _append_reviewed_shas(repo_root, tail, vulns_found=len(vulns or []))
@@ -1814,14 +1969,14 @@ def handle_push_sweep_posttooluse(input_data):
         session_id, vulns or [], prompted=_finding_keys(previous_findings)
     )
 
-    # Metrics — keep within the 10-key cap; agentic sub-metrics are dropped
+    # Metrics — keep within CC's metric-key cap; agentic sub-metrics are dropped
     # here in favour of the push-sweep funnel keys (telemetry can join on session_id
     # to the per-commit fires for agentic detail). rewake_summary must ride
     # this line (CC reads only the first {-prefixed stdout line); the emit
     # is deferred to the two exit points below so the with-vulns path can
-    # also pass additional_context in the same JSON line (#1375/#1783) —
-    # the by-design "CC keeps only the first JSON line" constraint means
-    # we can't emit twice. Builds the shared metrics dict here; vulns path
+    # also pass additional_context in the same emit_metrics call — the
+    # by-design "CC keeps only the first JSON line" constraint means we
+    # can't emit twice. Builds the shared metrics dict here; vulns path
     # adds additional_context, no-vulns path emits as-is.
     _push_metrics = {
         **_base, "pushed": len(push_range), "unreviewed": len(tail),
@@ -1887,9 +2042,9 @@ def handle_push_sweep_posttooluse(input_data):
     else:
         guidance = concrete_guidance or _format_vulns_guidance(reported) or ""
     # Emit metrics + additional_context together — single JSON line is the
-    # contract CC's hook parser expects. exit(2) preserved as the asyncRewake
-    # "force fix" trigger (see comment near handle_commit_review_posttooluse).
-    # See #1358 / #1375 / #1783.
+    # contract CC's hook parser expects; the guidance itself goes to stderr.
+    # exit(2) preserved as the asyncRewake "force fix" trigger (see comment
+    # near handle_commit_review_posttooluse).
     emit_metrics(_push_metrics, rewake_summary=_push_rewake_summary,
                  additional_context=(PROVENANCE_BANNER + "\n\n"
                                      + guidance + CONTINUATION_SUFFIX + "\n"),
@@ -1959,6 +2114,8 @@ def handle_stop_hook(input_data):
             "skipped": True, "skip_reason": reason, "fire_index": fire_count + 1,
             "diff_strategy_v2": True,
             **v2_metrics, **extra, **sweep,
+            **({"diff_hdr_unparsed": len(gitutil._unparsed_diff_headers)}
+               if gitutil._unparsed_diff_headers else {}),
         })
         sys.exit(0)
 
@@ -2155,11 +2312,9 @@ def handle_stop_hook(input_data):
         # untracked_baseline_n is the signal for whether the UPS-time
         # untracked-snapshot capture actually ran.
         sweep_trimmed = {k: v for k, v in sweep.items() if k != "warn_unresolved_mask"}
-        # Pass guidance via additional_context so CC surfaces the findings via
-        # hookSpecificOutput.additionalContext instead of stderr-only (which
-        # was the cause of "json output validation failed" / empty-reason UI in
-        # #1375 / #1783). exit(2) preserved as the asyncRewake "force fix"
-        # signal — that's the documented mechanism. See #1358 / #1375 / #1783.
+        # Guidance goes to stderr plus top-level decision/reason (see
+        # emit_metrics). exit(2) preserved as the asyncRewake "force fix"
+        # signal — that's the documented mechanism.
         emit_metrics({
             "vulns_found": len(vulns),
             "untracked_baseline_n": len(untracked_at_baseline),
@@ -2174,26 +2329,31 @@ def handle_stop_hook(input_data):
                if llm._last_review_truncated_bytes else {}),
             **({"repo_resolution": repo_res} if res_metrics else {}),
             **sweep_trimmed,
+            **({"diff_hdr_unparsed": len(gitutil._unparsed_diff_headers)}
+               if gitutil._unparsed_diff_headers else {}),
         }, rewake_summary=_format_vulns_summary(vulns),
            additional_context=(PROVENANCE_BANNER + "\n\n"
                                + concrete_guidance + CONTINUATION_SUFFIX + "\n"),
            hook_event_name=hook_event_name)
         sys.exit(2)
 
-    if llm._last_call_claude_http_error is not None:
-        debug_log(f"Stop hook: API call failed with status {llm._last_call_claude_http_error}")
+    stop_review_failed = llm.last_review_failed()
+    if stop_review_failed:
+        debug_log(f"Stop hook: review got no verdict "
+                  f"({_review_failure_reason(llm.last_review_status())[1]})")
         restore_unreviewed_stop_state(session_id, touched_paths, snap_baseline)
     else:
         debug_log("Stop hook: no security issues found")
         if is_subagent:
             record_reviewed_diff(session_id, diff_hash)
-    # CC truncates metrics to 10 keys by
-    # insertion order. The previous **sweep,**v2_metrics tail meant the 3
-    # v2_metrics keys were always sliced off this most-common path, so the
-    # diff-strategy diagnostics never reached telemetry. Drop sweep here (it's
-    # PostToolUse-warning state, orthogonal to diff-strategy comparison).
-    # 6 base + optional api_error + 3 v2_metrics = ≤10.
+    # CC keeps the first 20 metric keys (10 in older versions), in insertion
+    # order, after the pv and usage keys emit_metrics puts first. The previous
+    # **sweep,**v2_metrics tail meant the 3 v2_metrics keys were always sliced
+    # off this most-common path, so the diff-strategy diagnostics never reached
+    # telemetry. Drop sweep here (it's PostToolUse-warning state, orthogonal to
+    # diff-strategy comparison).
     emit_metrics({
+        **({"review_failed": True} if stop_review_failed else {}),
         "vulns_found": 0,
         "diff_strategy_v2": True,
         "files_reviewed": len(diff_files),
@@ -2204,6 +2364,8 @@ def handle_stop_hook(input_data):
         **({"diff_truncated": llm._last_review_truncated_bytes}
            if llm._last_review_truncated_bytes else {}),
         **v2_metrics,
+        **({"diff_hdr_unparsed": len(gitutil._unparsed_diff_headers)}
+           if gitutil._unparsed_diff_headers else {}),
     })
     sys.exit(0)
 
