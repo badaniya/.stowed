@@ -1,5 +1,6 @@
 return {
   'ChmaraX/herdr-nvim',
+  lazy = false, -- Configure before Herdr's VimEnter fallback enables default keymaps
 
   opts = {},
 
