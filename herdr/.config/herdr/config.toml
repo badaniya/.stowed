@@ -290,7 +290,7 @@ pane_history = true
 [advanced]
 # Maximum scrollback buffer size in bytes retained per pane terminal.
 # Matches Ghostty's default scrollback-limit behavior.
-scrollback_limit_bytes = 1000000000
+scrollback_limit_bytes = 4294967296
 
 [[keys.command]]
 key = "prefix+E"                      # "all panes"; prefix+e is taken by scrollback
