@@ -46,7 +46,7 @@
         }
       }
     ],
-    "checkedAt": 1792173147098
+    "checkedAt": 1792179806326
   },
   "github-copilot": {
     "models": [
@@ -1809,6 +1809,46 @@
   "cline": {
     "models": [
       {
+        "id": "xingchen-agi/xing4.0-29b-a4b:free",
+        "name": "Xing4.0 29B A4B (free) (Cline)",
+        "reasoning": true,
+        "input": [
+          "text"
+        ],
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0
+        },
+        "contextWindow": 262144,
+        "maxTokens": 235929,
+        "_pricingKnown": true,
+        "modelsDev": {
+          "id": "xingchen-agi/xing4.0-29b-a4b:free",
+          "name": "Xing4.0 29B A4B (free)",
+          "family": "agi"
+        },
+        "api": "openai-completions",
+        "provider": "cline",
+        "baseUrl": "https://api.cline.bot/api/v1",
+        "headers": {
+          "HTTP-Referer": "https://cline.bot",
+          "X-Title": "Cline",
+          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
+          "X-PLATFORM": "Visual Studio Code",
+          "X-PLATFORM-VERSION": "1.109.3",
+          "X-CLIENT-TYPE": "VSCode Extension",
+          "X-CLIENT-VERSION": "4.1.10",
+          "X-CORE-VERSION": "4.1.10",
+          "X-Is-Multiroot": "false",
+          "User-Agent": "Cline/4.1.10"
+        },
+        "compat": {
+          "supportsDeveloperRole": false
+        }
+      },
+      {
         "id": "nvidia/nemotron-3.5-super-vl:free",
         "name": "Nemotron 3.5 Super VL (free) (Cline)",
         "reasoning": true,
@@ -1844,7 +1884,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
+          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -1884,7 +1924,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
+          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -1924,7 +1964,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
+          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -1953,14 +1993,6 @@
         "contextWindow": 1000000,
         "maxTokens": 65536,
         "_pricingKnown": true,
-        "thinkingLevelMap": {
-          "off": "none",
-          "minimal": null,
-          "low": "low",
-          "medium": "medium",
-          "high": "high",
-          "xhigh": null
-        },
         "modelsDev": {
           "id": "nvidia/nemotron-3.5-lightning-free",
           "name": "Nemotron 3.5 Lightning Free",
@@ -1972,7 +2004,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
+          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2013,7 +2045,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
+          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2061,7 +2093,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
+          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2110,7 +2142,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
+          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2150,7 +2182,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
+          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2190,7 +2222,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
+          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2231,7 +2263,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
+          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2271,7 +2303,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
+          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2312,7 +2344,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
+          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2353,7 +2385,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
+          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2394,7 +2426,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
+          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2435,7 +2467,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
+          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2476,7 +2508,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
+          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2524,7 +2556,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
+          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2564,7 +2596,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
+          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2605,7 +2637,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
+          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2652,7 +2684,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
+          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2698,7 +2730,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
+          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2746,7 +2778,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H89TFR0YHWS68SRWT5M664",
+          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2760,7 +2792,7 @@
         }
       }
     ],
-    "checkedAt": 1792173147317
+    "checkedAt": 1792179806495
   },
   "fastrouter": {
     "models": [
@@ -3031,7 +3063,7 @@
         }
       }
     ],
-    "checkedAt": 1792173147379
+    "checkedAt": 1792179806555
   },
   "anthropic": {
     "models": [
