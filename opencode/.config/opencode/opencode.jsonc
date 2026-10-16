@@ -46,6 +46,7 @@
         "command": ["npx", "-y", "chrome-devtools-mcp@latest", "--executablePath", "/usr/bin/brave-browser", "--isolated"]
       }
     },
+    "codebase-memory-mcp": {"command":["/home/badaniya/.local/bin/codebase-memory-mcp"],"type":"local"},
   },
   "plugins": [
     "superpowers@git+https://github.com/obra/superpowers.git",
