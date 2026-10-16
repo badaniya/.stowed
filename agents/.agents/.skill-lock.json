@@ -384,9 +384,9 @@
       "sourceType": "github",
       "sourceUrl": "https://github.com/herdrdev/herdr.git",
       "skillPath": "skills/herdr/SKILL.md",
-      "skillFolderHash": "b9dcfddcfa7ce43e2e4cf60e724c519be553f149",
+      "skillFolderHash": "2be0d86d481d1bb29c62e11ef37b78d27d01b478",
       "installedAt": "2026-07-08T15:54:49.024Z",
-      "updatedAt": "2026-09-15T18:26:25.336Z"
+      "updatedAt": "2026-10-16T19:04:28.982Z"
     },
     "improve-codebase-architecture": {
       "source": "mattpocock/skills",
