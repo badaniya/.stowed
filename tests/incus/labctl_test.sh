@@ -253,6 +253,8 @@ for unsafe_profile_json in \
 	'{"devices":{"socket":{"type":"unix-char","source":"/run/host.sock","path":"/run/host.sock"}}}' \
 	'{"devices":{"vf":{"type":"nic","nictype":"sriov","parent":"enp1s0"}}}' \
 	'{"devices":{"host-bridge":{"type":"nic","nictype":"bridged","parent":"br0"}}}' \
+	'{"config":{"raw.lxc":"lxc.net.0.type = phys\\nlxc.net.0.link = enp1s0"}}' \
+	'{"config":{"raw.lxc":"lxc.mount.entry = /srv host none bind,create=dir 0 0"}}' \
 	'{"devices":{"eth0":{"type":"nic","network":"agentbr0","name":"eth0"},"eth1":{"type":"nic","network":"agentbr0","name":"eth1"}}}' \
 	'{"devices":{"gpu":{"type":"gpu"}}}'; do
 	PATH="${FAKE_BIN}:$PATH" LABCTL_UNSAFE_PROFILE_JSON="$unsafe_profile_json" assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight

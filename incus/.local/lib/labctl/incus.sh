@@ -21,6 +21,7 @@ labctl_incus_profile_is_unsafe() {
 			)
 		] | length > 0) or
 		([.. | objects | select(
+			(.config? | type == "object" and has("raw.lxc")) or
 			(."security.privileged" == true) or
 			(."security.privileged" == "true") or
 			(.network == "host") or
