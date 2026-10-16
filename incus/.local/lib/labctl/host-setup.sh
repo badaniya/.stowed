@@ -2,7 +2,7 @@
 # Read-only Incus coexistence checks and the narrowly scoped host setup actions.
 set -euo pipefail
 
-labctl_incus_required_commands=(incus jq flock docker ip sysctl df)
+labctl_incus_required_commands=(incus jq flock docker ip sysctl df lxc multipass)
 
 labctl_incus_require_commands() {
 	local command
@@ -30,16 +30,37 @@ labctl_incus_cidr_overlaps() {
 	(((left_number & right_mask) == (right_number & right_mask) || (right_number & left_mask) == (left_number & left_mask)))
 }
 
+labctl_incus_inventory() {
+	local inventory_name=$1 output
+	shift
+	if ! output=$("$@" 2>&1); then
+		labctl_die "unable to inventory $inventory_name; inspect the service and retry"
+		return 1
+	fi
+	printf '%s\n' "$output"
+}
+
 labctl_incus_reject_external_name_conflicts() {
-	local name output
+	local name output resource
+	local -a inventories
+
+	output=$(labctl_incus_inventory 'LXD networks' lxc network list --format csv -c n) || return 1
+	inventories+=("$output")
+	output=$(labctl_incus_inventory 'LXD storage pools' lxc storage list --format csv -c n) || return 1
+	inventories+=("$output")
+	output=$(labctl_incus_inventory 'LXD profiles' lxc profile list --format csv -c n) || return 1
+	inventories+=("$output")
+	output=$(labctl_incus_inventory 'LXD instances' lxc list --format csv -c n) || return 1
+	inventories+=("$output")
+	output=$(labctl_incus_inventory 'Multipass instances' multipass list --format csv) || return 1
+	inventories+=("$output")
+
 	for name in "$LABCTL_AGENT_BRIDGE" "$LABCTL_INCUS_PROFILE" "$LABCTL_INCUS_STORAGE_POOL"; do
-		for output in \
-			"$(lxc network list --format csv -c n 2>/dev/null || true)" \
-			"$(lxc storage list --format csv -c n 2>/dev/null || true)" \
-			"$(lxc profile list --format csv -c n 2>/dev/null || true)" \
-			"$(lxc list --format csv -c n 2>/dev/null || true)" \
-			"$(multipass list --format csv 2>/dev/null || true)"; do
-			while IFS= read -r resource; do
+		for output in "${inventories[@]}"; do
+			while IFS=, read -r resource _; do
+				resource=${resource%$'\r'}
+				resource=${resource#\"}
+				resource=${resource%\"}
 				[[ $resource == "$name" ]] || continue
 				labctl_die "configured Incus name conflicts with existing LXD or Multipass resource: $name"
 				return 1
@@ -98,7 +119,7 @@ labctl_incus_preflight() {
 	labctl_incus_reject_external_name_conflicts || return 1
 	if profile_json=$(incus profile show "$LABCTL_INCUS_PROFILE" --format json 2>/dev/null); then
 		if labctl_incus_profile_is_unsafe "$profile_json"; then
-			labctl_die "active Incus profile has privileged, host-network, proxy, or Docker socket behavior: $LABCTL_INCUS_PROFILE"
+			labctl_die "active Incus profile has privileged, host-network, proxy, Docker socket, or host-device passthrough behavior: $LABCTL_INCUS_PROFILE"
 			return 1
 		fi
 	fi

@@ -12,10 +12,18 @@ labctl_incus_profile_is_unsafe() {
 			(."security.privileged" == true) or
 			(."security.privileged" == "true") or
 			(.nictype == "physical") or
+			(.nictype == "macvlan") or
 			(.network == "host") or
 			(.type == "proxy") or
 			(.source == "/var/run/docker.sock") or
-			(.path == "/var/run/docker.sock")
+			(.path == "/var/run/docker.sock") or
+			(.type == "disk" and (.source? | type == "string" and startswith("/"))) or
+			(.type == "unix-block") or
+			(.type == "unix-char") or
+			(.type == "unix-hotplug") or
+			(.type == "gpu") or
+			(.type == "pci") or
+			(.type == "usb")
 		)] | length > 0
 	' >/dev/null <<<"$profile_json"
 }
@@ -25,6 +33,7 @@ labctl_incus_ensure_profile() {
 		labctl_run incus profile create "$LABCTL_INCUS_PROFILE"
 	fi
 
+	labctl_run incus profile set "$LABCTL_INCUS_PROFILE" security.privileged=false
 	labctl_run incus profile set "$LABCTL_INCUS_PROFILE" security.nesting=true
 	labctl_run incus profile set "$LABCTL_INCUS_PROFILE" limits.cpu=2
 	labctl_run incus profile set "$LABCTL_INCUS_PROFILE" limits.memory=4GiB

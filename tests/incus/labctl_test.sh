@@ -18,6 +18,8 @@ source "${LABCTL_LIB}/common.sh"
 source "${LABCTL_LIB}/config.sh"
 # shellcheck source=/dev/null
 source "${LABCTL_LIB}/state.sh"
+# shellcheck source=/dev/null
+source "${LABCTL_LIB}/host-setup.sh"
 
 export HOME="${TEST_ROOT}/home"
 export XDG_STATE_HOME="${TEST_ROOT}/state"
@@ -73,6 +75,7 @@ chmod 600 "$DUPLICATE_PORT_CONFIG"
 assert_fails labctl_config_load "$DUPLICATE_PORT_CONFIG"
 
 labctl_config_load "$CONFIG_PATH"
+assert_succeeds labctl_incus_cidr_overlaps '10.42.0.0/16' '10.42.1.0/24'
 assert_equals '10.42.0.10' "$(labctl_state_reserve_ip 'jira-#')"
 assert_equals '10.42.0.10' "$(labctl_state_reserve_ip 'jira-#')"
 assert_fails labctl_state_claim_ip '../JIRA-#' '10.42.0.10'
@@ -130,8 +133,8 @@ case "$*" in
 'info') [[ ${LABCTL_INCUS_ACCESS_DENIED:-false} != true ]] ;;
 'network show agentbr0') exit 1 ;;
 'profile show agent-dev-env --format json')
-	if [[ ${LABCTL_UNSAFE_PROFILE:-false} == true ]]; then
-		printf '%s\n' '{"config":{"security.privileged":"true"}}'
+	if [[ -n ${LABCTL_UNSAFE_PROFILE_JSON:-} ]]; then
+		printf '%s\n' "$LABCTL_UNSAFE_PROFILE_JSON"
 	else
 		exit 1
 	fi
@@ -168,12 +171,16 @@ DF
 cat >"${FAKE_BIN}/lxc" <<'LXC'
 #!/usr/bin/env bash
 printf 'lxc %s\n' "$*" >>"$COMMAND_LOG"
+[[ ${LABCTL_LXC_INVENTORY_FAILURE:-false} != true ]] || exit 1
 [[ ${LABCTL_EXTERNAL_NAME_CONFLICT:-false} != true ]] || printf 'agentbr0\n'
 LXC
 cat >"${FAKE_BIN}/multipass" <<'MULTIPASS'
 #!/usr/bin/env bash
 printf 'multipass %s\n' "$*" >>"$COMMAND_LOG"
-exit 0
+[[ ${LABCTL_MULTIPASS_INVENTORY_FAILURE:-false} != true ]] || exit 1
+if [[ ${LABCTL_MULTIPASS_NAME_CONFLICT:-false} == true ]]; then
+	printf '%s\n' 'Name,State,IPv4,Image' 'agentbr0,Running,10.42.0.20,24.04 LTS'
+fi
 MULTIPASS
 cat >"${FAKE_BIN}/docker" <<'DOCKER'
 #!/usr/bin/env bash
@@ -202,6 +209,7 @@ PATH="${FAKE_BIN}:$PATH" assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" s
 assert_command_log_contains 'network create agentbr0'
 assert_command_log_contains 'profile create agent-dev-env'
 assert_command_log_contains 'security.nesting=true'
+assert_command_log_contains 'security.privileged=false'
 assert_command_log_not_contains 'security.privileged=true'
 assert_command_log_not_contains '/var/run/docker.sock'
 
@@ -214,7 +222,7 @@ command() {
 	builtin command "$@"
 }
 COMMAND
-for unavailable in incus jq flock docker; do
+for unavailable in incus jq flock docker lxc multipass; do
 	PATH="${FAKE_BIN}:$PATH" BASH_ENV="$COMMAND_OVERRIDE" LABCTL_MISSING_COMMAND="$unavailable" assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
 done
 
@@ -224,6 +232,22 @@ PATH="${FAKE_BIN}:$PATH" LABCTL_HOST_BRIDGE_CONFLICT=true assert_fails "$LABCTL_
 export LABCTL_EXTERNAL_NAME_CONFLICT=true
 PATH="${FAKE_BIN}:$PATH" assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
 unset LABCTL_EXTERNAL_NAME_CONFLICT
-PATH="${FAKE_BIN}:$PATH" LABCTL_UNSAFE_PROFILE=true assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
+PATH="${FAKE_BIN}:$PATH" LABCTL_MULTIPASS_NAME_CONFLICT=true assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
+PATH="${FAKE_BIN}:$PATH" LABCTL_LXC_INVENTORY_FAILURE=true assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
+PATH="${FAKE_BIN}:$PATH" LABCTL_MULTIPASS_INVENTORY_FAILURE=true assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
+
+# These fixtures model every profile shape that would expose host networking or devices.
+for unsafe_profile_json in \
+	'{"config":{"security.privileged":"true"}}' \
+	'{"devices":{"eth0":{"type":"nic","network":"host"}}}' \
+	'{"devices":{"api":{"type":"proxy","listen":"tcp:0.0.0.0:2375"}}}' \
+	'{"devices":{"docker":{"type":"disk","source":"/var/run/docker.sock","path":"/var/run/docker.sock"}}}' \
+	'{"devices":{"host-data":{"type":"disk","source":"/srv","path":"/mnt/host"}}}' \
+	'{"devices":{"block":{"type":"unix-block","source":"/dev/sdb","path":"/dev/sdb"}}}' \
+	'{"devices":{"character":{"type":"unix-char","source":"/dev/ttyS0","path":"/dev/ttyS0"}}}' \
+	'{"devices":{"socket":{"type":"unix-char","source":"/run/host.sock","path":"/run/host.sock"}}}' \
+	'{"devices":{"gpu":{"type":"gpu"}}}'; do
+	PATH="${FAKE_BIN}:$PATH" LABCTL_UNSAFE_PROFILE_JSON="$unsafe_profile_json" assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
+done
 
 finish_tests
