@@ -71,13 +71,37 @@ labctl_incus_render_cloud_init() {
 	chmod 600 "$output"
 }
 
+labctl_incus_validate_launch_profiles() {
+	local profile profile_json
+	for profile in default "$LABCTL_INCUS_PROFILE"; do
+		profile_json=$(incus profile show "$profile" --format json 2>/dev/null) || {
+			labctl_die "unable to inspect Incus profile before launch; refusing to launch with an unvalidated profile: $profile"
+			return 1
+		}
+		if labctl_incus_profile_is_unsafe "$profile_json"; then
+			labctl_die "Incus profile is unsafe for launch: $profile"
+			return 1
+		fi
+	done
+}
+
 labctl_incus_launch() {
 	local ticket=$1 ip=$2 instance cloud_init
 	instance=$(labctl_normalize_ticket "$ticket") || return 1
 	cloud_init=$(mktemp "${TMPDIR:-/tmp}/labctl-cloud-init.XXXXXX") || return 1
-	trap 'rm -f "$cloud_init"' RETURN
-	labctl_incus_render_cloud_init "$cloud_init" || return 1
-	labctl_run incus launch "$LABCTL_INSTANCE_IMAGE" "$instance" --profile default --profile "$LABCTL_INCUS_PROFILE" -c "user.user-data=$(cat "$cloud_init")"
+	labctl_incus_render_cloud_init "$cloud_init" || {
+		rm -f "$cloud_init"
+		return 1
+	}
+	labctl_incus_validate_launch_profiles || {
+		rm -f "$cloud_init"
+		return 1
+	}
+	labctl_run incus launch "$LABCTL_INSTANCE_IMAGE" "$instance" --profile default --profile "$LABCTL_INCUS_PROFILE" -c "user.user-data=$(cat "$cloud_init")" || {
+		rm -f "$cloud_init"
+		return 1
+	}
+	rm -f "$cloud_init"
 	labctl_run incus config device set "$instance" eth0 ipv4.address="$ip"
 }
 

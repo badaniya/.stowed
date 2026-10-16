@@ -19,6 +19,8 @@ source "${LABCTL_LIB}/config.sh"
 # shellcheck source=/dev/null
 source "${LABCTL_LIB}/state.sh"
 # shellcheck source=/dev/null
+source "${LABCTL_LIB}/incus.sh"
+# shellcheck source=/dev/null
 source "${LABCTL_LIB}/host-setup.sh"
 
 export HOME="${TEST_ROOT}/home"
@@ -259,6 +261,12 @@ for unsafe_default_profile_json in \
 	'{"devices":{"vf":{"type":"nic","nictype":"sriov","parent":"enp1s0"}}}'; do
 	PATH="${FAKE_BIN}:$PATH" LABCTL_UNSAFE_DEFAULT_PROFILE_JSON="$unsafe_default_profile_json" assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
 done
+
+# Revalidate profiles at the launch boundary: an unsafe default must prevent launch.
+: >"$COMMAND_LOG"
+PATH="${FAKE_BIN}:$PATH" LABCTL_UNSAFE_DEFAULT_PROFILE_JSON='{"config":{"raw.lxc":"lxc.net.0.type = phys\\nlxc.net.0.link = enp1s0"}}' assert_fails labctl_incus_launch 'launch-default-profile' '10.42.0.10'
+assert_command_log_contains 'profile show default --format json'
+assert_command_log_not_contains 'launch images:ubuntu/24.04 launch-default-profile'
 
 for unsafe_profile_json in \
 	'{"config":{"security.privileged":"true"}}' \
