@@ -47,7 +47,6 @@ This repository is used to store all dot-config files for various shells and edi
 - copilot-cli
 - opencode
 - pi
-- goose
 - agents (centralized skills for AI tools)
 
 ## How To Use GNU Stow
@@ -91,7 +90,7 @@ rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/mise; rm -rf $HOME/.config
 
 ```bash
 # Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
-rm -rf $HOME/.npmrc; rm -rf $HOME/.config/herdr; rm -rf $HOME/.claude.json; rm -rf $HOME/.claude; rm -rf $HOME/.copilot; rm -rf $HOME/.config/.copilot; rm -rf $HOME/.config/opencode; rm -rf $HOME/.pi; rm -rf $HOME/.config/goose; rm -rf $HOME/.config/mcphub; rm -rf $HOME/.agents; stow -d $HOME/.stowed npm herdr claude copilot opencode pi goose mcphub agents
+rm -rf $HOME/.npmrc; rm -rf $HOME/.config/herdr; rm -rf $HOME/.claude.json; rm -rf $HOME/.claude; rm -rf $HOME/.copilot; rm -rf $HOME/.config/.copilot; rm -rf $HOME/.config/opencode; rm -rf $HOME/.pi; rm -rf $HOME/.agents; stow -d $HOME/.stowed npm herdr claude copilot opencode pi agents
 ```
 
 ## Installing Stowed Terminal Tools
@@ -196,14 +195,11 @@ sudo apt install -y postgresql-client
 sudo apt install -y mariadb-client 
 ```
 
-#### CopilotChat, CodeCompanion, Avante Plugins - AI chat for github copilot and others which uses nodejs
+#### CopilotChat Plugin - AI chat for github copilot and others which uses nodejs
 
 ```bash
 # Nix dependency
 nix-env -iA nixpkgs.nodejs_22
-
-# Global install of mcp-hub for agent based AI tools
-npm install -g mcp-hub@latest
 
 # Global install of copilot-cli
 npm install -g @github/copilot
@@ -404,13 +400,7 @@ pi install npm:pi-claude-auth                       # Claude code LLM access
 pi install npm:pi-free                              # Free LLM access
 ```
 
-### 7) Goose - An AI coding assistant for the terminal
-
-```bash
-curl -fsSL https://github.com/block/goose/releases/download/stable/download_cli.sh | bash
-```
-
-### 8) Agents - A centralized skills area for all AI tools
+### 7) Agents - A centralized skills area for all AI tools
 
 ```bash
 # Sure-fire way to ensure stow symlink creation
