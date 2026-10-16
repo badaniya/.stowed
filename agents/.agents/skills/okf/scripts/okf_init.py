@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["pyyaml>=6"]
+# dependencies = ["pyyaml>=6,<7"]
 # ///
 """Scaffold a conformant starter Open Knowledge Format (OKF) v0.2 bundle.
 
@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import argparse
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import yaml
@@ -69,8 +69,9 @@ def build_concept(title: str, now_iso: str) -> str:
         "# Overview\n\n"
         "This is the first concept in a freshly scaffolded OKF bundle. Replace "
         "it with real knowledge — one concept per file, cross-linked with "
-        "standard markdown links — and keep `index.md` and `log.md` updated as "
-        "you go.\n"
+        "standard markdown links — and keep `index.md` updated as you go. "
+        "`log.md` records lifecycle events only: a concept created, "
+        "deprecated, superseded, regenerated or verified.\n"
     )
 
 
@@ -93,8 +94,8 @@ def main() -> int:
         return 1
 
     title = args.title or humanize(args.target.resolve().name)
-    today = datetime.now(timezone.utc).date().isoformat()
-    now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    today = datetime.now(UTC).date().isoformat()
+    now_iso = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     args.target.mkdir(parents=True, exist_ok=True)
     (args.target / "index.md").write_text(build_index(title), encoding="utf-8")

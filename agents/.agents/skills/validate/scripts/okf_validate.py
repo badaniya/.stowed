@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["pyyaml>=6"]
+# dependencies = ["pyyaml>=6,<7"]
 # ///
 """Deterministic conformance checker for Open Knowledge Format (OKF) v0.2.
 
@@ -42,10 +42,11 @@ RESERVED = {"index.md", "log.md"}
 RECOMMENDED = ("title", "description", "tags")
 STATUS_VALUES = {"draft", "stable", "deprecated"}
 ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-# RFC 3339, as the spec writes `generated.at` / `verified[].at` throughout. A
+# RFC 3339, as the spec writes `generated.at` / `verified[].at` throughout, and
+# (since 0.9.6) `stale_after`, `sources[].last_modified` and `usage_window`. A
 # date-only value is tolerated: it is common in the wild and loses only precision.
 # PyYAML resolves an unquoted timestamp to a datetime whose str() separates with a
-# space, so both spellings have to pass — as with `stale_after` above.
+# space, so both spellings have to pass.
 RFC3339 = re.compile(
     r"^\d{4}-\d{2}-\d{2}"
     r"(?:[Tt ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:[Zz]|[+-]\d{2}:?\d{2})?)?$")
@@ -60,24 +61,32 @@ ACTOR_SHAPE = re.compile(r"^(?:[^\s:/]+:\S+|\S+/\S+)$")
 # of these, since it satisfies the generic `<prefix>:<id>` shape and so looks
 # entirely well-formed while §5.3 reads it as an agent. The lookahead keeps
 # `humanoid_agent/v1` out: only a non-identifier boundary makes it a near-miss.
-ACTOR_HUMANISH = re.compile(r"^(?:human|process)(?![A-Za-z0-9_])", re.I)
+ACTOR_HUMANISH = re.compile(r"^(?:human|process)(?![A-Za-z0-9_])", re.IGNORECASE)
 FENCE = re.compile(r"^(```|~~~)")
 # markdown link target capture: [text](target) — ignores images ![...]
 LINK = re.compile(r"(?<!\!)\[[^\]]*\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)")
-CITATIONS = re.compile(r"^#{1,6}[ \t]+Citations[ \t]*$", re.M)
+CITATIONS = re.compile(r"^#{1,6}[ \t]+Citations[ \t]*$", re.MULTILINE)
 # a footnote *reference* in the body; the definition line `[^id]: …` matches too,
 # which is harmless — both carry the same label, the join key into `sources`.
 FOOTNOTE = re.compile(r"\[\^([^\]\s]+)\]")
+# CommonMark recognizes no footnote inside code (#56): a regex class such as
+# `[^#?/]` in a code span or a fence is code. A fence opens with 3+ backticks or
+# tildes (up to 3 spaces in) and closes on a run of the same char at least as long.
+# A code span closes on a backtick run of exactly its opening length, and may wrap
+# lines within a paragraph but never crosses a blank line.
+FENCE_RUN = re.compile(r"^ {0,3}(`{3,}|~{3,})")
+CODE_SPAN = re.compile(r"(?<!`)(`+)(?!`)((?:(?!\n[ \t]*\n).)+?)(?<!`)\1(?!`)", re.DOTALL)
+
 
 # --migrate only. `timestamp` is a top-level key (§4.1), so anchor at column 0 —
 # an indented one belongs to something else and must not be hoisted.
-TIMESTAMP = re.compile(r"^timestamp:[ \t]*(.+?)[ \t]*$", re.M)
-HEADING = re.compile(r"^#{1,6}[ \t]", re.M)
+TIMESTAMP = re.compile(r"^timestamp:[ \t]*(.+?)[ \t]*$", re.MULTILINE)
+HEADING = re.compile(r"^#{1,6}[ \t]", re.MULTILINE)
 # same shape as LINK above, plus the link text — a citation written with a title
 # attribute, `[Src](url "Title")`, must not be dropped: the section is deleted
 # wholesale once anything parses, so a miss here is silent data loss.
 MD_LINK = re.compile(r"(?<!\!)\[([^\]]+)\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)")
-OKF_VERSION_LINE = re.compile(r"^(okf_version:[ \t]*)[\"']?0\.1[\"']?[ \t]*$", re.M)
+OKF_VERSION_LINE = re.compile(r"^(okf_version:[ \t]*)[\"']?0\.1[\"']?[ \t]*$", re.MULTILINE)
 # True, and it keeps the concept correctly `unverified` under §5.3: who wrote the
 # content before `generated` existed is not recoverable, and inventing a `human:`
 # actor would fake a review that never happened.
@@ -245,20 +254,20 @@ def check_trust(meta: dict, rel: str, report: Report) -> None:
 
 
 def check_lifecycle(meta: dict, rel: str, report: Report) -> None:
-    """§5.4 / §5.5 — `status` and `stale_after`."""
+    """§5.4 / §5.5 — `status` and `stale_after`. A concept is stale when
+    `now >= stale_after`."""
     status = meta.get("status")
     if status is not None and status not in STATUS_VALUES:
         report.warn(rel, f"§5.4 unknown `status` `{status}` (expected "
                          f"{'|'.join(sorted(STATUS_VALUES))})")
     stale = meta.get("stale_after")
-    # PyYAML resolves an unquoted `2026-09-23` to a date object; str() round-trips
-    # it back to the ISO form, so both spellings check identically.
-    if stale is not None and not ISO_DATE.match(str(stale)):
-        report.warn(rel, f"§5.5 `stale_after` `{stale}` is not an absolute YYYY-MM-DD date")
+    if stale is not None and not RFC3339.match(str(stale)):
+        report.warn(rel, f"§5.5 `stale_after` `{stale}` is not an ISO 8601 datetime "
+                         f"(a bare date is tolerated)")
 
 
 def check_window(window, where: str, rel: str, report: Report) -> None:
-    """§5.1 — a `usage_window` is a `{from, to}` pair of absolute dates."""
+    """§5.1 — a `usage_window` is a `{from, to}` pair of ISO 8601 datetimes."""
     if window is None:
         return
     if not isinstance(window, dict):
@@ -268,9 +277,27 @@ def check_window(window, where: str, rel: str, report: Report) -> None:
         value = window.get(bound)
         if value is None:
             report.warn(rel, f"§5.1 `{where}` `usage_window` is missing `{bound}`")
-        elif not ISO_DATE.match(str(value)):
+        elif not RFC3339.match(str(value)):
             report.warn(rel, f"§5.1 `{where}` `usage_window.{bound}` `{value}` "
-                             f"is not an absolute YYYY-MM-DD date")
+                             f"is not an ISO 8601 datetime (a bare date is tolerated)")
+
+
+def strip_code(body: str) -> str:
+    """The body with fenced blocks and inline code spans removed."""
+    kept: list[str] = []
+    fence = ""
+    for line in body.splitlines():
+        m = FENCE_RUN.match(line)
+        if fence:
+            if m and m.group(1)[0] == fence[0] and len(m.group(1)) >= len(fence) \
+                    and not line[m.end():].strip():
+                fence = ""
+            continue
+        if m and not (m.group(1)[0] == "`" and "`" in line[m.end():]):
+            fence = m.group(1)
+            continue
+        kept.append(line)
+    return CODE_SPAN.sub("", "\n".join(kept))
 
 
 def check_sources(meta: dict, body: str, rel: str, report: Report) -> None:
@@ -305,11 +332,13 @@ def check_sources(meta: dict, body: str, rel: str, report: Report) -> None:
                              f"framing it (a sibling of `sources`, or on the entry)")
         check_window(window, f"sources[{i}]", rel, report)
         last_mod = src.get("last_modified")
-        if last_mod is not None and not ISO_DATE.match(str(last_mod)):
-            report.warn(rel, f"§5.1 `sources[{i}].last_modified` `{last_mod}` is not YYYY-MM-DD")
+        if last_mod is not None and not RFC3339.match(str(last_mod)):
+            report.warn(rel, f"§5.1 `sources[{i}].last_modified` `{last_mod}` is not an "
+                             f"ISO 8601 datetime (a bare date is tolerated)")
     # Attribution joins on the label, not on position (§5.1) — a footnote whose
     # label names no source silently attributes a claim to nothing.
-    for label in sorted(set(FOOTNOTE.findall(body)) - ids):
+    # Code is skipped: a regex class in a code span is not a footnote (#56).
+    for label in sorted(set(FOOTNOTE.findall(strip_code(body))) - ids):
         report.warn(rel, f"§5.1 footnote `[^{label}]` matches no `sources[].id`")
 
 

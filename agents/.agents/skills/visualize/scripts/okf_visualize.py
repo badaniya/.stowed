@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["pyyaml>=6"]
+# dependencies = ["pyyaml>=6,<7"]
 # ///
 """Render an Open Knowledge Format (OKF) bundle as a single self-contained,
 interactive HTML graph (`viz.html`). No backend, no install on the viewing side,
@@ -189,8 +189,8 @@ HTML = r"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
 __OGIMAGE__
-<script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.2/dist/cytoscape.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/marked@14/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.2/dist/cytoscape.min.js" integrity="sha384-IWROdLKRsN1UuJywMlWl7/blXQ8GEooN2n7dzTxfEPd7ybYIKCUJ2Ol/1Gpf3YV4" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@14.1.4/marked.min.js" integrity="sha384-lqPzN0kmFw9t2syAMwVPM4VbAyqsz/lPyYWbb2Xt6nSPM0WPNrpSWCUBgdcAdgnC" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.4.12/dist/purify.min.js" integrity="sha384-piCcpDdJ7qVeK4Tv8Z6Hpcr3ZBIgP16TxQTPVfsLFdZ5uDgwc3Y8Ho7oUnqf12qu" crossorigin="anonymous"></script>
 <style>
  :root{--bg:#0e0f13;--panel:#16181f;--line:#262a35;--fg:#e6e8ee;--mut:#9aa3b2;--accent:#8ab4ff}
@@ -275,15 +275,15 @@ function relList(title,arr){if(!arr.length)return'';
 // §5.3 — the trust tier is derived, never stored: no `verified` is unverified,
 // `verified` by non-`human:` actors only is machine-confirmed, and any `human:`
 // actor makes it human-reviewed. The exact lowercase prefix is the whole key.
-// §5.5 — a concept is stale when today >= stale_after; both are YYYY-MM-DD, so
-// a string compare is the whole comparison. Advisory signals, not access control.
-const TODAY=new Date().toISOString().slice(0,10);
+// §5.5 — a concept is stale when now >= stale_after. PyYAML renders an unquoted
+// datetime with a space separator, which Date.parse rejects in some engines.
+// Advisory signals, not access control.
 function trustTier(n){const v=n.verified||[];
  if(!v.length)return['t-unverified','unverified'];
  return v.some(e=>(e.by||'').startsWith('human:'))?['t-human','human-reviewed']
                                                   :['t-machine','machine-confirmed'];}
 function badges(n){const [cls,label]=trustTier(n),out=[`<span class="badge ${cls}">${label}</span>`];
- if(n.stale_after&&TODAY>=n.stale_after)out.push(`<span class="badge b-stale">stale since ${esc(n.stale_after)}</span>`);
+ if(n.stale_after&&Date.parse(n.stale_after.replace(' ','T'))<=Date.now())out.push(`<span class="badge b-stale">stale since ${esc(n.stale_after)}</span>`);
  if(n.status==='deprecated')out.push('<span class="badge b-deprecated">deprecated</span>');
  return `<div class="badges">${out.join('')}</div>`;}
 // OKF v0.2 trust (§5.2) + lifecycle (§5.4/§5.5). A v0.1 `timestamp` arrives here
