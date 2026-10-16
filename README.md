@@ -413,7 +413,7 @@ rm -rf $HOME/.agents; stow -d $HOME/.stowed agents
 
 ```bash
 # Skill.sh Install and Upgrade
-npx skills add obra/superpowers
+npx skills add obra/superpowers -g
 ```
 
 ### 2) Graphify - Knowledge Graph
