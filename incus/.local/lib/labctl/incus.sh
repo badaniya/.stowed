@@ -13,6 +13,8 @@ labctl_incus_profile_is_unsafe() {
 			(."security.privileged" == "true") or
 			(.nictype == "physical") or
 			(.nictype == "macvlan") or
+			(.nictype == "ipvlan") or
+			(.nictype == "sriov") or
 			(.network == "host") or
 			(.type == "proxy") or
 			(.source == "/var/run/docker.sock") or

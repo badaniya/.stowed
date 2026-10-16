@@ -246,6 +246,7 @@ for unsafe_profile_json in \
 	'{"devices":{"block":{"type":"unix-block","source":"/dev/sdb","path":"/dev/sdb"}}}' \
 	'{"devices":{"character":{"type":"unix-char","source":"/dev/ttyS0","path":"/dev/ttyS0"}}}' \
 	'{"devices":{"socket":{"type":"unix-char","source":"/run/host.sock","path":"/run/host.sock"}}}' \
+	'{"devices":{"vf":{"type":"nic","nictype":"sriov","parent":"enp1s0"}}}' \
 	'{"devices":{"gpu":{"type":"gpu"}}}'; do
 	PATH="${FAKE_BIN}:$PATH" LABCTL_UNSAFE_PROFILE_JSON="$unsafe_profile_json" assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
 done
