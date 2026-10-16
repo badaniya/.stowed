@@ -118,4 +118,112 @@ done
 assert_equals '1' "$race_successes"
 assert_equals '1' "$(jq '[.sandboxes[] | select(.ip == "10.42.0.10")] | length' "${RACE_STATE_HOME}/labctl/sandboxes.json")"
 
+FAKE_BIN="${TEST_ROOT}/fake-bin"
+COMMAND_LOG="${TEST_ROOT}/command.log"
+mkdir -p "$FAKE_BIN"
+export COMMAND_LOG
+cat >"${FAKE_BIN}/incus" <<'INCUS'
+#!/usr/bin/env bash
+printf 'incus %s\n' "$*" >>"$COMMAND_LOG"
+case "$*" in
+'info --format json') printf '%s\n' '{"environment":{"kernel_features":{"idmapped_mounts":true}}}' ;;
+'info') [[ ${LABCTL_INCUS_ACCESS_DENIED:-false} != true ]] ;;
+'network show agentbr0') exit 1 ;;
+'profile show agent-dev-env --format json')
+	if [[ ${LABCTL_UNSAFE_PROFILE:-false} == true ]]; then
+		printf '%s\n' '{"config":{"security.privileged":"true"}}'
+	else
+		exit 1
+	fi
+	;;
+'network list --format csv -c n' | 'storage list --format csv -c n' | 'profile list --format csv -c n' | 'list --format csv -c n')
+	[[ ${LABCTL_EXTERNAL_NAME_CONFLICT:-false} != true ]] || printf 'agentbr0\n'
+	;;
+*) exit 0 ;;
+esac
+INCUS
+cat >"${FAKE_BIN}/ip" <<'IP'
+#!/usr/bin/env bash
+printf 'ip %s\n' "$*" >>"$COMMAND_LOG"
+case "$*" in
+'link show agentbr0') [[ ${LABCTL_HOST_BRIDGE_CONFLICT:-false} == true ]] ;;
+'route show') [[ ${LABCTL_ROUTE_CONFLICT:-false} != true ]] || printf '10.42.0.0/24 dev lxdbr0\n' ;;
+'route get 10.1.1.1') printf '10.1.1.1 via 10.1.1.1 dev eth0 src 10.1.1.2\n' ;;
+esac
+IP
+cat >"${FAKE_BIN}/sysctl" <<'SYSCTL'
+#!/usr/bin/env bash
+printf 'sysctl %s\n' "$*" >>"$COMMAND_LOG"
+if [[ ${1:-} == -n ]]; then
+	printf '1\n'
+else
+	printf 'net.ipv4.ip_forward = 1\n'
+fi
+SYSCTL
+cat >"${FAKE_BIN}/df" <<'DF'
+#!/usr/bin/env bash
+printf 'df %s\n' "$*" >>"$COMMAND_LOG"
+printf 'Filesystem 1024-blocks Used Available Capacity Mounted on\n/dev/test 1000 1 999 1%% /\n'
+DF
+cat >"${FAKE_BIN}/lxc" <<'LXC'
+#!/usr/bin/env bash
+printf 'lxc %s\n' "$*" >>"$COMMAND_LOG"
+[[ ${LABCTL_EXTERNAL_NAME_CONFLICT:-false} != true ]] || printf 'agentbr0\n'
+LXC
+cat >"${FAKE_BIN}/multipass" <<'MULTIPASS'
+#!/usr/bin/env bash
+printf 'multipass %s\n' "$*" >>"$COMMAND_LOG"
+exit 0
+MULTIPASS
+cat >"${FAKE_BIN}/docker" <<'DOCKER'
+#!/usr/bin/env bash
+printf 'docker %s\n' "$*" >>"$COMMAND_LOG"
+exit 0
+DOCKER
+for fake_command in incus ip sysctl df lxc multipass docker; do chmod +x "${FAKE_BIN}/${fake_command}"; done
+
+assert_command_log_contains() {
+	local expected=$1
+	if ! rg -F --quiet "$expected" "$COMMAND_LOG"; then
+		fail "expected command log to contain [$expected]"
+	fi
+}
+
+assert_command_log_not_contains() {
+	local unexpected=$1
+	if rg -F --quiet "$unexpected" "$COMMAND_LOG"; then
+		fail "expected command log not to contain [$unexpected]"
+	fi
+}
+
+PATH="${FAKE_BIN}:$PATH" LABCTL_TEST_FAKE_COMMANDS=true assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" setup-host
+PATH="${FAKE_BIN}:$PATH" assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" --dry-run setup-host --yes
+PATH="${FAKE_BIN}:$PATH" assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" setup-host --yes
+assert_command_log_contains 'network create agentbr0'
+assert_command_log_contains 'profile create agent-dev-env'
+assert_command_log_contains 'security.nesting=true'
+assert_command_log_not_contains 'security.privileged=true'
+assert_command_log_not_contains '/var/run/docker.sock'
+
+COMMAND_OVERRIDE="${TEST_ROOT}/command-override.sh"
+cat >"$COMMAND_OVERRIDE" <<'COMMAND'
+command() {
+	if [[ ${1:-} == -v && ${2:-} == "${LABCTL_MISSING_COMMAND:-}" ]]; then
+		return 1
+	fi
+	builtin command "$@"
+}
+COMMAND
+for unavailable in incus jq flock docker; do
+	PATH="${FAKE_BIN}:$PATH" BASH_ENV="$COMMAND_OVERRIDE" LABCTL_MISSING_COMMAND="$unavailable" assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
+done
+
+PATH="${FAKE_BIN}:$PATH" LABCTL_INCUS_ACCESS_DENIED=true assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
+PATH="${FAKE_BIN}:$PATH" LABCTL_ROUTE_CONFLICT=true assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
+PATH="${FAKE_BIN}:$PATH" LABCTL_HOST_BRIDGE_CONFLICT=true assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
+export LABCTL_EXTERNAL_NAME_CONFLICT=true
+PATH="${FAKE_BIN}:$PATH" assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
+unset LABCTL_EXTERNAL_NAME_CONFLICT
+PATH="${FAKE_BIN}:$PATH" LABCTL_UNSAFE_PROFILE=true assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
+
 finish_tests

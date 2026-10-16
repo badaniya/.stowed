@@ -15,6 +15,10 @@ source "$lib_dir/common.sh"
 source "$lib_dir/config.sh"
 # shellcheck source=/dev/null
 source "$lib_dir/state.sh"
+# shellcheck source=/dev/null
+source "$lib_dir/incus.sh"
+# shellcheck source=/dev/null
+source "$lib_dir/host-setup.sh"
 
 usage() {
 	cat <<'USAGE'
@@ -23,6 +27,7 @@ Usage: labctl [--config PATH] [--dry-run] <command> [args]
 Commands:
   help              Show this help text
   preflight         Validate host and configuration prerequisites
+  setup-host --yes  Create or reconcile only labctl's Incus bridge and profile
   status            Show sandbox status
   create            Create a ticket sandbox
   start             Start a ticket sandbox
@@ -68,7 +73,20 @@ if (($#)); then shift; fi
 case $command in
 help) usage ;;
 config-load) labctl_config_load "$config_path" ;;
-preflight | status | create | start | stop | destroy | cleanup-worktree)
+preflight)
+	labctl_config_load "$config_path"
+	labctl_incus_preflight
+	;;
+setup-host)
+	labctl_config_load "$config_path"
+	[[ ${1:-} == --yes && $# -eq 1 ]] || {
+		labctl_die 'setup-host requires exactly: setup-host --yes'
+		exit 1
+	}
+	export LABCTL_ASSUME_YES=true
+	labctl_incus_setup_host
+	;;
+status | create | start | stop | destroy | cleanup-worktree)
 	labctl_config_load "$config_path"
 	labctl_die "$command is not implemented"
 	exit 1

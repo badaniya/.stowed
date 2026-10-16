@@ -1,0 +1,11 @@
+#cloud-config
+package_update: true
+packages:
+  - docker.io
+  - docker-compose-v2
+users:
+  - name: __LABCTL_INSTANCE_USER__
+    groups: [docker]
+    shell: /bin/bash
+runcmd:
+  - systemctl enable --now docker
