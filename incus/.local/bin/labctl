@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+source_path=${BASH_SOURCE[0]}
+while [[ -L $source_path ]]; do
+	source_dir=$(cd -P "$(dirname "$source_path")" && pwd)
+	source_path=$(readlink "$source_path")
+	[[ $source_path == /* ]] || source_path=$source_dir/$source_path
+done
+bin_dir=$(cd -P "$(dirname "$source_path")" && pwd)
+lib_dir=$(cd "$bin_dir/../lib/labctl" && pwd)
+# shellcheck source=/dev/null
+source "$lib_dir/common.sh"
+# shellcheck source=/dev/null
+source "$lib_dir/config.sh"
+# shellcheck source=/dev/null
+source "$lib_dir/state.sh"
+
+usage() {
+	cat <<'USAGE'
+Usage: labctl [--config PATH] [--dry-run] <command> [args]
+
+Commands:
+  help              Show this help text
+  preflight         Validate host and configuration prerequisites
+  status            Show sandbox status
+  create            Create a ticket sandbox
+  start             Start a ticket sandbox
+  stop              Stop a ticket sandbox
+  destroy           Destroy a ticket sandbox
+  cleanup-worktree  Remove a source worktree after confirmation
+USAGE
+}
+
+config_path="${XDG_CONFIG_HOME:-$HOME/.config}/labctl/config.env"
+while (($#)); do
+	case $1 in
+	--config)
+		[[ $# -ge 2 ]] || {
+			labctl_die '--config requires a path'
+			exit 1
+		}
+		config_path=$2
+		shift 2
+		;;
+	--dry-run)
+		export LABCTL_DRY_RUN=true
+		shift
+		;;
+	--help | -h)
+		usage
+		exit 0
+		;;
+	--)
+		shift
+		break
+		;;
+	-*)
+		labctl_die "unknown global option: $1"
+		exit 1
+		;;
+	*) break ;;
+	esac
+done
+
+command=${1:-help}
+if (($#)); then shift; fi
+case $command in
+help) usage ;;
+config-load) labctl_config_load "$config_path" ;;
+preflight | status | create | start | stop | destroy | cleanup-worktree)
+	labctl_config_load "$config_path"
+	labctl_die "$command is not implemented"
+	exit 1
+	;;
+*)
+	labctl_die "unknown command: $command"
+	usage >&2
+	exit 1
+	;;
+esac
