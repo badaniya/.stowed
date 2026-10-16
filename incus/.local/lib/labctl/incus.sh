@@ -7,14 +7,22 @@ LABCTL_INCUS_STORAGE_POOL=${LABCTL_INCUS_STORAGE_POOL:-agentpool}
 
 labctl_incus_profile_is_unsafe() {
 	local profile_json=$1
-	jq -e '
-		[.. | objects | select(
+	jq -e --arg agent_bridge "$LABCTL_AGENT_BRIDGE" '
+		([
+			.devices? | objects | to_entries[]? |
+			select(
+				.value.type == "nic" and (
+					.key != "eth0" or
+					.value.network != $agent_bridge or
+					.value.name != "eth0" or
+					(.value | has("parent")) or
+					(.value | has("nictype"))
+				)
+			)
+		] | length > 0) or
+		([.. | objects | select(
 			(."security.privileged" == true) or
 			(."security.privileged" == "true") or
-			(.nictype == "physical") or
-			(.nictype == "macvlan") or
-			(.nictype == "ipvlan") or
-			(.nictype == "sriov") or
 			(.network == "host") or
 			(.type == "proxy") or
 			(.source == "/var/run/docker.sock") or
@@ -26,7 +34,7 @@ labctl_incus_profile_is_unsafe() {
 			(.type == "gpu") or
 			(.type == "pci") or
 			(.type == "usb")
-		)] | length > 0
+		)] | length > 0)
 	' >/dev/null <<<"$profile_json"
 }
 

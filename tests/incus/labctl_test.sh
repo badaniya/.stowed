@@ -150,7 +150,11 @@ cat >"${FAKE_BIN}/ip" <<'IP'
 printf 'ip %s\n' "$*" >>"$COMMAND_LOG"
 case "$*" in
 'link show agentbr0') [[ ${LABCTL_HOST_BRIDGE_CONFLICT:-false} == true ]] ;;
-'route show') [[ ${LABCTL_ROUTE_CONFLICT:-false} != true ]] || printf '10.42.0.0/24 dev lxdbr0\n' ;;
+'route show')
+	if [[ ${LABCTL_ROUTE_INVENTORY_FAILURE:-false} == true ]]; then
+		exit 42
+	fi
+	[[ ${LABCTL_ROUTE_CONFLICT:-false} != true ]] || printf '10.42.0.0/24 dev lxdbr0\n' ;;
 'route get 10.1.1.1') printf '10.1.1.1 via 10.1.1.1 dev eth0 src 10.1.1.2\n' ;;
 esac
 IP
@@ -228,6 +232,7 @@ done
 
 PATH="${FAKE_BIN}:$PATH" LABCTL_INCUS_ACCESS_DENIED=true assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
 PATH="${FAKE_BIN}:$PATH" LABCTL_ROUTE_CONFLICT=true assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
+PATH="${FAKE_BIN}:$PATH" LABCTL_ROUTE_INVENTORY_FAILURE=true assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
 PATH="${FAKE_BIN}:$PATH" LABCTL_HOST_BRIDGE_CONFLICT=true assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
 export LABCTL_EXTERNAL_NAME_CONFLICT=true
 PATH="${FAKE_BIN}:$PATH" assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
@@ -247,6 +252,8 @@ for unsafe_profile_json in \
 	'{"devices":{"character":{"type":"unix-char","source":"/dev/ttyS0","path":"/dev/ttyS0"}}}' \
 	'{"devices":{"socket":{"type":"unix-char","source":"/run/host.sock","path":"/run/host.sock"}}}' \
 	'{"devices":{"vf":{"type":"nic","nictype":"sriov","parent":"enp1s0"}}}' \
+	'{"devices":{"host-bridge":{"type":"nic","nictype":"bridged","parent":"br0"}}}' \
+	'{"devices":{"eth0":{"type":"nic","network":"agentbr0","name":"eth0"},"eth1":{"type":"nic","network":"agentbr0","name":"eth1"}}}' \
 	'{"devices":{"gpu":{"type":"gpu"}}}'; do
 	PATH="${FAKE_BIN}:$PATH" LABCTL_UNSAFE_PROFILE_JSON="$unsafe_profile_json" assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
 done

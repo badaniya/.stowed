@@ -70,11 +70,15 @@ labctl_incus_reject_external_name_conflicts() {
 }
 
 labctl_incus_reject_network_conflicts() {
-	local route destination
+	local route destination routes
 	if ip link show "$LABCTL_AGENT_BRIDGE" >/dev/null 2>&1 && ! incus network show "$LABCTL_AGENT_BRIDGE" >/dev/null 2>&1; then
 		labctl_die "configured Incus bridge conflicts with an existing host bridge: $LABCTL_AGENT_BRIDGE"
 		return 1
 	fi
+	routes=$(ip route show 2>&1) || {
+		labctl_die 'unable to inventory host routes; inspect the host network and retry'
+		return 1
+	}
 	while IFS= read -r route; do
 		destination=${route%% *}
 		[[ $destination == */* ]] || continue
@@ -82,7 +86,7 @@ labctl_incus_reject_network_conflicts() {
 			labctl_die "configured agent subnet overlaps an existing host, LXD, or Multipass route: $destination"
 			return 1
 		fi
-	done < <(ip route show)
+	done <<<"$routes"
 }
 
 labctl_incus_preflight() {
