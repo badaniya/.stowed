@@ -8,6 +8,7 @@ to work without retargeting.
 """
 import os
 import subprocess
+import time
 
 from _base import debug_log, _PV
 from gitutil import (
@@ -103,17 +104,22 @@ def consume_stop_state(session_id, clear=True):
             "fire_count_expired": expired and state.get("stop_hook_fire_count", 0) > 0,
             "previous_findings": [] if findings_expired else list(state.get("previous_findings", [])),
             "reviewed_diff_hash": state.get("reviewed_diff_hash"),
+            # State lost or overwritten since the last Stop (session_state).
+            "state_resets": state.get("state_resets", 0),
+            "state_overwrites": state.get("state_overwrites", 0),
         }
         if clear:
             state["touched_paths"] = []
             state.pop("reviewed_diff_hash", None)
+            state.pop("state_resets", None)
+            state.pop("state_overwrites", None)
         return snap
 
     return with_locked_state(session_id, _snap) or {
         "touched_paths": [], "baseline_sha": None, "head_at_capture": None,
         "untracked_at_baseline": {},
         "fire_count": 0, "fire_count_expired": False, "previous_findings": [],
-        "reviewed_diff_hash": None,
+        "reviewed_diff_hash": None, "state_resets": 0, "state_overwrites": 0,
     }
 
 
@@ -198,7 +204,8 @@ def capture_git_baseline(cwd):
     NOTE: `git stash create` does NOT capture untracked files. UPS pairs this
     SHA with a `_list_untracked()` snapshot stored as `untracked_at_baseline`,
     and `compute_v2_review_set` subtracts that set so pre-existing untracked
-    files are not reviewed as Claude-authored.
+    files are not reviewed as Claude-authored. UPS takes no snapshot while the
+    Stop review, its only reader, is switched off.
     """
     # stdout is a SHA so text=True is safe on stdout, but a non-ASCII
     # filename in `git stash create`'s STDERR warning (e.g. a worktree
@@ -279,14 +286,19 @@ def capture_git_baseline(cwd):
 _REVIEWED_SHAS_BASENAME = "sg-reviewed-shas"
 _REVIEWED_SHAS_CAP = 500
 
+def _is_full_sha(sha):
+    return len(sha) == 40 and all(c in "0123456789abcdef" for c in sha)
+
+
 def _reviewed_shas_path(repo_root):
     gd = _git_dir(repo_root)
     return os.path.join(gd, _REVIEWED_SHAS_BASENAME) if gd else None
 
 
-def _load_reviewed_shas(repo_root):
+def _load_reviewed_shas(repo_root, _gd=None):
     """Set of full 40-hex shas previously reviewed in this clone."""
-    p = _reviewed_shas_path(repo_root)
+    p = (os.path.join(_gd, _REVIEWED_SHAS_BASENAME) if _gd
+         else _reviewed_shas_path(repo_root))
     if not p or not os.path.exists(p):
         return set()
     out = set()
@@ -294,7 +306,7 @@ def _load_reviewed_shas(repo_root):
         with open(p, "r") as f:
             for line in f:
                 sha = line.split("\t", 1)[0].strip()
-                if len(sha) == 40 and all(c in "0123456789abcdef" for c in sha):
+                if _is_full_sha(sha):
                     out.add(sha)
     except OSError:
         pass
@@ -346,11 +358,194 @@ def _append_reviewed_shas(repo_root, shas, vulns_found=0):
             pass
 
 
+# ─── in-flight review markers ───────────────────────────────────────────────
+#
+# A commit or push review records its shas only once it has a verdict, which
+# is minutes after it starts. A review that starts in between (the push right
+# after a commit, the next commit's reflog scan) would send the same commits
+# through a second full review. So a review first takes an exclusive flock on
+# `sg-inflight-<sha>`, next to the reviewed-shas file, and holds it until its
+# process ends; other reviews leave a locked commit to it. The kernel drops
+# the lock however the holder dies, so a killed review blocks nobody. Without
+# flock (native Windows Python, some network filesystems) there are no
+# markers and nothing changes.
+
+_INFLIGHT_PREFIX = "sg-inflight-"
+# A marker file nobody holds (a killed review's) is removed once this old.
+_INFLIGHT_GC_AGE_S = 3600
+_inflight_held = {}
+
+
+def _full_shas(repo_root, shas):
+    """Resolve abbreviated commit refs to full 40-hex shas; drops unresolved."""
+    out = []
+    for s in shas:
+        try:
+            r = subprocess.run(
+                [*GIT_CMD, "rev-parse", "--verify", "-q", s],
+                cwd=repo_root, capture_output=True, timeout=5,
+            )
+        except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+            continue
+        if r.returncode == 0:
+            out.append(r.stdout.decode("utf-8", errors="replace").strip())
+    return out
+
+
+def _flock_nb(fd, exclusive):
+    """True when the lock was taken, False when another process holds it.
+    Raises OSError when the file cannot be locked at all."""
+    import errno
+    import fcntl
+    try:
+        fcntl.flock(fd, (fcntl.LOCK_EX if exclusive else fcntl.LOCK_SH) | fcntl.LOCK_NB)
+        return True
+    except OSError as e:
+        if e.errno in (errno.EWOULDBLOCK, errno.EAGAIN):
+            return False
+        raise
+
+
+def _release_inflight():
+    for p, fd in list(_inflight_held.items()):
+        try:
+            os.unlink(p)
+        except OSError:
+            pass
+        try:
+            os.close(fd)
+        except OSError:
+            pass
+    _inflight_held.clear()
+
+
+def _sweep_inflight(gd):
+    """Remove old marker files no review holds."""
+    import time as _time
+    cutoff = _time.time() - _INFLIGHT_GC_AGE_S
+    for name in os.listdir(gd):
+        p = os.path.join(gd, name)
+        if not name.startswith(_INFLIGHT_PREFIX) or p in _inflight_held:
+            continue
+        try:
+            if os.path.getmtime(p) > cutoff:
+                continue
+            fd = os.open(p, os.O_RDWR)
+        except OSError:
+            continue
+        try:
+            if _flock_nb(fd, exclusive=True):
+                os.unlink(p)
+        except OSError:
+            pass
+        os.close(fd)
+
+
+def _mark_inflight(repo_root, shas):
+    """Claim `shas` (full 40-hex) for the review this process is about to
+    run, until the process ends. Best-effort; never raises. A commit another
+    live review holds stays with that review."""
+    try:
+        import fcntl  # noqa: F401
+        gd = _git_dir(repo_root)
+        if not gd:
+            return
+        _sweep_inflight(gd)
+        for sha in shas:
+            p = os.path.join(gd, _INFLIGHT_PREFIX + sha)
+            if not _is_full_sha(sha) or p in _inflight_held:
+                continue
+            fd = os.open(p, os.O_RDWR | os.O_CREAT, 0o600)
+            try:
+                # The inode check: a holder unlinks its marker when it ends,
+                # and a lock on that unlinked file would claim nothing.
+                held = (_flock_nb(fd, exclusive=True)
+                        and os.fstat(fd).st_ino == os.stat(p).st_ino)
+            except OSError:
+                # Cannot lock here at all: leave no file that reads as held.
+                os.close(fd)
+                os.unlink(p)
+                return
+            if not held:
+                os.close(fd)
+                continue
+            if not _inflight_held:
+                import atexit
+                atexit.register(_release_inflight)
+            _inflight_held[p] = fd
+            os.utime(p)
+    except Exception:
+        pass
+
+
+def _load_inflight_shas(repo_root, shas, _gd=None):
+    """Which of `shas` another live review in this clone holds right now."""
+    out = set()
+    try:
+        import fcntl  # noqa: F401
+    except ImportError:
+        return out
+    gd = _gd or _git_dir(repo_root)
+    if not gd:
+        return out
+    for sha in shas:
+        p = os.path.join(gd, _INFLIGHT_PREFIX + sha)
+        if not _is_full_sha(sha) or p in _inflight_held:
+            continue
+        try:
+            fd = os.open(p, os.O_RDONLY)
+        except OSError:
+            continue
+        try:
+            # Shared, so two reviews asking at once do not look like a
+            # holder to each other.
+            if not _flock_nb(fd, exclusive=False):
+                out.add(sha)
+        except OSError:
+            pass
+        os.close(fd)
+    return out
+
+
+def _reviewed_after_inflight(repo_root, push_range, max_wait_s, poll_s=1.0):
+    """The reviewed-sha set for a push of `push_range` (oldest first), read
+    once no other review is still running on the commit the push review
+    would start from, or after `max_wait_s`. Returns (reviewed, waited_s)."""
+    import time as _time
+    gd = _git_dir(repo_root)
+    start = _time.monotonic()
+    waited = False
+    reviewed = _load_reviewed_shas(repo_root, _gd=gd)
+    while gd:
+        # Only the first unreviewed commit matters: if nobody is reviewing
+        # it, the push review covers everything from there on anyway.
+        first = next((s for s in push_range if s not in reviewed), None)
+        if first is None:
+            break
+        # In-flight before reviewed: a review that ends between the two
+        # reads then shows up as reviewed rather than as neither.
+        busy = _load_inflight_shas(repo_root, [first], _gd=gd)
+        reviewed = _load_reviewed_shas(repo_root, _gd=gd)
+        if first in reviewed:
+            continue
+        if not busy or _time.monotonic() - start >= max_wait_s:
+            break
+        waited = True
+        _time.sleep(poll_s)
+    return reviewed, (_time.monotonic() - start) if waited else 0.0
+
+
 # =====================================================================
 # v2 review-set computation (Stop hook)
 # =====================================================================
 
 UNTRACKED_BASELINE_CAP = 2000
+# Set in a snapshot that hit the cap, to the time the listing started. NUL
+# cannot occur in a path, so the key never collides with a file.
+UNTRACKED_CAPPED_AT_KEY = "\0capped_at_ns"
+# Coarse filesystem timestamps (1 s on ext3, 2 s on FAT) can stamp a file
+# created just after the snapshot as slightly older than it.
+_CAPPED_BASELINE_SLACK_NS = 2_000_000_000
 
 
 def _list_untracked(cwd):
@@ -377,6 +572,7 @@ def _list_untracked(cwd):
     the holdouts."""
     try:
         repo = _git_toplevel(cwd) or cwd
+        started_ns = time.time_ns()
         # core.quotePath=false comes from GIT_CMD globally (see gitutil.py).
         r = subprocess.run(
             [*GIT_CMD, "ls-files", "--others", "--exclude-standard", "-z"],
@@ -397,6 +593,10 @@ def _list_untracked(cwd):
                 out[p] = 0
             if len(out) >= UNTRACKED_BASELINE_CAP:
                 debug_log(f"_list_untracked: capped at {UNTRACKED_BASELINE_CAP}")
+                # The files past the cap are not recorded one by one. Record
+                # when the snapshot was taken so the Stop hook can still tell
+                # them from files created or edited during the turn.
+                out[UNTRACKED_CAPPED_AT_KEY] = started_ns
                 break
         return out
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError, ValueError) as e:
@@ -442,14 +642,24 @@ def compute_v2_review_set(cwd, baseline_sha, head_at_capture, untracked_at_basel
     if tracked_dirty is None:
         return [], "HEAD", repo, [], {"dirty_now_count": -1, "changed_since_count": -1, "review_set_count": 0}
 
+    capped_at_ns = untracked_at_baseline.get(UNTRACKED_CAPPED_AT_KEY)
+
     def _unchanged_since_baseline(p):
         base_mtime = untracked_at_baseline.get(p)
-        if base_mtime is None:
-            return False
         try:
-            return os.stat(os.path.join(repo, p)).st_mtime_ns == base_mtime
+            st = os.stat(os.path.join(repo, p))
         except OSError:
             return False
+        if base_mtime is not None:
+            return st.st_mtime_ns == base_mtime
+        if not capped_at_ns:
+            return False
+        # The snapshot stopped at the cap, so this file may simply be one it
+        # never reached. Without this, every pre-existing file past the cap
+        # looks new on every turn and the same files are reviewed again and
+        # again. A file created or edited during the turn has a later mtime
+        # or ctime than the snapshot; anything older was already there.
+        return max(st.st_mtime_ns, st.st_ctime_ns) < capped_at_ns - _CAPPED_BASELINE_SLACK_NS
 
     preexisting_unchanged = {p for p in untracked if _unchanged_since_baseline(p)}
     new_untracked = untracked - preexisting_unchanged

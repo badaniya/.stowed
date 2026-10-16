@@ -12,11 +12,13 @@ Two extensibility points, both additive only:
 
 Discovery, in precedence order (matching CLAUDE.md / settings.json):
   - ``~/.claude/<name>``                  (user)
+  - ``$CLAUDE_CONFIG_DIR/<name>``         (user, when set to another directory)
   - ``<cwd>/.claude/<name>``              (project, committed)
   - ``<cwd>/.claude/<name>.local.<ext>``  (project local, gitignored)
 
 Managed delivery via ``managed-settings.json`` is not yet supported.
-Org admins can still push files to ``~/.claude/`` via MDM/GPO.
+Org admins can still push files to ``~/.claude/`` (or the directory
+``CLAUDE_CONFIG_DIR`` names) via MDM/GPO.
 
 Trust model:
   - The ``.md`` is repo-controlled and goes into the USER prompt (not system),
@@ -89,11 +91,32 @@ def user_patterns() -> List[Dict[str, Any]]:
 # ── claude-security-guidance.md ───────────────────────────────────────────────────────
 
 
+def _user_config_dirs() -> List[str]:
+    """User-level config directories. ``~/.claude`` always, so a file placed
+    there keeps loading; then ``CLAUDE_CONFIG_DIR`` when it names another
+    directory. Empty is treated as not set, as in ``_base.state_dir``."""
+    dirs = [os.path.expanduser(os.path.join("~", ".claude"))]
+    configured = (os.environ.get("CLAUDE_CONFIG_DIR") or "").strip()
+    if configured:
+        configured = os.path.expanduser(configured)
+        if _same_dir(configured, dirs[0]):
+            return dirs
+        dirs.append(configured)
+    return dirs
+
+
+def _same_dir(a: str, b: str) -> bool:
+    try:
+        return os.path.samefile(a, b)
+    except OSError:
+        return os.path.normcase(os.path.abspath(a)) == os.path.normcase(os.path.abspath(b))
+
+
 def _config_paths(cwd: Optional[str], basename: str) -> List[Tuple[str, str]]:
     """Existing config file paths, lowest precedence first (so concat reads in
     precedence order user → project → project-local). Truncation is done on
     the concatenated string, so lowest-precedence content is dropped last."""
-    paths = [("User", os.path.expanduser(os.path.join("~", ".claude", basename)))]
+    paths = [("User", os.path.join(d, basename)) for d in _user_config_dirs()]
     if cwd:
         paths.append(("Project", os.path.join(cwd, ".claude", basename)))
         # claude-security-guidance.local.md / security-patterns.local.yaml

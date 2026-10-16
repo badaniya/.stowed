@@ -8,4 +8,6 @@ show_line_num = true
 show_status_bar = true
 show_done = false
 show_future = false
+share_token = d0a5d5a3c9b8a173c441189976a6b25df9ab685434ebdf855e89755e027ec3b4
+share_port = 40007
 notes_dir = ~/vaults/work/notes/

@@ -8,9 +8,3 @@ workspaces:
       - label: 1 - Agent
         panes:
           - command: claude
-
-      # ── 2 - Edit ─────────────────────────────────────────────────────
-      # Neovim, same project dir
-      - label: 2 - Edit
-        panes:
-          - command: nvim

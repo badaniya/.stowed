@@ -41,6 +41,13 @@ GIT_CMD = [
     # content same) rewrites the index under index.lock, GIT_OPTIONAL_LOCKS or
     # not. Off, every diff here only reads the index, so none needs a copy.
     "-c", "diff.autoRefreshIndex=false",
+    # The diff parsers read `diff --git a/<old> b/<new>` headers. A user's
+    # diff.mnemonicPrefix (c/ w/ i/), diff.noprefix or diff.srcPrefix /
+    # diff.dstPrefix changes that shape, and every file would be dropped.
+    "-c", "diff.mnemonicPrefix=false",
+    "-c", "diff.noprefix=false",
+    "-c", "diff.srcPrefix=a/",
+    "-c", "diff.dstPrefix=b/",
 ]
 
 SAFE_GIT_CONFIG = (
@@ -856,6 +863,77 @@ SKIP_FILE_SUFFIXES = (
     '.lock', '_pb2.py', '.pb.go',
 )
 
+# Files that hold secrets by naming convention are never sent for review. The
+# review covers everything dirty in the work tree, including files the user
+# changed and Claude never opened, so a key file or an encrypted dotfile source
+# would otherwise leave the machine in the review request. The list is kept to
+# names that are secret stores by convention; ordinary source such as
+# `private_api.py` or `id_generator.py` stays reviewable.
+_SSH_PRIVATE_KEY_BASENAMES = frozenset((
+    'id_rsa', 'id_dsa', 'id_ecdsa', 'id_ecdsa_sk', 'id_ed25519',
+    'id_ed25519_sk', 'id_xmss',
+))
+_PRIVATE_KEY_NAME_SUFFIXES = ('_rsa', '_dsa', '_ecdsa', '_ed25519')
+_CREDENTIAL_BASENAMES = frozenset((
+    'credentials', '.netrc', '.pgpass', '.npmrc', '.pypirc',
+    '.git-credentials', '.dockercfg',
+))
+# chezmoi encodes a target file's attributes as stacked name prefixes
+# (`private_dot_netrc`, `encrypted_private_token`); `dot_` stands for a
+# leading dot.
+_CHEZMOI_ATTR_PREFIXES = (
+    'after_', 'before_', 'create_', 'empty_', 'encrypted_', 'exact_',
+    'executable_', 'external_', 'literal_', 'modify_', 'once_', 'onchange_',
+    'private_', 'readonly_', 'remove_', 'run_', 'symlink_',
+)
+# An `encrypted_` source keeps its target's name, so `encrypted_store.py` could
+# be either ciphertext or code about encryption. Treat it as ciphertext only
+# when it has no extension or a data-file one.
+_ENCRYPTED_DATA_EXTENSIONS = frozenset((
+    '', '.json', '.yaml', '.yml', '.toml', '.properties', '.tfvars',
+))
+
+
+# Paths skipped as secret-shaped during this hook run. The Stop hook reports
+# the count (never the names) so the skip can be watched in telemetry.
+_secret_shaped_skipped = set()
+
+
+def _skip_secret_shaped(file_path):
+    if not _is_secret_shaped(file_path):
+        return False
+    _secret_shaped_skipped.add(file_path)
+    return True
+
+
+def _is_secret_shaped(file_path):
+    base = os.path.basename(file_path.replace("\\", "/")).lower()
+    target = base
+    encrypted = False
+    stripped = True
+    while stripped:
+        stripped = False
+        for prefix in _CHEZMOI_ATTR_PREFIXES:
+            if target.startswith(prefix) and len(target) > len(prefix):
+                target = target[len(prefix):]
+                encrypted = encrypted or prefix == 'encrypted_'
+                stripped = True
+                break
+    if target.startswith('dot_'):
+        target = '.' + target[4:]
+    ext = os.path.splitext(target)[1]
+    if encrypted and ext in _ENCRYPTED_DATA_EXTENSIONS:
+        return True
+    for name in {base, target}:
+        if name.startswith('.env'):
+            return True
+        if name in _SSH_PRIVATE_KEY_BASENAMES or name in _CREDENTIAL_BASENAMES:
+            return True
+        if '.' not in name and name.endswith(_PRIVATE_KEY_NAME_SUFFIXES):
+            return True
+    return False
+
+
 # Path tokens that bump a file's review priority when a commit exceeds
 # MAX_DIFF_FILES and we have to pick a subset. These are exactly the surfaces
 # single-shot and agentic reviews disagree on most (auth, routing, IPC,
@@ -932,6 +1010,8 @@ def _is_reviewable_source(file_path):
     # without false-positiving on `rebuild/` matching `build/`.
     norm = "/" + file_path.replace("\\", "/")
     if any(("/" + p) in norm for p in SKIP_PATH_PATTERNS):
+        return False
+    if _skip_secret_shaped(file_path):
         return False
     if file_path.endswith(SKIP_FILE_SUFFIXES):
         return False
@@ -1037,12 +1117,12 @@ _unparsed_diff_headers = set()
 
 
 def _iter_diff_sections(diff_output):
-    """Yield (new_path, lines after the header line) per file section."""
+    """Yield (new_path, old_path, lines after the header line) per file section."""
     for section in _DIFF_SECTION_RE.split(diff_output)[1:]:
         lines = section.split('\n')
         paths = _parse_diff_header(lines[0])
         if paths:
-            yield paths[1] or paths[0], lines[1:]
+            yield paths[1] or paths[0], paths[0], lines[1:]
         else:
             _unparsed_diff_headers.add(lines[0])
 
@@ -1056,8 +1136,8 @@ def extract_file_paths_from_diff(diff_output):
         return []
 
     return [
-        file_path for file_path, _ in _iter_diff_sections(diff_output)
-        if _is_reviewable_source(file_path)
+        file_path for file_path, old_path, _ in _iter_diff_sections(diff_output)
+        if _is_reviewable_source(file_path) and not _skip_secret_shaped(old_path)
     ]
 
 
@@ -1070,9 +1150,10 @@ def parse_diff_into_files(diff_output):
         return []
 
     files = []
-    for file_path, lines in _iter_diff_sections(diff_output):
-        # Filter to source code files only
-        if not _is_reviewable_source(file_path):
+    for file_path, old_path, lines in _iter_diff_sections(diff_output):
+        # Filter to source code files only. A rename away from a secret-shaped
+        # name still carries the secret's content, so the old name counts too.
+        if not _is_reviewable_source(file_path) or _skip_secret_shaped(old_path):
             continue
 
         # Extract the diff content (from first @@ onwards)

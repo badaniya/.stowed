@@ -596,8 +596,8 @@ def _call_claude_via_sdk(prompt, output_schema, *, max_tokens=16000, model=None)
     3P providers. Uses the same `output_format` JSON-schema contract so the
     return value shape is identical (parsed dict or None).
 
-    No tools (`allowed_tools=[]`) — the security review only needs structured
-    output, not Read/Grep/Glob. Single turn keeps cost predictable.
+    No tools (see _only_tools_args) — the security review only needs
+    structured output, not Read/Grep/Glob. Single turn keeps cost predictable.
     """
     global _last_call_claude_http_error
     _last_call_claude_http_error = None
@@ -645,6 +645,7 @@ def _call_claude_via_sdk(prompt, output_schema, *, max_tokens=16000, model=None)
             system_prompt=CLAUDE_CODE_SYSTEM_PROMPT,
             cli_path=cli_path,
             allowed_tools=[],
+            extra_args=_only_tools_args(),
             setting_sources=[],
             max_turns=2,
             model=chosen_model,
@@ -1404,6 +1405,23 @@ def _send_sdk_logs_to_debug_log() -> None:
             sdk_logger.propagate = False
 
 
+# The agentic reviewer reads a diff it must not trust, so it gets
+# file-reading tools and nothing else.
+_REVIEWER_TOOLS = ("Read", "Grep", "Glob")
+
+
+def _only_tools_args(tools: Tuple[str, ...] = ()) -> Dict[str, Optional[str]]:
+    """extra_args that make `tools` the inner CLI's whole tool set.
+
+    allowed_tools only pre-approves tools. Without these flags the inner CLI
+    still offers every Claude Code tool (shell, file edits, web, subagents)
+    and any configured MCP server, and whether a call to one runs is left to
+    the permission mode that CLI starts in. Passed as CLI flags because not
+    every Agent SDK build that can run a review has a `tools` option.
+    """
+    return {"tools": ",".join(tools), "strict-mcp-config": None}
+
+
 def _agentic_spawn_env() -> Dict[str, str]:
     """opts.env for the SDK-spawned inner `claude` CLI.
 
@@ -1426,11 +1444,11 @@ def _agentic_spawn_env() -> Dict[str, str]:
         "CLAUDE_CODE_WEBSOCKET_AUTH_FILE_DESCRIPTOR": "",
         "CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR": "",
         "CLAUDE_CODE_INCLUDE_PARTIAL_MESSAGES": "",
-        # Neutralize git config/env hijack vectors so an allowlisted
-        # `git diff/log/show` cannot be turned into RCE via diff.external,
-        # core.pager, core.sshCommand, or an inherited GIT_* var. The agentic
-        # session only needs read-only history inspection; it never needs an
-        # external diff driver, a pager, or a remote.
+        # Neutralize git config/env hijack vectors so a `git diff/log/show`
+        # cannot be turned into RCE via diff.external, core.pager,
+        # core.sshCommand, or an inherited GIT_* var. The inner CLI has no
+        # shell tool (see _only_tools_args); this stays as a second line of
+        # defence should it ever run git.
         "GIT_CONFIG_NOSYSTEM": "1",
         "GIT_CONFIG_GLOBAL": "/dev/null",
         "GIT_EXTERNAL_DIFF": "",
@@ -1452,13 +1470,46 @@ def _agentic_spawn_env() -> Dict[str, str]:
     return env
 
 
+# The tools the agentic reviewer is given to look around the repo.
+_REVIEWER_FILE_TOOLS = ("Read", "Grep", "Glob")
+
+
+def _agentic_context_dir(repo_dir: str) -> str:
+    """The directory the agentic reviewer runs in."""
+    return os.environ.get("SG_AGENTIC_CONTEXT_DIR") or repo_dir
+
+
 def agentic_review(
     repo_dir: str, diff_files: List[Tuple[str, str]], touched_paths: List[str],
+) -> Tuple[Optional[str], List[Dict[str, Any]], Dict[str, Any]]:
+    """Run the two-stage agentic review (_agentic_review) and add reviewer
+    context diagnostics to its metrics. Counts only, no paths:
+
+      rv_cwd_gone    1 = the directory the reviewer runs in was missing
+                     before the review, 2 = it went missing during it
+      rv_tool_err    Read/Grep/Glob calls that came back as errors
+      rv_tool_calls  Read/Grep/Glob calls made
+
+    The counts cover all stages of the review. Keys are left out when 0."""
+    context_dir = _agentic_context_dir(repo_dir)
+    gone = 0 if os.path.isdir(context_dir) else 1
+    ctx = {"rv_tool_err": 0, "rv_tool_calls": 0}
+    guidance, vulns, metrics = _agentic_review(repo_dir, diff_files, touched_paths, ctx)
+    if not gone and not os.path.isdir(context_dir):
+        gone = 2
+    ctx_m = {"rv_cwd_gone": gone, **ctx}
+    return guidance, vulns, {**metrics, **{k: v for k, v in ctx_m.items() if v}}
+
+
+def _agentic_review(
+    repo_dir: str, diff_files: List[Tuple[str, str]], touched_paths: List[str],
+    ctx: Dict[str, int],
 ) -> Tuple[Optional[str], List[Dict[str, Any]], Dict[str, Any]]:
     """Two-stage Agent-SDK review: investigate (Read/Grep/Glob over the repo)
     then a self-refute filter pass. Returns (guidance_or_None, vulns,
     metrics). On SDK unavailability returns (None, [], {"agentic_fallback":
-    reason}) so the caller can fall back to the single-shot path."""
+    reason}) so the caller can fall back to the single-shot path. Adds to
+    the `ctx` counters (see agentic_review) as the reviewer makes tool calls."""
     import time as _t
 
     # Note: do NOT pop ANTHROPIC_AUTH_TOKEN from os.environ here. The race
@@ -1510,7 +1561,7 @@ def agentic_review(
     # eval harness it's a temp dir with ONLY touched_paths — the agent can't
     # trace cross-file data flow. The harness sets SG_AGENTIC_CONTEXT_DIR to a
     # full repo (worktree at the commit, or the live clone at HEAD).
-    context_dir = os.environ.get("SG_AGENTIC_CONTEXT_DIR") or repo_dir
+    context_dir = _agentic_context_dir(repo_dir)
     context_note = ""
     if context_dir != repo_dir:
         context_note = (
@@ -1613,12 +1664,10 @@ def agentic_review(
             system_prompt=system,
             cwd=context_dir,
             cli_path=cli_path,
-            allowed_tools=["Read", "Grep", "Glob"],
-            # Read/Grep/Glob within cwd are auto-approved in default
-            # permission mode, so bypassPermissions is unnecessary (and
-            # would trip our own agent-permission-bypass guidance). Leaving
-            # permission_mode unset means an accidental future addition of
-            # a write/exec tool to allowed_tools is caught by the gate.
+            # Pre-approved, and the only tools the reviewer has: no
+            # permission mode can then let it write, run or fetch anything.
+            allowed_tools=list(_REVIEWER_TOOLS),
+            extra_args=_only_tools_args(_REVIEWER_TOOLS),
             setting_sources=[],
             max_turns=turns if turns is not None else max_turns,
             model=model,
@@ -1675,9 +1724,16 @@ def agentic_review(
             yield {"type": "user",
                    "message": {"role": "user", "content": prompt}}
 
+        # Blocks are matched by shape so older SDK builds need no extra import.
+        file_tool_ids = set()
         async for msg in query(prompt=_once(), options=opts):
             if isinstance(msg, AssistantMessage):
                 n += 1
+                for b in getattr(msg, "content", None) or []:
+                    if (getattr(b, "name", None) in _REVIEWER_FILE_TOOLS
+                            and getattr(b, "id", None)):
+                        file_tool_ids.add(b.id)
+                        ctx["rv_tool_calls"] += 1
             elif isinstance(msg, ResultMessage):
                 subtype = msg.subtype
                 if msg.structured_output is not None:
@@ -1687,6 +1743,15 @@ def agentic_review(
                 # the price-table estimate. getattr guards older SDK builds.
                 _record_usage(getattr(msg, "usage", None) or {}, model,
                               cost_usd=getattr(msg, "total_cost_usd", None))
+            else:
+                # Tool results come back as user messages.
+                content = getattr(msg, "content", None)
+                if isinstance(content, list):
+                    ctx["rv_tool_err"] += sum(
+                        1 for b in content
+                        if getattr(b, "is_error", None) is True
+                        and getattr(b, "tool_use_id", None) in file_tool_ids
+                    )
         return structured, n, subtype
 
     def _run(system: str, prompt: str, *, schema: Dict[str, Any]
