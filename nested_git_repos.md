@@ -129,12 +129,7 @@ npx skills find <query>              # Search for skills
 npx skills add <owner/repo@skill> -g -y  # Install a skill globally
 
 # Example: Install all obra/superpowers skills
-npx skills add obra/superpowers@brainstorming -g -y
-npx skills add obra/superpowers@systematic-debugging -g -y
-npx skills add obra/superpowers@test-driven-development -g -y
-npx skills add obra/superpowers@writing-plans -g -y
-npx skills add obra/superpowers@executing-plans -g -y
-npx skills add obra/superpowers@subagent-driven-development -g -y
+npx skills add obra/superpowers -g -y
 
 # Check for skill updates
 npx skills check

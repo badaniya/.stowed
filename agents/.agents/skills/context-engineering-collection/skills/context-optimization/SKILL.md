@@ -1,29 +1,36 @@
 ---
 name: context-optimization
-description: This skill should be used when the user asks to "optimize context", "reduce token costs", "improve context efficiency", "implement KV-cache optimization", "partition context", or mentions context limits, observation masking, context budgeting, or extending effective context capacity.
+description: "This skill should be used for improving context efficiency: context budgeting, observation masking, prefix or KV-cache strategy, partitioning, token-cost reduction, retrieval scoping, and extending effective context capacity without lowering answer quality."
 ---
 
 # Context Optimization Techniques
 
-Context optimization extends the effective capacity of limited context windows through strategic compression, masking, caching, and partitioning. Effective optimization can double or triple effective context capacity without requiring larger models or longer windows — but only when applied with discipline. The techniques below are ordered by impact and risk.
+Context optimization extends the effective capacity of limited context windows through strategic compression, masking, caching, and partitioning. Effective optimization increases useful capacity without requiring larger models or longer windows — but only when applied with measurement discipline. The techniques below are ordered by impact and risk.
 
 ## When to Activate
 
 Activate this skill when:
-- Context limits constrain task complexity
-- Optimizing for cost reduction (fewer tokens = lower costs)
-- Reducing latency for long conversations
-- Implementing long-running agent systems
-- Needing to handle larger documents or conversations
-- Building production systems at scale
+- Context budgets or token costs constrain task complexity
+- Observation masking can replace verbose tool outputs with retrievable references
+- Prefix or KV-cache hit rate needs improvement
+- Retrieval scoping can reduce irrelevant loaded context
+- Context partitioning can extend effective capacity across agents
+- Budget triggers are needed for masking, compaction, or partitioning
+
+Do not activate this skill for adjacent work owned by other skills:
+- Explaining why attention or context windows behave this way: `context-fundamentals`.
+- Diagnosing active lost-in-middle, poisoning, distraction, confusion, or clash: `context-degradation`.
+- Designing a structured handoff summary for a long conversation: `context-compression`.
+- Storing large outputs, plans, or logs as files: `filesystem-context`.
+- Model-initiated rewrites of its own context and their re-prefill cost: `self-managed-context`.
 
 ## Core Concepts
 
 Apply four primary strategies in this priority order:
 
-1. **KV-cache optimization** — Reorder and stabilize prompt structure so the inference engine reuses cached Key/Value tensors. This is the cheapest optimization: zero quality risk, immediate cost and latency savings. Apply it first and unconditionally.
+1. **KV-cache optimization** — Reorder and stabilize prompt structure so the inference engine reuses cached Key/Value tensors. This is the cheapest optimization when the runtime supports prefix caching: low quality risk, immediate cost and latency savings. Apply it first when stable prefixes exist.
 
-2. **Observation masking** — Replace verbose tool outputs with compact references once their purpose has been served. Tool outputs consume 80%+ of tokens in typical agent trajectories, so masking them yields the largest capacity gains. The original content remains retrievable if needed downstream.
+2. **Observation masking** — Replace verbose tool outputs with compact references once their purpose has been served. Tool outputs can dominate agent trajectories (claim-context-optimization-tool-output-dominance), so masking often yields the largest capacity gains. The original content remains retrievable if needed downstream.
 
 3. **Compaction** — Summarize accumulated context when utilization exceeds 70%, then reinitialize with the summary. This distills the window's contents while preserving task-critical state. Compaction is lossy — apply it after masking has already removed the low-value bulk.
 
@@ -66,7 +73,7 @@ Apply this ordering in every prompt:
 4. Conversation history (grows but shares prefix with prior turns)
 5. Current query and dynamic content (least stable — always last)
 
-Design prompts for cache stability: remove timestamps, session counters, and request IDs from the system prompt. Move dynamic metadata into a separate user message or tool result where it does not break the prefix. Even a single whitespace change in the prefix invalidates the entire cached block downstream of that change.
+Design prompts for cache stability: remove timestamps, session counters, and request IDs from the system prompt. Move dynamic metadata into a separate user message or tool result where it does not break the prefix. Even a single whitespace change in the prefix invalidates the entire cached block downstream of that change. The same rule prices any compaction or masking edit applied to earlier history: its cost is the text that follows it, so batch such edits and prefer them near the end of the context.
 
 Target 70%+ cache hit rate for stable workloads. At scale, this translates to 50%+ cost reduction and 40%+ latency reduction on cached tokens.
 
@@ -135,6 +142,19 @@ context += [reused_templates]  # Reusable
 context += [unique_content]  # Unique
 ```
 
+**Example 4: Budget-triggered optimization policy**
+```yaml
+budgets:
+  tool_outputs: 35%
+  message_history: 30%
+  retrieved_documents: 20%
+  reserved_buffer: 15%
+triggers:
+  tool_outputs_over_budget: mask resolved observations
+  total_context_over_70_percent: compact message history
+  repeated_irrelevant_retrievals: tighten retrieval scope
+```
+
 ## Guidelines
 
 1. Measure before optimizing—know your current state
@@ -164,12 +184,17 @@ context += [unique_content]  # Unique
 
 ## Integration
 
-This skill builds on context-fundamentals and context-degradation. It connects to:
+This skill owns token-efficiency tactics and budget policy. Adjacent skills own diagnosis, storage, and architecture:
 
-- multi-agent-patterns - Partitioning as isolation
-- latent-briefing - Selective KV retention across orchestrator–worker boundaries (compatible models)
-- evaluation - Measuring optimization effectiveness
-- memory-systems - Offloading context to memory
+- `context-fundamentals`: mental models for why context quality and attention placement matter.
+- `context-degradation`: diagnosis when output quality has already dropped.
+- `context-compression`: lossy summarization and handoff strategy.
+- `filesystem-context`: file-backed offloading for full outputs and logs.
+- `multi-agent-patterns`: partitioning work across isolated agent contexts.
+- `latent-briefing`: selective KV retention across orchestrator-worker boundaries in compatible runtimes.
+- `self-managed-context`: the model, not the harness, decides when and what to edit in its live context.
+- `evaluation`: measuring whether the optimization improved quality, cost, or latency.
+- `memory-systems`: persistent retrieval layers that feed context just in time.
 
 ## References
 
@@ -191,6 +216,6 @@ External resources:
 ## Skill Metadata
 
 **Created**: 2025-12-20
-**Last Updated**: 2026-03-17
+**Last Updated**: 2026-05-15
 **Author**: Agent Skills for Context Engineering Contributors
-**Version**: 2.0.0
+**Version**: 2.1.0

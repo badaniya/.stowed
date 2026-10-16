@@ -455,6 +455,18 @@ npx skills add scaccogatto/okf-skills -g
 npx skills add tt-a1i/archify -g
 ```
 
+### 7) Diagram-Design - All-Around Diagram Generator (Architecture, Sequence, ERD ...)
+
+```bash
+npx skills add cathrynlavery/diagram-design -g
+```
+
+### 8) Langfuse - Agent Observabilty
+
+```bash
+npx skills add langfuse/skills --skill "langfuse" -g
+```
+
 ## Linux Development Environment Setup
 
 ### 1) Golang
