@@ -132,6 +132,15 @@ case "$*" in
 'info --format json') printf '%s\n' '{"environment":{"kernel_features":{"idmapped_mounts":true}}}' ;;
 'info') [[ ${LABCTL_INCUS_ACCESS_DENIED:-false} != true ]] ;;
 'network show agentbr0') exit 1 ;;
+'profile show default --format json')
+	if [[ ${LABCTL_DEFAULT_PROFILE_INVENTORY_FAILURE:-false} == true ]]; then
+		exit 42
+	elif [[ -n ${LABCTL_UNSAFE_DEFAULT_PROFILE_JSON:-} ]]; then
+		printf '%s\n' "$LABCTL_UNSAFE_DEFAULT_PROFILE_JSON"
+	else
+		printf '%s\n' '{}'
+	fi
+	;;
 'profile show agent-dev-env --format json')
 	if [[ -n ${LABCTL_UNSAFE_PROFILE_JSON:-} ]]; then
 		printf '%s\n' "$LABCTL_UNSAFE_PROFILE_JSON"
@@ -240,8 +249,17 @@ unset LABCTL_EXTERNAL_NAME_CONFLICT
 PATH="${FAKE_BIN}:$PATH" LABCTL_MULTIPASS_NAME_CONFLICT=true assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
 PATH="${FAKE_BIN}:$PATH" LABCTL_LXC_INVENTORY_FAILURE=true assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
 PATH="${FAKE_BIN}:$PATH" LABCTL_MULTIPASS_INVENTORY_FAILURE=true assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
+PATH="${FAKE_BIN}:$PATH" LABCTL_DEFAULT_PROFILE_INVENTORY_FAILURE=true assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
 
 # These fixtures model every profile shape that would expose host networking or devices.
+# The default profile is applied at launch, so it follows the managed-profile policy.
+for unsafe_default_profile_json in \
+	'{"config":{"raw.lxc":"lxc.net.0.type = phys\\nlxc.net.0.link = enp1s0"}}' \
+	'{"devices":{"host-data":{"type":"disk","source":"/srv","path":"/mnt/host"}}}' \
+	'{"devices":{"vf":{"type":"nic","nictype":"sriov","parent":"enp1s0"}}}'; do
+	PATH="${FAKE_BIN}:$PATH" LABCTL_UNSAFE_DEFAULT_PROFILE_JSON="$unsafe_default_profile_json" assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
+done
+
 for unsafe_profile_json in \
 	'{"config":{"security.privileged":"true"}}' \
 	'{"devices":{"eth0":{"type":"nic","network":"host"}}}' \

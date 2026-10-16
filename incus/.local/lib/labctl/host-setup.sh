@@ -90,7 +90,7 @@ labctl_incus_reject_network_conflicts() {
 }
 
 labctl_incus_preflight() {
-	local info profile_json available forwarding route
+	local info profile_json available forwarding route profile
 	labctl_incus_require_commands || return 1
 	incus info >/dev/null 2>&1 || {
 		labctl_die 'current user cannot access the Incus daemon'
@@ -121,12 +121,17 @@ labctl_incus_preflight() {
 	}
 	labctl_incus_reject_network_conflicts || return 1
 	labctl_incus_reject_external_name_conflicts || return 1
-	if profile_json=$(incus profile show "$LABCTL_INCUS_PROFILE" --format json 2>/dev/null); then
-		if labctl_incus_profile_is_unsafe "$profile_json"; then
-			labctl_die "active Incus profile has privileged, host-network, proxy, Docker socket, or host-device passthrough behavior: $LABCTL_INCUS_PROFILE"
+	for profile in default "$LABCTL_INCUS_PROFILE"; do
+		if profile_json=$(incus profile show "$profile" --format json 2>/dev/null); then
+			if labctl_incus_profile_is_unsafe "$profile_json"; then
+				labctl_die "active Incus profile has privileged, host-network, proxy, Docker socket, or host-device passthrough behavior: $profile"
+				return 1
+			fi
+		elif [[ $profile == default ]]; then
+			labctl_die 'unable to inspect the default Incus profile; refusing to launch with an unvalidated profile'
 			return 1
 		fi
-	fi
+	done
 	printf '%s\n' 'labctl: operator prerequisite pending: install external-device static route for the agent subnet'
 	printf '%s\n' 'labctl: operator prerequisite pending: permit only documented device TCP ports in the host firewall'
 }
