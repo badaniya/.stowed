@@ -134,21 +134,72 @@ labctl_incus_wait_ready() {
 	labctl_run incus exec "$instance" -- docker info
 }
 
+labctl_incus_instance_is_unsafe() {
+	local instance_json=$1
+	jq -e '
+		(.config["security.privileged"] == true) or
+		(.config["security.privileged"] == "true") or
+		(.config["raw.lxc"]? | type == "string" and test("lxc\\.net|lxc\\.mount")) or
+		([
+			.devices? | objects | to_entries[]? |
+			select(
+				.value.type == "proxy" or
+				(.value.type == "nic" and (
+					.value.network == "host" or
+					(.value | has("parent")) or
+					.value.nictype == "physical" or
+					.value.nictype == "macvlan" or
+					.value.nictype == "sriov" or
+					.value.nictype == "bridged"
+				)) or
+				((.value.source? // "") | endswith("/docker.sock")) or
+				((.value.path? // "") | endswith("/docker.sock"))
+			)
+		] | length > 0)
+	' >/dev/null <<<"$instance_json"
+}
+
+labctl_incus_workspace_is_mounted() {
+	local instance=$1 ticket_root=$2 instance_json
+	instance_json=$(incus config show "$instance" --expanded --format json) || {
+		labctl_die "unable to inspect sandbox configuration: $instance"
+		return 1
+	}
+	jq -e --arg master "$LABCTL_MASTER_ROOT" --arg ticket "$ticket_root" '
+		[.devices? | objects | .[]?] as $devices |
+		any($devices[]?; .type == "disk" and .source == $master and .path == $master) and
+		any($devices[]?; .type == "disk" and .source == $ticket and .path == $ticket)
+	' >/dev/null <<<"$instance_json"
+}
+
+labctl_incus_verify_isolation() {
+	local instance=$1 instance_json
+	labctl_incus_validate_launch_profiles || return 1
+	instance_json=$(incus config show "$instance" --expanded --format json) || {
+		labctl_die "unable to inspect sandbox configuration: $instance"
+		return 1
+	}
+	if labctl_incus_instance_is_unsafe "$instance_json"; then
+		labctl_die "sandbox configuration violates isolation policy: $instance"
+		return 1
+	fi
+}
+
 labctl_incus_stack_command() {
 	local instance=$1 ticket_root=$2 command=$3 quoted_root
 	printf -v quoted_root '%q' "$ticket_root"
-	labctl_run incus exec "$instance" -- su - "$LABCTL_INSTANCE_USER" -s /bin/sh -c "cd -- $quoted_root && $command"
+	labctl_run incus exec "$instance" -- bash -lc "cd -- $quoted_root && $command"
 }
 
 labctl_incus_start() {
 	local instance=$1 ticket_root=$2
 	labctl_run incus start "$instance"
 	labctl_incus_wait_ready "$instance"
-	labctl_incus_stack_command "$instance" "$ticket_root" "$LABCTL_STACK_UP_COMMAND"
+	labctl_stack_up "$instance"
 }
 
 labctl_incus_stop() {
 	local instance=$1 ticket_root=$2
-	labctl_incus_stack_command "$instance" "$ticket_root" "$LABCTL_STACK_DOWN_COMMAND"
+	labctl_stack_down "$instance"
 	labctl_run incus stop "$instance"
 }

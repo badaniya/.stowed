@@ -18,6 +18,8 @@ source "$lib_dir/state.sh"
 # shellcheck source=/dev/null
 source "$lib_dir/incus.sh"
 # shellcheck source=/dev/null
+source "$lib_dir/network.sh"
+# shellcheck source=/dev/null
 source "$lib_dir/workspace.sh"
 # shellcheck source=/dev/null
 source "$lib_dir/host-setup.sh"
@@ -34,6 +36,7 @@ Commands:
   start TICKET [--dry-run]
   stop TICKET [--dry-run]
   status TICKET
+  verify TICKET [--dry-run]
   destroy TICKET --yes [--dry-run]
   cleanup-worktree TICKET --yes [--dry-run]
 USAGE
@@ -226,7 +229,7 @@ setup-host)
 	export LABCTL_ASSUME_YES=true
 	labctl_incus_setup_host
 	;;
-create | start | stop | status | destroy | cleanup-worktree)
+create | start | stop | status | verify | destroy | cleanup-worktree)
 	labctl_config_load "$config_path"
 	labctl_lifecycle_options "$@"
 	case $command in
@@ -234,6 +237,7 @@ create | start | stop | status | destroy | cleanup-worktree)
 	start) labctl_start "$LABCTL_LIFECYCLE_TICKET" ;;
 	stop) labctl_stop "$LABCTL_LIFECYCLE_TICKET" ;;
 	status) labctl_status "$LABCTL_LIFECYCLE_TICKET" ;;
+	verify) labctl_verify "$LABCTL_LIFECYCLE_TICKET" ;;
 	destroy) labctl_destroy "$LABCTL_LIFECYCLE_TICKET" ;;
 	cleanup-worktree) labctl_cleanup_worktree "$LABCTL_LIFECYCLE_TICKET" ;;
 	esac

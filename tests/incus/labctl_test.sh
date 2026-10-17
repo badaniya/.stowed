@@ -21,6 +21,8 @@ source "${LABCTL_LIB}/state.sh"
 # shellcheck source=/dev/null
 source "${LABCTL_LIB}/incus.sh"
 # shellcheck source=/dev/null
+source "${LABCTL_LIB}/network.sh"
+# shellcheck source=/dev/null
 source "${LABCTL_LIB}/host-setup.sh"
 
 export HOME="${TEST_ROOT}/home"
@@ -131,8 +133,22 @@ cat >"${FAKE_BIN}/incus" <<'INCUS'
 #!/usr/bin/env bash
 printf 'incus %s\n' "$*" >>"$COMMAND_LOG"
 case "$*" in
+'info '*' --format json') printf '%s\n' "{\"status\":\"${LABCTL_FAKE_INSTANCE_STATUS:-Running}\"}" ;;
 'info jira-#') [[ ${LABCTL_FAKE_INSTANCE_EXISTS:-false} == true ]] ;;
-'config get jira-# eth0 ipv4.address') printf '%s\n' "${LABCTL_FAKE_INSTANCE_IP:-}" ;;
+'config get '*' eth0 ipv4.address')
+	case ${3:-} in
+	jira-#) printf '%s\n' "${LABCTL_FAKE_INSTANCE_IP:-10.42.0.10}" ;;
+	jira-two) printf '%s\n' "${LABCTL_FAKE_SECOND_INSTANCE_IP:-10.42.0.11}" ;;
+	*) printf '%s\n' "${LABCTL_FAKE_INSTANCE_IP:-10.42.0.10}" ;;
+	esac
+	;;
+'config show '*' --expanded --format json' | 'config show '*' --format json')
+	if [[ -n ${LABCTL_FAKE_INSTANCE_CONFIG_JSON+x} ]]; then
+		printf '%s\n' "$LABCTL_FAKE_INSTANCE_CONFIG_JSON"
+	else
+		printf '%s\n' '{"config":{"security.privileged":"false"},"devices":{}}'
+	fi
+	;;
 'info --format json') printf '%s\n' '{"environment":{"kernel_features":{"idmapped_mounts":true}}}' ;;
 'info') [[ ${LABCTL_INCUS_ACCESS_DENIED:-false} != true ]] ;;
 'network show agentbr0') exit 1 ;;
@@ -206,7 +222,12 @@ cat >"${FAKE_BIN}/docker" <<'DOCKER'
 printf 'docker %s\n' "$*" >>"$COMMAND_LOG"
 exit 0
 DOCKER
-for fake_command in incus ip sysctl df lxc multipass docker; do chmod +x "${FAKE_BIN}/${fake_command}"; done
+cat >"${FAKE_BIN}/nc" <<'NC'
+#!/usr/bin/env bash
+printf 'nc %s\n' "$*" >>"$COMMAND_LOG"
+[[ ${LABCTL_FAKE_CLOSED_PORT:-} != "${5:-}" ]]
+NC
+for fake_command in incus ip sysctl df lxc multipass docker nc; do chmod +x "${FAKE_BIN}/${fake_command}"; done
 
 assert_command_log_contains() {
 	local expected=$1
@@ -336,5 +357,60 @@ PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=true LABCTL_FAKE_INSTANCE_I
 printf 'gitdir: /outside/master/two\n' >"${TEST_ROOT}/workspace/jira-#/two/.git"
 assert_fails labctl_workspace_validate 'JIRA-#'
 printf 'gitdir: %s\n' "${TEST_ROOT}/workspace/master/two/worktrees/jira-#" >"${TEST_ROOT}/workspace/jira-#/two/.git"
+
+# Task 4 network fixtures: stack hooks run only in a running sandbox with both
+# expected workspace mounts, and ports are probed at each sandbox IP.
+export LABCTL_FAKE_INSTANCE_EXISTS=true
+export LABCTL_FAKE_PROFILE_EXISTS=true
+export LABCTL_FAKE_INSTANCE_IP=10.42.0.10
+export LABCTL_FAKE_SECOND_INSTANCE_IP=10.42.0.11
+export LABCTL_FAKE_INSTANCE_CONFIG_JSON=$(jq -cn --arg master "${TEST_ROOT}/workspace/master" --arg ticket "${TEST_ROOT}/workspace/jira-#" '{config:{"security.privileged":"false"},devices:{"git-master":{type:"disk",source:$master,path:$master},"ticket-workspace":{type:"disk",source:$ticket,path:$ticket}}}')
+
+: >"$COMMAND_LOG"
+if ! PATH="${FAKE_BIN}:$PATH" "$LABCTL_BIN" --config "$CONFIG_PATH" --dry-run verify 'JIRA-#' >>"$COMMAND_LOG" 2>&1; then
+	fail 'dry-run verify failed'
+fi
+assert_command_log_contains 'nc -z -w 3 10.42.0.10 10001'
+assert_command_log_contains 'nc -z -w 3 10.42.0.10 10002'
+assert_command_log_contains 'exec jira-# -- bash -lc'
+assert_command_log_not_contains 'config device add jira-# proxy'
+
+: >"$COMMAND_LOG"
+PATH="${FAKE_BIN}:$PATH" assert_succeeds labctl_stack_up 'JIRA-#'
+PATH="${FAKE_BIN}:$PATH" assert_succeeds labctl_stack_down 'JIRA-#'
+assert_command_log_contains 'exec jira-# -- bash -lc cd --'
+assert_command_log_contains 'compose up -d'
+assert_command_log_contains 'compose down'
+
+labctl_verify_ports_when_closed() {
+	LABCTL_FAKE_CLOSED_PORT=$1 labctl_verify_ports 'JIRA-#'
+}
+PATH="${FAKE_BIN}:$PATH" assert_fails labctl_verify_ports_when_closed 10001
+labctl_fake_instance_config() {
+	jq -cn --arg master "${TEST_ROOT}/workspace/master" --arg ticket "${TEST_ROOT}/workspace/jira-#" --argjson policy "$1" '
+		$policy | .devices = ((.devices // {}) + {
+			"git-master": {type: "disk", source: $master, path: $master},
+			"ticket-workspace": {type: "disk", source: $ticket, path: $ticket}
+		})
+	'
+}
+
+export LABCTL_FAKE_INSTANCE_CONFIG_JSON
+LABCTL_FAKE_INSTANCE_CONFIG_JSON=$(labctl_fake_instance_config '{"config":{"security.privileged":"true"}}')
+PATH="${FAKE_BIN}:$PATH" assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" verify 'JIRA-#'
+LABCTL_FAKE_INSTANCE_CONFIG_JSON=$(labctl_fake_instance_config '{"config":{},"devices":{"hostnic":{"type":"nic","network":"host"}}}')
+PATH="${FAKE_BIN}:$PATH" assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" verify 'JIRA-#'
+LABCTL_FAKE_INSTANCE_CONFIG_JSON=$(labctl_fake_instance_config '{"config":{},"devices":{"docker":{"type":"disk","source":"/var/run/docker.sock","path":"/var/run/docker.sock"}}}')
+PATH="${FAKE_BIN}:$PATH" assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" verify 'JIRA-#'
+LABCTL_FAKE_INSTANCE_CONFIG_JSON=$(labctl_fake_instance_config '{"config":{},"devices":{"proxy":{"type":"proxy","listen":"tcp:0.0.0.0:10001"}}}')
+PATH="${FAKE_BIN}:$PATH" assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" verify 'JIRA-#'
+LABCTL_FAKE_INSTANCE_CONFIG_JSON=$(labctl_fake_instance_config '{"config":{"security.privileged":"false"}}')
+
+: >"$COMMAND_LOG"
+PATH="${FAKE_BIN}:$PATH" assert_succeeds labctl_verify_ports 'JIRA-#'
+PATH="${FAKE_BIN}:$PATH" assert_succeeds labctl_verify_ports 'jira-two'
+assert_command_log_contains 'nc -z -w 3 10.42.0.10 10001'
+assert_command_log_contains 'nc -z -w 3 10.42.0.11 10001'
+assert_command_log_not_contains ' proxy '
 
 finish_tests
