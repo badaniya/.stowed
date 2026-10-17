@@ -164,13 +164,16 @@ labctl_incus_launch() {
 
 labctl_incus_redact_systemd_credentials() {
 	jq '
-		if (.config? | type) == "object" then
-			.config |= with_entries(
-				if (.key | startswith("systemd.credential.")) then .value = "[REDACTED]" else . end
-			)
-		else
-			.
-		end
+		def redact_credentials:
+			if type == "object" then
+				with_entries(
+					if (.key | startswith("systemd.credential.")) then .value = "[REDACTED]" else . end
+				)
+			else
+				.
+			end;
+		.config |= redact_credentials |
+		.expanded_config |= redact_credentials
 	'
 }
 

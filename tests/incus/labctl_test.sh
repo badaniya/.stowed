@@ -581,7 +581,7 @@ export LABCTL_FAKE_INSTANCE_CONFIG_JSON
 # values. The key remains visible to consumers that need to establish its
 # presence, while every systemd.credential.* value is redacted.
 INSTANCE_CREDENTIAL_SECRET=$(printf '%s%s' 'instance-credential-secret-' 'not-for-logs')
-LABCTL_FAKE_INSTANCE_CONFIG_JSON=$(jq -cn --arg master "${TEST_ROOT}/workspace/master" --arg ticket "${TEST_ROOT}/workspace/jira-#" --arg secret "$INSTANCE_CREDENTIAL_SECRET" '{config:{"security.privileged":"false","systemd.credential.git-module-token":$secret,"systemd.credential.other-token":("other-" + $secret)},devices:{"git-master":{type:"disk",source:$master,path:$master},"ticket-workspace":{type:"disk",source:$ticket,path:$ticket}}}')
+LABCTL_FAKE_INSTANCE_CONFIG_JSON=$(jq -cn --arg master "${TEST_ROOT}/workspace/master" --arg ticket "${TEST_ROOT}/workspace/jira-#" --arg secret "$INSTANCE_CREDENTIAL_SECRET" '{config:{"security.privileged":"false","systemd.credential.git-module-token":$secret,"systemd.credential.other-token":("other-" + $secret)},expanded_config:{"systemd.credential.git-module-token":$secret,"systemd.credential.other-token":("other-" + $secret)},devices:{"git-master":{type:"disk",source:$master,path:$master},"ticket-workspace":{type:"disk",source:$ticket,path:$ticket}}}')
 export LABCTL_FAKE_INSTANCE_CONFIG_JSON
 STATUS_OUTPUT="${TEST_ROOT}/status-output"
 : >"$COMMAND_LOG"
@@ -590,6 +590,8 @@ if ! PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=true "$LABCTL_BIN" --c
 fi
 assert_succeeds rg -F --quiet '"systemd.credential.git-module-token": "[REDACTED]"' "$STATUS_OUTPUT"
 assert_succeeds rg -F --quiet '"systemd.credential.other-token": "[REDACTED]"' "$STATUS_OUTPUT"
+assert_equals '2' "$(rg -F -c '"systemd.credential.git-module-token": "[REDACTED]"' "$STATUS_OUTPUT")"
+assert_equals '2' "$(rg -F -c '"systemd.credential.other-token": "[REDACTED]"' "$STATUS_OUTPUT")"
 assert_fails rg -F --quiet "$INSTANCE_CREDENTIAL_SECRET" "$STATUS_OUTPUT"
 assert_command_log_contains 'query /1.0/instances/jira-%23'
 assert_command_log_not_contains "$INSTANCE_CREDENTIAL_SECRET"
