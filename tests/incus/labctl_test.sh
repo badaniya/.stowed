@@ -189,8 +189,13 @@ config\ device\ set\ *\ eth0\ ipv4.address=*)
 	*) printf '%s\n' "${LABCTL_FAKE_INSTANCE_IP:-10.42.0.10}" ;;
 	esac
 	;;
+# Incus treats --data literally; @file is not expanded as a payload reference.
 query\ /1.0/instances/*\ --request\ PATCH\ --data\ @*)
-	patch_file=${6#@}
+	printf '%s\n' 'Error: literal @file payloads are unsupported; use --data-file' >&2
+	exit 2
+	;;
+query\ /1.0/instances/*\ --request\ PATCH\ --data-file\ *)
+	patch_file=${6:?}
 	jq -e --arg credential "systemd.credential.${LABCTL_FAKE_CREDENTIAL_NAME:-git-module-token}" '
 		(keys == ["config"]) and (.config | keys == [$credential])
 	' "$patch_file" >/dev/null
@@ -679,13 +684,15 @@ exit 17
 PROBE
 chmod +x "${FAKE_BIN}/git" "${FAKE_BIN}/systemd-creds" "${FAKE_BIN}/askpass-probe"
 
-# Capture API payloads without writing their content to the command log.  The
-# production command must pass only a @temporary-file reference to Incus.
+# Capture API payloads without writing their content to the command log. Incus
+# must receive the JSON from a temporary file through --data-file, not a
+# literal @temporary-file value passed through --data.
 : >"$COMMAND_LOG"
 PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_GIT_PASSWORD="$CREDENTIAL_SECRET" LABCTL_FAKE_PATCH_VALIDATION="$PATCH_VALIDATION" assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" credential sync 'JIRA-#'
 assert_equals 'valid' "$(cat "$PATCH_VALIDATION")"
 assert_command_log_contains 'git credential fill'
-assert_command_log_contains 'incus query /1.0/instances/jira-%23 --request PATCH --data @'
+assert_command_log_contains 'incus query /1.0/instances/jira-%23 --request PATCH --data-file '
+assert_command_log_not_contains ' --data @'
 assert_command_log_not_contains "$CREDENTIAL_SECRET"
 assert_command_log_not_contains 'username=credential-user'
 assert_command_log_not_contains 'password='
@@ -704,7 +711,8 @@ assert_command_log_not_contains 'git credential fill'
 rm -f "$PATCH_VALIDATION"
 PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_PATCH_VALIDATION="$PATCH_VALIDATION" assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" credential unset 'JIRA-#'
 assert_equals 'valid' "$(cat "$PATCH_VALIDATION")"
-assert_command_log_contains 'incus query /1.0/instances/jira-%23 --request PATCH --data @'
+assert_command_log_contains 'incus query /1.0/instances/jira-%23 --request PATCH --data-file '
+assert_command_log_not_contains ' --data @'
 assert_command_log_not_contains "$CREDENTIAL_SECRET"
 
 # The guest wrapper creates a root-only temporary askpass helper, obtains its

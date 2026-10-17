@@ -312,7 +312,7 @@ labctl_incus_patch_config_file() {
 		labctl_die 'Incus configuration patch payload is unreadable'
 		return 1
 	}
-	labctl_run incus query "$api_path" --request PATCH --data "@$payload" >/dev/null
+	labctl_run incus query "$api_path" --request PATCH --data-file "$payload" >/dev/null
 }
 
 labctl_incus_set_systemd_credential() (
