@@ -86,6 +86,8 @@ labctl_config_load "$CONFIG_PATH"
 CLOUD_INIT_PATH="${TEST_ROOT}/cloud-init.yaml"
 LABCTL_INSTANCE_USER='sandbox-user' labctl_incus_render_cloud_init "$CLOUD_INIT_PATH"
 assert_succeeds rg -F --quiet 'install -d -o sandbox-user -g sandbox-user /home/sandbox-user' "$CLOUD_INIT_PATH"
+# Stack hooks may invoke GNU Make, so every rendered guest bootstrap must install it.
+assert_succeeds rg -x --fixed-strings --quiet '  - make' "$CLOUD_INIT_PATH"
 labctl_config_load "$CONFIG_PATH"
 
 assert_succeeds labctl_incus_cidr_overlaps '10.42.0.0/16' '10.42.1.0/24'
