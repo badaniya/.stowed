@@ -58,6 +58,15 @@ assert_contains 'branch -D badaniya/PlatformCommonModels/NVO-20131' "$LOG"
 [[ ! -d $TEST_ROOT/home/workspace/badaniya/NVO-20131/PlatformCommonModels ]] || fail 'unregistered orphan worktree was not removed'
 [[ ! -e $TEST_ROOT/home/workspace/badaniya/NVO-20131 ]] || fail 'aggregate context residue was not removed'
 
+# A previous partial forced cleanup can leave an orphaned branch after the
+# ticket root itself was removed; retrying the action must clean that branch.
+: >"$LOG"
+HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$PATH" TEST_LOG="$LOG" "$SCRIPT" 'NVO-20131 --force'
+assert_contains 'branch -D badaniya/PlatformCommonModels/NVO-20131' "$LOG"
+if rg -F --quiet 'remove-worktree' "$LOG"; then
+	fail 'missing ticket root attempted guarded worktree removal'
+fi
+
 : >"$LOG"
 if HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$PATH" TEST_LOG="$LOG" "$SCRIPT" 'NVO-20131; rm -rf / --force'; then
 	fail 'malformed ticket was accepted'

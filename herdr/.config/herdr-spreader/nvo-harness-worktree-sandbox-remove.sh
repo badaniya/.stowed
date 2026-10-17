@@ -46,16 +46,17 @@ printf -v destroy_command '%q %q %q %q' "$labctl" destroy "$ticket" --yes
 printf '→ Destroying Incus sandbox %s…\n' "$ticket"
 sg incus-admin -c "$destroy_command"
 
-if [[ $force == true && -d $project_root ]]; then
-	# Docker build artifacts can be root-owned inside the idmapped workspace.
-	# Ownership repair is restricted to the explicitly force-removed ticket root.
-	printf '→ Repairing ownership of generated artifacts in %s…\n' "$project_root"
-	sudo chown -R "$(id -un):$(id -gn)" "$project_root"
+if [[ $force == true ]]; then
+	if [[ -d $project_root ]]; then
+		# Docker build artifacts can be root-owned inside the idmapped workspace.
+		# Ownership repair is restricted to the explicitly force-removed ticket root.
+		printf '→ Repairing ownership of generated artifacts in %s…\n' "$project_root"
+		sudo chown -R "$(id -un):$(id -gn)" "$project_root"
+	fi
 
 	# A failed `git worktree remove` can deregister a worktree before failing to
 	# delete root-owned build artifacts. Remove only those now-unregistered,
-	# known harness repository directories; registered worktrees stay with the
-	# existing guarded remover below.
+	# known harness repository directories and their matching ticket branches.
 	for repo in GoDCApp PlatformCommonModels PlatformServices PlatformServicesCommon; do
 		worktree_path="${project_root}/${repo}"
 		bare_repo="${HOME}/workspace/badaniya/master/${repo}"
@@ -77,8 +78,12 @@ if [[ $force == true && -d $project_root ]]; then
 	done
 fi
 
-printf '→ Removing harness worktrees for %s…\n' "$ticket"
-bash "${spreader_dir}/nvo-harness-worktree-remove.sh" "${args[@]}"
+if [[ -d $project_root ]]; then
+	printf '→ Removing harness worktrees for %s…\n' "$ticket"
+	bash "${spreader_dir}/nvo-harness-worktree-remove.sh" "${args[@]}"
+else
+	printf '→ Ticket root %s is already removed; skipping worktree removal.\n' "$project_root"
+fi
 
 if [[ $force == true && -f $project_root/.agents/.herdr-aggregate-context ]]; then
 	# The harness creator builds .agents as an aggregate context tree. Its marker
