@@ -77,16 +77,62 @@ labctl_incus_ensure_profile() {
 	fi
 }
 
+labctl_incus_docker_daemon_json() {
+	local endpoint first=true
+	local -a endpoints
+	IFS=, read -r -a endpoints <<<"$LABCTL_INTERNAL_INSECURE_REGISTRIES"
+	printf '{"insecure-registries":['
+	for endpoint in "${endpoints[@]}"; do
+		if [[ $first == false ]]; then
+			printf ','
+		fi
+		printf '"%s"' "$endpoint"
+		first=false
+	done
+	printf ']}'
+}
+
+labctl_incus_k3s_registries_yaml() {
+	local endpoint
+	local -a endpoints
+	IFS=, read -r -a endpoints <<<"$LABCTL_INTERNAL_INSECURE_REGISTRIES"
+	printf 'mirrors:\n'
+	for endpoint in "${endpoints[@]}"; do
+		printf '  "%s":\n    endpoint:\n      - "http://%s"\n' "$endpoint" "$endpoint"
+	done
+}
+
 labctl_incus_render_cloud_init() {
-	local output=$1 template_dir template
+	local output=$1 template_dir template docker_daemon_json k3s_registries_yaml line indent
 	template_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../share/labctl" && pwd)
 	template=$template_dir/cloud-init.yaml.tmpl
 	[[ -r $template ]] || {
 		labctl_die "cloud-init template is missing: $template"
 		return 1
 	}
+	docker_daemon_json=$(labctl_incus_docker_daemon_json)
+	k3s_registries_yaml=$(labctl_incus_k3s_registries_yaml)
 	umask 077
-	sed -e "s|__LABCTL_INSTANCE_USER__|${LABCTL_INSTANCE_USER}|g" -e "s|__LABCTL_GO_VERSION__|${LABCTL_GO_VERSION}|g" "$template" >"$output"
+	while IFS= read -r line || [[ -n $line ]]; do
+		case $line in
+		*__LABCTL_DOCKER_DAEMON_JSON__*)
+			indent=${line%%[^[:space:]]*}
+			printf '%s%s\n' "$indent" "$docker_daemon_json"
+			;;
+		*__LABCTL_K3S_REGISTRIES_YAML__*)
+			indent=${line%%[^[:space:]]*}
+			while IFS= read -r line || [[ -n $line ]]; do
+				printf '%s%s\n' "$indent" "$line"
+			done <<<"$k3s_registries_yaml"
+			;;
+		*)
+			line=${line//__LABCTL_INSTANCE_USER__/$LABCTL_INSTANCE_USER}
+			line=${line//__LABCTL_GO_VERSION__/$LABCTL_GO_VERSION}
+			line=${line//__LABCTL_K3S_VERSION__/$LABCTL_K3S_VERSION}
+			printf '%s\n' "$line"
+			;;
+		esac
+	done <"$template" >"$output"
 	chmod 600 "$output"
 }
 
@@ -102,6 +148,15 @@ labctl_incus_validate_launch_profiles() {
 			return 1
 		fi
 	done
+}
+
+labctl_incus_set_cloud_init() {
+	local instance=$1 cloud_init=$2
+	printf '+ incus config set %q user.user-data - < [private cloud-init]\n' "$instance"
+	if [[ ${LABCTL_DRY_RUN:-false} == true ]]; then
+		return 0
+	fi
+	incus config set "$instance" user.user-data - <"$cloud_init"
 }
 
 labctl_incus_launch() {
@@ -120,7 +175,11 @@ labctl_incus_launch() {
 		rm -f "$cloud_init"
 		return 1
 	}
-	labctl_run incus init "$LABCTL_INSTANCE_IMAGE" "$instance" --profile default --profile "$LABCTL_INCUS_PROFILE" -c "user.user-data=$(cat "$cloud_init")" || {
+	labctl_run incus init "$LABCTL_INSTANCE_IMAGE" "$instance" --profile default --profile "$LABCTL_INCUS_PROFILE" || {
+		rm -f "$cloud_init"
+		return 1
+	}
+	labctl_incus_set_cloud_init "$instance" "$cloud_init" || {
 		rm -f "$cloud_init"
 		return 1
 	}

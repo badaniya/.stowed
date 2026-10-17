@@ -59,6 +59,27 @@ If it needs host compatibility changes, review and apply them explicitly at the
 host profile level. Do not solve a failed proof by enabling privileged Docker,
 host networking, a host Docker socket, or broad device passthrough.
 
+## Optional K3s and internal registry bootstrap
+
+The private configuration can provision a pinned single-node K3s server during
+guest cloud-init. Set `LABCTL_K3S_VERSION` to the selected K3s release in the
+required `vMAJOR.MINOR.PATCH+k3sREVISION` format. The bootstrap installs that
+exact release with Traefik disabled and waits for the server readiness endpoint
+before cloud-init completes.
+
+Set `LABCTL_INTERNAL_INSECURE_REGISTRIES` only to a comma-separated list of
+internal `host:port` registry endpoints. The controller rejects schemes, paths,
+credentials, malformed ports, and duplicates. It renders those endpoints into
+Docker's `insecure-registries` array and K3s `registries.yaml` HTTP mirror
+endpoints, then restarts Docker before K3s installation. Keep endpoint values
+solely in the owner-only active configuration: they are not represented in the
+example or documentation, and cloud-init payloads are passed to Incus on
+standard input rather than logged.
+
+The bootstrap also replaces a non-directory `/root/go/bin` path with the
+required directory before Atlas installation. This is limited to the sandbox
+guest and does not alter the host or any existing sandbox.
+
 ## Command reference
 
 Run `labctl help` for the installed interface. Use `<ticket>` and `<repo>` as

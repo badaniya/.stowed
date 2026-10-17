@@ -6,7 +6,8 @@ labctl_config_required_vars=(
 	LABCTL_WORKSPACE_ROOT LABCTL_MASTER_ROOT LABCTL_AGENT_BRIDGE
 	LABCTL_AGENT_CIDR LABCTL_AGENT_GATEWAY LABCTL_IP_POOL_START
 	LABCTL_IP_POOL_END LABCTL_LAB_ROUTE_GATEWAY LABCTL_INSTANCE_IMAGE
-	LABCTL_INSTANCE_USER LABCTL_GO_VERSION LABCTL_DEVICE_TCP_PORTS LABCTL_STACK_UP_COMMAND
+	LABCTL_INSTANCE_USER LABCTL_GO_VERSION LABCTL_K3S_VERSION
+	LABCTL_INTERNAL_INSECURE_REGISTRIES LABCTL_DEVICE_TCP_PORTS LABCTL_STACK_UP_COMMAND
 	LABCTL_STACK_DOWN_COMMAND LABCTL_STACK_HEALTH_COMMAND
 	LABCTL_WORKTREE_CREATE_HOOK LABCTL_WORKTREE_REMOVE_HOOK
 	LABCTL_HARNESS_REPO_NAMES LABCTL_GIT_HOST
@@ -40,6 +41,16 @@ labctl_config_ipv4_number() {
 	printf '%u\n' "$((10#$a * 16777216 + 10#$b * 65536 + 10#$c * 256 + 10#$d))"
 }
 
+labctl_config_validate_registry_endpoint() {
+	local endpoint=$1 host port
+	[[ $endpoint == *:* ]] || return 1
+	host=${endpoint%:*}
+	port=${endpoint##*:}
+	[[ -n $host && $port =~ ^[0-9]+$ ]] || return 1
+	((10#$port >= 1 && 10#$port <= 65535)) || return 1
+	labctl_config_is_ipv4 "$host" || [[ $host =~ ^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$ ]]
+}
+
 labctl_config_validate() {
 	local name value mode cidr_ip prefix network mask start end
 	for name in "${labctl_config_required_vars[@]}"; do
@@ -64,6 +75,10 @@ labctl_config_validate() {
 	}
 	[[ $LABCTL_GO_VERSION =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || {
 		labctl_die 'Go version must use numeric semantic version format: MAJOR.MINOR.PATCH'
+		return 1
+	}
+	[[ $LABCTL_K3S_VERSION =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\+k3s(0|[1-9][0-9]*)$ ]] || {
+		labctl_die 'K3s version must use vMAJOR.MINOR.PATCH+k3sREVISION format'
 		return 1
 	}
 	[[ $LABCTL_GIT_HOST =~ ^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?(:[0-9]{1,5})?$ ]] || {
@@ -97,8 +112,25 @@ labctl_config_validate() {
 		labctl_die 'invalid IPv4 pool range'
 		return 1
 	}
-	local port
-	local -A seen_ports=()
+	local endpoint port
+	local -a endpoints ports
+	local -A seen_endpoints=() seen_ports=()
+	[[ $LABCTL_INTERNAL_INSECURE_REGISTRIES =~ ^[^,]+(,[^,]+)*$ ]] || {
+		labctl_die 'internal insecure registry list must contain comma-separated host:port endpoints'
+		return 1
+	}
+	IFS=, read -r -a endpoints <<<"$LABCTL_INTERNAL_INSECURE_REGISTRIES"
+	for endpoint in "${endpoints[@]}"; do
+		labctl_config_validate_registry_endpoint "$endpoint" || {
+			labctl_die 'internal insecure registry endpoints must be host:port values with valid ports'
+			return 1
+		}
+		[[ ! ${seen_endpoints[$endpoint]+present} ]] || {
+			labctl_die 'duplicate internal insecure registry endpoint'
+			return 1
+		}
+		seen_endpoints[$endpoint]=1
+	done
 	[[ $LABCTL_DEVICE_TCP_PORTS =~ ^[0-9]+(,[0-9]+)*$ ]] || {
 		labctl_die 'device TCP port list must not be empty and must contain comma-separated ports'
 		return 1

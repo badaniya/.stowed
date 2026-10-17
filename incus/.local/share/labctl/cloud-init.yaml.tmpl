@@ -20,4 +20,25 @@ runcmd:
   - rm -f /tmp/labctl-go.tar.gz
   - ln -sf /usr/local/go/bin/go /usr/local/bin/go
   - printf '%s\n' 'export PATH="/usr/local/go/bin:$PATH"' > /etc/profile.d/labctl-go.sh
+  - |
+      if [ -e /root/go/bin ] && [ ! -d /root/go/bin ]; then
+        rm -f /root/go/bin
+      fi
+      install -d -m 0755 /root/go/bin
+  - |
+      cat > /etc/docker/daemon.json <<'EOF_DOCKER'
+      __LABCTL_DOCKER_DAEMON_JSON__
+      EOF_DOCKER
+  - systemctl restart docker
+  - systemctl is-active --quiet docker
+  - |
+      install -d -m 0755 /etc/rancher/k3s
+      cat > /etc/rancher/k3s/registries.yaml <<'EOF_REGISTRIES'
+      __LABCTL_K3S_REGISTRIES_YAML__
+      EOF_REGISTRIES
+  - curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="__LABCTL_K3S_VERSION__" INSTALL_K3S_EXEC="server --disable traefik" sh -
+  - |
+      until k3s kubectl get --raw=/readyz >/dev/null 2>&1; do
+        sleep 2
+      done
   - systemctl enable --now docker

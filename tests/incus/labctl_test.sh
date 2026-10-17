@@ -43,6 +43,8 @@ LABCTL_LAB_ROUTE_GATEWAY=10.1.1.1
 LABCTL_INSTANCE_IMAGE=images:ubuntu/24.04
 LABCTL_INSTANCE_USER=ubuntu
 LABCTL_GO_VERSION=1.25.11
+LABCTL_K3S_VERSION=v1.32.2+k3s1
+LABCTL_INTERNAL_INSECURE_REGISTRIES=registry-one.example.test:5000,registry-two.example.test:5001
 LABCTL_DEVICE_TCP_PORTS=10001,10002
 LABCTL_STACK_UP_COMMAND=compose up -d
 LABCTL_STACK_DOWN_COMMAND=compose down
@@ -65,6 +67,25 @@ for invalid_go_version in v1.25.11 1.25 1.25.11rc1 01.25.11 1.025.11 1.25.011; d
 	sed "s/^LABCTL_GO_VERSION=.*/LABCTL_GO_VERSION=${invalid_go_version}/" "$CONFIG_PATH" >"$INVALID_GO_VERSION_CONFIG"
 	chmod 600 "$INVALID_GO_VERSION_CONFIG"
 	assert_fails labctl_config_load "$INVALID_GO_VERSION_CONFIG"
+done
+
+MISSING_K3S_VERSION_CONFIG="${TEST_ROOT}/missing-k3s-version.env"
+rg -v '^LABCTL_K3S_VERSION=' "$CONFIG_PATH" >"$MISSING_K3S_VERSION_CONFIG"
+chmod 600 "$MISSING_K3S_VERSION_CONFIG"
+assert_fails labctl_config_load "$MISSING_K3S_VERSION_CONFIG"
+
+for invalid_k3s_version in 1.32.2+k3s1 v1.32.2 v1.32.2+k3s v01.32.2+k3s1; do
+	INVALID_K3S_VERSION_CONFIG="${TEST_ROOT}/invalid-k3s-version-${invalid_k3s_version}.env"
+	sed "s/^LABCTL_K3S_VERSION=.*/LABCTL_K3S_VERSION=${invalid_k3s_version}/" "$CONFIG_PATH" >"$INVALID_K3S_VERSION_CONFIG"
+	chmod 600 "$INVALID_K3S_VERSION_CONFIG"
+	assert_fails labctl_config_load "$INVALID_K3S_VERSION_CONFIG"
+done
+
+for invalid_registry_endpoints in 'http://registry.example.test:5000' 'registry.example.test' 'registry.example.test:0' 'registry.example.test:65536' 'registry.example.test:5000,registry.example.test:5000'; do
+	INVALID_REGISTRY_CONFIG="${TEST_ROOT}/invalid-registry-${RANDOM}.env"
+	sed "s|^LABCTL_INTERNAL_INSECURE_REGISTRIES=.*|LABCTL_INTERNAL_INSECURE_REGISTRIES=${invalid_registry_endpoints}|" "$CONFIG_PATH" >"$INVALID_REGISTRY_CONFIG"
+	chmod 600 "$INVALID_REGISTRY_CONFIG"
+	assert_fails labctl_config_load "$INVALID_REGISTRY_CONFIG"
 done
 
 mkdir -p "${TEST_ROOT}/workspace/master"
@@ -115,6 +136,24 @@ assert_succeeds rg -F --quiet "export PATH=\"/usr/local/go/bin:\$PATH\"" "$CLOUD
 # the Go command available before an interactive profile is read.
 assert_succeeds rg -F --quiet 'ln -sf /usr/local/go/bin/go /usr/local/bin/go' "$CLOUD_INIT_PATH"
 assert_fails rg -F --quiet '__LABCTL_GO_VERSION__' "$CLOUD_INIT_PATH"
+# Internal registries answer HTTP. Render their exact host:port endpoint semantics
+# without emitting any active-config value from the command interface.
+assert_succeeds rg -F --quiet '"insecure-registries":["registry-one.example.test:5000","registry-two.example.test:5001"]' "$CLOUD_INIT_PATH"
+assert_succeeds rg -F --quiet 'mirrors:' "$CLOUD_INIT_PATH"
+assert_succeeds rg -F --quiet '"registry-one.example.test:5000":' "$CLOUD_INIT_PATH"
+assert_succeeds rg -F --quiet '"http://registry-one.example.test:5000"' "$CLOUD_INIT_PATH"
+assert_succeeds rg -F --quiet '"registry-two.example.test:5001":' "$CLOUD_INIT_PATH"
+assert_succeeds rg -F --quiet '"http://registry-two.example.test:5001"' "$CLOUD_INIT_PATH"
+assert_succeeds rg -F --quiet 'systemctl restart docker' "$CLOUD_INIT_PATH"
+assert_succeeds rg -F --quiet '[ -e /root/go/bin ] && [ ! -d /root/go/bin ]' "$CLOUD_INIT_PATH"
+assert_succeeds rg -F --quiet 'install -d -m 0755 /root/go/bin' "$CLOUD_INIT_PATH"
+assert_succeeds rg -F --quiet 'INSTALL_K3S_VERSION="v1.32.2+k3s1"' "$CLOUD_INIT_PATH"
+assert_succeeds rg -F --quiet 'INSTALL_K3S_EXEC="server --disable traefik"' "$CLOUD_INIT_PATH"
+assert_succeeds rg -F --quiet 'k3s kubectl get --raw=/readyz' "$CLOUD_INIT_PATH"
+assert_fails rg -F --quiet '__LABCTL_K3S_VERSION__' "$CLOUD_INIT_PATH"
+assert_fails rg -F --quiet '__LABCTL_INTERNAL_INSECURE_REGISTRIES__' "$CLOUD_INIT_PATH"
+assert_fails rg -F --quiet '__LABCTL_DOCKER_DAEMON_JSON__' "$CLOUD_INIT_PATH"
+assert_fails rg -F --quiet '__LABCTL_K3S_REGISTRIES_YAML__' "$CLOUD_INIT_PATH"
 labctl_config_load "$CONFIG_PATH"
 
 assert_succeeds labctl_incus_cidr_overlaps '10.42.0.0/16' '10.42.1.0/24'
@@ -477,6 +516,8 @@ assert_command_log_contains 'init images:ubuntu/24.04 jira-#'
 assert_command_log_contains 'config device add jira-# git-master disk'
 assert_command_log_contains 'config device add jira-# ticket-workspace disk'
 assert_command_log_contains 'shift=true'
+assert_command_log_contains 'config set jira-# user.user-data -'
+assert_command_log_not_contains 'registry-one.example.test:5000'
 
 # Incus 6 rejects launch --no-start. Init creates the instance stopped, so it
 # must retain both profiles and cloud-init configuration before the inherited
@@ -484,7 +525,9 @@ assert_command_log_contains 'shift=true'
 : >"$COMMAND_LOG"
 PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_PROFILE_EXISTS=true assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" create 'JIRA-#'
 assert_command_log_contains 'init images:ubuntu/24.04 jira-# --profile default --profile agent-dev-env'
-assert_command_log_contains 'user.user-data='
+assert_command_log_contains 'config set jira-# user.user-data -'
+assert_command_log_not_contains 'registry-one.example.test:5000'
+assert_command_log_not_contains 'registry-two.example.test:5001'
 assert_command_log_not_contains 'launch images:ubuntu/24.04 jira-#'
 assert_command_log_contains 'config device override jira-# eth0 ipv4.address=10.42.0.10'
 assert_command_log_not_contains 'config device set jira-# eth0 ipv4.address='
