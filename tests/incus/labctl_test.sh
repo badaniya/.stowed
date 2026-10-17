@@ -265,8 +265,8 @@ assert_command_log_not_contains() {
 
 assert_command_log_ordered() {
 	local first=$1 second=$2 first_line second_line
-	first_line=$(rg -n -F "$first" "$COMMAND_LOG" | sed -n '1s/:.*//p')
-	second_line=$(rg -n -F "$second" "$COMMAND_LOG" | sed -n '1s/:.*//p')
+	first_line=$(rg -n -F "$first" "$COMMAND_LOG" | sed -n '1s/:.*//p' || true)
+	second_line=$(rg -n -F "$second" "$COMMAND_LOG" | sed -n '1s/:.*//p' || true)
 	if [[ -z $first_line || -z $second_line || $first_line -ge $second_line ]]; then
 		fail "expected command [$first] before [$second]"
 	fi
@@ -364,6 +364,9 @@ mkdir -p "${TEST_ROOT}/workspace/master/one/worktrees/jira-#" "${TEST_ROOT}/work
 mkdir -p "${TEST_ROOT}/workspace/jira-#/one" "${TEST_ROOT}/workspace/jira-#/two"
 printf 'gitdir: %s\n' "${TEST_ROOT}/workspace/master/one/worktrees/jira-#" >"${TEST_ROOT}/workspace/jira-#/one/.git"
 printf 'gitdir: %s\n' "${TEST_ROOT}/workspace/master/two/worktrees/jira-#" >"${TEST_ROOT}/workspace/jira-#/two/.git"
+# Nested repositories are not direct ticket worktrees and must not be trusted.
+mkdir -p "${TEST_ROOT}/workspace/jira-#/one/vendor/nested"
+printf 'gitdir: %s\n' "${TEST_ROOT}/workspace/master/one/worktrees/jira-#" >"${TEST_ROOT}/workspace/jira-#/one/vendor/nested/.git"
 
 assert_equals 'harness' "$(labctl_workspace_detect 'JIRA-#')"
 assert_succeeds labctl_workspace_validate 'JIRA-#'
@@ -411,6 +414,17 @@ assert_command_log_not_contains 'config device set jira-# eth0 ipv4.address='
 assert_command_log_ordered 'init images:ubuntu/24.04 jira-# --profile default --profile agent-dev-env' 'config device override jira-# eth0 ipv4.address=10.42.0.10'
 assert_command_log_ordered 'config device override jira-# eth0 ipv4.address=10.42.0.10' 'start jira-#'
 assert_command_log_ordered 'start jira-#' 'exec jira-# -- cloud-init status --wait'
+# After both idmapped mounts and guest readiness, configure only direct ticket
+# worktrees in the instance user's global Git configuration.
+assert_command_log_ordered 'config device add jira-# ticket-workspace disk' 'exec jira-# -- cloud-init status --wait'
+assert_command_log_ordered 'exec jira-# -- docker info' 'git config --global --add safe.directory'
+assert_command_log_contains "exec jira-# -- su - ubuntu -c git config --global --add safe.directory ${TEST_ROOT}/workspace/jira-#/one"
+assert_command_log_contains "exec jira-# -- su - ubuntu -c git config --global --add safe.directory ${TEST_ROOT}/workspace/jira-#/two"
+assert_command_log_not_contains "safe.directory ${TEST_ROOT}/workspace/master"
+assert_command_log_not_contains "safe.directory ${TEST_ROOT}/workspace/jira-# "
+assert_command_log_not_contains "safe.directory ${TEST_ROOT}/workspace/jira-#/one/vendor/nested"
+assert_command_log_not_contains 'safe.directory *'
+assert_equals '2' "$(rg -F -c 'git config --global --add safe.directory' "$COMMAND_LOG" || true)"
 
 # A failed historical create could leave an empty IP in its existing record.
 # Create must replace that incomplete reservation before launch, then persist and

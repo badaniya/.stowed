@@ -171,6 +171,14 @@ labctl_incus_wait_ready() {
 	labctl_run incus exec "$instance" -- docker info
 }
 
+labctl_incus_configure_git_safe_directories() {
+	local instance=$1 ticket_root=$2 worktree command
+	while IFS= read -r worktree; do
+		printf -v command 'git config --global --add safe.directory %q' "$worktree"
+		labctl_run incus exec "$instance" -- su - "$LABCTL_INSTANCE_USER" -c "$command"
+	done < <(labctl_workspace_linked_worktrees "$ticket_root")
+}
+
 labctl_incus_instance_is_unsafe() {
 	local instance_json=$1
 	jq -e '
