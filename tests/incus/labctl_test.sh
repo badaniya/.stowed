@@ -204,6 +204,10 @@ query\ /1.0/instances/*\ --request\ PATCH\ --data-file\ *)
 	printf '%s\n' valid >"${LABCTL_FAKE_PATCH_VALIDATION:?}"
 	;;
 'query /1.0/instances/'*)
+	if [[ ${LABCTL_FAKE_INSTANCE_QUERY_FAILURE:-false} == true ]]; then
+		printf '%s\n' "${LABCTL_FAKE_INSTANCE_QUERY_FAILURE_OUTPUT:-instance query failed}" >&2
+		exit 42
+	fi
 	status=${LABCTL_FAKE_INSTANCE_STATUS:-Running}
 	if [[ -n ${LABCTL_FAKE_INSTANCE_STATE_FILE:-} && -f ${LABCTL_FAKE_INSTANCE_STATE_FILE} ]]; then
 		status=$(<"$LABCTL_FAKE_INSTANCE_STATE_FILE")
@@ -516,11 +520,34 @@ fi
 # isolation checks must query the validated instance API endpoint instead.
 LABCTL_FAKE_INSTANCE_CONFIG_JSON=$(jq -cn --arg master "${TEST_ROOT}/workspace/master" --arg ticket "${TEST_ROOT}/workspace/jira-#" '{config:{"security.privileged":"false"},devices:{"git-master":{type:"disk",source:$master,path:$master},"ticket-workspace":{type:"disk",source:$ticket,path:$ticket}}}')
 export LABCTL_FAKE_INSTANCE_CONFIG_JSON
+# Regression: public instance inspection must never disclose systemd credential
+# values. The key remains visible to consumers that need to establish its
+# presence, while every systemd.credential.* value is redacted.
+INSTANCE_CREDENTIAL_SECRET=$(printf '%s%s' 'instance-credential-secret-' 'not-for-logs')
+LABCTL_FAKE_INSTANCE_CONFIG_JSON=$(jq -cn --arg master "${TEST_ROOT}/workspace/master" --arg ticket "${TEST_ROOT}/workspace/jira-#" --arg secret "$INSTANCE_CREDENTIAL_SECRET" '{config:{"security.privileged":"false","systemd.credential.git-module-token":$secret,"systemd.credential.other-token":("other-" + $secret)},devices:{"git-master":{type:"disk",source:$master,path:$master},"ticket-workspace":{type:"disk",source:$ticket,path:$ticket}}}')
+export LABCTL_FAKE_INSTANCE_CONFIG_JSON
+STATUS_OUTPUT="${TEST_ROOT}/status-output"
 : >"$COMMAND_LOG"
-PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=true assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" status 'JIRA-#'
+if ! PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=true "$LABCTL_BIN" --config "$CONFIG_PATH" status 'JIRA-#' >"$STATUS_OUTPUT" 2>&1; then
+	fail 'status failed while inspecting a sandbox with systemd credentials'
+fi
+assert_succeeds rg -F --quiet '"systemd.credential.git-module-token": "[REDACTED]"' "$STATUS_OUTPUT"
+assert_succeeds rg -F --quiet '"systemd.credential.other-token": "[REDACTED]"' "$STATUS_OUTPUT"
+assert_fails rg -F --quiet "$INSTANCE_CREDENTIAL_SECRET" "$STATUS_OUTPUT"
 assert_command_log_contains 'query /1.0/instances/jira-%23'
+assert_command_log_not_contains "$INSTANCE_CREDENTIAL_SECRET"
 assert_command_log_not_contains 'info jira-# --format json'
 assert_command_log_not_contains 'config show jira-# --expanded --format json'
+
+# A failed instance query must not relay Incus diagnostics containing a
+# credential value either.
+QUERY_FAILURE_OUTPUT="${TEST_ROOT}/query-failure-output"
+: >"$COMMAND_LOG"
+if PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=true LABCTL_FAKE_INSTANCE_QUERY_FAILURE=true LABCTL_FAKE_INSTANCE_QUERY_FAILURE_OUTPUT="$INSTANCE_CREDENTIAL_SECRET" "$LABCTL_BIN" --config "$CONFIG_PATH" status 'JIRA-#' >"$QUERY_FAILURE_OUTPUT" 2>&1; then
+	fail 'status succeeded after a failed instance query'
+fi
+assert_fails rg -F --quiet "$INSTANCE_CREDENTIAL_SECRET" "$QUERY_FAILURE_OUTPUT"
+assert_command_log_not_contains "$INSTANCE_CREDENTIAL_SECRET"
 
 : >"$COMMAND_LOG"
 PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=true LABCTL_FAKE_PROFILE_EXISTS=true assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" verify 'JIRA-#'
