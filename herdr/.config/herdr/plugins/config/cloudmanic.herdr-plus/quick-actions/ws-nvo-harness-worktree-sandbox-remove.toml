@@ -1,0 +1,7 @@
+name = "Destroy sandbox & remove workspace: NVO-WORKTREE-SANDBOX"
+type = "form"
+command = "bash ~/.config/herdr-spreader/nvo-harness-worktree-sandbox-remove-notify.sh '{{.Value}}'"
+
+[form]
+prompt = "DESTRUCTIVE: NVO ticket, optional --force (destroys its Incus sandbox, then removes its harness worktrees)"
+placeholder = "NVO-20131 [--force]"
