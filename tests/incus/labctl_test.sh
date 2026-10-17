@@ -151,13 +151,7 @@ case "$*" in
 	fi
 	;;
 'query /1.0') printf '%s\n' '{"environment":{"kernel_features":{"idmapped_mounts":true}}}' ;;
-'info --format json')
-	printf '%s\n' 'Error: unknown flag: --format' >&2
-	exit 2
-	;;
-'info') [[ ${LABCTL_INCUS_ACCESS_DENIED:-false} != true ]] ;;
-'network show agentbr0') exit 1 ;;
-'profile show default --format json')
+'query /1.0/profiles/default')
 	if [[ ${LABCTL_DEFAULT_PROFILE_INVENTORY_FAILURE:-false} == true ]]; then
 		exit 42
 	elif [[ -n ${LABCTL_UNSAFE_DEFAULT_PROFILE_JSON:-} ]]; then
@@ -166,7 +160,7 @@ case "$*" in
 		printf '%s\n' '{}'
 	fi
 	;;
-'profile show agent-dev-env --format json')
+'query /1.0/profiles/agent-dev-env')
 	if [[ -n ${LABCTL_UNSAFE_PROFILE_JSON:-} ]]; then
 		printf '%s\n' "$LABCTL_UNSAFE_PROFILE_JSON"
 	elif [[ ${LABCTL_FAKE_PROFILE_EXISTS:-false} == true ]]; then
@@ -174,6 +168,16 @@ case "$*" in
 	else
 		exit 1
 	fi
+	;;
+'info --format json')
+	printf '%s\n' 'Error: unknown flag: --format' >&2
+	exit 2
+	;;
+'info') [[ ${LABCTL_INCUS_ACCESS_DENIED:-false} != true ]] ;;
+'network show agentbr0') exit 1 ;;
+'profile show '*)
+	printf '%s\n' 'Error: unknown flag: --format' >&2
+	exit 2
 	;;
 'network list --format csv -c n' | 'storage list --format csv -c n' | 'profile list --format csv -c n' | 'list --format csv -c n')
 	[[ ${LABCTL_EXTERNAL_NAME_CONFLICT:-false} != true ]] || printf 'agentbr0\n'
@@ -248,11 +252,20 @@ assert_command_log_not_contains() {
 	fi
 }
 
+# Unsafe profile names must be rejected before they can become API path segments.
+: >"$COMMAND_LOG"
+PATH="${FAKE_BIN}:$PATH" assert_fails labctl_incus_profile_query 'default/../agent-dev-env'
+assert_command_log_not_contains 'incus query /1.0/profiles/'
+
 # Ubuntu Incus 6 rejects `incus info --format json`; capability discovery must use /1.0.
+# It also rejects all `profile show --format json` calls; profile inspection must
+# use the API endpoint, including the default profile applied at launch.
 : >"$COMMAND_LOG"
 PATH="${FAKE_BIN}:$PATH" assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
 assert_command_log_contains 'incus query /1.0'
+assert_command_log_contains 'incus query /1.0/profiles/default'
 assert_command_log_not_contains 'incus info --format json'
+assert_command_log_not_contains 'incus profile show '
 
 PATH="${FAKE_BIN}:$PATH" LABCTL_TEST_FAKE_COMMANDS=true assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" setup-host
 PATH="${FAKE_BIN}:$PATH" assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" --dry-run setup-host --yes
@@ -301,7 +314,8 @@ done
 # Revalidate profiles at the launch boundary: an unsafe default must prevent launch.
 : >"$COMMAND_LOG"
 PATH="${FAKE_BIN}:$PATH" LABCTL_UNSAFE_DEFAULT_PROFILE_JSON='{"config":{"raw.lxc":"lxc.net.0.type = phys\\nlxc.net.0.link = enp1s0"}}' assert_fails labctl_incus_launch 'launch-default-profile' '10.42.0.10'
-assert_command_log_contains 'profile show default --format json'
+assert_command_log_contains 'query /1.0/profiles/default'
+assert_command_log_not_contains 'profile show '
 assert_command_log_not_contains 'launch images:ubuntu/24.04 launch-default-profile'
 
 for unsafe_profile_json in \

@@ -122,7 +122,7 @@ labctl_incus_preflight() {
 	labctl_incus_reject_network_conflicts || return 1
 	labctl_incus_reject_external_name_conflicts || return 1
 	for profile in default "$LABCTL_INCUS_PROFILE"; do
-		if profile_json=$(incus profile show "$profile" --format json 2>/dev/null); then
+		if profile_json=$(labctl_incus_profile_query "$profile" 2>/dev/null); then
 			if labctl_incus_profile_is_unsafe "$profile_json"; then
 				labctl_die "active Incus profile has privileged, host-network, proxy, Docker socket, or host-device passthrough behavior: $profile"
 				return 1

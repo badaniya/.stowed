@@ -39,8 +39,27 @@ labctl_incus_profile_is_unsafe() {
 	' >/dev/null <<<"$profile_json"
 }
 
+labctl_incus_validate_profile_name() {
+	local profile=$1
+	[[ $profile =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*$ ]] || {
+		labctl_die "invalid Incus profile name: $profile"
+		return 1
+	}
+}
+
+labctl_incus_profile_query() {
+	local profile=$1 encoded_profile
+	labctl_incus_validate_profile_name "$profile" || return 1
+	encoded_profile=$(jq -rn --arg profile "$profile" '$profile | @uri') || {
+		labctl_die "unable to encode Incus profile name: $profile"
+		return 1
+	}
+	incus query "/1.0/profiles/$encoded_profile"
+}
+
 labctl_incus_ensure_profile() {
-	if ! incus profile show "$LABCTL_INCUS_PROFILE" --format json >/dev/null 2>&1; then
+	labctl_incus_validate_profile_name "$LABCTL_INCUS_PROFILE" || return 1
+	if ! labctl_incus_profile_query "$LABCTL_INCUS_PROFILE" >/dev/null 2>&1; then
 		labctl_run incus profile create "$LABCTL_INCUS_PROFILE"
 	fi
 
@@ -74,7 +93,7 @@ labctl_incus_render_cloud_init() {
 labctl_incus_validate_launch_profiles() {
 	local profile profile_json
 	for profile in default "$LABCTL_INCUS_PROFILE"; do
-		profile_json=$(incus profile show "$profile" --format json 2>/dev/null) || {
+		profile_json=$(labctl_incus_profile_query "$profile" 2>/dev/null) || {
 			labctl_die "unable to inspect Incus profile before launch; refusing to launch with an unvalidated profile: $profile"
 			return 1
 		}
