@@ -232,8 +232,10 @@ config\ device\ set\ *\ eth0\ ipv4.address=*)
 	printf '%s\n' 'Error: Cannot update inherited device; use config device override' >&2
 	exit 1
 	;;
-'config get '*' eth0 ipv4.address')
-	case ${3:-} in
+# Keep the fixture aligned with the device-scoped lookup used by lifecycle
+# validation. Its instance argument is the fourth token in this command shape.
+'config device get '*' eth0 ipv4.address')
+	case ${4:-} in
 	jira-#) printf '%s\n' "${LABCTL_FAKE_INSTANCE_IP:-10.42.0.10}" ;;
 	jira-two) printf '%s\n' "${LABCTL_FAKE_SECOND_INSTANCE_IP:-10.42.0.11}" ;;
 	*) printf '%s\n' "${LABCTL_FAKE_INSTANCE_IP:-10.42.0.10}" ;;
