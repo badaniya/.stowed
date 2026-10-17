@@ -238,7 +238,9 @@ labctl_incus_stack_command() {
 
 labctl_incus_start() {
 	local instance=$1 ticket_root=$2
-	labctl_run incus start "$instance"
+	if ! labctl_incus_is_running "$instance"; then
+		labctl_run incus start "$instance"
+	fi
 	labctl_incus_wait_ready "$instance"
 	labctl_stack_up "$instance"
 }

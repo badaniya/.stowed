@@ -163,10 +163,27 @@ config\ device\ set\ *\ eth0\ ipv4.address=*)
 	esac
 	;;
 'query /1.0/instances/'*)
+	status=${LABCTL_FAKE_INSTANCE_STATUS:-Running}
+	if [[ -n ${LABCTL_FAKE_INSTANCE_STATE_FILE:-} && -f ${LABCTL_FAKE_INSTANCE_STATE_FILE} ]]; then
+		status=$(<"$LABCTL_FAKE_INSTANCE_STATE_FILE")
+	fi
 	if [[ -n ${LABCTL_FAKE_INSTANCE_CONFIG_JSON+x} ]]; then
-		printf '%s\n' "$LABCTL_FAKE_INSTANCE_CONFIG_JSON" | jq --arg status "${LABCTL_FAKE_INSTANCE_STATUS:-Running}" '. + {status: $status}'
+		printf '%s\n' "$LABCTL_FAKE_INSTANCE_CONFIG_JSON" | jq --arg status "$status" '. + {status: $status}'
 	else
-		jq -cn --arg status "${LABCTL_FAKE_INSTANCE_STATUS:-Running}" '{status: $status, config: {"security.privileged": "false"}, devices: {}}'
+		jq -cn --arg status "$status" '{status: $status, config: {"security.privileged": "false"}, devices: {}}'
+	fi
+	;;
+start\ *)
+	status=${LABCTL_FAKE_INSTANCE_STATUS:-Running}
+	if [[ -n ${LABCTL_FAKE_INSTANCE_STATE_FILE:-} && -f ${LABCTL_FAKE_INSTANCE_STATE_FILE} ]]; then
+		status=$(<"$LABCTL_FAKE_INSTANCE_STATE_FILE")
+	fi
+	if [[ ${LABCTL_FAKE_REJECT_DUPLICATE_START:-false} == true && $status == Running ]]; then
+		printf '%s\n' 'Error: The instance is already running' >&2
+		exit 1
+	fi
+	if [[ -n ${LABCTL_FAKE_INSTANCE_STATE_FILE:-} ]]; then
+		printf '%s\n' Running >"$LABCTL_FAKE_INSTANCE_STATE_FILE"
 	fi
 	;;
 'query /1.0') printf '%s\n' '{"environment":{"kernel_features":{"idmapped_mounts":true}}}' ;;
@@ -489,6 +506,25 @@ export LABCTL_FAKE_INSTANCE_IP=10.42.0.10
 export LABCTL_FAKE_SECOND_INSTANCE_IP=10.42.0.11
 LABCTL_FAKE_INSTANCE_CONFIG_JSON=$(jq -cn --arg master "${TEST_ROOT}/workspace/master" --arg ticket "${TEST_ROOT}/workspace/jira-#" '{config:{"security.privileged":"false"},devices:{"git-master":{type:"disk",source:$master,path:$master},"ticket-workspace":{type:"disk",source:$ticket,path:$ticket}}}')
 export LABCTL_FAKE_INSTANCE_CONFIG_JSON
+
+# Regression: create leaves the sandbox running. Starting it again must skip
+# Incus start (which rejects a duplicate start) and still execute stack-up once.
+LABCTL_FAKE_INSTANCE_STATE_FILE="${TEST_ROOT}/instance-status"
+export LABCTL_FAKE_INSTANCE_STATE_FILE
+printf '%s\n' Running >"$LABCTL_FAKE_INSTANCE_STATE_FILE"
+: >"$COMMAND_LOG"
+PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_REJECT_DUPLICATE_START=true assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" start 'JIRA-#'
+assert_command_log_not_contains 'start jira-#'
+assert_equals '1' "$(rg -F -c 'compose up -d' "$COMMAND_LOG" || true)"
+
+# A stopped sandbox still needs an Incus start before readiness and stack-up.
+printf '%s\n' Stopped >"$LABCTL_FAKE_INSTANCE_STATE_FILE"
+: >"$COMMAND_LOG"
+PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_REJECT_DUPLICATE_START=true assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" start 'JIRA-#'
+assert_command_log_contains 'start jira-#'
+assert_command_log_ordered 'start jira-#' 'exec jira-# -- cloud-init status --wait'
+assert_equals '1' "$(rg -F -c 'compose up -d' "$COMMAND_LOG" || true)"
+unset LABCTL_FAKE_INSTANCE_STATE_FILE
 
 : >"$COMMAND_LOG"
 if ! PATH="${FAKE_BIN}:$PATH" "$LABCTL_BIN" --config "$CONFIG_PATH" --dry-run verify 'JIRA-#' >>"$COMMAND_LOG" 2>&1; then
