@@ -26,6 +26,7 @@ source "${LABCTL_LIB}/network.sh"
 source "${LABCTL_LIB}/host-setup.sh"
 
 export HOME="${TEST_ROOT}/home"
+export XDG_CONFIG_HOME="${TEST_ROOT}/config"
 export XDG_STATE_HOME="${TEST_ROOT}/state"
 mkdir -p "$HOME"
 
@@ -149,7 +150,11 @@ case "$*" in
 		printf '%s\n' '{"config":{"security.privileged":"false"},"devices":{}}'
 	fi
 	;;
-'info --format json') printf '%s\n' '{"environment":{"kernel_features":{"idmapped_mounts":true}}}' ;;
+'query /1.0') printf '%s\n' '{"environment":{"kernel_features":{"idmapped_mounts":true}}}' ;;
+'info --format json')
+	printf '%s\n' 'Error: unknown flag: --format' >&2
+	exit 2
+	;;
 'info') [[ ${LABCTL_INCUS_ACCESS_DENIED:-false} != true ]] ;;
 'network show agentbr0') exit 1 ;;
 'profile show default --format json')
@@ -242,6 +247,12 @@ assert_command_log_not_contains() {
 		fail "expected command log not to contain [$unexpected]"
 	fi
 }
+
+# Ubuntu Incus 6 rejects `incus info --format json`; capability discovery must use /1.0.
+: >"$COMMAND_LOG"
+PATH="${FAKE_BIN}:$PATH" assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
+assert_command_log_contains 'incus query /1.0'
+assert_command_log_not_contains 'incus info --format json'
 
 PATH="${FAKE_BIN}:$PATH" LABCTL_TEST_FAKE_COMMANDS=true assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" setup-host
 PATH="${FAKE_BIN}:$PATH" assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" --dry-run setup-host --yes
@@ -364,7 +375,8 @@ export LABCTL_FAKE_INSTANCE_EXISTS=true
 export LABCTL_FAKE_PROFILE_EXISTS=true
 export LABCTL_FAKE_INSTANCE_IP=10.42.0.10
 export LABCTL_FAKE_SECOND_INSTANCE_IP=10.42.0.11
-export LABCTL_FAKE_INSTANCE_CONFIG_JSON=$(jq -cn --arg master "${TEST_ROOT}/workspace/master" --arg ticket "${TEST_ROOT}/workspace/jira-#" '{config:{"security.privileged":"false"},devices:{"git-master":{type:"disk",source:$master,path:$master},"ticket-workspace":{type:"disk",source:$ticket,path:$ticket}}}')
+LABCTL_FAKE_INSTANCE_CONFIG_JSON=$(jq -cn --arg master "${TEST_ROOT}/workspace/master" --arg ticket "${TEST_ROOT}/workspace/jira-#" '{config:{"security.privileged":"false"},devices:{"git-master":{type:"disk",source:$master,path:$master},"ticket-workspace":{type:"disk",source:$ticket,path:$ticket}}}')
+export LABCTL_FAKE_INSTANCE_CONFIG_JSON
 
 : >"$COMMAND_LOG"
 if ! PATH="${FAKE_BIN}:$PATH" "$LABCTL_BIN" --config "$CONFIG_PATH" --dry-run verify 'JIRA-#' >>"$COMMAND_LOG" 2>&1; then

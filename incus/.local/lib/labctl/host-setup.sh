@@ -96,7 +96,7 @@ labctl_incus_preflight() {
 		labctl_die 'current user cannot access the Incus daemon'
 		return 1
 	}
-	info=$(incus info --format json) || {
+	info=$(incus query /1.0) || {
 		labctl_die 'unable to inspect Incus capabilities'
 		return 1
 	}
