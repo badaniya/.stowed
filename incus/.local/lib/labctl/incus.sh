@@ -204,7 +204,7 @@ labctl_incus_instance_exists() {
 }
 
 labctl_incus_instance_ip() {
-	incus config get "$1" eth0 ipv4.address
+	incus config device get "$1" eth0 ipv4.address
 }
 
 labctl_incus_is_running() {

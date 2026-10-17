@@ -118,10 +118,15 @@ labctl_config_load "$CONFIG_PATH"
 CLOUD_INIT_PATH="${TEST_ROOT}/cloud-init.yaml"
 LABCTL_INSTANCE_USER='sandbox-user' labctl_incus_render_cloud_init "$CLOUD_INIT_PATH"
 assert_succeeds rg -F --quiet 'install -d -o sandbox-user -g sandbox-user /home/sandbox-user' "$CLOUD_INIT_PATH"
-# Stack hooks may invoke GNU Make, so every rendered guest bootstrap must install it.
+# The baseline is self-contained: host-mounted Git worktrees, the Go services,
+# Docker Compose, and GoDCApp's artifact extraction must not rely on cloud-image
+# package defaults.
+assert_succeeds rg -x --fixed-strings --quiet '  - git' "$CLOUD_INIT_PATH"
+assert_succeeds rg -x --fixed-strings --quiet '  - gzip' "$CLOUD_INIT_PATH"
 assert_succeeds rg -x --fixed-strings --quiet '  - make' "$CLOUD_INIT_PATH"
 # Generic sandbox diagnostics and lifecycle scripts require these utilities before
-# the private stack hook runs.
+# the private stack hook runs. GoDCApp's image setup uses wget for artifact fetches.
+assert_succeeds rg -x --fixed-strings --quiet '  - wget' "$CLOUD_INIT_PATH"
 assert_succeeds rg -x --fixed-strings --quiet '  - jq' "$CLOUD_INIT_PATH"
 assert_succeeds rg -x --fixed-strings --quiet '  - screen' "$CLOUD_INIT_PATH"
 assert_succeeds rg -x --fixed-strings --quiet '  - net-tools' "$CLOUD_INIT_PATH"
