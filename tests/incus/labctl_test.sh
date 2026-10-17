@@ -413,4 +413,41 @@ assert_command_log_contains 'nc -z -w 3 10.42.0.10 10001'
 assert_command_log_contains 'nc -z -w 3 10.42.0.11 10001'
 assert_command_log_not_contains ' proxy '
 
+# Task 5 documentation contract: the committed guide must remain runnable yet sanitized.
+DOC_README="${REPO_ROOT}/incus/README.md"
+[[ -f $DOC_README ]] || fail 'Incus operator README is missing'
+
+if [[ -f $DOC_README ]]; then
+	for public_command in preflight setup-host create start stop status verify destroy cleanup-worktree; do
+		rg -F --quiet "labctl ${public_command}" "$DOC_README" || fail "README does not document labctl ${public_command}"
+	done
+	for required_option in --yes --dry-run; do
+		rg -F --quiet -- "$required_option" "$DOC_README" || fail "README does not document ${required_option}"
+	done
+
+	# Reject values that would disclose a private topology or credentials. Generic
+	# placeholders and shell variables are intentionally permitted.
+	if rg -n --pcre2 '/(home|Users)/[[:alnum:]_.-]+' "$DOC_README"; then
+		fail 'README contains a concrete user path'
+	fi
+	if rg -n --pcre2 '\b[A-Z][A-Z0-9]+-[0-9]+\b' "$DOC_README"; then
+		fail 'README contains a concrete ticket identifier'
+	fi
+	if rg -n --pcre2 '\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b' "$DOC_README"; then
+		fail 'README contains a concrete IP address'
+	fi
+	if rg -n --pcre2 '(?i)\b(?:tcp[[:space:]]+)?port(?:[[:space:]]+number)?[[:space:]]*[:=]?[[:space:]]*[0-9]{2,5}\b' "$DOC_README"; then
+		fail 'README contains a concrete port number'
+	fi
+	if rg -n --pcre2 -- '--repo[[:space:]]+(?!<repo>)[^[:space:]]+' "$DOC_README"; then
+		fail 'README contains a concrete repository name'
+	fi
+	if rg -n --pcre2 '(?i)\b(?:service|stack)[[:space:]]*(?:name|identifier)?[[:space:]]*[:=][[:space:]]*[[:alnum:]_.-]+' "$DOC_README"; then
+		fail 'README contains a private service identifier'
+	fi
+	if rg -n --pcre2 '(?i)(password|token|secret|credential)[[:space:]]*[:=][[:space:]]*[^ <]' "$DOC_README"; then
+		fail 'README contains a credential value'
+	fi
+fi
+
 finish_tests

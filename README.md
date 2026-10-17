@@ -39,6 +39,7 @@ This repository is used to store all dot-config files for various shells and edi
 - mermaid-cli
 - kubecolor (kubectl)
 - tuxedo
+- incus (ticket sandbox control; see [the operator guide](incus/README.md))
 
 **Stowed Optional AI Terminal Tools:**
 
