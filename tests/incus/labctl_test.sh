@@ -136,6 +136,10 @@ printf 'incus %s\n' "$*" >>"$COMMAND_LOG"
 case "$*" in
 'info '*' --format json') printf '%s\n' "{\"status\":\"${LABCTL_FAKE_INSTANCE_STATUS:-Running}\"}" ;;
 'info jira-#') [[ ${LABCTL_FAKE_INSTANCE_EXISTS:-false} == true ]] ;;
+launch\ *\ --no-start*)
+	printf '%s\n' 'Error: unknown flag: --no-start' >&2
+	exit 2
+	;;
 config\ device\ set\ *\ eth0\ ipv4.address=*)
 	printf '%s\n' 'Error: Cannot update inherited device; use config device override' >&2
 	exit 1
@@ -386,21 +390,24 @@ rmdir "${TEST_ROOT}/workspace/nVo-20130"
 if ! PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_PROFILE_EXISTS=true "$LABCTL_BIN" --config "$CONFIG_PATH" create 'JIRA-#' --dry-run >>"$COMMAND_LOG" 2>&1; then
 	fail 'dry-run create failed'
 fi
-assert_command_log_contains 'launch images:ubuntu/24.04 jira-#'
+assert_command_log_contains 'init images:ubuntu/24.04 jira-#'
 assert_command_log_contains 'config device add jira-# git-master disk'
 assert_command_log_contains 'config device add jira-# ticket-workspace disk'
 assert_command_log_contains 'shift=true'
 
-# Incus 6 rejects `device set` for the eth0 inherited from the agent profile.
-# Create it stopped, override the inherited device, then start before readiness.
+# Incus 6 rejects launch --no-start. Init creates the instance stopped, so it
+# must retain both profiles and cloud-init configuration before the inherited
+# eth0 override, explicit start, and readiness checks.
 : >"$COMMAND_LOG"
 PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_PROFILE_EXISTS=true assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" create 'JIRA-#'
-assert_command_log_contains 'launch images:ubuntu/24.04 jira-# --profile default --profile agent-dev-env'
-assert_command_log_contains 'agent-dev-env --no-start'
+assert_command_log_contains 'init images:ubuntu/24.04 jira-# --profile default --profile agent-dev-env'
+assert_command_log_contains 'user.user-data='
+assert_command_log_not_contains 'launch images:ubuntu/24.04 jira-#'
 assert_command_log_contains 'config device override jira-# eth0 ipv4.address=10.42.0.10'
 assert_command_log_not_contains 'config device set jira-# eth0 ipv4.address='
+assert_command_log_ordered 'init images:ubuntu/24.04 jira-# --profile default --profile agent-dev-env' 'config device override jira-# eth0 ipv4.address=10.42.0.10'
 assert_command_log_ordered 'config device override jira-# eth0 ipv4.address=10.42.0.10' 'start jira-#'
-assert_command_log_ordered 'config device override jira-# eth0 ipv4.address=10.42.0.10' 'exec jira-# -- cloud-init status --wait'
+assert_command_log_ordered 'start jira-#' 'exec jira-# -- cloud-init status --wait'
 
 PATH="${FAKE_BIN}:$PATH" assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" status 'JIRA-#'
 PATH="${FAKE_BIN}:$PATH" assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" destroy 'JIRA-#'

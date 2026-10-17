@@ -116,7 +116,7 @@ labctl_incus_launch() {
 		rm -f "$cloud_init"
 		return 1
 	}
-	labctl_run incus launch "$LABCTL_INSTANCE_IMAGE" "$instance" --profile default --profile "$LABCTL_INCUS_PROFILE" --no-start -c "user.user-data=$(cat "$cloud_init")" || {
+	labctl_run incus init "$LABCTL_INSTANCE_IMAGE" "$instance" --profile default --profile "$LABCTL_INCUS_PROFILE" -c "user.user-data=$(cat "$cloud_init")" || {
 		rm -f "$cloud_init"
 		return 1
 	}
