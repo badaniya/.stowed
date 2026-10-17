@@ -59,6 +59,10 @@ labctl_state_write() {
 labctl_state_claim_ip() {
 	local ticket ip=$2 state lock owner
 	ticket=$(labctl_normalize_ticket "$1") || return 1
+	labctl_config_is_ipv4 "$ip" || {
+		labctl_die "invalid sandbox IP address: $ip"
+		return 1
+	}
 	state=$(labctl_state_path)
 	lock=$(labctl_state_lock_path)
 	labctl_state_init
@@ -100,7 +104,7 @@ labctl_state_reserve_ip() {
 	exec {lock_fd}>"$lock"
 	flock "$lock_fd"
 	existing=$(jq -r --arg ticket "$ticket" '.sandboxes[$ticket].ip // empty' "$state")
-	if [[ -n $existing ]]; then
+	if [[ -n $existing ]] && labctl_config_is_ipv4 "$existing"; then
 		printf '%s\n' "$existing"
 		flock -u "$lock_fd"
 		exec {lock_fd}>&-
@@ -132,6 +136,10 @@ labctl_state_record() {
 	local ticket instance ip=$3 workspace_type=$4 ticket_root state lock owner temporary
 	ticket=$(labctl_normalize_ticket "$1") || return 1
 	instance=$(labctl_normalize_ticket "$2") || return 1
+	labctl_config_is_ipv4 "$ip" || {
+		labctl_die "invalid sandbox IP address: $ip"
+		return 1
+	}
 	ticket_root=$(realpath -m -- "${LABCTL_WORKSPACE_ROOT}/${ticket}") || return 1
 	state=$(labctl_state_path)
 	lock=$(labctl_state_lock_path)

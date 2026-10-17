@@ -135,7 +135,7 @@ cat >"${FAKE_BIN}/incus" <<'INCUS'
 printf 'incus %s\n' "$*" >>"$COMMAND_LOG"
 case "$*" in
 'info '*' --format json') printf '%s\n' "{\"status\":\"${LABCTL_FAKE_INSTANCE_STATUS:-Running}\"}" ;;
-'info jira-#') [[ ${LABCTL_FAKE_INSTANCE_EXISTS:-false} == true ]] ;;
+'info jira-#' | 'info nvo-20130') [[ ${LABCTL_FAKE_INSTANCE_EXISTS:-false} == true ]] ;;
 launch\ *\ --no-start*)
 	printf '%s\n' 'Error: unknown flag: --no-start' >&2
 	exit 2
@@ -408,6 +408,19 @@ assert_command_log_not_contains 'config device set jira-# eth0 ipv4.address='
 assert_command_log_ordered 'init images:ubuntu/24.04 jira-# --profile default --profile agent-dev-env' 'config device override jira-# eth0 ipv4.address=10.42.0.10'
 assert_command_log_ordered 'config device override jira-# eth0 ipv4.address=10.42.0.10' 'start jira-#'
 assert_command_log_ordered 'start jira-#' 'exec jira-# -- cloud-init status --wait'
+
+# A failed historical create could leave an empty IP in its existing record.
+# Create must replace that incomplete reservation before launch, then persist and
+# use the same valid address for the NIC override.
+jq '.sandboxes["nvo-20130"].ip = ""' "${XDG_STATE_HOME}/labctl/sandboxes.json" >"${XDG_STATE_HOME}/labctl/sandboxes.json.tmp"
+mv "${XDG_STATE_HOME}/labctl/sandboxes.json.tmp" "${XDG_STATE_HOME}/labctl/sandboxes.json"
+: >"$COMMAND_LOG"
+PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_PROFILE_EXISTS=true assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" create 'NVO-20130'
+assert_equals '10.42.0.11' "$(labctl_state_lookup 'nvo-20130' | jq -r '.ip')"
+assert_command_log_contains 'config device override nvo-20130 eth0 ipv4.address=10.42.0.11'
+if rg -x --fixed-strings --quiet 'incus config device override nvo-20130 eth0 ipv4.address=' "$COMMAND_LOG"; then
+	fail 'create issued an empty IPv4 device override for nvo-20130'
+fi
 
 PATH="${FAKE_BIN}:$PATH" assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" status 'JIRA-#'
 PATH="${FAKE_BIN}:$PATH" assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" destroy 'JIRA-#'

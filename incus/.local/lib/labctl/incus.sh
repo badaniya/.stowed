@@ -107,6 +107,10 @@ labctl_incus_validate_launch_profiles() {
 labctl_incus_launch() {
 	local ticket=$1 ip=$2 instance cloud_init
 	instance=$(labctl_normalize_ticket "$ticket") || return 1
+	labctl_config_is_ipv4 "$ip" || {
+		labctl_die "invalid sandbox IP address: $ip"
+		return 1
+	}
 	cloud_init=$(mktemp "${TMPDIR:-/tmp}/labctl-cloud-init.XXXXXX") || return 1
 	labctl_incus_render_cloud_init "$cloud_init" || {
 		rm -f "$cloud_init"
