@@ -1,0 +1,7 @@
+name = "Open workspace & bootstrap sandbox: NVO-WORKTREE-SANDBOX"
+type = "form"
+command = "bash ~/.config/herdr-spreader/nvo-harness-worktree-sandbox-notify.sh '{{.Value}}'"
+
+[form]
+prompt = "NVO ticket, upstream version, optional --restore-harness (creates the harness worktree, then boots its Incus sandbox)"
+placeholder = "NVO-20131 upstream-version [--restore-harness]"
