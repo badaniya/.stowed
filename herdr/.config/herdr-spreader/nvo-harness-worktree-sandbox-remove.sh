@@ -70,3 +70,14 @@ fi
 
 printf '→ Removing harness worktrees for %s…\n' "$ticket"
 bash "${spreader_dir}/nvo-harness-worktree-remove.sh" "${args[@]}"
+
+if [[ $force == true && -f $project_root/.agents/.herdr-aggregate-context ]]; then
+	# The harness creator builds .agents as an aggregate context tree. Its marker
+	# proves it is generated action state rather than an arbitrary user directory.
+	printf '→ Removing aggregate harness context %s/.agents…\n' "$project_root"
+	rm -rf --one-file-system -- "$project_root/.agents"
+fi
+if [[ -d $project_root && -z $(ls -A "$project_root") ]]; then
+	rmdir "$project_root"
+	printf '→ Removed empty ticket root %s…\n' "$project_root"
+fi

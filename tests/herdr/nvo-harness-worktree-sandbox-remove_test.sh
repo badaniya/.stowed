@@ -16,7 +16,8 @@ assert_contains() {
 
 TEST_ROOT=$(mktemp -d)
 trap 'rm -rf "$TEST_ROOT"' EXIT
-mkdir -p "$TEST_ROOT/bin" "$TEST_ROOT/home/.config/herdr-spreader" "$TEST_ROOT/home/.local/bin" "$TEST_ROOT/home/workspace/badaniya/NVO-20131/PlatformCommonModels" "$TEST_ROOT/home/workspace/badaniya/master/PlatformCommonModels"
+mkdir -p "$TEST_ROOT/bin" "$TEST_ROOT/home/.config/herdr-spreader" "$TEST_ROOT/home/.local/bin" "$TEST_ROOT/home/workspace/badaniya/NVO-20131/PlatformCommonModels" "$TEST_ROOT/home/workspace/badaniya/NVO-20131/.agents" "$TEST_ROOT/home/workspace/badaniya/master/PlatformCommonModels"
+touch "$TEST_ROOT/home/workspace/badaniya/NVO-20131/.agents/.herdr-aggregate-context"
 LOG="$TEST_ROOT/commands.log"
 
 cat >"$TEST_ROOT/home/.config/herdr-spreader/nvo-harness-worktree-remove.sh" <<'EOF'
@@ -50,6 +51,7 @@ assert_contains 'labctl destroy NVO-20131 --yes' "$LOG"
 assert_contains 'sudo chown -R' "$LOG"
 assert_contains 'remove-worktree NVO-20131 --force' "$LOG"
 [[ ! -d $TEST_ROOT/home/workspace/badaniya/NVO-20131/PlatformCommonModels ]] || fail 'unregistered orphan worktree was not removed'
+[[ ! -e $TEST_ROOT/home/workspace/badaniya/NVO-20131 ]] || fail 'aggregate context residue was not removed'
 
 : >"$LOG"
 if HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$PATH" TEST_LOG="$LOG" "$SCRIPT" 'NVO-20131; rm -rf / --force'; then
