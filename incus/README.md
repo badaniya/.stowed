@@ -84,6 +84,15 @@ command line, so private hook text is not included in controller command logs.
 Store credentials through the approved credential mechanism, not in stack hook
 values.
 
+Use `labctl bootstrap <ticket>` as the idempotent entry point for reproducible
+sandbox startup. It validates the ticket and workspace, creates or reuses the
+named sandbox, starts it only when it is stopped, waits for guest and Docker
+readiness, and then runs the configured private stack-up hook exactly once.
+`create` deliberately does not run the hook; `bootstrap` owns the ordered
+create/reuse → ready → private-stack-up flow. Repeating bootstrap for a running
+sandbox does not issue a duplicate start, but intentionally performs one fresh
+stack-up hook invocation after readiness.
+
 K3s installation, service configuration, readiness checks, and registry mirror
 configuration are intentionally outside the generic bootstrap. K3s remains a
 deferred, opt-in workload scope that needs a separately reviewed design.
@@ -97,7 +106,8 @@ placeholders below; never put private identifiers in committed documentation.
 | --- | --- |
 | `labctl preflight` | Read-only dependency, access, forwarding, conflict, and route validation. |
 | `labctl setup-host --yes` | Creates or reconciles only controller-owned Incus resources; `--yes` is required. |
-| `labctl create <ticket> [--repo <repo>] [--ensure-worktree]` | Creates or reuses the sandbox for an existing workspace. |
+| `labctl create <ticket> [--repo <repo>] [--ensure-worktree]` | Creates or reuses the sandbox for an existing workspace without running the private stack-up hook. |
+| `labctl bootstrap <ticket> [--repo <repo>] [--ensure-worktree]` | Idempotent startup entry point: validates or creates/reuses the sandbox, starts it when needed, waits for readiness, then runs the private stack-up hook once. |
 | `labctl start <ticket>` | Starts only the named sandbox and its private runtime. |
 | `labctl stop <ticket>` | Stops only the named sandbox; source worktrees remain intact. |
 | `labctl status <ticket>` | Reports controller state, workspace validity, and instance state. |

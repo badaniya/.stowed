@@ -33,6 +33,7 @@ Commands:
   preflight                                 Validate host and configuration prerequisites
   setup-host --yes                          Create or reconcile only labctl's Incus bridge and profile
   create TICKET [--repo NAME] [--ensure-worktree] [--dry-run]
+  bootstrap TICKET [--repo NAME] [--ensure-worktree] [--dry-run]
   start TICKET [--dry-run]
   stop TICKET [--dry-run]
   status TICKET
@@ -111,6 +112,16 @@ labctl_create() {
 	if [[ ${LABCTL_DRY_RUN:-false} != true ]]; then
 		labctl_state_record "$ticket" "$instance" "$ip" "$workspace_type"
 	fi
+}
+
+labctl_bootstrap() {
+	local ticket=$1 selector=${2:-}
+	ticket=$(labctl_normalize_ticket "$ticket") || return 1
+	printf 'bootstrap: validate/create ticket=%s\n' "$ticket"
+	labctl_create "$ticket" "$selector"
+	printf 'bootstrap: running/ready ticket=%s\n' "$ticket"
+	printf 'bootstrap: stack-up ticket=%s\n' "$ticket"
+	labctl_start "$ticket"
 }
 
 labctl_start() {
@@ -256,11 +267,12 @@ credential)
 	}
 	labctl_credential "$1" "$2"
 	;;
-create | start | stop | status | verify | destroy | cleanup-worktree)
+create | bootstrap | start | stop | status | verify | destroy | cleanup-worktree)
 	labctl_config_load "$config_path"
 	labctl_lifecycle_options "$@"
 	case $command in
 	create) labctl_create "$LABCTL_LIFECYCLE_TICKET" "$LABCTL_REPO_SELECTOR" ;;
+	bootstrap) labctl_bootstrap "$LABCTL_LIFECYCLE_TICKET" "$LABCTL_REPO_SELECTOR" ;;
 	start) labctl_start "$LABCTL_LIFECYCLE_TICKET" ;;
 	stop) labctl_stop "$LABCTL_LIFECYCLE_TICKET" ;;
 	status) labctl_status "$LABCTL_LIFECYCLE_TICKET" ;;

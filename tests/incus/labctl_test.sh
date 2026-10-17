@@ -112,6 +112,11 @@ LABCTL_INSTANCE_USER='sandbox-user' labctl_incus_render_cloud_init "$CLOUD_INIT_
 assert_succeeds rg -F --quiet 'install -d -o sandbox-user -g sandbox-user /home/sandbox-user' "$CLOUD_INIT_PATH"
 # Stack hooks may invoke GNU Make, so every rendered guest bootstrap must install it.
 assert_succeeds rg -x --fixed-strings --quiet '  - make' "$CLOUD_INIT_PATH"
+# Generic sandbox diagnostics and lifecycle scripts require these utilities before
+# the private stack hook runs.
+assert_succeeds rg -x --fixed-strings --quiet '  - jq' "$CLOUD_INIT_PATH"
+assert_succeeds rg -x --fixed-strings --quiet '  - screen' "$CLOUD_INIT_PATH"
+assert_succeeds rg -x --fixed-strings --quiet '  - net-tools' "$CLOUD_INIT_PATH"
 # CGO-backed private modules require the generic Ubuntu compiler toolchain.
 assert_succeeds rg -x --fixed-strings --quiet '  - build-essential' "$CLOUD_INIT_PATH"
 # Ubuntu's apt Go version is not sufficient for all mounted workspaces. The
@@ -187,12 +192,26 @@ export COMMAND_LOG
 cat >"${FAKE_BIN}/incus" <<'INCUS'
 #!/usr/bin/env bash
 printf 'incus %s\n' "$*" >>"$COMMAND_LOG"
+fake_instance_exists() {
+	[[ ${LABCTL_FAKE_INSTANCE_EXISTS:-false} == true ]] ||
+		[[ -n ${LABCTL_FAKE_INSTANCE_DIRECTORY:-} && -f ${LABCTL_FAKE_INSTANCE_DIRECTORY}/$1 ]]
+}
 case "$*" in
 'info '*' --format json' | 'config show '*' --expanded --format json' | 'config show '*' --format json')
 	printf '%s\n' 'Error: unknown flag: --format' >&2
 	exit 2
 	;;
-'info jira-#' | 'info nvo-20130') [[ ${LABCTL_FAKE_INSTANCE_EXISTS:-false} == true ]] ;;
+info\ --format*)
+	printf '%s\n' 'Error: unknown flag: --format' >&2
+	exit 2
+	;;
+info\ *) fake_instance_exists "$2" ;;
+init\ *)
+	if [[ -n ${LABCTL_FAKE_INSTANCE_DIRECTORY:-} ]]; then
+		mkdir -p "$LABCTL_FAKE_INSTANCE_DIRECTORY"
+		touch "${LABCTL_FAKE_INSTANCE_DIRECTORY}/${3:?}"
+	fi
+	;;
 launch\ *\ --no-start*)
 	printf '%s\n' 'Error: unknown flag: --no-start' >&2
 	exit 2
@@ -273,10 +292,6 @@ start\ *)
 	else
 		exit 1
 	fi
-	;;
-'info --format json')
-	printf '%s\n' 'Error: unknown flag: --format' >&2
-	exit 2
 	;;
 'info') [[ ${LABCTL_INCUS_ACCESS_DENIED:-false} != true ]] ;;
 'network show agentbr0') exit 1 ;;
@@ -622,6 +637,40 @@ assert_command_log_ordered 'start jira-#' 'exec jira-# -- cloud-init status --wa
 assert_equals '1' "$(rg -F -c 'exec jira-# -- bash -s --' "$COMMAND_LOG" || true)"
 unset LABCTL_FAKE_INSTANCE_STATE_FILE
 
+# Bootstrap is the idempotent lifecycle entry point: it reuses an already-running
+# sandbox without a duplicate Incus start, then executes the private stack hook once.
+: >"$COMMAND_LOG"
+BOOTSTRAP_REUSE_OUTPUT="${TEST_ROOT}/bootstrap-reuse-output"
+PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_REJECT_DUPLICATE_START=true assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" bootstrap 'JIRA-#' >"$BOOTSTRAP_REUSE_OUTPUT"
+assert_command_log_not_contains 'start jira-#'
+assert_equals '1' "$(rg -F -c 'exec jira-# -- bash -s --' "$COMMAND_LOG" || true)"
+assert_succeeds rg -F --quiet 'bootstrap: validate/create ticket=jira-#' "$BOOTSTRAP_REUSE_OUTPUT"
+assert_succeeds rg -F --quiet 'bootstrap: running/ready ticket=jira-#' "$BOOTSTRAP_REUSE_OUTPUT"
+assert_succeeds rg -F --quiet 'bootstrap: stack-up ticket=jira-#' "$BOOTSTRAP_REUSE_OUTPUT"
+
+# A new valid ticket creates its sandbox, then follows the same start path exactly once.
+mkdir -p "${TEST_ROOT}/workspace/bootstrap-new/one" "${TEST_ROOT}/workspace/bootstrap-new/two"
+printf 'gitdir: %s\n' "${TEST_ROOT}/workspace/master/one/worktrees/bootstrap-new" >"${TEST_ROOT}/workspace/bootstrap-new/one/.git"
+printf 'gitdir: %s\n' "${TEST_ROOT}/workspace/master/two/worktrees/bootstrap-new" >"${TEST_ROOT}/workspace/bootstrap-new/two/.git"
+BOOTSTRAP_CONFIG="${TEST_ROOT}/bootstrap-config.env"
+sed 's/^LABCTL_IP_POOL_END=.*/LABCTL_IP_POOL_END=10.42.0.12/' "$CONFIG_PATH" >"$BOOTSTRAP_CONFIG"
+chmod 600 "$BOOTSTRAP_CONFIG"
+LABCTL_FAKE_INSTANCE_DIRECTORY="${TEST_ROOT}/fake-instances"
+export LABCTL_FAKE_INSTANCE_DIRECTORY
+BOOTSTRAP_INSTANCE_CONFIG_JSON=$(jq -cn --arg master "${TEST_ROOT}/workspace/master" --arg ticket "${TEST_ROOT}/workspace/bootstrap-new" '{config:{"security.privileged":"false"},devices:{"git-master":{type:"disk",source:$master,path:$master},"ticket-workspace":{type:"disk",source:$ticket,path:$ticket}}}')
+: >"$COMMAND_LOG"
+PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=false LABCTL_FAKE_INSTANCE_CONFIG_JSON="$BOOTSTRAP_INSTANCE_CONFIG_JSON" assert_succeeds "$LABCTL_BIN" --config "$BOOTSTRAP_CONFIG" bootstrap bootstrap-new
+assert_command_log_contains 'init images:ubuntu/24.04 bootstrap-new'
+assert_equals '1' "$(rg -F -c 'start bootstrap-new' "$COMMAND_LOG" || true)"
+assert_equals '1' "$(rg -F -c 'exec bootstrap-new -- bash -s --' "$COMMAND_LOG" || true)"
+assert_equals 'running' "$(labctl_state_lookup 'bootstrap-new' | jq -r '.status')"
+unset LABCTL_FAKE_INSTANCE_DIRECTORY
+
+# Bad tickets are rejected before any Incus command can touch the host.
+: >"$COMMAND_LOG"
+PATH="${FAKE_BIN}:$PATH" assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" bootstrap '../bad-ticket'
+assert_command_log_not_contains 'incus '
+
 : >"$COMMAND_LOG"
 if ! PATH="${FAKE_BIN}:$PATH" "$LABCTL_BIN" --config "$CONFIG_PATH" --dry-run verify 'JIRA-#' >>"$COMMAND_LOG" 2>&1; then
 	fail 'dry-run verify failed'
@@ -679,7 +728,7 @@ DOC_README="${REPO_ROOT}/incus/README.md"
 [[ -f $DOC_README ]] || fail 'Incus operator README is missing'
 
 if [[ -f $DOC_README ]]; then
-	for public_command in preflight setup-host create start stop status verify destroy cleanup-worktree; do
+	for public_command in preflight setup-host create bootstrap start stop status verify destroy cleanup-worktree; do
 		rg -F --quiet "labctl ${public_command}" "$DOC_README" || fail "README does not document labctl ${public_command}"
 	done
 	for required_option in --yes --dry-run; do
