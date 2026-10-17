@@ -42,7 +42,11 @@ EOF
 cat >"$TEST_ROOT/bin/git" <<'EOF'
 #!/usr/bin/env bash
 printf 'git %s\n' "$*" >>"${TEST_LOG:?}"
-[[ $3 == worktree && $4 == list && $5 == --porcelain ]] || exit 2
+case "$3 $4" in
+'worktree list') exit 0 ;;
+'show-ref --verify' | 'branch -D') exit 0 ;;
+*) exit 2 ;;
+esac
 EOF
 chmod +x "$TEST_ROOT/home/.config/herdr-spreader/nvo-harness-worktree-remove.sh" "$TEST_ROOT/home/.local/bin/labctl" "$TEST_ROOT/bin/sg" "$TEST_ROOT/bin/sudo" "$TEST_ROOT/bin/git"
 
@@ -50,6 +54,7 @@ HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$PATH" TEST_LOG="$LOG" "$SCRIPT" 'NV
 assert_contains 'labctl destroy NVO-20131 --yes' "$LOG"
 assert_contains 'sudo chown -R' "$LOG"
 assert_contains 'remove-worktree NVO-20131 --force' "$LOG"
+assert_contains 'branch -D badaniya/PlatformCommonModels/NVO-20131' "$LOG"
 [[ ! -d $TEST_ROOT/home/workspace/badaniya/NVO-20131/PlatformCommonModels ]] || fail 'unregistered orphan worktree was not removed'
 [[ ! -e $TEST_ROOT/home/workspace/badaniya/NVO-20131 ]] || fail 'aggregate context residue was not removed'
 

@@ -59,12 +59,21 @@ if [[ $force == true && -d $project_root ]]; then
 	for repo in GoDCApp PlatformCommonModels PlatformServices PlatformServicesCommon; do
 		worktree_path="${project_root}/${repo}"
 		bare_repo="${HOME}/workspace/badaniya/master/${repo}"
-		[[ -d $worktree_path ]] || continue
+		registered=false
 		if git -C "$bare_repo" worktree list --porcelain 2>/dev/null | rg -Fx -- "worktree ${worktree_path}" >/dev/null; then
-			continue
+			registered=true
 		fi
-		printf '→ Removing orphaned worktree directory %s…\n' "$worktree_path"
-		rm -rf --one-file-system -- "$worktree_path"
+		if [[ -d $worktree_path && $registered == false ]]; then
+			printf '→ Removing orphaned worktree directory %s…\n' "$worktree_path"
+			rm -rf --one-file-system -- "$worktree_path"
+		fi
+		if [[ $registered == false ]]; then
+			branch="badaniya/${repo}/${ticket}"
+			if git -C "$bare_repo" show-ref --verify --quiet "refs/heads/${branch}"; then
+				printf '→ Deleting orphaned worktree branch %s…\n' "$branch"
+				git -C "$bare_repo" branch -D "$branch"
+			fi
+		fi
 	done
 fi
 
