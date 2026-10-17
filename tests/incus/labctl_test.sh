@@ -134,7 +134,10 @@ cat >"${FAKE_BIN}/incus" <<'INCUS'
 #!/usr/bin/env bash
 printf 'incus %s\n' "$*" >>"$COMMAND_LOG"
 case "$*" in
-'info '*' --format json') printf '%s\n' "{\"status\":\"${LABCTL_FAKE_INSTANCE_STATUS:-Running}\"}" ;;
+'info '*' --format json' | 'config show '*' --expanded --format json' | 'config show '*' --format json')
+	printf '%s\n' 'Error: unknown flag: --format' >&2
+	exit 2
+	;;
 'info jira-#' | 'info nvo-20130') [[ ${LABCTL_FAKE_INSTANCE_EXISTS:-false} == true ]] ;;
 launch\ *\ --no-start*)
 	printf '%s\n' 'Error: unknown flag: --no-start' >&2
@@ -151,11 +154,11 @@ config\ device\ set\ *\ eth0\ ipv4.address=*)
 	*) printf '%s\n' "${LABCTL_FAKE_INSTANCE_IP:-10.42.0.10}" ;;
 	esac
 	;;
-'config show '*' --expanded --format json' | 'config show '*' --format json')
+'query /1.0/instances/'*)
 	if [[ -n ${LABCTL_FAKE_INSTANCE_CONFIG_JSON+x} ]]; then
-		printf '%s\n' "$LABCTL_FAKE_INSTANCE_CONFIG_JSON"
+		printf '%s\n' "$LABCTL_FAKE_INSTANCE_CONFIG_JSON" | jq --arg status "${LABCTL_FAKE_INSTANCE_STATUS:-Running}" '. + {status: $status}'
 	else
-		printf '%s\n' '{"config":{"security.privileged":"false"},"devices":{}}'
+		jq -cn --arg status "${LABCTL_FAKE_INSTANCE_STATUS:-Running}" '{status: $status, config: {"security.privileged": "false"}, devices: {}}'
 	fi
 	;;
 'query /1.0') printf '%s\n' '{"environment":{"kernel_features":{"idmapped_mounts":true}}}' ;;
@@ -422,7 +425,22 @@ if rg -x --fixed-strings --quiet 'incus config device override nvo-20130 eth0 ip
 	fail 'create issued an empty IPv4 device override for nvo-20130'
 fi
 
-PATH="${FAKE_BIN}:$PATH" assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" status 'JIRA-#'
+# Incus 6 rejects JSON formatting on both `info` and `config show`; status and
+# isolation checks must query the validated instance API endpoint instead.
+LABCTL_FAKE_INSTANCE_CONFIG_JSON=$(jq -cn --arg master "${TEST_ROOT}/workspace/master" --arg ticket "${TEST_ROOT}/workspace/jira-#" '{config:{"security.privileged":"false"},devices:{"git-master":{type:"disk",source:$master,path:$master},"ticket-workspace":{type:"disk",source:$ticket,path:$ticket}}}')
+export LABCTL_FAKE_INSTANCE_CONFIG_JSON
+: >"$COMMAND_LOG"
+PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=true assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" status 'JIRA-#'
+assert_command_log_contains 'query /1.0/instances/jira-%23'
+assert_command_log_not_contains 'info jira-# --format json'
+assert_command_log_not_contains 'config show jira-# --expanded --format json'
+
+: >"$COMMAND_LOG"
+PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=true LABCTL_FAKE_PROFILE_EXISTS=true assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" verify 'JIRA-#'
+assert_command_log_contains 'query /1.0/instances/jira-%23'
+assert_command_log_not_contains 'info jira-# --format json'
+assert_command_log_not_contains 'config show jira-# --expanded --format json'
+
 PATH="${FAKE_BIN}:$PATH" assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" destroy 'JIRA-#'
 PATH="${FAKE_BIN}:$PATH" assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" destroy 'JIRA-#' --yes --dry-run
 assert_command_log_not_contains 'git worktree remove'

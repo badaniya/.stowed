@@ -129,9 +129,22 @@ labctl_incus_launch() {
 	labctl_run incus start "$instance"
 }
 
+labctl_incus_instance_query() {
+	local instance=$1 normalized encoded_instance
+	normalized=$(labctl_normalize_ticket "$instance") || return 1
+	[[ $instance == "$normalized" ]] || {
+		labctl_die "invalid Incus instance name: $instance"
+		return 1
+	}
+	encoded_instance=$(jq -rn --arg instance "$instance" '$instance | @uri') || {
+		labctl_die "unable to encode Incus instance name: $instance"
+		return 1
+	}
+	incus query "/1.0/instances/$encoded_instance"
+}
+
 labctl_incus_inspect() {
-	local instance=$1
-	incus info "$instance" --format json
+	labctl_incus_instance_query "$1"
 }
 
 labctl_incus_instance_exists() {
@@ -143,7 +156,7 @@ labctl_incus_instance_ip() {
 }
 
 labctl_incus_is_running() {
-	incus info "$1" --format json | jq -e '.status == "Running"' >/dev/null
+	labctl_incus_instance_query "$1" | jq -e '.status == "Running"' >/dev/null
 }
 
 labctl_incus_attach_workspace() {
@@ -185,7 +198,7 @@ labctl_incus_instance_is_unsafe() {
 
 labctl_incus_workspace_is_mounted() {
 	local instance=$1 ticket_root=$2 instance_json
-	instance_json=$(incus config show "$instance" --expanded --format json) || {
+	instance_json=$(labctl_incus_instance_query "$instance") || {
 		labctl_die "unable to inspect sandbox configuration: $instance"
 		return 1
 	}
@@ -199,7 +212,7 @@ labctl_incus_workspace_is_mounted() {
 labctl_incus_verify_isolation() {
 	local instance=$1 instance_json
 	labctl_incus_validate_launch_profiles || return 1
-	instance_json=$(incus config show "$instance" --expanded --format json) || {
+	instance_json=$(labctl_incus_instance_query "$instance") || {
 		labctl_die "unable to inspect sandbox configuration: $instance"
 		return 1
 	}
