@@ -230,11 +230,52 @@ labctl_incus_verify_isolation() {
 	fi
 }
 
-labctl_incus_stack_command() {
-	local instance=$1 ticket_root=$2 command=$3 quoted_root
-	printf -v quoted_root '%q' "$ticket_root"
-	labctl_run incus exec "$instance" -- bash -lc "cd -- $quoted_root && $command"
+labctl_incus_stack_command() (
+	set -euo pipefail
+	local instance=$1 ticket_root=$2 command=$3 helper
+	umask 077
+	helper=$(mktemp "${TMPDIR:-/tmp}/labctl-stack-wrapper.XXXXXX")
+	trap 'rm -f -- "$helper"' EXIT
+	chmod 600 "$helper"
+	cat >"$helper" <<'SCRIPT'
+#!/usr/bin/env bash
+set -euo pipefail
+
+ticket_root=$1
+credential_name=$2
+git_host=$3
+stack_command=$4
+runtime_parent=${LABCTL_GIT_ASKPASS_RUNTIME_DIR:-/run}
+runtime_dir=$(mktemp -d "$runtime_parent/labctl-git-askpass.XXXXXX")
+cleanup() {
+  rm -rf -- "$runtime_dir"
 }
+trap cleanup EXIT HUP INT TERM
+chmod 700 "$runtime_dir"
+askpass="$runtime_dir/askpass"
+cat >"$askpass" <<'ASKPASS'
+#!/usr/bin/env bash
+set -euo pipefail
+credential_name=${LABCTL_GIT_CREDENTIAL_NAME:?}
+mapfile -t credential_lines < <(systemd-creds cat "$credential_name")
+(( ${#credential_lines[@]} == 2 )) || exit 1
+case ${1:-} in
+  Username*) printf '%s\n' "${credential_lines[0]}" ;;
+  Password*) printf '%s\n' "${credential_lines[1]}" ;;
+  *) exit 1 ;;
+esac
+ASKPASS
+chmod 700 "$askpass"
+export LABCTL_GIT_CREDENTIAL_NAME="$credential_name"
+export GIT_ASKPASS="$askpass"
+export GIT_TERMINAL_PROMPT=0
+export GOPRIVATE="$git_host"
+export GONOSUMDB="$git_host"
+cd -- "$ticket_root"
+bash -lc "$stack_command"
+SCRIPT
+	labctl_run incus exec "$instance" -- bash -s -- "$ticket_root" "$LABCTL_GIT_CREDENTIAL_NAME" "$LABCTL_GIT_HOST" "$command" <"$helper"
+)
 
 labctl_incus_start() {
 	local instance=$1 ticket_root=$2
@@ -250,3 +291,83 @@ labctl_incus_stop() {
 	labctl_stack_down "$instance"
 	labctl_run incus stop "$instance"
 }
+
+labctl_incus_validate_credential_name() { labctl_config_validate_credential_name "$1"; }
+
+labctl_incus_instance_api_path() {
+	local instance=$1 normalized encoded_instance
+	normalized=$(labctl_normalize_ticket "$instance") || return 1
+	[[ $instance == "$normalized" ]] || {
+		labctl_die "invalid Incus instance name: $instance"
+		return 1
+	}
+	encoded_instance=$(jq -rn --arg instance "$instance" '$instance | @uri') || return 1
+	printf '/1.0/instances/%s\n' "$encoded_instance"
+}
+
+labctl_incus_patch_config_file() {
+	local instance=$1 payload=$2 api_path
+	api_path=$(labctl_incus_instance_api_path "$instance") || return 1
+	[[ -r $payload ]] || {
+		labctl_die 'Incus configuration patch payload is unreadable'
+		return 1
+	}
+	labctl_run incus query "$api_path" --request PATCH --data "@$payload" >/dev/null
+}
+
+labctl_incus_set_systemd_credential() (
+	set -euo pipefail
+	local instance=$1 credential_name=$2 credential_request credential_response credential_value payload
+	local line username='' password='' username_count=0 password_count=0 api_key
+	labctl_incus_validate_credential_name "$credential_name"
+	labctl_incus_instance_exists "$instance" || {
+		labctl_die "sandbox instance does not exist: $instance"
+		return 1
+	}
+	umask 077
+	credential_request=$(mktemp "${TMPDIR:-/tmp}/labctl-git-request.XXXXXX")
+	credential_response=$(mktemp "${TMPDIR:-/tmp}/labctl-git-response.XXXXXX")
+	credential_value=$(mktemp "${TMPDIR:-/tmp}/labctl-git-value.XXXXXX")
+	payload=$(mktemp "${TMPDIR:-/tmp}/labctl-incus-patch.XXXXXX")
+	trap 'rm -f -- "$credential_request" "$credential_response" "$credential_value" "$payload"' EXIT
+	chmod 600 "$credential_request" "$credential_response" "$credential_value" "$payload"
+	printf 'protocol=https\nhost=%s\n\n' "$LABCTL_GIT_HOST" >"$credential_request"
+	git credential fill <"$credential_request" >"$credential_response"
+	while IFS= read -r line || [[ -n $line ]]; do
+		case $line in
+		username=*)
+			username=${line#username=}
+			username_count=$((username_count + 1))
+			;;
+		password=*)
+			password=${line#password=}
+			password_count=$((password_count + 1))
+			;;
+		esac
+	done <"$credential_response"
+	[[ $username_count == 1 && -n $username && $username != *$'\n'* && $password_count == 1 && -n $password && $password != *$'\n'* ]] || {
+		labctl_die 'Git credential helper did not return exactly one username and password'
+		return 1
+	}
+	printf '%s\n%s\n' "$username" "$password" >"$credential_value"
+	api_key="systemd.credential.$credential_name"
+	jq -n --arg key "$api_key" --rawfile value "$credential_value" '{config: {($key): $value}}' >"$payload"
+	labctl_incus_patch_config_file "$instance" "$payload"
+)
+
+labctl_incus_unset_systemd_credential() (
+	set -euo pipefail
+	local instance=$1 credential_name=$2 payload api_key
+	labctl_incus_validate_credential_name "$credential_name"
+	labctl_incus_instance_exists "$instance" || {
+		labctl_die "sandbox instance does not exist: $instance"
+		return 1
+	}
+	umask 077
+	payload=$(mktemp "${TMPDIR:-/tmp}/labctl-incus-patch.XXXXXX")
+	trap 'rm -f -- "$payload"' EXIT
+	chmod 600 "$payload"
+	api_key="systemd.credential.$credential_name"
+	jq -n --arg key "$api_key" '{config: {($key): null}}' >"$payload"
+	labctl_incus_patch_config_file "$instance" "$payload"
+)

@@ -9,8 +9,20 @@ labctl_config_required_vars=(
 	LABCTL_INSTANCE_USER LABCTL_GO_VERSION LABCTL_DEVICE_TCP_PORTS LABCTL_STACK_UP_COMMAND
 	LABCTL_STACK_DOWN_COMMAND LABCTL_STACK_HEALTH_COMMAND
 	LABCTL_WORKTREE_CREATE_HOOK LABCTL_WORKTREE_REMOVE_HOOK
-	LABCTL_HARNESS_REPO_NAMES
+	LABCTL_HARNESS_REPO_NAMES LABCTL_GIT_HOST
 )
+
+labctl_config_optional_vars=(
+	LABCTL_GIT_CREDENTIAL_NAME
+)
+
+labctl_config_validate_credential_name() {
+	local name=$1
+	[[ $name =~ ^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$ ]] || {
+		labctl_die "invalid systemd credential name: $name"
+		return 1
+	}
+}
 
 labctl_config_is_ipv4() {
 	local ip=$1 octet IFS=.
@@ -54,6 +66,13 @@ labctl_config_validate() {
 		labctl_die 'Go version must use numeric semantic version format: MAJOR.MINOR.PATCH'
 		return 1
 	}
+	[[ $LABCTL_GIT_HOST =~ ^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?(:[0-9]{1,5})?$ ]] || {
+		labctl_die 'Git host must be an HTTPS host name with an optional port'
+		return 1
+	}
+	if [[ -n ${LABCTL_GIT_CREDENTIAL_NAME:-} ]] && ! labctl_config_validate_credential_name "$LABCTL_GIT_CREDENTIAL_NAME"; then
+		return 1
+	fi
 	[[ $LABCTL_AGENT_CIDR == */* ]] || {
 		labctl_die 'invalid agent CIDR'
 		return 1
@@ -118,7 +137,7 @@ labctl_config_load() {
 	}
 	local line line_number=0 name value
 	local -A seen_names=()
-	for name in "${labctl_config_required_vars[@]}"; do
+	for name in "${labctl_config_required_vars[@]}" "${labctl_config_optional_vars[@]}"; do
 		unset "$name"
 	done
 	while IFS= read -r line || [[ -n $line ]]; do
@@ -131,7 +150,7 @@ labctl_config_load() {
 		fi
 		name=${BASH_REMATCH[1]}
 		value=${BASH_REMATCH[2]}
-		case " ${labctl_config_required_vars[*]} " in
+		case " ${labctl_config_required_vars[*]} ${labctl_config_optional_vars[*]} " in
 		*" $name "*) ;;
 		*)
 			labctl_die "unrecognized configuration variable at $path:$line_number: $name"
@@ -145,6 +164,7 @@ labctl_config_load() {
 		seen_names[$name]=1
 		printf -v "$name" '%s' "$value"
 	done <"$path"
+	: "${LABCTL_GIT_CREDENTIAL_NAME:=git-module-token}"
 	labctl_config_validate || return 1
 	LABCTL_CONFIG_PATH=$path
 	export LABCTL_CONFIG_PATH

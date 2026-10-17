@@ -39,6 +39,8 @@ Commands:
   verify TICKET [--dry-run]
   destroy TICKET --yes [--dry-run]
   cleanup-worktree TICKET --yes [--dry-run]
+  credential sync TICKET                     Sync host Git credential into the sandbox
+  credential unset TICKET                    Remove the sandbox Git credential
 USAGE
 }
 
@@ -170,6 +172,19 @@ labctl_destroy() {
 	[[ ${LABCTL_DRY_RUN:-false} == true ]] || labctl_state_set_status "$ticket" destroyed
 }
 
+labctl_credential() {
+	local action=${1:-} ticket=${2:-}
+	[[ $action == sync || $action == unset ]] || {
+		labctl_die 'credential requires: credential <sync|unset> TICKET'
+		return 1
+	}
+	ticket=$(labctl_normalize_ticket "$ticket") || return 1
+	case $action in
+	sync) labctl_incus_set_systemd_credential "$ticket" "$LABCTL_GIT_CREDENTIAL_NAME" ;;
+	unset) labctl_incus_unset_systemd_credential "$ticket" "$LABCTL_GIT_CREDENTIAL_NAME" ;;
+	esac
+}
+
 labctl_cleanup_worktree() {
 	local ticket=$1
 	ticket=$(labctl_normalize_ticket "$ticket") || return 1
@@ -232,6 +247,14 @@ setup-host)
 	}
 	export LABCTL_ASSUME_YES=true
 	labctl_incus_setup_host
+	;;
+credential)
+	labctl_config_load "$config_path"
+	[[ $# -eq 2 ]] || {
+		labctl_die 'credential requires: credential <sync|unset> TICKET'
+		exit 1
+	}
+	labctl_credential "$1" "$2"
 	;;
 create | start | stop | status | verify | destroy | cleanup-worktree)
 	labctl_config_load "$config_path"

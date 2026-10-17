@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-# shellcheck source=test_helper.sh
+# shellcheck source=tests/incus/test_helper.sh
 source "${REPO_ROOT}/tests/incus/test_helper.sh"
 
 LABCTL_BIN="${REPO_ROOT}/incus/.local/bin/labctl"
@@ -50,6 +50,8 @@ LABCTL_STACK_HEALTH_COMMAND=compose ps
 LABCTL_WORKTREE_CREATE_HOOK=/bin/true
 LABCTL_WORKTREE_REMOVE_HOOK=/bin/true
 LABCTL_HARNESS_REPO_NAMES=one,two
+LABCTL_GIT_HOST=git.example.test
+LABCTL_GIT_CREDENTIAL_NAME=git-module-token
 CONFIG
 chmod 600 "$CONFIG_PATH"
 
@@ -187,6 +189,13 @@ config\ device\ set\ *\ eth0\ ipv4.address=*)
 	*) printf '%s\n' "${LABCTL_FAKE_INSTANCE_IP:-10.42.0.10}" ;;
 	esac
 	;;
+query\ /1.0/instances/*\ --request\ PATCH\ --data\ @*)
+	patch_file=${6#@}
+	jq -e --arg credential "systemd.credential.${LABCTL_FAKE_CREDENTIAL_NAME:-git-module-token}" '
+		(keys == ["config"]) and (.config | keys == [$credential])
+	' "$patch_file" >/dev/null
+	printf '%s\n' valid >"${LABCTL_FAKE_PATCH_VALIDATION:?}"
+	;;
 'query /1.0/instances/'*)
 	status=${LABCTL_FAKE_INSTANCE_STATUS:-Running}
 	if [[ -n ${LABCTL_FAKE_INSTANCE_STATE_FILE:-} && -f ${LABCTL_FAKE_INSTANCE_STATE_FILE} ]]; then
@@ -196,6 +205,13 @@ config\ device\ set\ *\ eth0\ ipv4.address=*)
 		printf '%s\n' "$LABCTL_FAKE_INSTANCE_CONFIG_JSON" | jq --arg status "$status" '. + {status: $status}'
 	else
 		jq -cn --arg status "$status" '{status: $status, config: {"security.privileged": "false"}, devices: {}}'
+	fi
+	;;
+exec\ *\ --\ bash\ -s\ --\ *)
+	if [[ -n ${LABCTL_FAKE_CAPTURE_REMOTE_SCRIPT:-} ]]; then
+		cat >"$LABCTL_FAKE_CAPTURE_REMOTE_SCRIPT"
+	else
+		cat >/dev/null
 	fi
 	;;
 start\ *)
@@ -557,13 +573,13 @@ if ! PATH="${FAKE_BIN}:$PATH" "$LABCTL_BIN" --config "$CONFIG_PATH" --dry-run ve
 fi
 assert_command_log_contains 'nc -z -w 3 10.42.0.10 10001'
 assert_command_log_contains 'nc -z -w 3 10.42.0.10 10002'
-assert_command_log_contains 'exec jira-# -- bash -lc'
+assert_command_log_contains 'exec jira-# -- bash -s --'
 assert_command_log_not_contains 'config device add jira-# proxy'
 
 : >"$COMMAND_LOG"
 PATH="${FAKE_BIN}:$PATH" assert_succeeds labctl_stack_up 'JIRA-#'
 PATH="${FAKE_BIN}:$PATH" assert_succeeds labctl_stack_down 'JIRA-#'
-assert_command_log_contains 'exec jira-# -- bash -lc cd --'
+assert_command_log_contains 'exec jira-# -- bash -s --'
 assert_command_log_contains 'compose up -d'
 assert_command_log_contains 'compose down'
 
@@ -634,5 +650,86 @@ if [[ -f $DOC_README ]]; then
 		fail 'README contains a credential value'
 	fi
 fi
+
+# Credential delivery: sync reads host Git credentials through stdin/stdout only,
+# sends a restrictive temporary API payload, and never prints the secret.
+CREDENTIAL_SECRET=$(printf '%s%s' 'credential-test-token-' 'not-for-logs')
+CREDENTIAL_NAME='git-module-token'
+PATCH_VALIDATION="${TEST_ROOT}/patch-validation"
+cat >"${FAKE_BIN}/git" <<'GIT'
+#!/usr/bin/env bash
+printf 'git %s\n' "$*" >>"$COMMAND_LOG"
+if [[ ${1:-} == credential && ${2:-} == fill ]]; then
+  cat >/dev/null
+  printf 'protocol=https\nhost=git.example.test\nusername=credential-user\npassword=%s\n\n' "$LABCTL_FAKE_GIT_PASSWORD"
+fi
+GIT
+cat >"${FAKE_BIN}/systemd-creds" <<'CREDS'
+#!/usr/bin/env bash
+printf 'systemd-creds %s\n' "$*" >>"$COMMAND_LOG"
+[[ ${1:-} == cat ]] || exit 2
+printf '%s\n%s\n' credential-user "$LABCTL_FAKE_GIT_PASSWORD"
+CREDS
+cat >"${FAKE_BIN}/askpass-probe" <<'PROBE'
+#!/usr/bin/env bash
+username=$("$GIT_ASKPASS" 'Username for https://git.example.test:')
+password=$("$GIT_ASKPASS" 'Password for https://git.example.test:')
+printf '%s:%s\n' "$username" "$password" | sha256sum | cut -d' ' -f1 >"$LABCTL_ASKPASS_PROBE_HASH"
+exit 17
+PROBE
+chmod +x "${FAKE_BIN}/git" "${FAKE_BIN}/systemd-creds" "${FAKE_BIN}/askpass-probe"
+
+# Capture API payloads without writing their content to the command log.  The
+# production command must pass only a @temporary-file reference to Incus.
+: >"$COMMAND_LOG"
+PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_GIT_PASSWORD="$CREDENTIAL_SECRET" LABCTL_FAKE_PATCH_VALIDATION="$PATCH_VALIDATION" assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" credential sync 'JIRA-#'
+assert_equals 'valid' "$(cat "$PATCH_VALIDATION")"
+assert_command_log_contains 'git credential fill'
+assert_command_log_contains 'incus query /1.0/instances/jira-%23 --request PATCH --data @'
+assert_command_log_not_contains "$CREDENTIAL_SECRET"
+assert_command_log_not_contains 'username=credential-user'
+assert_command_log_not_contains 'password='
+assert_fails rg -F --quiet "$CREDENTIAL_SECRET" "${REPO_ROOT}/incus" "${REPO_ROOT}/tests/incus" "$CONFIG_PATH" "${XDG_STATE_HOME}"
+
+# Names must map to exactly one safe systemd credential key and no other
+# instance configuration.  Invalid configured names fail before Git runs.
+INVALID_CREDENTIAL_CONFIG="${TEST_ROOT}/invalid-credential-name.env"
+sed 's/^LABCTL_GIT_CREDENTIAL_NAME=.*/LABCTL_GIT_CREDENTIAL_NAME=bad name/' "$CONFIG_PATH" >"$INVALID_CREDENTIAL_CONFIG"
+chmod 600 "$INVALID_CREDENTIAL_CONFIG"
+: >"$COMMAND_LOG"
+PATH="${FAKE_BIN}:$PATH" assert_fails "$LABCTL_BIN" --config "$INVALID_CREDENTIAL_CONFIG" credential sync 'JIRA-#'
+assert_command_log_not_contains 'git credential fill'
+
+: >"$COMMAND_LOG"
+rm -f "$PATCH_VALIDATION"
+PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_PATCH_VALIDATION="$PATCH_VALIDATION" assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" credential unset 'JIRA-#'
+assert_equals 'valid' "$(cat "$PATCH_VALIDATION")"
+assert_command_log_contains 'incus query /1.0/instances/jira-%23 --request PATCH --data @'
+assert_command_log_not_contains "$CREDENTIAL_SECRET"
+
+# The guest wrapper creates a root-only temporary askpass helper, obtains its
+# values only at runtime through systemd-creds, and removes the helper directory
+# even when the wrapped stack command fails.
+REMOTE_SCRIPT="${TEST_ROOT}/remote-stack.sh"
+REMOTE_RUNTIME="${TEST_ROOT}/remote-run"
+REMOTE_PROBE_HASH="${TEST_ROOT}/askpass-hash"
+mkdir -p "$REMOTE_RUNTIME"
+: >"$COMMAND_LOG"
+PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_CAPTURE_REMOTE_SCRIPT="$REMOTE_SCRIPT" LABCTL_FAKE_GIT_PASSWORD="$CREDENTIAL_SECRET" assert_succeeds labctl_incus_stack_command 'jira-#' "${TEST_ROOT}/workspace/jira-#" 'askpass-probe'
+# shellcheck disable=SC2016 # Inspect the generated helper's literal variable expansion.
+assert_succeeds rg -F --quiet 'systemd-creds cat "$credential_name"' "$REMOTE_SCRIPT"
+assert_succeeds rg -F --quiet 'trap cleanup EXIT HUP INT TERM' "$REMOTE_SCRIPT"
+# shellcheck disable=SC2016 # Inspect the generated cleanup command literally.
+assert_succeeds rg -F --quiet 'rm -rf -- "$runtime_dir"' "$REMOTE_SCRIPT"
+assert_fails rg -F --quiet "$CREDENTIAL_SECRET" "$REMOTE_SCRIPT"
+
+set +e
+PATH="${FAKE_BIN}:$PATH" LABCTL_GIT_ASKPASS_RUNTIME_DIR="$REMOTE_RUNTIME" LABCTL_ASKPASS_PROBE_HASH="$REMOTE_PROBE_HASH" LABCTL_FAKE_GIT_PASSWORD="$CREDENTIAL_SECRET" bash "$REMOTE_SCRIPT" "${TEST_ROOT}/workspace/jira-#" "$CREDENTIAL_NAME" git.example.test 'askpass-probe'
+remote_status=$?
+set -e
+assert_equals '17' "$remote_status"
+assert_equals "$(printf 'credential-user:%s\n' "$CREDENTIAL_SECRET" | sha256sum | cut -d' ' -f1)" "$(cat "$REMOTE_PROBE_HASH")"
+assert_equals '0' "$(find "$REMOTE_RUNTIME" -mindepth 1 -maxdepth 1 | wc -l | tr -d ' ')"
+assert_command_log_not_contains "$CREDENTIAL_SECRET"
 
 finish_tests

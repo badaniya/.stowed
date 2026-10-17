@@ -75,6 +75,8 @@ placeholders below; never put private identifiers in committed documentation.
 | `labctl verify <ticket>` | Checks isolation, private Docker, stack health, and configured TCP reachability. |
 | `labctl destroy <ticket> --yes` | Removes the named sandbox and private runtime state, not source worktrees. |
 | `labctl cleanup-worktree <ticket> --yes` | Separately delegates source-worktree removal after explicit confirmation. |
+| `labctl credential sync <ticket>` | Reads the configured HTTPS host credential without displaying it and updates only the configured sandbox system credential. |
+| `labctl credential unset <ticket>` | Removes only the configured sandbox system credential. |
 
 Use `--dry-run` before every state-changing action, including host setup,
 creation, destruction, and worktree cleanup. The global form places it before
@@ -125,6 +127,20 @@ CPU, memory, process count, disk use, and host headroom under representative
 load. Record the measurement and obtain an operator decision before scaling.
 
 Kubernetes workload classes, CI agent registration, GitOps control planes,
-application-configuration repository access, DNS naming, and automated device
-credentials are explicitly deferred. They are not part of this package's
-initial rollout.
+application-configuration repository access, and DNS naming are explicitly
+deferred. They are not part of this package's initial rollout.
+
+## Private Git credential delivery
+
+Set `LABCTL_GIT_HOST` to the Git HTTPS host. `LABCTL_GIT_CREDENTIAL_NAME` is
+optional and defaults to `git-module-token`. Do not place a credential value or
+username in active configuration. `labctl credential sync <ticket>` uses the
+host Git credential helper, writes restrictive temporary files, and patches only
+`systemd.credential.<configured-name>` on the target instance. It never prints
+the returned credential. Use `labctl credential unset <ticket>` to remove that
+key.
+
+During stack hooks, a root-only temporary askpass helper reads the systemd
+credential at runtime, supplies the returned username and token to Git, sets
+`GOPRIVATE` and `GONOSUMDB` for the configured host, and removes itself even if
+the hook fails. The token is not written to the sandbox filesystem.
