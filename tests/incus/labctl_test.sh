@@ -104,6 +104,8 @@ LABCTL_INSTANCE_USER='sandbox-user' labctl_incus_render_cloud_init "$CLOUD_INIT_
 assert_succeeds rg -F --quiet 'install -d -o sandbox-user -g sandbox-user /home/sandbox-user' "$CLOUD_INIT_PATH"
 # Stack hooks may invoke GNU Make, so every rendered guest bootstrap must install it.
 assert_succeeds rg -x --fixed-strings --quiet '  - make' "$CLOUD_INIT_PATH"
+# CGO-backed private modules require the generic Ubuntu compiler toolchain.
+assert_succeeds rg -x --fixed-strings --quiet '  - build-essential' "$CLOUD_INIT_PATH"
 # Ubuntu's apt Go version is not sufficient for all mounted workspaces. The
 # rendered generic bootstrap must install the configured official toolchain.
 assert_succeeds rg -F --quiet 'https://go.dev/dl/go1.25.11.linux-amd64.tar.gz' "$CLOUD_INIT_PATH"
