@@ -80,6 +80,14 @@ chmod 600 "$DUPLICATE_PORT_CONFIG"
 assert_fails labctl_config_load "$DUPLICATE_PORT_CONFIG"
 
 labctl_config_load "$CONFIG_PATH"
+
+# Regression: lifecycle Git configuration uses `su -` and therefore requires a
+# writable configured-user home even when cloud image ownership is incorrect.
+CLOUD_INIT_PATH="${TEST_ROOT}/cloud-init.yaml"
+LABCTL_INSTANCE_USER='sandbox-user' labctl_incus_render_cloud_init "$CLOUD_INIT_PATH"
+assert_succeeds rg -F --quiet 'install -d -o sandbox-user -g sandbox-user /home/sandbox-user' "$CLOUD_INIT_PATH"
+labctl_config_load "$CONFIG_PATH"
+
 assert_succeeds labctl_incus_cidr_overlaps '10.42.0.0/16' '10.42.1.0/24'
 assert_equals '10.42.0.10' "$(labctl_state_reserve_ip 'jira-#')"
 assert_equals '10.42.0.10' "$(labctl_state_reserve_ip 'jira-#')"

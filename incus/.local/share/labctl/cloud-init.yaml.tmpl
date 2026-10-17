@@ -8,4 +8,5 @@ users:
     groups: [docker]
     shell: /bin/bash
 runcmd:
+  - install -d -o __LABCTL_INSTANCE_USER__ -g __LABCTL_INSTANCE_USER__ /home/__LABCTL_INSTANCE_USER__
   - systemctl enable --now docker
