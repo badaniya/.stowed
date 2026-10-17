@@ -44,6 +44,7 @@ LABCTL_INSTANCE_IMAGE=images:ubuntu/24.04
 LABCTL_INSTANCE_USER=ubuntu
 LABCTL_GO_VERSION=1.25.11
 LABCTL_INTERNAL_INSECURE_REGISTRIES=registry-one.example.test:5000,registry-two.example.test:5001
+LABCTL_DOCKER_DNS_SERVERS=192.0.2.53,198.51.100.53
 LABCTL_DEVICE_TCP_PORTS=10001,10002
 LABCTL_STACK_UP_COMMAND=IMAGE_IMPORT=false ./private-pcm-setup.sh --token=stack-command-secret-not-for-logs
 LABCTL_STACK_DOWN_COMMAND=compose down
@@ -73,6 +74,13 @@ for invalid_registry_endpoints in 'http://registry.example.test:5000' 'registry.
 	sed "s|^LABCTL_INTERNAL_INSECURE_REGISTRIES=.*|LABCTL_INTERNAL_INSECURE_REGISTRIES=${invalid_registry_endpoints}|" "$CONFIG_PATH" >"$INVALID_REGISTRY_CONFIG"
 	chmod 600 "$INVALID_REGISTRY_CONFIG"
 	assert_fails labctl_config_load "$INVALID_REGISTRY_CONFIG"
+done
+
+for invalid_dns_servers in 'not-an-ip' '192.0.2.53,' '192.0.2.53,not-an-ip' '192.0.2.53,192.0.2.53'; do
+	INVALID_DNS_CONFIG="${TEST_ROOT}/invalid-dns-${RANDOM}.env"
+	sed "s/^LABCTL_DOCKER_DNS_SERVERS=.*/LABCTL_DOCKER_DNS_SERVERS=${invalid_dns_servers}/" "$CONFIG_PATH" >"$INVALID_DNS_CONFIG"
+	chmod 600 "$INVALID_DNS_CONFIG"
+	assert_fails labctl_config_load "$INVALID_DNS_CONFIG"
 done
 
 mkdir -p "${TEST_ROOT}/workspace/master"
@@ -128,14 +136,18 @@ assert_succeeds rg -F --quiet "export PATH=\"/usr/local/go/bin:\$PATH\"" "$CLOUD
 # the Go command available before an interactive profile is read.
 assert_succeeds rg -F --quiet 'ln -sf /usr/local/go/bin/go /usr/local/bin/go' "$CLOUD_INIT_PATH"
 assert_fails rg -F --quiet '__LABCTL_GO_VERSION__' "$CLOUD_INIT_PATH"
-# Internal registries answer HTTP. Render their exact host:port endpoint semantics
-# without emitting any active-config value from the command interface.
+# Docker receives the exact configured DNS and insecure-registry arrays. Parse the
+# rendered daemon JSON so JSON syntax and escaping stay valid.
+assert_succeeds rg -F --quiet '"dns":["192.0.2.53","198.51.100.53"]' "$CLOUD_INIT_PATH"
 assert_succeeds rg -F --quiet '"insecure-registries":["registry-one.example.test:5000","registry-two.example.test:5001"]' "$CLOUD_INIT_PATH"
+assert_equals '["192.0.2.53","198.51.100.53"]' "$(awk '/^      {"dns":/ { sub(/^      /, ""); print; exit }' "$CLOUD_INIT_PATH" | jq -c '.dns')"
+assert_equals '["registry-one.example.test:5000","registry-two.example.test:5001"]' "$(awk '/^      {"dns":/ { sub(/^      /, ""); print; exit }' "$CLOUD_INIT_PATH" | jq -c '.["insecure-registries"]')"
 assert_succeeds rg -F --quiet 'systemctl restart docker' "$CLOUD_INIT_PATH"
 assert_succeeds rg -F --quiet '[ -e /root/go/bin ] && [ ! -d /root/go/bin ]' "$CLOUD_INIT_PATH"
 assert_succeeds rg -F --quiet 'install -d -m 0755 /root/go/bin' "$CLOUD_INIT_PATH"
 assert_fails rg -i --quiet 'k3s|rancher|registries\.yaml|INSTALL_K3S' "$CLOUD_INIT_PATH"
 assert_fails rg -F --quiet '__LABCTL_INTERNAL_INSECURE_REGISTRIES__' "$CLOUD_INIT_PATH"
+assert_fails rg -F --quiet '__LABCTL_DOCKER_DNS_SERVERS__' "$CLOUD_INIT_PATH"
 assert_fails rg -F --quiet '__LABCTL_DOCKER_DAEMON_JSON__' "$CLOUD_INIT_PATH"
 labctl_config_load "$CONFIG_PATH"
 
@@ -511,6 +523,7 @@ assert_command_log_contains 'config device add jira-# ticket-workspace disk'
 assert_command_log_contains 'shift=true'
 assert_command_log_contains 'config set jira-# user.user-data -'
 assert_command_log_not_contains 'registry-one.example.test:5000'
+assert_command_log_not_contains '192.0.2.53'
 
 # Incus 6 rejects launch --no-start. Init creates the instance stopped, so it
 # must retain both profiles and cloud-init configuration before the inherited
@@ -521,6 +534,7 @@ assert_command_log_contains 'init images:ubuntu/24.04 jira-# --profile default -
 assert_command_log_contains 'config set jira-# user.user-data -'
 assert_command_log_not_contains 'registry-one.example.test:5000'
 assert_command_log_not_contains 'registry-two.example.test:5001'
+assert_command_log_not_contains '198.51.100.53'
 assert_command_log_not_contains 'launch images:ubuntu/24.04 jira-#'
 assert_command_log_contains 'config device override jira-# eth0 ipv4.address=10.42.0.10'
 assert_command_log_not_contains 'config device set jira-# eth0 ipv4.address='

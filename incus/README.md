@@ -63,9 +63,10 @@ host networking, a host Docker socket, or broad device passthrough.
 
 The generic cloud-init installs and readies Docker only. Set
 `LABCTL_INTERNAL_INSECURE_REGISTRIES` to a comma-separated list of internal
-`host:port` registry endpoints. The controller rejects schemes, paths,
-credentials, malformed ports, and duplicates, then renders those endpoints into
-Docker's `insecure-registries` array and restarts Docker. Keep endpoint values
+`host:port` registry endpoints and `LABCTL_DOCKER_DNS_SERVERS` to a
+comma-separated list of Docker DNS server IPv4 addresses. The controller rejects
+invalid or duplicate entries, renders both Docker `dns` and
+`insecure-registries` arrays, and restarts Docker. Keep endpoint and DNS values
 solely in the owner-only active configuration: they are not represented in the
 example or documentation, and cloud-init payloads are passed to Incus on
 standard input rather than logged.

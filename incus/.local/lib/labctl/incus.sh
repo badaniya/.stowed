@@ -78,18 +78,10 @@ labctl_incus_ensure_profile() {
 }
 
 labctl_incus_docker_daemon_json() {
-	local endpoint first=true
-	local -a endpoints
-	IFS=, read -r -a endpoints <<<"$LABCTL_INTERNAL_INSECURE_REGISTRIES"
-	printf '{"insecure-registries":['
-	for endpoint in "${endpoints[@]}"; do
-		if [[ $first == false ]]; then
-			printf ','
-		fi
-		printf '"%s"' "$endpoint"
-		first=false
-	done
-	printf ']}'
+	jq -cn \
+		--arg dns_servers "$LABCTL_DOCKER_DNS_SERVERS" \
+		--arg insecure_registries "$LABCTL_INTERNAL_INSECURE_REGISTRIES" \
+		'{dns: ($dns_servers | split(",")), "insecure-registries": ($insecure_registries | split(","))}'
 }
 
 labctl_incus_render_cloud_init() {

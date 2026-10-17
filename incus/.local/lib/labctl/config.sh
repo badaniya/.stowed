@@ -7,7 +7,7 @@ labctl_config_required_vars=(
 	LABCTL_AGENT_CIDR LABCTL_AGENT_GATEWAY LABCTL_IP_POOL_START
 	LABCTL_IP_POOL_END LABCTL_LAB_ROUTE_GATEWAY LABCTL_INSTANCE_IMAGE
 	LABCTL_INSTANCE_USER LABCTL_GO_VERSION
-	LABCTL_INTERNAL_INSECURE_REGISTRIES LABCTL_DEVICE_TCP_PORTS LABCTL_STACK_UP_COMMAND
+	LABCTL_INTERNAL_INSECURE_REGISTRIES LABCTL_DOCKER_DNS_SERVERS LABCTL_DEVICE_TCP_PORTS LABCTL_STACK_UP_COMMAND
 	LABCTL_STACK_DOWN_COMMAND LABCTL_STACK_HEALTH_COMMAND
 	LABCTL_WORKTREE_CREATE_HOOK LABCTL_WORKTREE_REMOVE_HOOK
 	LABCTL_HARNESS_REPO_NAMES LABCTL_GIT_HOST
@@ -108,9 +108,9 @@ labctl_config_validate() {
 		labctl_die 'invalid IPv4 pool range'
 		return 1
 	}
-	local endpoint port
-	local -a endpoints ports
-	local -A seen_endpoints=() seen_ports=()
+	local endpoint dns_server port
+	local -a endpoints dns_servers ports
+	local -A seen_endpoints=() seen_dns_servers=() seen_ports=()
 	[[ $LABCTL_INTERNAL_INSECURE_REGISTRIES =~ ^[^,]+(,[^,]+)*$ ]] || {
 		labctl_die 'internal insecure registry list must contain comma-separated host:port endpoints'
 		return 1
@@ -126,6 +126,22 @@ labctl_config_validate() {
 			return 1
 		}
 		seen_endpoints[$endpoint]=1
+	done
+	[[ $LABCTL_DOCKER_DNS_SERVERS =~ ^[^,]+(,[^,]+)*$ ]] || {
+		labctl_die 'Docker DNS server list must contain comma-separated IPv4 addresses'
+		return 1
+	}
+	IFS=, read -r -a dns_servers <<<"$LABCTL_DOCKER_DNS_SERVERS"
+	for dns_server in "${dns_servers[@]}"; do
+		labctl_config_is_ipv4 "$dns_server" || {
+			labctl_die 'Docker DNS servers must be valid IPv4 addresses'
+			return 1
+		}
+		[[ ! ${seen_dns_servers[$dns_server]+present} ]] || {
+			labctl_die 'duplicate Docker DNS server'
+			return 1
+		}
+		seen_dns_servers[$dns_server]=1
 	done
 	[[ $LABCTL_DEVICE_TCP_PORTS =~ ^[0-9]+(,[0-9]+)*$ ]] || {
 		labctl_die 'device TCP port list must not be empty and must contain comma-separated ports'
