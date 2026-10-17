@@ -24,14 +24,17 @@ ticket=${args[0]:-}
 	exit 1
 }
 
+force=false
 for argument in "${args[@]:1}"; do
 	[[ $argument == --force ]] || {
 		echo "Usage: nvo-harness-worktree-sandbox-remove.sh <JIRA#> [--force]" >&2
 		exit 1
 	}
+	force=true
 done
 
 spreader_dir="${HOME}/.config/herdr-spreader"
+project_root="${HOME}/workspace/badaniya/${ticket}"
 labctl="${HOME}/.local/bin/labctl"
 
 [[ -x $labctl ]] || {
@@ -42,6 +45,13 @@ labctl="${HOME}/.local/bin/labctl"
 printf -v destroy_command '%q %q %q %q' "$labctl" destroy "$ticket" --yes
 printf '→ Destroying Incus sandbox %s…\n' "$ticket"
 sg incus-admin -c "$destroy_command"
+
+if [[ $force == true && -d $project_root ]]; then
+	# Docker build artifacts can be root-owned inside the idmapped workspace.
+	# Ownership repair is restricted to the explicitly force-removed ticket root.
+	printf '→ Repairing ownership of generated artifacts in %s…\n' "$project_root"
+	sudo chown -R "$(id -un):$(id -gn)" "$project_root"
+fi
 
 printf '→ Removing harness worktrees for %s…\n' "$ticket"
 bash "${spreader_dir}/nvo-harness-worktree-remove.sh" "${args[@]}"

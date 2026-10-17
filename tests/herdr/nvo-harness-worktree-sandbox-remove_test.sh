@@ -16,7 +16,7 @@ assert_contains() {
 
 TEST_ROOT=$(mktemp -d)
 trap 'rm -rf "$TEST_ROOT"' EXIT
-mkdir -p "$TEST_ROOT/bin" "$TEST_ROOT/home/.config/herdr-spreader" "$TEST_ROOT/home/.local/bin"
+mkdir -p "$TEST_ROOT/bin" "$TEST_ROOT/home/.config/herdr-spreader" "$TEST_ROOT/home/.local/bin" "$TEST_ROOT/home/workspace/badaniya/NVO-20131"
 LOG="$TEST_ROOT/commands.log"
 
 cat >"$TEST_ROOT/home/.config/herdr-spreader/nvo-harness-worktree-remove.sh" <<'EOF'
@@ -33,10 +33,16 @@ cat >"$TEST_ROOT/bin/sg" <<'EOF'
 printf 'sg %s\n' "$3" >>"${TEST_LOG:?}"
 bash -c "$3"
 EOF
-chmod +x "$TEST_ROOT/home/.config/herdr-spreader/nvo-harness-worktree-remove.sh" "$TEST_ROOT/home/.local/bin/labctl" "$TEST_ROOT/bin/sg"
+cat >"$TEST_ROOT/bin/sudo" <<'EOF'
+#!/usr/bin/env bash
+printf 'sudo %s\n' "$*" >>"${TEST_LOG:?}"
+exec "$@"
+EOF
+chmod +x "$TEST_ROOT/home/.config/herdr-spreader/nvo-harness-worktree-remove.sh" "$TEST_ROOT/home/.local/bin/labctl" "$TEST_ROOT/bin/sg" "$TEST_ROOT/bin/sudo"
 
 HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$PATH" TEST_LOG="$LOG" "$SCRIPT" 'NVO-20131 --force'
 assert_contains 'labctl destroy NVO-20131 --yes' "$LOG"
+assert_contains 'sudo chown -R' "$LOG"
 assert_contains 'remove-worktree NVO-20131 --force' "$LOG"
 
 : >"$LOG"
