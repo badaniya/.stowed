@@ -150,3 +150,30 @@ No real host state, Incus instance/profile/device, bridge, route, firewall, Dock
 **Green:** status now queries the URI-encoded instance endpoint. The fake suite passes and the command log contains the endpoint only, not an unsupported formatted inspection command.
 
 No real Incus command, instance, profile, mount, network, stack, or worktree was accessed or changed.
+
+## Guest hook prerequisite follow-up
+
+- `f275cd4b` — `incus: install make in sandbox bootstrap`
+- The rendered generic guest bootstrap now installs GNU Make before lifecycle-managed hooks may execute. The change contains no ticket, repository, or service-specific values.
+- A render-level regression prevents removing the package from cloud-init while leaving the hook contract unchanged.
+
+### Red-green verification
+
+```text
+RED: bash tests/incus/labctl_test.sh
+# FAIL: expected command to succeed: rg -x --fixed-strings --quiet '  - make' <rendered-cloud-init>
+
+GREEN: bash tests/incus/labctl_test.sh
+# All tests passed
+
+shellcheck -e SC1091 incus/.local/bin/labctl incus/.local/lib/labctl/*.sh tests/incus/*.sh
+# exit 0
+
+shfmt -d incus/.local/bin/labctl incus/.local/lib/labctl/*.sh tests/incus/*.sh
+# exit 0
+
+git diff --check
+# exit 0
+```
+
+No live sandbox was created, repaired, recreated, or run; checks stayed within the existing mocked test harness and local template rendering.
