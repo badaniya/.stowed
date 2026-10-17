@@ -42,6 +42,7 @@ LABCTL_IP_POOL_END=10.42.0.11
 LABCTL_LAB_ROUTE_GATEWAY=10.1.1.1
 LABCTL_INSTANCE_IMAGE=images:ubuntu/24.04
 LABCTL_INSTANCE_USER=ubuntu
+LABCTL_GO_VERSION=1.25.11
 LABCTL_DEVICE_TCP_PORTS=10001,10002
 LABCTL_STACK_UP_COMMAND=compose up -d
 LABCTL_STACK_DOWN_COMMAND=compose down
@@ -51,6 +52,19 @@ LABCTL_WORKTREE_REMOVE_HOOK=/bin/true
 LABCTL_HARNESS_REPO_NAMES=one,two
 CONFIG
 chmod 600 "$CONFIG_PATH"
+
+MISSING_GO_VERSION_CONFIG="${TEST_ROOT}/missing-go-version.env"
+rg -v '^LABCTL_GO_VERSION=' "$CONFIG_PATH" >"$MISSING_GO_VERSION_CONFIG"
+chmod 600 "$MISSING_GO_VERSION_CONFIG"
+assert_fails labctl_config_load "$MISSING_GO_VERSION_CONFIG"
+
+for invalid_go_version in v1.25.11 1.25 1.25.11rc1 01.25.11 1.025.11 1.25.011; do
+	INVALID_GO_VERSION_CONFIG="${TEST_ROOT}/invalid-go-version-${invalid_go_version}.env"
+	sed "s/^LABCTL_GO_VERSION=.*/LABCTL_GO_VERSION=${invalid_go_version}/" "$CONFIG_PATH" >"$INVALID_GO_VERSION_CONFIG"
+	chmod 600 "$INVALID_GO_VERSION_CONFIG"
+	assert_fails labctl_config_load "$INVALID_GO_VERSION_CONFIG"
+done
+
 mkdir -p "${TEST_ROOT}/workspace/master"
 
 assert_fails labctl_normalize_ticket '../JIRA-#'
@@ -88,6 +102,15 @@ LABCTL_INSTANCE_USER='sandbox-user' labctl_incus_render_cloud_init "$CLOUD_INIT_
 assert_succeeds rg -F --quiet 'install -d -o sandbox-user -g sandbox-user /home/sandbox-user' "$CLOUD_INIT_PATH"
 # Stack hooks may invoke GNU Make, so every rendered guest bootstrap must install it.
 assert_succeeds rg -x --fixed-strings --quiet '  - make' "$CLOUD_INIT_PATH"
+# Ubuntu's apt Go version is not sufficient for all mounted workspaces. The
+# rendered generic bootstrap must install the configured official toolchain.
+assert_succeeds rg -F --quiet 'https://go.dev/dl/go1.25.11.linux-amd64.tar.gz' "$CLOUD_INIT_PATH"
+assert_succeeds rg -F --quiet 'tar -C /usr/local -xzf /tmp/labctl-go.tar.gz' "$CLOUD_INIT_PATH"
+assert_succeeds rg -F --quiet "export PATH=\"/usr/local/go/bin:\$PATH\"" "$CLOUD_INIT_PATH"
+# /usr/local/bin is on the normal noninteractive shell PATH; the symlink keeps
+# the Go command available before an interactive profile is read.
+assert_succeeds rg -F --quiet 'ln -sf /usr/local/go/bin/go /usr/local/bin/go' "$CLOUD_INIT_PATH"
+assert_fails rg -F --quiet '__LABCTL_GO_VERSION__' "$CLOUD_INIT_PATH"
 labctl_config_load "$CONFIG_PATH"
 
 assert_succeeds labctl_incus_cidr_overlaps '10.42.0.0/16' '10.42.1.0/24'

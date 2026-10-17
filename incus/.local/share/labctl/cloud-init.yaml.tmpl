@@ -1,13 +1,22 @@
 #cloud-config
 package_update: true
 packages:
+  - ca-certificates
+  - curl
   - docker.io
   - docker-compose-v2
   - make
+  - tar
 users:
   - name: __LABCTL_INSTANCE_USER__
     groups: [docker]
     shell: /bin/bash
 runcmd:
   - install -d -o __LABCTL_INSTANCE_USER__ -g __LABCTL_INSTANCE_USER__ /home/__LABCTL_INSTANCE_USER__
+  - rm -rf /usr/local/go
+  - curl -fsSL https://go.dev/dl/go__LABCTL_GO_VERSION__.linux-amd64.tar.gz -o /tmp/labctl-go.tar.gz
+  - tar -C /usr/local -xzf /tmp/labctl-go.tar.gz
+  - rm -f /tmp/labctl-go.tar.gz
+  - ln -sf /usr/local/go/bin/go /usr/local/bin/go
+  - printf '%s\n' 'export PATH="/usr/local/go/bin:$PATH"' > /etc/profile.d/labctl-go.sh
   - systemctl enable --now docker

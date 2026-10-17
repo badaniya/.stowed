@@ -86,7 +86,7 @@ labctl_incus_render_cloud_init() {
 		return 1
 	}
 	umask 077
-	sed "s|__LABCTL_INSTANCE_USER__|${LABCTL_INSTANCE_USER}|g" "$template" >"$output"
+	sed -e "s|__LABCTL_INSTANCE_USER__|${LABCTL_INSTANCE_USER}|g" -e "s|__LABCTL_GO_VERSION__|${LABCTL_GO_VERSION}|g" "$template" >"$output"
 	chmod 600 "$output"
 }
 
