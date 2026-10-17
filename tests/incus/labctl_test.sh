@@ -136,6 +136,10 @@ printf 'incus %s\n' "$*" >>"$COMMAND_LOG"
 case "$*" in
 'info '*' --format json') printf '%s\n' "{\"status\":\"${LABCTL_FAKE_INSTANCE_STATUS:-Running}\"}" ;;
 'info jira-#') [[ ${LABCTL_FAKE_INSTANCE_EXISTS:-false} == true ]] ;;
+config\ device\ set\ *\ eth0\ ipv4.address=*)
+	printf '%s\n' 'Error: Cannot update inherited device; use config device override' >&2
+	exit 1
+	;;
 'config get '*' eth0 ipv4.address')
 	case ${3:-} in
 	jira-#) printf '%s\n' "${LABCTL_FAKE_INSTANCE_IP:-10.42.0.10}" ;;
@@ -249,6 +253,15 @@ assert_command_log_not_contains() {
 	local unexpected=$1
 	if rg -F --quiet "$unexpected" "$COMMAND_LOG"; then
 		fail "expected command log not to contain [$unexpected]"
+	fi
+}
+
+assert_command_log_ordered() {
+	local first=$1 second=$2 first_line second_line
+	first_line=$(rg -n -F "$first" "$COMMAND_LOG" | sed -n '1s/:.*//p')
+	second_line=$(rg -n -F "$second" "$COMMAND_LOG" | sed -n '1s/:.*//p')
+	if [[ -z $first_line || -z $second_line || $first_line -ge $second_line ]]; then
+		fail "expected command [$first] before [$second]"
 	fi
 }
 
@@ -377,6 +390,18 @@ assert_command_log_contains 'launch images:ubuntu/24.04 jira-#'
 assert_command_log_contains 'config device add jira-# git-master disk'
 assert_command_log_contains 'config device add jira-# ticket-workspace disk'
 assert_command_log_contains 'shift=true'
+
+# Incus 6 rejects `device set` for the eth0 inherited from the agent profile.
+# Create it stopped, override the inherited device, then start before readiness.
+: >"$COMMAND_LOG"
+PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_PROFILE_EXISTS=true assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" create 'JIRA-#'
+assert_command_log_contains 'launch images:ubuntu/24.04 jira-# --profile default --profile agent-dev-env'
+assert_command_log_contains 'agent-dev-env --no-start'
+assert_command_log_contains 'config device override jira-# eth0 ipv4.address=10.42.0.10'
+assert_command_log_not_contains 'config device set jira-# eth0 ipv4.address='
+assert_command_log_ordered 'config device override jira-# eth0 ipv4.address=10.42.0.10' 'start jira-#'
+assert_command_log_ordered 'config device override jira-# eth0 ipv4.address=10.42.0.10' 'exec jira-# -- cloud-init status --wait'
+
 PATH="${FAKE_BIN}:$PATH" assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" status 'JIRA-#'
 PATH="${FAKE_BIN}:$PATH" assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" destroy 'JIRA-#'
 PATH="${FAKE_BIN}:$PATH" assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" destroy 'JIRA-#' --yes --dry-run

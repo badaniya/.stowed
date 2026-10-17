@@ -116,12 +116,13 @@ labctl_incus_launch() {
 		rm -f "$cloud_init"
 		return 1
 	}
-	labctl_run incus launch "$LABCTL_INSTANCE_IMAGE" "$instance" --profile default --profile "$LABCTL_INCUS_PROFILE" -c "user.user-data=$(cat "$cloud_init")" || {
+	labctl_run incus launch "$LABCTL_INSTANCE_IMAGE" "$instance" --profile default --profile "$LABCTL_INCUS_PROFILE" --no-start -c "user.user-data=$(cat "$cloud_init")" || {
 		rm -f "$cloud_init"
 		return 1
 	}
 	rm -f "$cloud_init"
-	labctl_run incus config device set "$instance" eth0 ipv4.address="$ip"
+	labctl_run incus config device override "$instance" eth0 ipv4.address="$ip"
+	labctl_run incus start "$instance"
 }
 
 labctl_incus_inspect() {
