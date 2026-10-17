@@ -15,6 +15,7 @@ labctl_config_required_vars=(
 
 labctl_config_optional_vars=(
 	LABCTL_GIT_CREDENTIAL_NAME
+	LABCTL_LOGGO_TEMPLATE_PATH
 )
 
 labctl_config_validate_credential_name() {
@@ -83,6 +84,17 @@ labctl_config_validate() {
 	}
 	if [[ -n ${LABCTL_GIT_CREDENTIAL_NAME:-} ]] && ! labctl_config_validate_credential_name "$LABCTL_GIT_CREDENTIAL_NAME"; then
 		return 1
+	fi
+	if [[ -n ${LABCTL_LOGGO_TEMPLATE_PATH:-} ]]; then
+		[[ $LABCTL_LOGGO_TEMPLATE_PATH == /* && -f $LABCTL_LOGGO_TEMPLATE_PATH && -r $LABCTL_LOGGO_TEMPLATE_PATH && -O $LABCTL_LOGGO_TEMPLATE_PATH ]] || {
+			labctl_die 'Loggo template must be an absolute readable regular file owned by the current user'
+			return 1
+		}
+		mode=$(stat -c '%a' -- "$LABCTL_LOGGO_TEMPLATE_PATH") || return 1
+		(((8#$mode & 0077) == 0)) || {
+			labctl_die 'Loggo template must not be group- or world-accessible'
+			return 1
+		}
 	fi
 	[[ $LABCTL_AGENT_CIDR == */* ]] || {
 		labctl_die 'invalid agent CIDR'

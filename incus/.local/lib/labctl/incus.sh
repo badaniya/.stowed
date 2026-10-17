@@ -412,6 +412,34 @@ labctl_incus_set_systemd_credential() (
 	labctl_incus_patch_config_file "$instance" "$payload"
 )
 
+labctl_incus_set_systemd_credential_file() (
+	set -euo pipefail
+	local instance=$1 credential_name=$2 source_file=$3 payload api_key
+	labctl_incus_validate_credential_name "$credential_name"
+	[[ -f $source_file && -r $source_file && -O $source_file ]] || {
+		labctl_die 'credential source file is unreadable or not owned by the current user'
+		return 1
+	}
+	umask 077
+	payload=$(mktemp "${TMPDIR:-/tmp}/labctl-incus-patch.XXXXXX")
+	trap 'rm -f -- "$payload"' EXIT
+	chmod 600 "$payload"
+	api_key="systemd.credential.$credential_name"
+	jq -n --arg key "$api_key" --rawfile value "$source_file" '{config: {($key): $value}}' >"$payload"
+	labctl_incus_patch_config_file "$instance" "$payload"
+)
+
+labctl_incus_sync_loggo_template() {
+	local instance=$1 template=${LABCTL_LOGGO_TEMPLATE_PATH:-}
+	[[ -n $template ]] || {
+		labctl_die 'Loggo template is not configured; set LABCTL_LOGGO_TEMPLATE_PATH in private configuration'
+		return 1
+	}
+	labctl_incus_set_systemd_credential_file "$instance" loggo-template "$template" || return 1
+	# shellcheck disable=SC2016 # The guest shell, not this shell, expands its positional argument.
+	labctl_run incus exec "$instance" -- bash -c 'set -euo pipefail; install -d -m 0700 -o "$1" -g "$1" "/home/$1"; systemd-creds cat loggo-template >"/home/$1/.private-nvo-loggo.tpl"; chown "$1:$1" "/home/$1/.private-nvo-loggo.tpl"; chmod 0600 "/home/$1/.private-nvo-loggo.tpl"' -- "$LABCTL_INSTANCE_USER"
+}
+
 labctl_incus_unset_systemd_credential() (
 	set -euo pipefail
 	local instance=$1 credential_name=$2 payload api_key

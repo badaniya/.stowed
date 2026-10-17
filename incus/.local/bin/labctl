@@ -42,6 +42,7 @@ Commands:
   cleanup-worktree TICKET --yes [--dry-run]
   credential sync TICKET                     Sync host Git credential into the sandbox
   credential unset TICKET                    Remove the sandbox Git credential
+  template sync TICKET                       Copy the private Loggo template into the sandbox
 USAGE
 }
 
@@ -196,6 +197,16 @@ labctl_credential() {
 	esac
 }
 
+labctl_template() {
+	local action=${1:-} ticket=${2:-}
+	[[ $action == sync && $# -eq 2 ]] || {
+		labctl_die 'template requires: template sync TICKET'
+		return 1
+	}
+	ticket=$(labctl_normalize_ticket "$ticket") || return 1
+	labctl_incus_sync_loggo_template "$ticket"
+}
+
 labctl_cleanup_worktree() {
 	local ticket=$1
 	ticket=$(labctl_normalize_ticket "$ticket") || return 1
@@ -266,6 +277,10 @@ credential)
 		exit 1
 	}
 	labctl_credential "$1" "$2"
+	;;
+template)
+	labctl_config_load "$config_path"
+	labctl_template "$@"
 	;;
 create | bootstrap | start | stop | status | verify | destroy | cleanup-worktree)
 	labctl_config_load "$config_path"
