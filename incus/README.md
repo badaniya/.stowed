@@ -59,26 +59,34 @@ If it needs host compatibility changes, review and apply them explicitly at the
 host profile level. Do not solve a failed proof by enabling privileged Docker,
 host networking, a host Docker socket, or broad device passthrough.
 
-## Optional K3s and internal registry bootstrap
+## Docker registry and private stack bootstrap
 
-The private configuration can provision a pinned single-node K3s server during
-guest cloud-init. Set `LABCTL_K3S_VERSION` to the selected K3s release in the
-required `vMAJOR.MINOR.PATCH+k3sREVISION` format. The bootstrap installs that
-exact release with Traefik disabled and waits for the server readiness endpoint
-before cloud-init completes.
-
-Set `LABCTL_INTERNAL_INSECURE_REGISTRIES` only to a comma-separated list of
-internal `host:port` registry endpoints. The controller rejects schemes, paths,
-credentials, malformed ports, and duplicates. It renders those endpoints into
-Docker's `insecure-registries` array and K3s `registries.yaml` HTTP mirror
-endpoints, then restarts Docker before K3s installation. Keep endpoint values
+The generic cloud-init installs and readies Docker only. Set
+`LABCTL_INTERNAL_INSECURE_REGISTRIES` to a comma-separated list of internal
+`host:port` registry endpoints. The controller rejects schemes, paths,
+credentials, malformed ports, and duplicates, then renders those endpoints into
+Docker's `insecure-registries` array and restarts Docker. Keep endpoint values
 solely in the owner-only active configuration: they are not represented in the
 example or documentation, and cloud-init payloads are passed to Incus on
 standard input rather than logged.
 
-The bootstrap also replaces a non-directory `/root/go/bin` path with the
-required directory before Atlas installation. This is limited to the sandbox
-guest and does not alter the host or any existing sandbox.
+For a direct-Docker private stack setup, set the private stack-up command with
+an explicit `IMAGE_IMPORT=false` prefix, for example:
+
+```bash
+LABCTL_STACK_UP_COMMAND='IMAGE_IMPORT=false ./private-stack-setup.sh'
+```
+
+Use a command appropriate to the mounted workspace; do not add ticket, project,
+or repository identifiers to this documentation. `labctl` transfers the hook to
+the guest on standard input rather than placing its contents on an `incus exec`
+command line, so private hook text is not included in controller command logs.
+Store credentials through the approved credential mechanism, not in stack hook
+values.
+
+K3s installation, service configuration, readiness checks, and registry mirror
+configuration are intentionally outside the generic bootstrap. K3s remains a
+deferred, opt-in workload scope that needs a separately reviewed design.
 
 ## Command reference
 

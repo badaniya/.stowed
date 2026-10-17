@@ -43,10 +43,9 @@ LABCTL_LAB_ROUTE_GATEWAY=10.1.1.1
 LABCTL_INSTANCE_IMAGE=images:ubuntu/24.04
 LABCTL_INSTANCE_USER=ubuntu
 LABCTL_GO_VERSION=1.25.11
-LABCTL_K3S_VERSION=v1.32.2+k3s1
 LABCTL_INTERNAL_INSECURE_REGISTRIES=registry-one.example.test:5000,registry-two.example.test:5001
 LABCTL_DEVICE_TCP_PORTS=10001,10002
-LABCTL_STACK_UP_COMMAND=compose up -d
+LABCTL_STACK_UP_COMMAND=IMAGE_IMPORT=false ./private-pcm-setup.sh --token=stack-command-secret-not-for-logs
 LABCTL_STACK_DOWN_COMMAND=compose down
 LABCTL_STACK_HEALTH_COMMAND=compose ps
 LABCTL_WORKTREE_CREATE_HOOK=/bin/true
@@ -67,18 +66,6 @@ for invalid_go_version in v1.25.11 1.25 1.25.11rc1 01.25.11 1.025.11 1.25.011; d
 	sed "s/^LABCTL_GO_VERSION=.*/LABCTL_GO_VERSION=${invalid_go_version}/" "$CONFIG_PATH" >"$INVALID_GO_VERSION_CONFIG"
 	chmod 600 "$INVALID_GO_VERSION_CONFIG"
 	assert_fails labctl_config_load "$INVALID_GO_VERSION_CONFIG"
-done
-
-MISSING_K3S_VERSION_CONFIG="${TEST_ROOT}/missing-k3s-version.env"
-rg -v '^LABCTL_K3S_VERSION=' "$CONFIG_PATH" >"$MISSING_K3S_VERSION_CONFIG"
-chmod 600 "$MISSING_K3S_VERSION_CONFIG"
-assert_fails labctl_config_load "$MISSING_K3S_VERSION_CONFIG"
-
-for invalid_k3s_version in 1.32.2+k3s1 v1.32.2 v1.32.2+k3s v01.32.2+k3s1; do
-	INVALID_K3S_VERSION_CONFIG="${TEST_ROOT}/invalid-k3s-version-${invalid_k3s_version}.env"
-	sed "s/^LABCTL_K3S_VERSION=.*/LABCTL_K3S_VERSION=${invalid_k3s_version}/" "$CONFIG_PATH" >"$INVALID_K3S_VERSION_CONFIG"
-	chmod 600 "$INVALID_K3S_VERSION_CONFIG"
-	assert_fails labctl_config_load "$INVALID_K3S_VERSION_CONFIG"
 done
 
 for invalid_registry_endpoints in 'http://registry.example.test:5000' 'registry.example.test' 'registry.example.test:0' 'registry.example.test:65536' 'registry.example.test:5000,registry.example.test:5000'; do
@@ -139,21 +126,12 @@ assert_fails rg -F --quiet '__LABCTL_GO_VERSION__' "$CLOUD_INIT_PATH"
 # Internal registries answer HTTP. Render their exact host:port endpoint semantics
 # without emitting any active-config value from the command interface.
 assert_succeeds rg -F --quiet '"insecure-registries":["registry-one.example.test:5000","registry-two.example.test:5001"]' "$CLOUD_INIT_PATH"
-assert_succeeds rg -F --quiet 'mirrors:' "$CLOUD_INIT_PATH"
-assert_succeeds rg -F --quiet '"registry-one.example.test:5000":' "$CLOUD_INIT_PATH"
-assert_succeeds rg -F --quiet '"http://registry-one.example.test:5000"' "$CLOUD_INIT_PATH"
-assert_succeeds rg -F --quiet '"registry-two.example.test:5001":' "$CLOUD_INIT_PATH"
-assert_succeeds rg -F --quiet '"http://registry-two.example.test:5001"' "$CLOUD_INIT_PATH"
 assert_succeeds rg -F --quiet 'systemctl restart docker' "$CLOUD_INIT_PATH"
 assert_succeeds rg -F --quiet '[ -e /root/go/bin ] && [ ! -d /root/go/bin ]' "$CLOUD_INIT_PATH"
 assert_succeeds rg -F --quiet 'install -d -m 0755 /root/go/bin' "$CLOUD_INIT_PATH"
-assert_succeeds rg -F --quiet 'INSTALL_K3S_VERSION="v1.32.2+k3s1"' "$CLOUD_INIT_PATH"
-assert_succeeds rg -F --quiet 'INSTALL_K3S_EXEC="server --disable traefik"' "$CLOUD_INIT_PATH"
-assert_succeeds rg -F --quiet 'k3s kubectl get --raw=/readyz' "$CLOUD_INIT_PATH"
-assert_fails rg -F --quiet '__LABCTL_K3S_VERSION__' "$CLOUD_INIT_PATH"
+assert_fails rg -i --quiet 'k3s|rancher|registries\.yaml|INSTALL_K3S' "$CLOUD_INIT_PATH"
 assert_fails rg -F --quiet '__LABCTL_INTERNAL_INSECURE_REGISTRIES__' "$CLOUD_INIT_PATH"
 assert_fails rg -F --quiet '__LABCTL_DOCKER_DAEMON_JSON__' "$CLOUD_INIT_PATH"
-assert_fails rg -F --quiet '__LABCTL_K3S_REGISTRIES_YAML__' "$CLOUD_INIT_PATH"
 labctl_config_load "$CONFIG_PATH"
 
 assert_succeeds labctl_incus_cidr_overlaps '10.42.0.0/16' '10.42.1.0/24'
@@ -633,7 +611,7 @@ printf '%s\n' Running >"$LABCTL_FAKE_INSTANCE_STATE_FILE"
 : >"$COMMAND_LOG"
 PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_REJECT_DUPLICATE_START=true assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" start 'JIRA-#'
 assert_command_log_not_contains 'start jira-#'
-assert_equals '1' "$(rg -F -c 'compose up -d' "$COMMAND_LOG" || true)"
+assert_equals '1' "$(rg -F -c 'exec jira-# -- bash -s --' "$COMMAND_LOG" || true)"
 
 # A stopped sandbox still needs an Incus start before readiness and stack-up.
 printf '%s\n' Stopped >"$LABCTL_FAKE_INSTANCE_STATE_FILE"
@@ -641,7 +619,7 @@ printf '%s\n' Stopped >"$LABCTL_FAKE_INSTANCE_STATE_FILE"
 PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_REJECT_DUPLICATE_START=true assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" start 'JIRA-#'
 assert_command_log_contains 'start jira-#'
 assert_command_log_ordered 'start jira-#' 'exec jira-# -- cloud-init status --wait'
-assert_equals '1' "$(rg -F -c 'compose up -d' "$COMMAND_LOG" || true)"
+assert_equals '1' "$(rg -F -c 'exec jira-# -- bash -s --' "$COMMAND_LOG" || true)"
 unset LABCTL_FAKE_INSTANCE_STATE_FILE
 
 : >"$COMMAND_LOG"
@@ -657,8 +635,13 @@ assert_command_log_not_contains 'config device add jira-# proxy'
 PATH="${FAKE_BIN}:$PATH" assert_succeeds labctl_stack_up 'JIRA-#'
 PATH="${FAKE_BIN}:$PATH" assert_succeeds labctl_stack_down 'JIRA-#'
 assert_command_log_contains 'exec jira-# -- bash -s --'
-assert_command_log_contains 'compose up -d'
-assert_command_log_contains 'compose down'
+STACK_REMOTE_SCRIPT="${TEST_ROOT}/stack-remote-script"
+: >"$COMMAND_LOG"
+PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_CAPTURE_REMOTE_SCRIPT="$STACK_REMOTE_SCRIPT" assert_succeeds labctl_stack_up 'JIRA-#'
+assert_succeeds rg -F --quiet 'stack_command=IMAGE_IMPORT=false\ ./private-pcm-setup.sh\ --token=stack-command-secret-not-for-logs' "$STACK_REMOTE_SCRIPT"
+assert_command_log_not_contains 'IMAGE_IMPORT=false'
+assert_command_log_not_contains 'stack-command-secret-not-for-logs'
+assert_fails rg -F --quiet 'stack-command-secret-not-for-logs' "$COMMAND_LOG"
 
 labctl_verify_ports_when_closed() {
 	LABCTL_FAKE_CLOSED_PORT=$1 labctl_verify_ports 'JIRA-#'

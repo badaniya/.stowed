@@ -92,18 +92,8 @@ labctl_incus_docker_daemon_json() {
 	printf ']}'
 }
 
-labctl_incus_k3s_registries_yaml() {
-	local endpoint
-	local -a endpoints
-	IFS=, read -r -a endpoints <<<"$LABCTL_INTERNAL_INSECURE_REGISTRIES"
-	printf 'mirrors:\n'
-	for endpoint in "${endpoints[@]}"; do
-		printf '  "%s":\n    endpoint:\n      - "http://%s"\n' "$endpoint" "$endpoint"
-	done
-}
-
 labctl_incus_render_cloud_init() {
-	local output=$1 template_dir template docker_daemon_json k3s_registries_yaml line indent
+	local output=$1 template_dir template docker_daemon_json line indent
 	template_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../share/labctl" && pwd)
 	template=$template_dir/cloud-init.yaml.tmpl
 	[[ -r $template ]] || {
@@ -111,7 +101,6 @@ labctl_incus_render_cloud_init() {
 		return 1
 	}
 	docker_daemon_json=$(labctl_incus_docker_daemon_json)
-	k3s_registries_yaml=$(labctl_incus_k3s_registries_yaml)
 	umask 077
 	while IFS= read -r line || [[ -n $line ]]; do
 		case $line in
@@ -119,16 +108,9 @@ labctl_incus_render_cloud_init() {
 			indent=${line%%[^[:space:]]*}
 			printf '%s%s\n' "$indent" "$docker_daemon_json"
 			;;
-		*__LABCTL_K3S_REGISTRIES_YAML__*)
-			indent=${line%%[^[:space:]]*}
-			while IFS= read -r line || [[ -n $line ]]; do
-				printf '%s%s\n' "$indent" "$line"
-			done <<<"$k3s_registries_yaml"
-			;;
 		*)
 			line=${line//__LABCTL_INSTANCE_USER__/$LABCTL_INSTANCE_USER}
 			line=${line//__LABCTL_GO_VERSION__/$LABCTL_GO_VERSION}
-			line=${line//__LABCTL_K3S_VERSION__/$LABCTL_K3S_VERSION}
 			printf '%s\n' "$line"
 			;;
 		esac
@@ -322,7 +304,9 @@ set -euo pipefail
 ticket_root=$1
 credential_name=$2
 git_host=$3
-stack_command=$4
+SCRIPT
+	printf 'stack_command=%q\n' "$command" >>"$helper"
+	cat >>"$helper" <<'SCRIPT'
 runtime_parent=${LABCTL_GIT_ASKPASS_RUNTIME_DIR:-/run}
 runtime_dir=$(mktemp -d "$runtime_parent/labctl-git-askpass.XXXXXX")
 cleanup() {
@@ -352,7 +336,7 @@ export GONOSUMDB="$git_host"
 cd -- "$ticket_root"
 bash -lc "$stack_command"
 SCRIPT
-	labctl_run incus exec "$instance" -- bash -s -- "$ticket_root" "$LABCTL_GIT_CREDENTIAL_NAME" "$LABCTL_GIT_HOST" "$command" <"$helper"
+	labctl_run incus exec "$instance" -- bash -s -- "$ticket_root" "$LABCTL_GIT_CREDENTIAL_NAME" "$LABCTL_GIT_HOST" <"$helper"
 )
 
 labctl_incus_start() {
