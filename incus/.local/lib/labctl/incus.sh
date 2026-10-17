@@ -109,3 +109,46 @@ labctl_incus_inspect() {
 	local instance=$1
 	incus info "$instance" --format json
 }
+
+labctl_incus_instance_exists() {
+	incus info "$1" >/dev/null 2>&1
+}
+
+labctl_incus_instance_ip() {
+	incus config get "$1" eth0 ipv4.address
+}
+
+labctl_incus_is_running() {
+	incus info "$1" --format json | jq -e '.status == "Running"' >/dev/null
+}
+
+labctl_incus_attach_workspace() {
+	local instance=$1 ticket_root=$2
+	labctl_run incus config device add "$instance" git-master disk source="$LABCTL_MASTER_ROOT" path="$LABCTL_MASTER_ROOT" shift=true readonly=false
+	labctl_run incus config device add "$instance" ticket-workspace disk source="$ticket_root" path="$ticket_root" shift=true readonly=false
+}
+
+labctl_incus_wait_ready() {
+	local instance=$1
+	labctl_run incus exec "$instance" -- cloud-init status --wait
+	labctl_run incus exec "$instance" -- docker info
+}
+
+labctl_incus_stack_command() {
+	local instance=$1 ticket_root=$2 command=$3 quoted_root
+	printf -v quoted_root '%q' "$ticket_root"
+	labctl_run incus exec "$instance" -- su - "$LABCTL_INSTANCE_USER" -s /bin/sh -c "cd -- $quoted_root && $command"
+}
+
+labctl_incus_start() {
+	local instance=$1 ticket_root=$2
+	labctl_run incus start "$instance"
+	labctl_incus_wait_ready "$instance"
+	labctl_incus_stack_command "$instance" "$ticket_root" "$LABCTL_STACK_UP_COMMAND"
+}
+
+labctl_incus_stop() {
+	local instance=$1 ticket_root=$2
+	labctl_incus_stack_command "$instance" "$ticket_root" "$LABCTL_STACK_DOWN_COMMAND"
+	labctl_run incus stop "$instance"
+}

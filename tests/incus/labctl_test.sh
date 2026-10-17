@@ -131,6 +131,8 @@ cat >"${FAKE_BIN}/incus" <<'INCUS'
 #!/usr/bin/env bash
 printf 'incus %s\n' "$*" >>"$COMMAND_LOG"
 case "$*" in
+'info jira-#') [[ ${LABCTL_FAKE_INSTANCE_EXISTS:-false} == true ]] ;;
+'config get jira-# eth0 ipv4.address') printf '%s\n' "${LABCTL_FAKE_INSTANCE_IP:-}" ;;
 'info --format json') printf '%s\n' '{"environment":{"kernel_features":{"idmapped_mounts":true}}}' ;;
 'info') [[ ${LABCTL_INCUS_ACCESS_DENIED:-false} != true ]] ;;
 'network show agentbr0') exit 1 ;;
@@ -146,6 +148,8 @@ case "$*" in
 'profile show agent-dev-env --format json')
 	if [[ -n ${LABCTL_UNSAFE_PROFILE_JSON:-} ]]; then
 		printf '%s\n' "$LABCTL_UNSAFE_PROFILE_JSON"
+	elif [[ ${LABCTL_FAKE_PROFILE_EXISTS:-false} == true ]]; then
+		printf '%s\n' '{}'
 	else
 		exit 1
 	fi
@@ -285,5 +289,52 @@ for unsafe_profile_json in \
 	'{"devices":{"gpu":{"type":"gpu"}}}'; do
 	PATH="${FAKE_BIN}:$PATH" LABCTL_UNSAFE_PROFILE_JSON="$unsafe_profile_json" assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
 done
+
+# Task 3 lifecycle fixtures: all commands are fake and create uses dry-run.
+# shellcheck source=/dev/null
+source "${LABCTL_LIB}/workspace.sh"
+
+mkdir -p "${TEST_ROOT}/workspace/master/one/worktrees/jira-#" "${TEST_ROOT}/workspace/master/two/worktrees/jira-#"
+mkdir -p "${TEST_ROOT}/workspace/jira-#/one" "${TEST_ROOT}/workspace/jira-#/two"
+printf 'gitdir: %s\n' "${TEST_ROOT}/workspace/master/one/worktrees/jira-#" >"${TEST_ROOT}/workspace/jira-#/one/.git"
+printf 'gitdir: %s\n' "${TEST_ROOT}/workspace/master/two/worktrees/jira-#" >"${TEST_ROOT}/workspace/jira-#/two/.git"
+
+assert_equals 'harness' "$(labctl_workspace_detect 'JIRA-#')"
+assert_succeeds labctl_workspace_validate 'JIRA-#'
+assert_fails labctl_workspace_validate 'missing-ticket'
+mv "${TEST_ROOT}/workspace/master" "${TEST_ROOT}/workspace/master-missing"
+assert_fails labctl_workspace_validate 'JIRA-#'
+mv "${TEST_ROOT}/workspace/master-missing" "${TEST_ROOT}/workspace/master"
+mkdir -p "${TEST_ROOT}/outside/jira-#/one"
+ln -s "${TEST_ROOT}/outside" "${TEST_ROOT}/workspace/escaped"
+assert_fails labctl_workspace_validate 'escaped'
+printf 'gitdir: %s\n' "${TEST_ROOT}/workspace/master/one/worktrees/jira-#" >"${TEST_ROOT}/outside/jira-#/one/.git"
+
+: >"$COMMAND_LOG"
+if ! PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_PROFILE_EXISTS=true "$LABCTL_BIN" --config "$CONFIG_PATH" create 'JIRA-#' --dry-run >>"$COMMAND_LOG" 2>&1; then
+	fail 'dry-run create failed'
+fi
+assert_command_log_contains 'launch images:ubuntu/24.04 jira-#'
+assert_command_log_contains 'config device add jira-# git-master disk'
+assert_command_log_contains 'config device add jira-# ticket-workspace disk'
+assert_command_log_contains 'shift=true'
+PATH="${FAKE_BIN}:$PATH" assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" status 'JIRA-#'
+PATH="${FAKE_BIN}:$PATH" assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" destroy 'JIRA-#'
+PATH="${FAKE_BIN}:$PATH" assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" destroy 'JIRA-#' --yes --dry-run
+assert_command_log_not_contains 'git worktree remove'
+assert_command_log_not_contains 'git worktree prune'
+if ! PATH="${FAKE_BIN}:$PATH" "$LABCTL_BIN" --config "$CONFIG_PATH" cleanup-worktree 'JIRA-#' --yes --dry-run >>"$COMMAND_LOG" 2>&1; then
+	fail 'dry-run cleanup-worktree failed'
+fi
+assert_command_log_contains "/bin/true jira-#"
+
+# Existing instances must match the registry reservation before reuse.
+PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=true LABCTL_FAKE_INSTANCE_IP=10.42.0.10 assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" create 'JIRA-#' --dry-run
+PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=true LABCTL_FAKE_INSTANCE_IP=10.42.0.11 assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" create 'JIRA-#' --dry-run
+
+# A malformed harness root must fail linked-worktree validation.
+printf 'gitdir: /outside/master/two\n' >"${TEST_ROOT}/workspace/jira-#/two/.git"
+assert_fails labctl_workspace_validate 'JIRA-#'
+printf 'gitdir: %s\n' "${TEST_ROOT}/workspace/master/two/worktrees/jira-#" >"${TEST_ROOT}/workspace/jira-#/two/.git"
 
 finish_tests

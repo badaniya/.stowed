@@ -76,6 +76,21 @@ labctl_state_claim_ip() {
 	exec {lock_fd}>&-
 }
 
+labctl_state_preview_ip() {
+	local state candidate start end value
+	state=$(labctl_state_path)
+	start=$(labctl_config_ipv4_number "$LABCTL_IP_POOL_START")
+	end=$(labctl_config_ipv4_number "$LABCTL_IP_POOL_END")
+	for ((value = start; value <= end; value++)); do
+		candidate=$(printf '%d.%d.%d.%d' "$((value >> 24 & 255))" "$((value >> 16 & 255))" "$((value >> 8 & 255))" "$((value & 255))")
+		if [[ ! -f $state ]] || ! jq -e --arg ip "$candidate" '[.sandboxes[] | select(.ip == $ip)] | length > 0' "$state" >/dev/null; then
+			printf '%s\n' "$candidate"
+			return 0
+		fi
+	done
+	labctl_die 'no available sandbox IP addresses'
+}
+
 labctl_state_reserve_ip() {
 	local ticket state lock existing candidate start end value temporary
 	ticket=$(labctl_normalize_ticket "$1") || return 1
@@ -114,9 +129,10 @@ labctl_state_reserve_ip() {
 }
 
 labctl_state_record() {
-	local ticket instance ip=$3 workspace_type=$4 state lock owner temporary
+	local ticket instance ip=$3 workspace_type=$4 ticket_root state lock owner temporary
 	ticket=$(labctl_normalize_ticket "$1") || return 1
 	instance=$(labctl_normalize_ticket "$2") || return 1
+	ticket_root=$(realpath -m -- "${LABCTL_WORKSPACE_ROOT}/${ticket}") || return 1
 	state=$(labctl_state_path)
 	lock=$(labctl_state_lock_path)
 	labctl_state_init
@@ -133,7 +149,7 @@ labctl_state_record() {
 	temporary=$(mktemp "${state}.tmp.XXXXXX")
 	# shellcheck disable=SC2016 # jq variables are intentionally literal.
 	jq --arg ticket "$ticket" --arg instance "$instance" --arg ip "$ip" --arg workspace_type "$workspace_type" \
-		--arg workspace_root "$LABCTL_WORKSPACE_ROOT" --arg master_root "$LABCTL_MASTER_ROOT" \
+		--arg workspace_root "$ticket_root" --arg master_root "$LABCTL_MASTER_ROOT" \
 		'.sandboxes[$ticket] = ((.sandboxes[$ticket] // {created_at: (now | todateiso8601)}) + {ticket: $ticket, instance: $instance, ip: $ip, workspace_type: $workspace_type, mount_roots: {workspace: $workspace_root, master: $master_root}, updated_at: (now | todateiso8601), status: "created"})' \
 		"$state" >"$temporary"
 	mv -f -- "$temporary" "$state"
@@ -145,4 +161,18 @@ labctl_state_remove() {
 	ticket=$(labctl_normalize_ticket "$1") || return 1
 	# shellcheck disable=SC2016 # jq variable is intentionally literal.
 	labctl_state_write --arg ticket "$ticket" 'del(.sandboxes[$ticket])'
+}
+
+labctl_state_set_status() {
+	local ticket=$1 status=$2
+	ticket=$(labctl_normalize_ticket "$ticket") || return 1
+	# shellcheck disable=SC2016 # jq variables are intentionally literal.
+	labctl_state_write --arg ticket "$ticket" --arg status "$status" \
+		'.sandboxes[$ticket] = ((.sandboxes[$ticket] // error("sandbox is not registered")) + {status: $status, updated_at: (now | todateiso8601)})'
+}
+
+labctl_state_ip_for() {
+	local ticket
+	ticket=$(labctl_normalize_ticket "$1") || return 1
+	labctl_state_lookup "$ticket" | jq -r '.ip // empty'
 }

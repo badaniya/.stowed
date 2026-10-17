@@ -18,6 +18,8 @@ source "$lib_dir/state.sh"
 # shellcheck source=/dev/null
 source "$lib_dir/incus.sh"
 # shellcheck source=/dev/null
+source "$lib_dir/workspace.sh"
+# shellcheck source=/dev/null
 source "$lib_dir/host-setup.sh"
 
 usage() {
@@ -25,16 +27,155 @@ usage() {
 Usage: labctl [--config PATH] [--dry-run] <command> [args]
 
 Commands:
-  help              Show this help text
-  preflight         Validate host and configuration prerequisites
-  setup-host --yes  Create or reconcile only labctl's Incus bridge and profile
-  status            Show sandbox status
-  create            Create a ticket sandbox
-  start             Start a ticket sandbox
-  stop              Stop a ticket sandbox
-  destroy           Destroy a ticket sandbox
-  cleanup-worktree  Remove a source worktree after confirmation
+  help                                      Show this help text
+  preflight                                 Validate host and configuration prerequisites
+  setup-host --yes                          Create or reconcile only labctl's Incus bridge and profile
+  create TICKET [--repo NAME] [--ensure-worktree] [--dry-run]
+  start TICKET [--dry-run]
+  stop TICKET [--dry-run]
+  status TICKET
+  destroy TICKET --yes [--dry-run]
+  cleanup-worktree TICKET --yes [--dry-run]
 USAGE
+}
+
+labctl_lifecycle_options() {
+	LABCTL_LIFECYCLE_TICKET=${1:-}
+	shift || true
+	LABCTL_LIFECYCLE_YES=false
+	export LABCTL_ENSURE_WORKTREE=false
+	LABCTL_REPO_SELECTOR=
+	while (($#)); do
+		case $1 in
+		--yes) LABCTL_LIFECYCLE_YES=true ;;
+		--ensure-worktree) export LABCTL_ENSURE_WORKTREE=true ;;
+		--repo)
+			[[ $# -ge 2 ]] || {
+				labctl_die '--repo requires a repository name'
+				return 1
+			}
+			LABCTL_REPO_SELECTOR=$2
+			shift
+			;;
+		--dry-run) export LABCTL_DRY_RUN=true ;;
+		*)
+			labctl_die "unknown lifecycle option: $1"
+			return 1
+			;;
+		esac
+		shift
+	done
+	[[ -n $LABCTL_LIFECYCLE_TICKET ]] || {
+		labctl_die 'ticket is required'
+		return 1
+	}
+}
+
+labctl_ticket_root() { labctl_workspace_ticket_root "$1"; }
+
+labctl_create() {
+	local ticket=$1 selector=${2:-} instance root workspace_type ip existing_ip state
+	ticket=$(labctl_normalize_ticket "$ticket") || return 1
+	workspace_type=$(labctl_workspace_ensure "$ticket" "$selector") || return 1
+	root=$(labctl_ticket_root "$ticket") || return 1
+	instance=$ticket
+	state=$(labctl_state_path)
+	if [[ -f $state ]] && labctl_state_lookup "$ticket" >/dev/null 2>&1; then
+		ip=$(labctl_state_ip_for "$ticket")
+	elif [[ ${LABCTL_DRY_RUN:-false} == true ]]; then
+		ip=$(labctl_state_preview_ip)
+	else
+		ip=$(labctl_state_reserve_ip "$ticket")
+	fi
+	if labctl_incus_instance_exists "$instance"; then
+		existing_ip=$(labctl_incus_instance_ip "$instance")
+		[[ $existing_ip == "$ip" ]] || {
+			labctl_die "existing instance has a conflicting assigned IP: $instance ($existing_ip, expected $ip)"
+			return 1
+		}
+		[[ ${LABCTL_DRY_RUN:-false} == true ]] || labctl_state_record "$ticket" "$instance" "$ip" "$workspace_type"
+		return 0
+	fi
+	labctl_incus_launch "$instance" "$ip"
+	labctl_incus_attach_workspace "$instance" "$root"
+	labctl_incus_wait_ready "$instance"
+	if [[ ${LABCTL_DRY_RUN:-false} != true ]]; then
+		labctl_state_record "$ticket" "$instance" "$ip" "$workspace_type"
+	fi
+}
+
+labctl_start() {
+	local ticket=$1 root
+	ticket=$(labctl_normalize_ticket "$ticket") || return 1
+	root=$(labctl_ticket_root "$ticket") || return 1
+	labctl_incus_instance_exists "$ticket" || {
+		labctl_die "sandbox instance does not exist: $ticket"
+		return 1
+	}
+	labctl_incus_start "$ticket" "$root"
+	[[ ${LABCTL_DRY_RUN:-false} == true ]] || labctl_state_set_status "$ticket" running
+}
+
+labctl_stop() {
+	local ticket=$1 root
+	ticket=$(labctl_normalize_ticket "$ticket") || return 1
+	root=$(labctl_ticket_root "$ticket") || return 1
+	labctl_incus_instance_exists "$ticket" || {
+		labctl_die "sandbox instance does not exist: $ticket"
+		return 1
+	}
+	labctl_incus_stop "$ticket" "$root"
+	[[ ${LABCTL_DRY_RUN:-false} == true ]] || labctl_state_set_status "$ticket" stopped
+}
+
+labctl_status() {
+	local ticket=$1 root record
+	ticket=$(labctl_normalize_ticket "$ticket") || return 1
+	root=$(labctl_ticket_root "$ticket") || return 1
+	record=$(labctl_state_lookup "$ticket") || {
+		labctl_die "sandbox is not registered: $ticket"
+		return 1
+	}
+	if labctl_workspace_validate "$ticket" >/dev/null; then
+		jq '. + {workspace_valid: true}' <<<"$record"
+	else
+		jq '. + {workspace_valid: false}' <<<"$record"
+	fi
+	if labctl_incus_instance_exists "$ticket"; then
+		labctl_incus_inspect "$ticket"
+		labctl_run incus exec "$ticket" -- docker info
+	fi
+	[[ -d $root ]] || labctl_die "ticket root is missing: $root"
+}
+
+labctl_destroy() {
+	local ticket=$1
+	ticket=$(labctl_normalize_ticket "$ticket") || return 1
+	[[ ${LABCTL_LIFECYCLE_YES:-false} == true ]] || {
+		labctl_die 'destroy requires --yes'
+		return 1
+	}
+	printf 'target: destroy instance=%s ticket=%s\n' "$ticket" "$ticket"
+	if labctl_incus_instance_exists "$ticket"; then
+		labctl_incus_stop "$ticket" "$(labctl_ticket_root "$ticket")"
+		labctl_run incus delete "$ticket" --force
+	fi
+	[[ ${LABCTL_DRY_RUN:-false} == true ]] || labctl_state_set_status "$ticket" destroyed
+}
+
+labctl_cleanup_worktree() {
+	local ticket=$1
+	ticket=$(labctl_normalize_ticket "$ticket") || return 1
+	[[ ${LABCTL_LIFECYCLE_YES:-false} == true ]] || {
+		labctl_die 'cleanup-worktree requires --yes'
+		return 1
+	}
+	printf 'target: cleanup-worktree instance=%s ticket=%s\n' "$ticket" "$ticket"
+	if labctl_incus_instance_exists "$ticket" && labctl_incus_is_running "$ticket"; then
+		labctl_die "refusing worktree cleanup while sandbox instance is running: $ticket"
+		return 1
+	fi
+	labctl_run "$LABCTL_WORKTREE_REMOVE_HOOK" "$ticket"
 }
 
 config_path="${XDG_CONFIG_HOME:-$HOME/.config}/labctl/config.env"
@@ -67,7 +208,6 @@ while (($#)); do
 	*) break ;;
 	esac
 done
-
 command=${1:-help}
 if (($#)); then shift; fi
 case $command in
@@ -86,10 +226,17 @@ setup-host)
 	export LABCTL_ASSUME_YES=true
 	labctl_incus_setup_host
 	;;
-status | create | start | stop | destroy | cleanup-worktree)
+create | start | stop | status | destroy | cleanup-worktree)
 	labctl_config_load "$config_path"
-	labctl_die "$command is not implemented"
-	exit 1
+	labctl_lifecycle_options "$@"
+	case $command in
+	create) labctl_create "$LABCTL_LIFECYCLE_TICKET" "$LABCTL_REPO_SELECTOR" ;;
+	start) labctl_start "$LABCTL_LIFECYCLE_TICKET" ;;
+	stop) labctl_stop "$LABCTL_LIFECYCLE_TICKET" ;;
+	status) labctl_status "$LABCTL_LIFECYCLE_TICKET" ;;
+	destroy) labctl_destroy "$LABCTL_LIFECYCLE_TICKET" ;;
+	cleanup-worktree) labctl_cleanup_worktree "$LABCTL_LIFECYCLE_TICKET" ;;
+	esac
 	;;
 *)
 	labctl_die "unknown command: $command"
