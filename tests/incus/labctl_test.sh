@@ -356,6 +356,19 @@ ln -s "${TEST_ROOT}/outside" "${TEST_ROOT}/workspace/escaped"
 assert_fails labctl_workspace_validate 'escaped'
 printf 'gitdir: %s\n' "${TEST_ROOT}/workspace/master/one/worktrees/jira-#" >"${TEST_ROOT}/outside/jira-#/one/.git"
 
+# Ticket roots preserve their on-disk case, while controller/state identifiers normalize.
+mkdir -p "${TEST_ROOT}/workspace/master/one/worktrees/nvo-20130" "${TEST_ROOT}/workspace/master/two/worktrees/nvo-20130"
+mkdir -p "${TEST_ROOT}/workspace/NVO-20130/one" "${TEST_ROOT}/workspace/NVO-20130/two"
+printf 'gitdir: %s\n' "${TEST_ROOT}/workspace/master/one/worktrees/nvo-20130" >"${TEST_ROOT}/workspace/NVO-20130/one/.git"
+printf 'gitdir: %s\n' "${TEST_ROOT}/workspace/master/two/worktrees/nvo-20130" >"${TEST_ROOT}/workspace/NVO-20130/two/.git"
+assert_equals "${TEST_ROOT}/workspace/NVO-20130" "$(labctl_workspace_ticket_root 'NvO-20130')"
+assert_succeeds labctl_workspace_validate 'NvO-20130'
+assert_equals '10.42.0.11' "$(labctl_state_reserve_ip 'NvO-20130')"
+assert_equals 'nvo-20130' "$(labctl_state_lookup 'NVO-20130' | jq -r '.instance')"
+mkdir -p "${TEST_ROOT}/workspace/nVo-20130"
+assert_fails labctl_workspace_ticket_root 'NVO-20130'
+rmdir "${TEST_ROOT}/workspace/nVo-20130"
+
 : >"$COMMAND_LOG"
 if ! PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_PROFILE_EXISTS=true "$LABCTL_BIN" --config "$CONFIG_PATH" create 'JIRA-#' --dry-run >>"$COMMAND_LOG" 2>&1; then
 	fail 'dry-run create failed'

@@ -3,10 +3,26 @@
 set -euo pipefail
 
 labctl_workspace_ticket_root() {
-	local ticket=$1 normalized root candidate
+	local ticket=$1 normalized root entry candidate matches=0
 	normalized=$(labctl_normalize_ticket "$ticket") || return 1
-	root=$(realpath -m -- "$LABCTL_WORKSPACE_ROOT") || return 1
-	candidate=$(realpath -m -- "${LABCTL_WORKSPACE_ROOT}/${normalized}") || return 1
+	root=$(realpath -e -- "$LABCTL_WORKSPACE_ROOT") || {
+		labctl_die "workspace root is missing or invalid: $LABCTL_WORKSPACE_ROOT"
+		return 1
+	}
+	while IFS= read -r -d '' entry; do
+		[[ ${entry,,} == "$normalized" ]] || continue
+		matches=$((matches + 1))
+		candidate=$entry
+	done < <(find "$root" -mindepth 1 -maxdepth 1 -type d -printf '%f\0')
+	[[ $matches -eq 1 ]] || {
+		if [[ $matches -eq 0 ]]; then
+			labctl_die "existing worktree prerequisite is missing: $root/$normalized"
+		else
+			labctl_die "ambiguous case-insensitive ticket root: $normalized"
+		fi
+		return 1
+	}
+	candidate=$(realpath -e -- "$root/$candidate") || return 1
 	[[ $candidate == "$root"/* ]] || {
 		labctl_die "ticket root escapes workspace root: $ticket"
 		return 1
