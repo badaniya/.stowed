@@ -51,6 +51,21 @@ if [[ $force == true && -d $project_root ]]; then
 	# Ownership repair is restricted to the explicitly force-removed ticket root.
 	printf '→ Repairing ownership of generated artifacts in %s…\n' "$project_root"
 	sudo chown -R "$(id -un):$(id -gn)" "$project_root"
+
+	# A failed `git worktree remove` can deregister a worktree before failing to
+	# delete root-owned build artifacts. Remove only those now-unregistered,
+	# known harness repository directories; registered worktrees stay with the
+	# existing guarded remover below.
+	for repo in GoDCApp PlatformCommonModels PlatformServices PlatformServicesCommon; do
+		worktree_path="${project_root}/${repo}"
+		bare_repo="${HOME}/workspace/badaniya/master/${repo}"
+		[[ -d $worktree_path ]] || continue
+		if git -C "$bare_repo" worktree list --porcelain 2>/dev/null | rg -Fx -- "worktree ${worktree_path}" >/dev/null; then
+			continue
+		fi
+		printf '→ Removing orphaned worktree directory %s…\n' "$worktree_path"
+		rm -rf --one-file-system -- "$worktree_path"
+	done
 fi
 
 printf '→ Removing harness worktrees for %s…\n' "$ticket"
