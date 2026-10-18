@@ -453,7 +453,7 @@ labctl_incus_sync_nvo_environment() (
 	labctl_nvo_env_render "$ticket" "$rendered"
 	labctl_incus_set_systemd_credential_file "$instance" nvo-environment "$rendered"
 	# shellcheck disable=SC2016 # Guest shell expands the configured user argument.
-	labctl_run incus exec "$instance" -- bash -c 'set -euo pipefail; install -d -m 0700 -o "$1" -g "$1" "/home/$1/.config/nvo"; systemd-creds cat nvo-environment >"/home/$1/.config/nvo/sandbox.env"; chown "$1:$1" "/home/$1/.config/nvo/sandbox.env"; chmod 0600 "/home/$1/.config/nvo/sandbox.env"' -- "$LABCTL_INSTANCE_USER"
+	labctl_run incus exec "$instance" -- bash -c 'set -euo pipefail; install -d -m 0700 -o "$1" -g "$1" "/home/$1/.config"; install -d -m 0700 -o "$1" -g "$1" "/home/$1/.config/nvo"; systemd-creds cat nvo-environment >"/home/$1/.config/nvo/sandbox.env"; chown "$1:$1" "/home/$1/.config/nvo/sandbox.env"; chmod 0600 "/home/$1/.config/nvo/sandbox.env"' -- "$LABCTL_INSTANCE_USER"
 )
 
 labctl_incus_unset_systemd_credential() (
