@@ -86,11 +86,10 @@ wait_for_stage() {
 	done
 }
 
-sanitize_stage_output() {
+finalize_stage_output() {
 	local stage=$1 raw=$2 output binary
 	output=$(stage_log_path "$stage")
 	binary="${stage_dir}/${stage}.binary-output"
-	LC_ALL=C tr -cd '\11\12\15\40-\176' <"$raw" >"$output"
 	if ! cmp -s "$raw" "$output"; then
 		mv -- "$raw" "$binary"
 		printf '[%s] non-text output was saved to %s\n' "$stage" "$binary" >>"$output"
@@ -104,13 +103,13 @@ run_stage() {
 	raw=$(mktemp "${stage_dir}/.${stage}.raw.XXXXXX")
 	output=$(stage_log_path "$stage")
 	printf '→ Starting stage %s for %s…\n' "$stage" "$ticket" >>"$state_log"
-	if run_labctl_stage "$stage" >"$raw" 2>&1; then
-		sanitize_stage_output "$stage" "$raw"
+	if run_labctl_stage "$stage" 2>&1 | tee "$raw" | LC_ALL=C tr -cd '\11\12\15\40-\176' >"$output"; then
+		finalize_stage_output "$stage" "$raw"
 		write_stage_marker "$stage" ready
 		printf '→ Stage %s completed.\n' "$stage" >>"$state_log"
 		return 0
 	fi
-	sanitize_stage_output "$stage" "$raw"
+	finalize_stage_output "$stage" "$raw"
 	write_stage_marker "$stage" failed
 	printf '→ Stage %s failed; inspect %s.\n' "$stage" "$output" >>"$state_log"
 	return 1
@@ -178,6 +177,10 @@ prepare_state() {
 	: >"$state_log"
 	rm -rf -- "$stage_dir"
 	mkdir -m 0700 "$stage_dir"
+	local stage
+	for stage in shared pcm-db platform-tagging-build platform-tagging-start godcapp-build godcapp-infra godcapp-services; do
+		: >"$(stage_log_path "$stage")"
+	done
 }
 
 start_bootstrap() {

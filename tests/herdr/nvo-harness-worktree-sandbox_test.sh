@@ -48,6 +48,9 @@ STATE_LOG="$TEST_ROOT/state/herdr-spreader/NVO-20131.log"
 # directory shell while the coordinator performs a monolithic bootstrap.
 assert_contains 'stage_pane_command' "$SCRIPT"
 assert_contains 'tail -n +1 -F' "$SCRIPT"
+# shellcheck disable=SC2016 # Match the literal pipeline emitted by the script.
+assert_contains 'tee "$raw"' "$SCRIPT"
+assert_contains 'for stage in shared pcm-db' "$SCRIPT"
 
 cat >"$TEST_ROOT/home/.config/herdr-spreader/nvo-harness-worktree-sandbox-base.sh" <<'EOF_BASE'
 #!/usr/bin/env bash
