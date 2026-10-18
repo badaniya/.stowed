@@ -56,7 +56,7 @@ printf '→ Syncing private Loggo template into sandbox %s…\n' "$ticket"
 run_labctl template sync
 
 instance_user=$(run_labctl_without_ticket instance-user)
-[[ $instance_user =~ ^[a-z_][a-z0-9_-]*\$?$ ]] || {
+[[ $instance_user =~ ^[a-z_][a-z0-9_-]*$ ]] || {
 	printf 'Error: labctl returned an unsafe sandbox user name\n' >&2
 	exit 1
 }

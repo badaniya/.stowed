@@ -72,7 +72,7 @@ EOF
 chmod +x "$TEST_ROOT/home/.config/herdr-spreader/nvo-harness-worktree.sh" "$TEST_ROOT/home/.local/bin/labctl" "$TEST_ROOT/bin/sg" "$TEST_ROOT/bin/herdr"
 printf '2\n' >"$TEST_ROOT/herdr-counter"
 
-HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$PATH" TEST_LOG="$LOG" TEST_HERDR_COUNTER="$TEST_ROOT/herdr-counter" "$SCRIPT" 'NVO-20131 25.16.0 --restore-harness'
+HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$PATH" TEST_LOG="$LOG" TEST_HERDR_COUNTER="$TEST_ROOT/herdr-counter" TEST_INSTANCE_USER=nvo-builder "$SCRIPT" 'NVO-20131 25.16.0 --restore-harness'
 assert_contains 'worktree deferred=true args=NVO-20131 25.16.0 --restore-harness' "$LOG"
 assert_contains 'labctl credential sync NVO-20131' "$LOG"
 assert_contains 'labctl bootstrap NVO-20131' "$LOG"
@@ -84,7 +84,8 @@ assert_ordered 'labctl template sync NVO-20131' 'herdr workspace create' "$LOG"
 assert_contains 'herdr tab rename w1:t1 1 - Agent' "$LOG"
 assert_contains 'herdr tab create --workspace w1 --cwd ' "$LOG"
 assert_contains '--label 2 - Build --no-focus' "$LOG"
-assert_contains 'incus exec nvo-20131 -- su - sandbox-user -c' "$LOG"
+assert_contains 'incus exec nvo-20131 -- su - nvo-builder -c' "$LOG"
+assert_not_contains 'su - sandbox-user -c' "$LOG"
 for path in /var/log/network/network-server.log /var/log/edge/edge-server.log /var/log/scheduler/scheduler-server.log /var/log/runonce/runonce-server.log /var/log/system/system-server.log; do
 	assert_contains "$path" "$LOG"
 done
@@ -102,6 +103,14 @@ if HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$PATH" TEST_LOG="$LOG" TEST_HERDR
 	fail 'template sync failure was accepted'
 fi
 assert_contains 'labctl template sync NVO-20131' "$LOG"
+assert_not_contains 'herdr workspace create' "$LOG"
+
+: >"$LOG"
+printf '2\n' >"$TEST_ROOT/herdr-counter"
+if HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$PATH" TEST_LOG="$LOG" TEST_HERDR_COUNTER="$TEST_ROOT/herdr-counter" TEST_INSTANCE_USER='nvo-builder$' "$SCRIPT" 'NVO-20131 25.16.0'; then
+	fail 'unsafe instance user was accepted'
+fi
+assert_contains 'labctl instance-user' "$LOG"
 assert_not_contains 'herdr workspace create' "$LOG"
 
 : >"$LOG"
