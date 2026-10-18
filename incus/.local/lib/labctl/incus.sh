@@ -54,7 +54,7 @@ labctl_incus_profile_query() {
 		labctl_die "unable to encode Incus profile name: $profile"
 		return 1
 	}
-	incus query "/1.0/profiles/$encoded_profile"
+	incus --project "$LABCTL_INCUS_PROJECT" query "/1.0/profiles/$encoded_profile"
 }
 
 labctl_incus_ensure_profile() {
@@ -70,7 +70,7 @@ labctl_incus_ensure_profile() {
 	labctl_run incus profile set "$LABCTL_INCUS_PROFILE" limits.memory.enforce=hard
 	labctl_run incus profile set "$LABCTL_INCUS_PROFILE" limits.memory.swap=false
 	labctl_run incus profile set "$LABCTL_INCUS_PROFILE" limits.processes=4096
-	if incus profile device show "$LABCTL_INCUS_PROFILE" eth0 >/dev/null 2>&1; then
+	if incus --project "$LABCTL_INCUS_PROJECT" profile device show "$LABCTL_INCUS_PROFILE" eth0 >/dev/null 2>&1; then
 		labctl_run incus profile device set "$LABCTL_INCUS_PROFILE" eth0 network="$LABCTL_AGENT_BRIDGE"
 	else
 		labctl_run incus profile device add "$LABCTL_INCUS_PROFILE" eth0 nic network="$LABCTL_AGENT_BRIDGE" name=eth0
@@ -130,7 +130,7 @@ labctl_incus_set_cloud_init() {
 	if [[ ${LABCTL_DRY_RUN:-false} == true ]]; then
 		return 0
 	fi
-	incus config set "$instance" user.user-data - <"$cloud_init"
+	incus --project "$LABCTL_INCUS_PROJECT" config set "$instance" user.user-data - <"$cloud_init"
 }
 
 labctl_incus_launch() {
@@ -188,7 +188,7 @@ labctl_incus_instance_query() {
 		labctl_die "unable to encode Incus instance name: $instance"
 		return 1
 	}
-	instance_json=$(incus query "/1.0/instances/$encoded_instance" 2>&1) || {
+	instance_json=$(incus --project "$LABCTL_INCUS_PROJECT" query "/1.0/instances/$encoded_instance" 2>&1) || {
 		labctl_die "unable to inspect sandbox configuration: $instance"
 		return 1
 	}
@@ -203,11 +203,11 @@ labctl_incus_inspect() {
 }
 
 labctl_incus_instance_exists() {
-	incus info "$1" >/dev/null 2>&1
+	incus --project "$LABCTL_INCUS_PROJECT" info "$1" >/dev/null 2>&1
 }
 
 labctl_incus_instance_ip() {
-	incus config device get "$1" eth0 ipv4.address
+	incus --project "$LABCTL_INCUS_PROJECT" config device get "$1" eth0 ipv4.address
 }
 
 labctl_incus_is_running() {
@@ -373,7 +373,7 @@ labctl_incus_patch_config_file() {
 		labctl_die 'Incus configuration patch payload is unreadable'
 		return 1
 	}
-	labctl_run incus query "$api_path" --request PATCH --data-file "$payload" >/dev/null
+	labctl_run incus query --project "$LABCTL_INCUS_PROJECT" "$api_path" --request PATCH --data-file "$payload" >/dev/null
 }
 
 labctl_incus_set_systemd_credential() (

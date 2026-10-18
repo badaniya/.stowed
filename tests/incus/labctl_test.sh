@@ -250,6 +250,19 @@ mkdir -p "$FAKE_BIN"
 export COMMAND_LOG
 cat >"${FAKE_BIN}/incus" <<'INCUS'
 #!/usr/bin/env bash
+# The real Incus CLI accepts --project as a global option before or after a
+# subcommand. Preserve it in the command log, then remove it for existing
+# fixture command-shape matching.
+args=()
+while (($#)); do
+	if [[ $1 == --project ]]; then
+		shift 2
+		continue
+	fi
+	args+=("$1")
+	shift
+done
+set -- "${args[@]}"
 printf 'incus %s\n' "$*" >>"$COMMAND_LOG"
 fake_instance_exists() {
 	[[ ${LABCTL_FAKE_INSTANCE_EXISTS:-false} == true ]] ||
