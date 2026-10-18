@@ -993,4 +993,16 @@ assert_equals "$(printf 'credential-user:%s\n' "$CREDENTIAL_SECRET" | sha256sum 
 assert_equals '0' "$(find "$REMOTE_RUNTIME" -mindepth 1 -maxdepth 1 | wc -l | tr -d ' ')"
 assert_command_log_not_contains "$CREDENTIAL_SECRET"
 
+# Golden images are explicit, versioned, private-project resources. The builder
+# must scrub and verify before it can publish, then be removed on success.
+: >"$COMMAND_LOG"
+PATH="${FAKE_BIN}:$PATH" assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" image build invalid
+assert_command_log_not_contains 'publish'
+: >"$COMMAND_LOG"
+PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=false assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" image build 2026-10-18-1
+assert_command_log_contains 'incus init images:ubuntu/24.04 golden-builder-2026-10-18-1 --profile default --profile agent-dev-env'
+assert_command_log_contains 'incus publish golden-builder-2026-10-18-1 --alias golden:2026-10-18-1'
+assert_command_log_contains 'incus delete golden-builder-2026-10-18-1'
+assert_command_log_ordered 'incus exec golden-builder-2026-10-18-1 -- bash -s' 'incus publish golden-builder-2026-10-18-1 --alias golden:2026-10-18-1'
+
 finish_tests

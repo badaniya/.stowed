@@ -22,6 +22,8 @@ source "$lib_dir/network.sh"
 # shellcheck source=/dev/null
 source "$lib_dir/nvo-env.sh"
 # shellcheck source=/dev/null
+source "$lib_dir/image.sh"
+# shellcheck source=/dev/null
 source "$lib_dir/workspace.sh"
 # shellcheck source=/dev/null
 source "$lib_dir/host-setup.sh"
@@ -47,6 +49,7 @@ Commands:
   credential unset TICKET                    Remove the sandbox Git credential
   template sync TICKET                       Copy the private Loggo template into the sandbox
   nvo-env sync TICKET                        Sync the private rendered NVO environment into the sandbox
+  image build YYYY-MM-DD-N                   Build a scrubbed private local golden image
   instance-user                              Print the configured sandbox user
   instance-project                           Print the configured Incus project
 USAGE
@@ -311,6 +314,14 @@ nvo-env)
 		exit 1
 	}
 	labctl_nvo_env "$1" "$2"
+	;;
+image)
+	labctl_config_load "$config_path"
+	[[ ${1:-} == build && $# -eq 2 ]] || {
+		labctl_die 'image requires exactly: image build YYYY-MM-DD-N'
+		exit 1
+	}
+	labctl_image_build "$2"
 	;;
 stage)
 	labctl_config_load "$config_path"
