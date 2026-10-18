@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-# shellcheck source=tests/incus/test_helper.sh
+# shellcheck disable=SC1091 # The test helper is resolved from the repository root.
 source "${REPO_ROOT}/tests/incus/test_helper.sh"
 
 LABCTL_BIN="${REPO_ROOT}/incus/.local/bin/labctl"
@@ -55,6 +55,10 @@ LABCTL_HARNESS_REPO_NAMES=one,two
 LABCTL_GIT_HOST=git.example.test
 LABCTL_GIT_CREDENTIAL_NAME=git-module-token
 CONFIG
+LOGGO_TEMPLATE_PATH="${TEST_ROOT}/private-loggo.tpl"
+printf '%s\n' 'template-fixture-private-value' >"$LOGGO_TEMPLATE_PATH"
+chmod 600 "$LOGGO_TEMPLATE_PATH"
+printf 'LABCTL_LOGGO_TEMPLATE_PATH=%s\n' "$LOGGO_TEMPLATE_PATH" >>"$CONFIG_PATH"
 chmod 600 "$CONFIG_PATH"
 
 MISSING_GO_VERSION_CONFIG="${TEST_ROOT}/missing-go-version.env"
@@ -259,6 +263,9 @@ query\ /1.0/instances/*\ --request\ PATCH\ --data-file\ *)
 	jq -e --arg credential "systemd.credential.${LABCTL_FAKE_CREDENTIAL_NAME:-git-module-token}" '
 		(keys == ["config"]) and (.config | keys == [$credential])
 	' "$patch_file" >/dev/null
+	if [[ -n ${LABCTL_FAKE_PATCH_CAPTURE:-} ]]; then
+		cp "$patch_file" "$LABCTL_FAKE_PATCH_CAPTURE"
+	fi
 	printf '%s\n' valid >"${LABCTL_FAKE_PATCH_VALIDATION:?}"
 	;;
 'query /1.0/instances/'*)
@@ -610,6 +617,48 @@ if PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=true LABCTL_FAKE_INSTANC
 fi
 assert_fails rg -F --quiet "$INSTANCE_CREDENTIAL_SECRET" "$QUERY_FAILURE_OUTPUT"
 assert_command_log_not_contains "$INSTANCE_CREDENTIAL_SECRET"
+
+# Private Loggo templates must be owner-only configuration, passed only through
+# an Incus systemd credential, and installed by the guest with private ownership.
+MISSING_TEMPLATE_CONFIG="${TEST_ROOT}/missing-loggo-template.env"
+sed 's|^LABCTL_LOGGO_TEMPLATE_PATH=.*|LABCTL_LOGGO_TEMPLATE_PATH=/missing/private-loggo.tpl|' "$CONFIG_PATH" >"$MISSING_TEMPLATE_CONFIG"
+chmod 600 "$MISSING_TEMPLATE_CONFIG"
+: >"$COMMAND_LOG"
+PATH="${FAKE_BIN}:$PATH" assert_fails "$LABCTL_BIN" --config "$MISSING_TEMPLATE_CONFIG" template sync 'JIRA-#'
+assert_command_log_not_contains 'incus '
+
+INSECURE_TEMPLATE_CONFIG="${TEST_ROOT}/insecure-loggo-template.env"
+chmod 644 "$LOGGO_TEMPLATE_PATH"
+cp "$CONFIG_PATH" "$INSECURE_TEMPLATE_CONFIG"
+chmod 600 "$INSECURE_TEMPLATE_CONFIG"
+PATH="${FAKE_BIN}:$PATH" assert_fails "$LABCTL_BIN" --config "$INSECURE_TEMPLATE_CONFIG" template sync 'JIRA-#'
+chmod 600 "$LOGGO_TEMPLATE_PATH"
+
+LOGGO_TEMPLATE_SECRET=$(<"$LOGGO_TEMPLATE_PATH")
+LOGGO_PATCH_CAPTURE="${TEST_ROOT}/loggo-patch.json"
+LOGGO_PATCH_VALIDATION="${TEST_ROOT}/loggo-patch-validation"
+: >"$COMMAND_LOG"
+PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_CREDENTIAL_NAME=loggo-template LABCTL_FAKE_PATCH_VALIDATION="$LOGGO_PATCH_VALIDATION" LABCTL_FAKE_PATCH_CAPTURE="$LOGGO_PATCH_CAPTURE" assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" template sync 'JIRA-#'
+assert_equals 'valid' "$(cat "$LOGGO_PATCH_VALIDATION")"
+assert_equals "$LOGGO_TEMPLATE_SECRET" "$(jq -r '.config["systemd.credential.loggo-template"]' "$LOGGO_PATCH_CAPTURE")"
+assert_equals '["systemd.credential.loggo-template"]' "$(jq -c '.config | keys' "$LOGGO_PATCH_CAPTURE")"
+assert_command_log_contains 'incus query /1.0/instances/jira-%23 --request PATCH --data-file '
+assert_command_log_contains 'incus exec jira-# -- bash -c '
+assert_command_log_contains 'systemd-creds cat loggo-template'
+assert_command_log_contains "chmod 0600 \"/home/\$1/.private-nvo-loggo.tpl\""
+assert_command_log_contains "chown \"\$1:\$1\" \"/home/\$1/.private-nvo-loggo.tpl\""
+assert_command_log_not_contains "$LOGGO_TEMPLATE_SECRET"
+
+# Credential values must remain redacted in both normal and expanded config.
+LOGGO_STATUS_SECRET=$(printf '%s%s' 'loggo-template-status-' 'not-for-logs')
+LABCTL_FAKE_INSTANCE_CONFIG_JSON=$(jq -cn --arg secret "$LOGGO_STATUS_SECRET" '{config:{"systemd.credential.loggo-template":$secret},expanded_config:{"systemd.credential.loggo-template":$secret}}')
+LOGGO_STATUS_OUTPUT="${TEST_ROOT}/loggo-status-output"
+PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=true "$LABCTL_BIN" --config "$CONFIG_PATH" status 'JIRA-#' >"$LOGGO_STATUS_OUTPUT" 2>&1
+redacted_loggo_key='"systemd.credential.loggo-template": "[REDACTED]"'
+assert_equals '2' "$(rg -F -c "$redacted_loggo_key" "$LOGGO_STATUS_OUTPUT")"
+assert_fails rg -F --quiet "$LOGGO_STATUS_SECRET" "$LOGGO_STATUS_OUTPUT"
+LABCTL_FAKE_INSTANCE_CONFIG_JSON=$(jq -cn --arg master "${TEST_ROOT}/workspace/master" --arg ticket "${TEST_ROOT}/workspace/jira-#" '{config:{"security.privileged":"false"},devices:{"git-master":{type:"disk",source:$master,path:$master},"ticket-workspace":{type:"disk",source:$ticket,path:$ticket}}}')
+export LABCTL_FAKE_INSTANCE_CONFIG_JSON
 
 : >"$COMMAND_LOG"
 PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=true LABCTL_FAKE_PROFILE_EXISTS=true assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" verify 'JIRA-#'
