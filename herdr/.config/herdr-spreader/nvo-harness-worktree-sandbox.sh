@@ -200,9 +200,13 @@ instance_user_setup() {
 }
 
 guest_exec_command() {
-	local guest_command=$1 command
+	local guest_command=$1 interactive=${2:-false} command
 	# shellcheck disable=SC2016 # Build pane obtains and validates this value at runtime.
-	printf -v command 'incus exec %q -- su - "$instance_user" -c %q' "$normalized_ticket" "$guest_command"
+	if [[ $interactive == true ]]; then
+		printf -v command 'incus exec --force-interactive %q -- su - "$instance_user" -c %q' "$normalized_ticket" "$guest_command"
+	else
+		printf -v command 'incus exec %q -- su - "$instance_user" -c %q' "$normalized_ticket" "$guest_command"
+	fi
 	printf '%s\n' "$command"
 }
 
@@ -218,9 +222,9 @@ monitor_command() {
 }
 
 ready_guest_command() {
-	local guest_command=$1 readiness guest_exec setup command
+	local guest_command=$1 interactive=${2:-false} readiness guest_exec setup command
 	printf -v readiness 'incus exec %q -- true' "$normalized_ticket"
-	guest_exec=$(guest_exec_command "$guest_command")
+	guest_exec=$(guest_exec_command "$guest_command" "$interactive")
 	setup=$(instance_user_setup)
 	# shellcheck disable=SC2016 # The generated pane shell expands after the guest is ready.
 	printf -v command 'until sg incus-admin -c %q; do sleep 0.2; done; %s; export instance_user; sg incus-admin -c %q || { printf %q >&2; exec bash; }' \
@@ -264,7 +268,7 @@ create_workspace() {
 
 	local monitor lazydocker pcm platform godcapp
 	monitor=$(monitor_command)
-	lazydocker=$(ready_guest_command 'lazydocker')
+	lazydocker=$(ready_guest_command 'lazydocker' true)
 	pcm=$(stage_pane_command pcm-db "${project_dir}/PlatformCommonModels/scripts/development")
 	platform=$(stage_pane_command platform-tagging-start "${project_dir}/PlatformServices/scripts/development")
 	godcapp=$(stage_pane_command godcapp-services "${project_dir}/GoDCApp/NVO/scripts/development")

@@ -146,6 +146,7 @@ assert_contains 'incus' "$LOG"
 assert_contains 'nvo-20131' "$LOG"
 assert_contains 'true' "$LOG"
 assert_contains 'lazydocker' "$LOG"
+assert_contains '--force-interactive' "$LOG"
 assert_not_contains 'docker.sock' "$LOG"
 assert_not_contains 'docker info' "$LOG"
 
