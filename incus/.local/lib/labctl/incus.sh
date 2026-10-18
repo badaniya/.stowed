@@ -300,6 +300,7 @@ set -euo pipefail
 ticket_root=$1
 credential_name=$2
 git_host=$3
+instance_user=$4
 SCRIPT
 	printf 'stack_command=%q\n' "$command" >>"$helper"
 	cat >>"$helper" <<'SCRIPT'
@@ -330,9 +331,11 @@ export GIT_TERMINAL_PROMPT=0
 export GOPRIVATE="$git_host"
 export GONOSUMDB="$git_host"
 cd -- "$ticket_root"
+env_file="/home/${instance_user}/.config/nvo/sandbox.env"
+[[ -r $env_file ]] && source "$env_file"
 bash -lc "$stack_command"
 SCRIPT
-	labctl_run incus exec "$instance" -- bash -s -- "$ticket_root" "$LABCTL_GIT_CREDENTIAL_NAME" "$LABCTL_GIT_HOST" <"$helper"
+	labctl_run incus exec "$instance" -- bash -s -- "$ticket_root" "$LABCTL_GIT_CREDENTIAL_NAME" "$LABCTL_GIT_HOST" "$LABCTL_INSTANCE_USER" <"$helper"
 )
 
 labctl_incus_start() {
@@ -440,6 +443,18 @@ labctl_incus_sync_loggo_template() {
 	# shellcheck disable=SC2016 # The guest shell, not this shell, expands its positional argument.
 	labctl_run incus exec "$instance" -- bash -c 'set -euo pipefail; install -d -m 0700 -o "$1" -g "$1" "/home/$1"; systemd-creds cat loggo-template >"/home/$1/.private-nvo-loggo.tpl"; chown "$1:$1" "/home/$1/.private-nvo-loggo.tpl"; chmod 0600 "/home/$1/.private-nvo-loggo.tpl"' -- "$LABCTL_INSTANCE_USER"
 }
+
+labctl_incus_sync_nvo_environment() (
+	set -euo pipefail
+	local instance=$1 ticket=$2 rendered
+	umask 077
+	rendered=$(mktemp "${TMPDIR:-/tmp}/labctl-nvo-env.XXXXXX")
+	trap 'rm -f -- "$rendered"' EXIT
+	labctl_nvo_env_render "$ticket" "$rendered"
+	labctl_incus_set_systemd_credential_file "$instance" nvo-environment "$rendered"
+	# shellcheck disable=SC2016 # Guest shell expands the configured user argument.
+	labctl_run incus exec "$instance" -- bash -c 'set -euo pipefail; install -d -m 0700 -o "$1" -g "$1" "/home/$1/.config/nvo"; systemd-creds cat nvo-environment >"/home/$1/.config/nvo/sandbox.env"; chown "$1:$1" "/home/$1/.config/nvo/sandbox.env"; chmod 0600 "/home/$1/.config/nvo/sandbox.env"' -- "$LABCTL_INSTANCE_USER"
+)
 
 labctl_incus_unset_systemd_credential() (
 	set -euo pipefail
