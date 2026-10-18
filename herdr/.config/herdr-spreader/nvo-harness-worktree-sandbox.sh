@@ -118,7 +118,7 @@ ready_guest_command() {
 	guest_exec=$(guest_exec_command "$guest_command")
 	setup=$(instance_user_setup)
 	# shellcheck disable=SC2016 # The generated pane shell expands the spinner expression at runtime.
-	printf -v command 'spinner=("⠋" "⠙" "⠹" "⠸" "⠼" "⠴" "⠦" "⠧" "⠇"); spin=0; until sg incus-admin -c %q; do printf "\\r\\033[K%%s Starting sandbox…" "${spinner[spin %% ${#spinner[@]}]}"; spin=$((spin + 1)); sleep 0.12; done; printf "\\r\\033[K"; %s; export instance_user; sg incus-admin -c %q || { printf %q >&2; exec bash; }' \
+	printf -v command 'printf "\\033[2J\\033[H"; spinner=("⠋" "⠙" "⠹" "⠸" "⠼" "⠴" "⠦" "⠧" "⠇"); spin=0; until sg incus-admin -c %q; do printf "\\r\\033[K%%s Starting sandbox…" "${spinner[spin %% ${#spinner[@]}]}"; spin=$((spin + 1)); sleep 0.12; done; printf "\\r\\033[K"; %s; export instance_user; sg incus-admin -c %q || { printf %q >&2; exec bash; }' \
 		"$readiness" "$setup" "$guest_exec" 'Sandbox attachment exited; inspect the command above.'
 	printf '%s\n' "$command"
 }
