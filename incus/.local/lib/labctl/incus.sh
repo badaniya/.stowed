@@ -178,7 +178,7 @@ labctl_incus_redact_systemd_credentials() {
 }
 
 labctl_incus_instance_query() {
-	local instance=$1 normalized encoded_instance instance_json
+	local instance=$1 normalized encoded_instance instance_json api_path
 	normalized=$(labctl_normalize_ticket "$instance") || return 1
 	[[ $instance == "$normalized" ]] || {
 		labctl_die "invalid Incus instance name: $instance"
@@ -188,7 +188,8 @@ labctl_incus_instance_query() {
 		labctl_die "unable to encode Incus instance name: $instance"
 		return 1
 	}
-	instance_json=$(incus --project "$LABCTL_INCUS_PROJECT" query "/1.0/instances/$encoded_instance" 2>&1) || {
+	api_path=$(labctl_incus_instance_api_path "$instance") || return 1
+	instance_json=$(incus query "$api_path" 2>&1) || {
 		labctl_die "unable to inspect sandbox configuration: $instance"
 		return 1
 	}
