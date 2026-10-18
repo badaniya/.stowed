@@ -20,6 +20,8 @@ source "$lib_dir/incus.sh"
 # shellcheck source=/dev/null
 source "$lib_dir/network.sh"
 # shellcheck source=/dev/null
+source "$lib_dir/nvo-env.sh"
+# shellcheck source=/dev/null
 source "$lib_dir/workspace.sh"
 # shellcheck source=/dev/null
 source "$lib_dir/host-setup.sh"

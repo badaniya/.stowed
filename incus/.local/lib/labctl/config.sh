@@ -20,6 +20,7 @@ labctl_config_required_vars=(
 labctl_config_optional_vars=(
 	LABCTL_GIT_CREDENTIAL_NAME
 	LABCTL_LOGGO_TEMPLATE_PATH
+	LABCTL_NVO_ENV_SOURCE_PATH
 )
 
 labctl_config_validate_credential_name() {
