@@ -230,11 +230,17 @@ labctl_incus_wait_ready() {
 }
 
 labctl_incus_configure_git_safe_directories() {
-	local instance=$1 ticket_root=$2 worktree command
+	local instance=$1 ticket_root=$2 worktree repository_root command
 	while IFS= read -r worktree; do
 		labctl_run incus exec "$instance" -- git config --global --add safe.directory "$worktree" </dev/null
 		printf -v command 'git config --global --add safe.directory %q' "$worktree"
 		labctl_run incus exec "$instance" -- su - "$LABCTL_INSTANCE_USER" -c "$command" </dev/null
+		repository_root=$(git -C "$worktree" rev-parse --show-toplevel 2>/dev/null || true)
+		if [[ -n $repository_root && $repository_root != "$worktree" ]]; then
+			labctl_run incus exec "$instance" -- git config --global --add safe.directory "$repository_root" </dev/null
+			printf -v command 'git config --global --add safe.directory %q' "$repository_root"
+			labctl_run incus exec "$instance" -- su - "$LABCTL_INSTANCE_USER" -c "$command" </dev/null
+		fi
 	done < <(labctl_workspace_linked_worktrees "$ticket_root")
 }
 
@@ -352,7 +358,9 @@ labctl_incus_start() {
 
 labctl_incus_stop() {
 	local instance=$1 ticket_root=$2
-	labctl_stack_down "$instance"
+	if ! labctl_stack_down "$instance"; then
+		printf 'warning: sandbox stack-down hook failed; continuing with instance stop: %s\n' "$instance" >&2
+	fi
 	labctl_run incus stop "$instance"
 }
 

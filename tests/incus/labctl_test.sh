@@ -920,6 +920,8 @@ printf 'git %s\n' "$*" >>"$COMMAND_LOG"
 if [[ ${1:-} == credential && ${2:-} == fill ]]; then
   cat >/dev/null
   printf 'protocol=https\nhost=git.example.test\nusername=credential-user\npassword=%s\n\n' "$LABCTL_FAKE_GIT_PASSWORD"
+elif [[ ${1:-} == -C && ${3:-} == rev-parse && ${4:-} == --show-toplevel ]]; then
+  printf '%s\n' "$2"
 fi
 GIT
 cat >"${FAKE_BIN}/systemd-creds" <<'CREDS'
