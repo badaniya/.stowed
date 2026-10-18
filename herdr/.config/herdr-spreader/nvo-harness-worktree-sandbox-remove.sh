@@ -19,8 +19,8 @@ else
 fi
 
 ticket=${args[0]:-}
-[[ $ticket =~ ^NVO-[0-9]+$ ]] || {
-	echo "Error: ticket must use the NVO-<number> format" >&2
+[[ $ticket =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ]] || {
+	echo "Error: ticket must use a Jira key such as NVO-123 or CFD-123" >&2
 	exit 1
 }
 

@@ -15,8 +15,14 @@ else
 fi
 
 ticket=${args[0]:-}
-[[ $ticket =~ ^NVO-[0-9]+$ ]] || {
-	printf 'Error: ticket must use the NVO-<number> format\n' >&2
+[[ $ticket =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ]] || {
+	printf 'Error: ticket must use a Jira key such as NVO-123 or CFD-123\n' >&2
+	exit 1
+}
+# Creation must prove Jira availability before creating any worktree, workspace,
+# or instance. The destructive cleanup action intentionally skips this lookup.
+jira issue view "$ticket" --raw >/dev/null || {
+	printf 'Error: Jira ticket is unavailable: %s\n' "$ticket" >&2
 	exit 1
 }
 normalized_ticket=${ticket,,}
