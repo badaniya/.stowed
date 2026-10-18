@@ -278,18 +278,23 @@ create_workspace() {
 	platform=$(stage_pane_command platform-tagging-start "${project_dir}/PlatformServices/scripts/development" platform-tagging-build platform-tagging-start)
 	godcapp=$(stage_pane_command godcapp-services "${project_dir}/GoDCApp/NVO/scripts/development" godcapp-build godcapp-infra godcapp-services)
 
+	herdr pane rename "$build_pane_id" Monitor
 	herdr pane run "$build_pane_id" "$monitor"
 	lazy_json=$(herdr pane split "$build_pane_id" --direction down --ratio 0.42 --cwd "$project_dir" --no-focus)
 	lazy_pane_id=$(jq -er '.result.pane.pane_id' <<<"$lazy_json")
+	herdr pane rename "$lazy_pane_id" LazyDocker
 	herdr pane run "$lazy_pane_id" "$lazydocker"
 	pcm_json=$(herdr pane split "$lazy_pane_id" --direction right --ratio 0.65 --cwd "$project_dir" --no-focus)
 	pcm_pane_id=$(jq -er '.result.pane.pane_id' <<<"$pcm_json")
+	herdr pane rename "$pcm_pane_id" PlatformCommonModels
 	herdr pane run "$pcm_pane_id" "$pcm"
 	platform_json=$(herdr pane split "$pcm_pane_id" --direction down --ratio 0.33 --cwd "$project_dir" --no-focus)
 	platform_pane_id=$(jq -er '.result.pane.pane_id' <<<"$platform_json")
+	herdr pane rename "$platform_pane_id" PlatformServices
 	herdr pane run "$platform_pane_id" "$platform"
 	godcapp_json=$(herdr pane split "$platform_pane_id" --direction down --ratio 0.5 --cwd "$project_dir" --focus)
 	godcapp_pane_id=$(jq -er '.result.pane.pane_id' <<<"$godcapp_json")
+	herdr pane rename "$godcapp_pane_id" GoDCApp
 	herdr pane run "$godcapp_pane_id" "$godcapp"
 }
 
