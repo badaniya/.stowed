@@ -44,10 +44,10 @@ mkdir -p "$TEST_ROOT/bin" "$TEST_ROOT/home/.config/herdr-spreader" "$TEST_ROOT/h
 LOG="$TEST_ROOT/commands.log"
 STATE_LOG="$TEST_ROOT/state/herdr-spreader/NVO-20131.log"
 
-# The active terminal font renders ⠦ as a blank frame. Keep the generated
-# spinner sequence restricted to glyphs verified visible in Herdr panes.
-assert_not_contains '"⠦"' "$SCRIPT"
-assert_contains '\\0337%%s Starting sandbox…\\0338' "$SCRIPT"
+# Build panes must tail their named stage logs rather than opening an empty
+# directory shell while the coordinator performs a monolithic bootstrap.
+assert_contains 'stage_pane_command' "$SCRIPT"
+assert_contains 'tail -n +1 -F' "$SCRIPT"
 
 cat >"$TEST_ROOT/home/.config/herdr-spreader/nvo-harness-worktree-sandbox-base.sh" <<'EOF_BASE'
 #!/usr/bin/env bash
@@ -58,6 +58,9 @@ cat >"$TEST_ROOT/home/.local/bin/labctl" <<'EOF_LABCTL'
 printf 'labctl %s\n' "$*" >>"${TEST_LOG:?}"
 if [[ ${1:-} == instance-user ]]; then
 	printf '%s\n' "${TEST_INSTANCE_USER:-sandbox-user}"
+elif [[ ${1:-} == stage ]]; then
+	printf 'stage %s\n' "${3:-}" >>"${TEST_LOG:?}"
+	[[ ${TEST_FAIL_STAGE:-} != "${3:-}" ]] || exit 1
 elif [[ ${1:-} == template && ${TEST_FAIL_TEMPLATE:-false} == true ]]; then
 	exit 1
 fi
@@ -107,11 +110,29 @@ assert_contains 'herdr tab create --workspace w1' "$LOG"
 assert_ordered 'herdr workspace create' 'labctl create NVO-20131' "$LOG"
 assert_contains '→ Creating sandbox NVO-20131…' "$STATE_LOG"
 assert_contains '→ Syncing the host Git credential into sandbox NVO-20131…' "$STATE_LOG"
-assert_contains '→ Bootstrapping sandbox NVO-20131…' "$STATE_LOG"
+assert_contains '→ Running shared sandbox preparation for NVO-20131…' "$STATE_LOG"
 assert_contains '→ Syncing private Loggo template into sandbox NVO-20131…' "$STATE_LOG"
+assert_contains 'stage shared' "$LOG"
+assert_contains 'stage pcm-db' "$LOG"
+assert_contains 'stage platform-tagging-build' "$LOG"
+assert_contains 'stage platform-tagging-start' "$LOG"
+assert_contains 'stage godcapp-build' "$LOG"
+assert_contains 'stage godcapp-infra' "$LOG"
+assert_contains 'stage godcapp-services' "$LOG"
+assert_ordered 'stage shared' 'stage pcm-db' "$LOG"
+assert_ordered 'stage shared' 'stage platform-tagging-build' "$LOG"
+assert_ordered 'stage shared' 'stage godcapp-build' "$LOG"
+assert_ordered 'stage shared' 'stage godcapp-infra' "$LOG"
+assert_ordered 'stage pcm-db' 'stage platform-tagging-start' "$LOG"
+assert_ordered 'stage platform-tagging-build' 'stage platform-tagging-start' "$LOG"
+assert_ordered 'stage pcm-db' 'stage godcapp-services' "$LOG"
+assert_ordered 'stage platform-tagging-start' 'stage godcapp-services' "$LOG"
+[[ -f "${TEST_ROOT}/state/herdr-spreader/NVO-20131.stages/pcm-db.ready" ]] || fail 'PCM ready marker was not written'
+[[ -f "${TEST_ROOT}/state/herdr-spreader/NVO-20131.stages/platform-tagging-start.ready" ]] || fail 'Platform tagging ready marker was not written'
+[[ -f "${TEST_ROOT}/state/herdr-spreader/NVO-20131.stages/godcapp-services.ready" ]] || fail 'GoDCApp services ready marker was not written'
+assert_contains 'mktemp' "$SCRIPT"
+assert_contains 'mv --' "$SCRIPT"
 assert_ordered '→ Creating sandbox NVO-20131…' '→ Syncing the host Git credential into sandbox NVO-20131…' "$STATE_LOG"
-assert_ordered '→ Syncing the host Git credential into sandbox NVO-20131…' '→ Bootstrapping sandbox NVO-20131…' "$STATE_LOG"
-assert_ordered '→ Bootstrapping sandbox NVO-20131…' '→ Syncing private Loggo template into sandbox NVO-20131…' "$STATE_LOG"
 assert_contains 'tail -n +1 -F' "$LOG"
 assert_contains "$STATE_LOG" "$LOG"
 assert_contains 'NVO_SANDBOX_BOOTSTRAP_SUCCESS' "$LOG"
@@ -126,12 +147,14 @@ assert_not_contains 'docker info' "$LOG"
 : >"$LOG"
 printf '2\n' >"$TEST_ROOT/herdr-counter"
 : >"$STATE_LOG"
-if HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$PATH" XDG_STATE_HOME="$TEST_ROOT/state" TEST_LOG="$LOG" TEST_HERDR_COUNTER="$TEST_ROOT/herdr-counter" TEST_INSTANCE_USER=nvo-builder TEST_FAIL_TEMPLATE=true "$SCRIPT" 'NVO-20131 25.16.0'; then
+if HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$PATH" XDG_STATE_HOME="$TEST_ROOT/state" TEST_LOG="$LOG" TEST_HERDR_COUNTER="$TEST_ROOT/herdr-counter" TEST_INSTANCE_USER=nvo-builder TEST_FAIL_STAGE=pcm-db "$SCRIPT" 'NVO-20131 25.16.0'; then
 	:
 else
 	fail 'asynchronous bootstrap failure blocked workspace creation'
 fi
 wait_for_marker 'NVO_SANDBOX_BOOTSTRAP_FAILED' "$STATE_LOG"
-assert_contains '→ Syncing private Loggo template into sandbox NVO-20131…' "$STATE_LOG"
+assert_contains 'stage pcm-db' "$LOG"
+assert_not_contains 'stage platform-tagging-start' "$LOG"
+assert_not_contains 'stage godcapp-services' "$LOG"
 assert_contains 'herdr workspace create' "$LOG"
 assert_not_contains 'NVO_SANDBOX_BOOTSTRAP_SUCCESS' "$STATE_LOG"

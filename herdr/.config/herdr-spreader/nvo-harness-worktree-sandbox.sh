@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# nvo-harness-worktree-sandbox — create/reuse an NVO harness worktree, then open
-# its agent/build Herdr workspace while the ticket-scoped Incus sandbox bootstraps.
+# nvo-harness-worktree-sandbox — create/reuse NVO harness worktrees and open an
+# asynchronous, dependency-aware Incus sandbox Build workspace.
 set -euo pipefail
 
 if [[ $# -lt 1 ]]; then
@@ -28,6 +28,7 @@ workspace_root=${NVO_WORKSPACE_ROOT:-"${HOME}/workspace/${workspace_owner}"}
 project_dir="${workspace_root}/${ticket}"
 state_dir="${XDG_STATE_HOME:-${HOME}/.local/state}/herdr-spreader"
 state_log="${state_dir}/${ticket}.log"
+stage_dir="${state_dir}/${ticket}.stages"
 
 [[ -x $labctl ]] || {
 	printf 'Error: labctl is unavailable at %s; stow the incus package first\n' "$labctl" >&2
@@ -35,8 +36,6 @@ state_log="${state_dir}/${ticket}.log"
 }
 
 # The standard creator remains responsible for worktrees and aggregate context.
-# Its normal one-tab workspace is deliberately deferred while this script creates
-# the agent and build tabs below.
 NVO_HARNESS_DEFER_WORKSPACE=true bash "${spreader_dir}/nvo-harness-worktree-sandbox-base.sh" "${args[@]}"
 
 run_labctl() {
@@ -51,19 +50,120 @@ run_labctl_without_ticket() {
 	sg incus-admin -c "$command"
 }
 
+run_labctl_stage() {
+	local stage=$1 command
+	printf -v command '%q %q %q %q' "$labctl" stage "$ticket" "$stage"
+	sg incus-admin -c "$command"
+}
+
+stage_marker_path() {
+	printf '%s/%s.%s\n' "$stage_dir" "$1" "$2"
+}
+
+stage_log_path() {
+	printf '%s/%s.log\n' "$stage_dir" "$1"
+}
+
+write_stage_marker() {
+	local stage=$1 result=$2 marker temporary
+	marker=$(stage_marker_path "$stage" "$result")
+	temporary=$(mktemp "${stage_dir}/.${stage}.${result}.XXXXXX")
+	printf '%s\n' "$(date -Is) stage=${stage} result=${result}" >"$temporary"
+	mv -- "$temporary" "$marker"
+}
+
+stage_is_ready() { [[ -f $(stage_marker_path "$1" ready) ]]; }
+stage_is_failed() { [[ -f $(stage_marker_path "$1" failed) ]]; }
+
+wait_for_stage() {
+	local stage=$1
+	until stage_is_ready "$stage"; do
+		if stage_is_failed "$stage"; then
+			printf 'stage prerequisite failed: %s\n' "$stage" >&2
+			return 1
+		fi
+		sleep 0.2
+	done
+}
+
+sanitize_stage_output() {
+	local stage=$1 raw=$2 output binary
+	output=$(stage_log_path "$stage")
+	binary="${stage_dir}/${stage}.binary-output"
+	LC_ALL=C tr -cd '\11\12\15\40-\176' <"$raw" >"$output"
+	if ! cmp -s "$raw" "$output"; then
+		mv -- "$raw" "$binary"
+		printf '[%s] non-text output was saved to %s\n' "$stage" "$binary" >>"$output"
+	else
+		rm -f -- "$raw"
+	fi
+}
+
+run_stage() {
+	local stage=$1 raw output
+	raw=$(mktemp "${stage_dir}/.${stage}.raw.XXXXXX")
+	output=$(stage_log_path "$stage")
+	printf '→ Starting stage %s for %s…\n' "$stage" "$ticket" >>"$state_log"
+	if run_labctl_stage "$stage" >"$raw" 2>&1; then
+		sanitize_stage_output "$stage" "$raw"
+		write_stage_marker "$stage" ready
+		printf '→ Stage %s completed.\n' "$stage" >>"$state_log"
+		return 0
+	fi
+	sanitize_stage_output "$stage" "$raw"
+	write_stage_marker "$stage" failed
+	printf '→ Stage %s failed; inspect %s.\n' "$stage" "$output" >>"$state_log"
+	return 1
+}
+
+run_dependent_stage() {
+	local stage=$1 prerequisite
+	shift
+	for prerequisite in "$@"; do
+		if ! wait_for_stage "$prerequisite"; then
+			printf 'stage %s skipped because prerequisite %s failed\n' "$stage" "$prerequisite" >"$(stage_log_path "$stage")"
+			write_stage_marker "$stage" failed
+			return 1
+		fi
+	done
+	run_stage "$stage"
+}
+
+wait_for_workers() {
+	local pid result=0
+	for pid in "$@"; do
+		wait "$pid" || result=1
+	done
+	return "$result"
+}
+
 bootstrap_sandbox() {
-	local instance_user
+	local instance_user pcm_pid platform_build_pid godcapp_build_pid godcapp_infra_pid platform_start_pid godcapp_services_pid
 
 	printf '%s\n' 'NVO_SANDBOX_BOOTSTRAP_STARTED'
 	printf '→ Creating sandbox %s…\n' "$ticket"
 	run_labctl create || return 1
 	printf '→ Syncing the host Git credential into sandbox %s…\n' "$ticket"
 	run_labctl credential sync || return 1
-	printf '→ Bootstrapping sandbox %s…\n' "$ticket"
-	run_labctl bootstrap || return 1
+	printf '→ Running shared sandbox preparation for %s…\n' "$ticket"
+	run_stage shared || return 1
+
+	run_stage pcm-db &
+	pcm_pid=$!
+	run_stage platform-tagging-build &
+	platform_build_pid=$!
+	run_stage godcapp-build &
+	godcapp_build_pid=$!
+	run_stage godcapp-infra &
+	godcapp_infra_pid=$!
+	run_dependent_stage platform-tagging-start pcm-db platform-tagging-build &
+	platform_start_pid=$!
+	run_dependent_stage godcapp-services pcm-db platform-tagging-start &
+	godcapp_services_pid=$!
+	wait_for_workers "$pcm_pid" "$platform_build_pid" "$godcapp_build_pid" "$godcapp_infra_pid" "$platform_start_pid" "$godcapp_services_pid" || return 1
+
 	printf '→ Syncing private Loggo template into sandbox %s…\n' "$ticket"
 	run_labctl template sync || return 1
-
 	instance_user=$(run_labctl_without_ticket instance-user) || return 1
 	[[ $instance_user =~ ^[a-z_][a-z0-9_-]*$ ]] || {
 		printf 'Error: labctl returned an unsafe sandbox user name\n' >&2
@@ -73,9 +173,11 @@ bootstrap_sandbox() {
 	printf '%s\n' 'NVO_SANDBOX_BOOTSTRAP_SUCCESS'
 }
 
-prepare_state_log() {
+prepare_state() {
 	mkdir -p "$state_dir"
 	: >"$state_log"
+	rm -rf -- "$stage_dir"
+	mkdir -m 0700 "$stage_dir"
 }
 
 start_bootstrap() {
@@ -89,7 +191,7 @@ start_bootstrap() {
 instance_user_setup() {
 	local setup
 	# shellcheck disable=SC2016 # Build pane expands this only after bootstrap writes its state log.
-	printf -v setup 'user_spinner=("⠋" "⠙" "⠹" "⠸" "⠼" "⠴"); user_spin=0; until instance_user=$(awk -F= %q %q) && [[ $instance_user =~ ^[a-z_][a-z0-9_-]*$ ]]; do if rg -Fxq %q %q; then printf %q >&2; exit 1; fi; printf "\\0337%%s Starting sandbox…\\0338" "${user_spinner[user_spin %% ${#user_spinner[@]}]}"; user_spin=$((user_spin + 1)); sleep 0.12; done; printf "\\r\\033[K"' \
+	printf -v setup 'until instance_user=$(awk -F= %q %q) && [[ $instance_user =~ ^[a-z_][a-z0-9_-]*$ ]]; do if rg -Fxq %q %q; then printf %q >&2; exit 1; fi; sleep 0.2; done' \
 		'/^NVO_SANDBOX_INSTANCE_USER=/{print $2; exit}' "$state_log" 'NVO_SANDBOX_BOOTSTRAP_FAILED' "$state_log" 'Sandbox bootstrap did not provide a safe instance user\n'
 	printf '%s\n' "$setup"
 }
@@ -117,9 +219,22 @@ ready_guest_command() {
 	printf -v readiness 'incus exec %q -- true' "$normalized_ticket"
 	guest_exec=$(guest_exec_command "$guest_command")
 	setup=$(instance_user_setup)
-	# shellcheck disable=SC2016 # The generated pane shell expands the spinner expression at runtime.
-	printf -v command 'printf "\\033[2J\\033[H"; spinner=("⠋" "⠙" "⠹" "⠸" "⠼" "⠴"); spin=0; until sg incus-admin -c %q; do printf "\\0337%%s Starting sandbox…\\0338" "${spinner[spin %% ${#spinner[@]}]}"; spin=$((spin + 1)); sleep 0.12; done; printf "\\r\\033[K"; %s; export instance_user; sg incus-admin -c %q || { printf %q >&2; exec bash; }' \
-		"$readiness" "$setup" "$guest_exec" 'Sandbox attachment exited; inspect the command above.'
+	# shellcheck disable=SC2016 # The generated pane shell expands after the guest is ready.
+	printf -v command 'until sg incus-admin -c %q; do sleep 0.2; done; %s; export instance_user; sg incus-admin -c %q || { printf %q >&2; exec bash; }' \
+		"$readiness" "$setup" "$guest_exec" 'Sandbox attachment exited; inspect the command above.\n'
+	printf '%s\n' "$command"
+}
+
+stage_pane_command() {
+	local stage=$1 directory=$2 guest_exec setup command log ready failed
+	log=$(stage_log_path "$stage")
+	ready=$(stage_marker_path "$stage" ready)
+	failed=$(stage_marker_path "$stage" failed)
+	guest_exec=$(guest_exec_command "cd $(printf '%q' "$directory") && exec bash -l")
+	setup=$(instance_user_setup)
+	# shellcheck disable=SC2016 # Pane tails stage output then opens the guest directory after success.
+	printf -v command 'tail -n +1 -F %q & stage_log_pid=$!; trap %q EXIT; until [[ -f %q || -f %q ]]; do sleep 0.2; done; if [[ -f %q ]]; then printf %q >&2; exec bash; fi; kill "$stage_log_pid" 2>/dev/null || true; wait "$stage_log_pid" 2>/dev/null || true; %s; export instance_user; sg incus-admin -c %q || { printf %q >&2; exec bash; }' \
+		"$log" 'kill "$stage_log_pid" 2>/dev/null || true' "$ready" "$failed" "$failed" "Stage ${stage} failed; inspect ${log}.\n" "$setup" "$guest_exec" 'Sandbox attachment exited; inspect the command above.\n'
 	printf '%s\n' "$command"
 }
 
@@ -147,9 +262,9 @@ create_workspace() {
 	local monitor lazydocker pcm platform godcapp
 	monitor=$(monitor_command)
 	lazydocker=$(ready_guest_command 'lazydocker')
-	pcm=$(ready_guest_command "cd $(printf '%q' "${project_dir}/PlatformCommonModels/scripts/development") && exec bash -l")
-	platform=$(ready_guest_command "cd $(printf '%q' "${project_dir}/PlatformServices/scripts/development") && exec bash -l")
-	godcapp=$(ready_guest_command "cd $(printf '%q' "${project_dir}/GoDCApp/NVO/scripts/development") && exec bash -l")
+	pcm=$(stage_pane_command pcm-db "${project_dir}/PlatformCommonModels/scripts/development")
+	platform=$(stage_pane_command platform-tagging-start "${project_dir}/PlatformServices/scripts/development")
+	godcapp=$(stage_pane_command godcapp-services "${project_dir}/GoDCApp/NVO/scripts/development")
 
 	herdr pane run "$build_pane_id" "$monitor"
 	lazy_json=$(herdr pane split "$build_pane_id" --direction down --ratio 0.42 --cwd "$project_dir" --no-focus)
@@ -166,8 +281,8 @@ create_workspace() {
 	herdr pane run "$godcapp_pane_id" "$godcapp"
 }
 
-# Make the log available before the Build top pane starts tailing it. Tabs are
-# then usable immediately while the worker records the bootstrap outcome.
-prepare_state_log
+# Make state available before the Build top pane starts tailing it. Tabs are
+# usable immediately while the worker records the stage outcomes.
+prepare_state
 create_workspace
 start_bootstrap
