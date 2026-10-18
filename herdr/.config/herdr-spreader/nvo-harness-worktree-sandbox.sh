@@ -89,7 +89,7 @@ start_bootstrap() {
 instance_user_setup() {
 	local setup
 	# shellcheck disable=SC2016 # Build pane expands this only after bootstrap writes its state log.
-	printf -v setup 'user_spinner=("⠋" "⠙" "⠹" "⠸" "⠼" "⠴" "⠦"); user_spin=0; until instance_user=$(awk -F= %q %q) && [[ $instance_user =~ ^[a-z_][a-z0-9_-]*$ ]]; do if rg -Fxq %q %q; then printf %q >&2; exit 1; fi; printf "\\r%%s Starting sandbox…" "${user_spinner[user_spin %% ${#user_spinner[@]}]}"; user_spin=$((user_spin + 1)); sleep 0.12; done; printf "\\r\\033[K"' \
+	printf -v setup 'user_spinner=("⠋" "⠙" "⠹" "⠸" "⠼" "⠴"); user_spin=0; until instance_user=$(awk -F= %q %q) && [[ $instance_user =~ ^[a-z_][a-z0-9_-]*$ ]]; do if rg -Fxq %q %q; then printf %q >&2; exit 1; fi; printf "\\r%%s Starting sandbox…" "${user_spinner[user_spin %% ${#user_spinner[@]}]}"; user_spin=$((user_spin + 1)); sleep 0.12; done; printf "\\r\\033[K"' \
 		'/^NVO_SANDBOX_INSTANCE_USER=/{print $2; exit}' "$state_log" 'NVO_SANDBOX_BOOTSTRAP_FAILED' "$state_log" 'Sandbox bootstrap did not provide a safe instance user\n'
 	printf '%s\n' "$setup"
 }
@@ -118,7 +118,7 @@ ready_guest_command() {
 	guest_exec=$(guest_exec_command "$guest_command")
 	setup=$(instance_user_setup)
 	# shellcheck disable=SC2016 # The generated pane shell expands the spinner expression at runtime.
-	printf -v command 'printf "\\033[2J\\033[H"; spinner=("⠋" "⠙" "⠹" "⠸" "⠼" "⠴" "⠦"); spin=0; until sg incus-admin -c %q; do printf "\\r%%s Starting sandbox…" "${spinner[spin %% ${#spinner[@]}]}"; spin=$((spin + 1)); sleep 0.12; done; printf "\\r\\033[K"; %s; export instance_user; sg incus-admin -c %q || { printf %q >&2; exec bash; }' \
+	printf -v command 'printf "\\033[2J\\033[H"; spinner=("⠋" "⠙" "⠹" "⠸" "⠼" "⠴"); spin=0; until sg incus-admin -c %q; do printf "\\r%%s Starting sandbox…" "${spinner[spin %% ${#spinner[@]}]}"; spin=$((spin + 1)); sleep 0.12; done; printf "\\r\\033[K"; %s; export instance_user; sg incus-admin -c %q || { printf %q >&2; exec bash; }' \
 		"$readiness" "$setup" "$guest_exec" 'Sandbox attachment exited; inspect the command above.'
 	printf '%s\n' "$command"
 }

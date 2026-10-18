@@ -44,6 +44,10 @@ mkdir -p "$TEST_ROOT/bin" "$TEST_ROOT/home/.config/herdr-spreader" "$TEST_ROOT/h
 LOG="$TEST_ROOT/commands.log"
 STATE_LOG="$TEST_ROOT/state/herdr-spreader/NVO-20131.log"
 
+# The active terminal font renders ⠦ as a blank frame. Keep the generated
+# spinner sequence restricted to glyphs verified visible in Herdr panes.
+assert_not_contains '"⠦"' "$SCRIPT"
+
 cat >"$TEST_ROOT/home/.config/herdr-spreader/nvo-harness-worktree-sandbox-base.sh" <<'EOF_BASE'
 #!/usr/bin/env bash
 printf 'worktree deferred=%s args=%s\n' "${NVO_HARNESS_DEFER_WORKSPACE:-}" "$*" >>"${TEST_LOG:?}"
