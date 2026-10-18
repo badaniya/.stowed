@@ -88,9 +88,9 @@ start_bootstrap() {
 
 instance_user_setup() {
 	local setup
-	# shellcheck disable=SC2016 # Build pane must expand this at runtime, after bootstrap writes the state log.
-	printf -v setup 'instance_user=$(awk -F= %q %q); [[ $instance_user =~ ^[a-z_][a-z0-9_-]*$ ]] || { printf %q >&2; exit 1; }' \
-		'/^NVO_SANDBOX_INSTANCE_USER=/{print $2; exit}' "$state_log" 'Sandbox bootstrap did not provide a safe instance user\n'
+	# shellcheck disable=SC2016 # Build pane expands this only after bootstrap writes its state log.
+	printf -v setup 'until instance_user=$(awk -F= %q %q) && [[ $instance_user =~ ^[a-z_][a-z0-9_-]*$ ]]; do if rg -Fxq %q %q; then printf %q >&2; exit 1; fi; printf %q; sleep 1; done' \
+		'/^NVO_SANDBOX_INSTANCE_USER=/{print $2; exit}' "$state_log" 'NVO_SANDBOX_BOOTSTRAP_FAILED' "$state_log" 'Sandbox bootstrap did not provide a safe instance user\n' 'Waiting for sandbox bootstrap user…\n'
 	printf '%s\n' "$setup"
 }
 
