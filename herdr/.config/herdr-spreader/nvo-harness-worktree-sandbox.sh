@@ -103,7 +103,7 @@ guest_exec_command() {
 
 monitor_command() {
 	local guest_command guest_exec setup command
-	guest_command='tail -F /var/log/network/network-server.log /var/log/edge/edge-server.log /var/log/scheduler/scheduler-server.log /var/log/runonce/runonce-server.log /var/log/system/system-server.log | loggo stream -t ~/.private-nvo-loggo.tpl'
+	guest_command='tail -F /var/log/network/network-server.log /var/log/edge/edge-server.log /var/log/scheduler/scheduler-server.log /var/log/runonce/runonce-server.log /var/log/system/system-server.log | /usr/local/bin/loggo stream -t ~/.private-nvo-loggo.tpl'
 	guest_exec=$(guest_exec_command "$guest_command")
 	setup=$(instance_user_setup)
 	# shellcheck disable=SC2016 # The generated Build-pane command owns its tail process.
