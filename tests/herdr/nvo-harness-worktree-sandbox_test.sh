@@ -47,6 +47,7 @@ STATE_LOG="$TEST_ROOT/state/herdr-spreader/NVO-20131.log"
 # The active terminal font renders ⠦ as a blank frame. Keep the generated
 # spinner sequence restricted to glyphs verified visible in Herdr panes.
 assert_not_contains '"⠦"' "$SCRIPT"
+assert_contains '\\0337%%s Starting sandbox…\\0338' "$SCRIPT"
 
 cat >"$TEST_ROOT/home/.config/herdr-spreader/nvo-harness-worktree-sandbox-base.sh" <<'EOF_BASE'
 #!/usr/bin/env bash
