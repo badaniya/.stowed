@@ -35,6 +35,25 @@ labctl_stack_health() {
 	labctl_stack_run "$1" "$LABCTL_STACK_HEALTH_COMMAND"
 }
 
+labctl_stack_stage() {
+	local ticket=$1 stage=$2 command
+	case $stage in
+	shared) command=$LABCTL_STAGE_SHARED_COMMAND ;;
+	pcm-db) command=$LABCTL_STAGE_PCM_DB_COMMAND ;;
+	platform-tagging-build) command=$LABCTL_STAGE_PLATFORM_TAGGING_BUILD_COMMAND ;;
+	platform-tagging-start) command=$LABCTL_STAGE_PLATFORM_TAGGING_START_COMMAND ;;
+	godcapp-build) command=$LABCTL_STAGE_GODCAPP_BUILD_COMMAND ;;
+	godcapp-infra) command=$LABCTL_STAGE_GODCAPP_INFRA_COMMAND ;;
+	godcapp-services) command=$LABCTL_STAGE_GODCAPP_SERVICES_COMMAND ;;
+	*)
+		labctl_die "invalid sandbox stage: $stage"
+		return 1
+		;;
+	esac
+	printf 'stage: %s ticket=%s\n' "$stage" "$ticket"
+	labctl_stack_run "$ticket" "$command"
+}
+
 labctl_verify_ports() {
 	local ticket=$1 ip port
 	ticket=$(labctl_normalize_ticket "$ticket") || return 1

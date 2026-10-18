@@ -34,6 +34,7 @@ Commands:
   setup-host --yes                          Create or reconcile only labctl's Incus bridge and profile
   create TICKET [--repo NAME] [--ensure-worktree] [--dry-run]
   bootstrap TICKET [--repo NAME] [--ensure-worktree] [--dry-run]
+  stage TICKET STAGE_NAME                    Run one allowlisted private application stage
   start TICKET [--dry-run]
   stop TICKET [--dry-run]
   status TICKET
@@ -208,6 +209,12 @@ labctl_template() {
 	labctl_incus_sync_loggo_template "$ticket"
 }
 
+labctl_stage() {
+	local ticket=$1 stage=$2
+	ticket=$(labctl_normalize_ticket "$ticket") || return 1
+	labctl_stack_stage "$ticket" "$stage"
+}
+
 labctl_cleanup_worktree() {
 	local ticket=$1
 	ticket=$(labctl_normalize_ticket "$ticket") || return 1
@@ -282,6 +289,14 @@ credential)
 template)
 	labctl_config_load "$config_path"
 	labctl_template "$@"
+	;;
+stage)
+	labctl_config_load "$config_path"
+	[[ $# -eq 2 ]] || {
+		labctl_die 'stage requires exactly: stage TICKET STAGE_NAME'
+		exit 1
+	}
+	labctl_stage "$1" "$2"
 	;;
 instance-user)
 	labctl_config_load "$config_path"

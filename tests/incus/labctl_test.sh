@@ -770,6 +770,20 @@ assert_equals '1' "$(rg -F -c 'exec bootstrap-new -- bash -s --' "$COMMAND_LOG" 
 assert_equals 'running' "$(labctl_state_lookup 'bootstrap-new' | jq -r '.status')"
 unset LABCTL_FAKE_INSTANCE_DIRECTORY
 
+# Stages are fixed identifiers that select private configuration commands. The
+# private command must execute through the credential-aware guest wrapper but
+# must never be echoed by labctl.
+: >"$COMMAND_LOG"
+STAGE_OUTPUT="${TEST_ROOT}/stage-output"
+PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=true LABCTL_FAKE_INSTANCE_CONFIG_JSON="$BOOTSTRAP_INSTANCE_CONFIG_JSON" assert_succeeds "$LABCTL_BIN" --config "$BOOTSTRAP_CONFIG" stage bootstrap-new pcm-db >"$STAGE_OUTPUT"
+assert_command_log_contains 'exec bootstrap-new -- bash -s --' "$COMMAND_LOG"
+assert_command_log_not_contains 'private-pcm-db.sh' "$COMMAND_LOG"
+assert_succeeds rg -F --quiet 'stage: pcm-db ticket=bootstrap-new' "$STAGE_OUTPUT"
+assert_fails rg -F --quiet 'private-pcm-db.sh' "$STAGE_OUTPUT"
+: >"$COMMAND_LOG"
+PATH="${FAKE_BIN}:$PATH" assert_fails "$LABCTL_BIN" --config "$BOOTSTRAP_CONFIG" stage bootstrap-new arbitrary-command
+assert_command_log_not_contains 'incus '
+
 # Bad tickets are rejected before any Incus command can touch the host.
 : >"$COMMAND_LOG"
 PATH="${FAKE_BIN}:$PATH" assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" bootstrap '../bad-ticket'
