@@ -165,7 +165,7 @@ assert_succeeds rg -x --fixed-strings --quiet '  - screen' "$CLOUD_INIT_PATH"
 assert_succeeds rg -x --fixed-strings --quiet '  - net-tools' "$CLOUD_INIT_PATH"
 assert_succeeds rg -x --fixed-strings --quiet '  - ripgrep' "$CLOUD_INIT_PATH"
 assert_succeeds rg -F --quiet 'go install github.com/badaniya/loggo@6dba9bab7c9491890349935da50c14f2f346912d' "$CLOUD_INIT_PATH"
-assert_succeeds rg -F --quiet 'go install github.com/jesseduffield/lazydocker@v0.23.3' "$CLOUD_INIT_PATH"
+assert_succeeds rg -F --quiet 'go install github.com/jesseduffield/lazydocker@v0.25.2' "$CLOUD_INIT_PATH"
 # CGO-backed private modules require the generic Ubuntu compiler toolchain.
 assert_succeeds rg -x --fixed-strings --quiet '  - build-essential' "$CLOUD_INIT_PATH"
 # Ubuntu's apt Go version is not sufficient for all mounted workspaces. The

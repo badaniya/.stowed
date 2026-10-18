@@ -27,7 +27,7 @@ runcmd:
   - rm -f /tmp/labctl-go.tar.gz
   - ln -sf /usr/local/go/bin/go /usr/local/bin/go
   - HOME=/root GOPATH=/root/go GOCACHE=/root/.cache/go-build GOBIN=/usr/local/bin /usr/local/go/bin/go install github.com/badaniya/loggo@6dba9bab7c9491890349935da50c14f2f346912d
-  - HOME=/root GOPATH=/root/go GOCACHE=/root/.cache/go-build GOBIN=/usr/local/bin /usr/local/go/bin/go install github.com/jesseduffield/lazydocker@v0.23.3
+  - HOME=/root GOPATH=/root/go GOCACHE=/root/.cache/go-build GOBIN=/usr/local/bin /usr/local/go/bin/go install github.com/jesseduffield/lazydocker@v0.25.2
   - printf '%s\n' 'export PATH="/usr/local/go/bin:$PATH"' > /etc/profile.d/labctl-go.sh
   - |
       if [ -e /root/go/bin ] && [ ! -d /root/go/bin ]; then
