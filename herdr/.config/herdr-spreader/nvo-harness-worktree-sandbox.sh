@@ -103,7 +103,7 @@ run_stage() {
 	raw=$(mktemp "${stage_dir}/.${stage}.raw.XXXXXX")
 	output=$(stage_log_path "$stage")
 	printf '→ Starting stage %s for %s…\n' "$stage" "$ticket" >>"$state_log"
-	if run_labctl_stage "$stage" 2>&1 | tee "$raw" | LC_ALL=C tr -cd '\11\12\15\40-\176' >"$output"; then
+	if run_labctl_stage "$stage" 2>&1 | tee "$raw" | LC_ALL=C stdbuf -oL tr -cd '\11\12\15\40-\176' >"$output"; then
 		finalize_stage_output "$stage" "$raw"
 		write_stage_marker "$stage" ready
 		printf '→ Stage %s completed.\n' "$stage" >>"$state_log"

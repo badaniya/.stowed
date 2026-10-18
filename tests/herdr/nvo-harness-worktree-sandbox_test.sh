@@ -49,6 +49,9 @@ STATE_LOG="$TEST_ROOT/state/herdr-spreader/NVO-20131.log"
 assert_contains 'stage_pane_command' "$SCRIPT"
 assert_contains 'tail -n +1 -F' "$SCRIPT"
 # shellcheck disable=SC2016 # Match the literal pipeline emitted by the script.
+# shellcheck disable=SC2016 # Match the literal streaming pipeline in the script.
+assert_contains 'stdbuf -oL tr -cd' "$SCRIPT"
+# shellcheck disable=SC2016 # Match the literal raw artifact tee in the script.
 assert_contains 'tee "$raw"' "$SCRIPT"
 assert_contains 'for stage in shared pcm-db' "$SCRIPT"
 
