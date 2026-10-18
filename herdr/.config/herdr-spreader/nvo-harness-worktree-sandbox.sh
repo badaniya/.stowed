@@ -150,6 +150,8 @@ bootstrap_sandbox() {
 	printf 'NVO_SANDBOX_INSTANCE_USER=%s\n' "$instance_user"
 	printf '→ Syncing the host Git credential into sandbox %s…\n' "$ticket"
 	run_labctl credential sync || return 1
+	printf '→ Syncing private NVO environment into sandbox %s…\n' "$ticket"
+	run_labctl nvo-env sync || return 1
 	printf '→ Running shared sandbox preparation for %s…\n' "$ticket"
 	run_stage shared || return 1
 
