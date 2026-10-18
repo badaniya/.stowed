@@ -263,7 +263,11 @@ while (($#)); do
 	shift
 done
 set -- "${args[@]}"
-printf 'incus %s\n' "$*" >>"$COMMAND_LOG"
+logged=("$@")
+if [[ ${logged[0]:-} == query ]]; then
+	logged[1]=${logged[1]%%\?project=*}
+fi
+printf 'incus %s\n' "${logged[*]}" >>"$COMMAND_LOG"
 fake_instance_exists() {
 	[[ ${LABCTL_FAKE_INSTANCE_EXISTS:-false} == true ]] ||
 		[[ -n ${LABCTL_FAKE_INSTANCE_DIRECTORY:-} && -f ${LABCTL_FAKE_INSTANCE_DIRECTORY}/$1 ]]
@@ -352,7 +356,7 @@ start\ *)
 	fi
 	;;
 'query /1.0') printf '%s\n' '{"environment":{"kernel_features":{"idmapped_mounts":true}}}' ;;
-'query /1.0/profiles/default')
+'query /1.0/profiles/default' | 'query /1.0/profiles/default?project='*)
 	if [[ ${LABCTL_DEFAULT_PROFILE_INVENTORY_FAILURE:-false} == true ]]; then
 		exit 42
 	elif [[ -n ${LABCTL_UNSAFE_DEFAULT_PROFILE_JSON:-} ]]; then
@@ -361,7 +365,7 @@ start\ *)
 		printf '%s\n' '{}'
 	fi
 	;;
-'query /1.0/profiles/agent-dev-env')
+'query /1.0/profiles/agent-dev-env' | 'query /1.0/profiles/agent-dev-env?project='*)
 	if [[ -n ${LABCTL_UNSAFE_PROFILE_JSON:-} ]]; then
 		printf '%s\n' "$LABCTL_UNSAFE_PROFILE_JSON"
 	elif [[ ${LABCTL_FAKE_PROFILE_EXISTS:-false} == true ]]; then

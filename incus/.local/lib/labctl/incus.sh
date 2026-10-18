@@ -54,7 +54,7 @@ labctl_incus_profile_query() {
 		labctl_die "unable to encode Incus profile name: $profile"
 		return 1
 	}
-	incus --project "$LABCTL_INCUS_PROJECT" query "/1.0/profiles/$encoded_profile"
+	incus query "/1.0/profiles/$encoded_profile?project=$(jq -rn --arg project "$LABCTL_INCUS_PROJECT" '$project | @uri')"
 }
 
 labctl_incus_ensure_profile() {
@@ -363,7 +363,7 @@ labctl_incus_instance_api_path() {
 		return 1
 	}
 	encoded_instance=$(jq -rn --arg instance "$instance" '$instance | @uri') || return 1
-	printf '/1.0/instances/%s\n' "$encoded_instance"
+	printf '/1.0/instances/%s?project=%s\n' "$encoded_instance" "$(jq -rn --arg project "$LABCTL_INCUS_PROJECT" '$project | @uri')"
 }
 
 labctl_incus_patch_config_file() {
@@ -373,7 +373,7 @@ labctl_incus_patch_config_file() {
 		labctl_die 'Incus configuration patch payload is unreadable'
 		return 1
 	}
-	labctl_run incus query --project "$LABCTL_INCUS_PROJECT" "$api_path" --request PATCH --data-file "$payload" >/dev/null
+	labctl_run incus query "$api_path" --request PATCH --data-file "$payload" >/dev/null
 }
 
 labctl_incus_set_systemd_credential() (
