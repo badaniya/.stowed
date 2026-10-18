@@ -183,6 +183,18 @@ for REPO in "${REPOS[@]}"; do
 	git -C "${WORKTREE_DIR}" branch --set-upstream-to="origin/${UPSTREAM_VERSION}" "${NEW_BRANCH}" 2>/dev/null || true
 done
 
+# Platform Services' Go workspace requires this pinned submodule. Convert the
+# configured SSH remote to equivalent HTTPS so host credential-helper access
+# works without requiring an SSH key inside the sandbox lifecycle.
+platform_services_repo="${PROJECT_DIR}/PlatformServices"
+casdoor_path="IAM/authn/casdoor"
+casdoor_url=$(git -C "$platform_services_repo" config -f .gitmodules --get "submodule.${casdoor_path}.url")
+if [[ $casdoor_url =~ ^git@([^:]+):(.+)$ ]]; then
+	casdoor_url="https://${BASH_REMATCH[1]}/${BASH_REMATCH[2]}"
+fi
+git -C "$platform_services_repo" config "submodule.${casdoor_path}.url" "$casdoor_url"
+git -C "$platform_services_repo" submodule update --init --checkout -- "$casdoor_path"
+
 aggregate_context_trees "$PROJECT_DIR"
 echo "→ Created aggregate .agents and .claude context trees."
 
