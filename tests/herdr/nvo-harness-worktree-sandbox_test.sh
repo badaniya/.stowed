@@ -60,6 +60,8 @@ assert_contains 'platform-tagging-build platform-tagging-start)' "$SCRIPT"
 # shellcheck disable=SC2016 # Match the literal generated pane assignments.
 assert_contains 'godcapp=$(stage_pane_command godcapp-services' "$SCRIPT"
 assert_contains 'godcapp-build godcapp-infra godcapp-services)' "$SCRIPT"
+# shellcheck disable=SC2016 # Match the literal interactive guest-shell handoff.
+assert_contains '&& exec bash -l" true' "$SCRIPT"
 
 cat >"$TEST_ROOT/home/.config/herdr-spreader/nvo-harness-worktree-sandbox-base.sh" <<'EOF_BASE'
 #!/usr/bin/env bash

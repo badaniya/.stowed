@@ -204,7 +204,7 @@ guest_exec_command() {
 	# shellcheck disable=SC2016 # Build pane obtains and validates this value at runtime.
 	if [[ $interactive == true ]]; then
 		local guest_setpriv_command
-		printf -v guest_setpriv_command 'exec setpriv --reset-env --reuid "$1" --regid "$(id -g "$1")" --init-groups %q' "$guest_command"
+		printf -v guest_setpriv_command 'exec setpriv --reset-env --reuid "$1" --regid "$(id -g "$1")" --init-groups bash -lc %q' "$guest_command"
 		printf -v command 'incus exec --force-interactive %q -- bash -lc %q _ "$instance_user"' "$normalized_ticket" "$guest_setpriv_command"
 	else
 		printf -v command 'incus exec %q -- su - "$instance_user" -c %q' "$normalized_ticket" "$guest_command"
@@ -242,7 +242,7 @@ stage_pane_command() {
 	done
 	ready=$(stage_marker_path "$final_stage" ready)
 	failed=$(stage_marker_path "$final_stage" failed)
-	guest_exec=$(guest_exec_command "cd $(printf '%q' "$directory") && exec bash -l")
+	guest_exec=$(guest_exec_command "cd $(printf '%q' "$directory") && exec bash -l" true)
 	setup=$(instance_user_setup)
 	# shellcheck disable=SC2016 # Pane tails all owned stage logs, then opens the guest directory after the final stage succeeds.
 	printf -v command 'tail -q -n +1 -F%s & stage_log_pid=$!; trap %q EXIT; until [[ -f %q || -f %q ]]; do sleep 0.2; done; if [[ -f %q ]]; then printf %q >&2; exec bash; fi; kill "$stage_log_pid" 2>/dev/null || true; wait "$stage_log_pid" 2>/dev/null || true; %s; export instance_user; sg incus-admin -c %q || { printf %q >&2; exec bash; }' \
