@@ -169,6 +169,8 @@ assert_contains 'lazydocker' "$LOG"
 assert_contains '--force-interactive' "$LOG"
 assert_contains 'guest_setpriv_command' "$SCRIPT"
 assert_contains 'setpriv --reset-env --reuid' "$SCRIPT"
+# shellcheck disable=SC2016 # Match the literal interactive-home handoff.
+assert_contains 'cd "$HOME" && exec' "$SCRIPT"
 assert_not_contains 'docker.sock' "$LOG"
 assert_not_contains 'docker info' "$LOG"
 
