@@ -227,8 +227,21 @@ labctl_incus_wait_ready() {
 	labctl_run incus exec "$instance" -- bash -c 'set -euo pipefail; id "$1" >/dev/null 2>&1 || useradd --create-home --shell /bin/bash --groups docker,sudo "$1"; install -d -m 0755 -o "$1" -g "$1" "/home/$1"' -- "$LABCTL_INSTANCE_USER"
 	# Docker may be started by the guest init system after Incus reports the container running.
 	# Do not require a systemd bus; wait for the daemon socket with a bounded retry.
+	# shellcheck disable=SC2016 # The guest shell evaluates the retry loop.
 	labctl_run incus exec "$instance" -- bash -c 'for attempt in $(seq 1 300); do docker info >/dev/null 2>&1 && exit 0; sleep 1; done; printf "Docker daemon did not become ready within five minutes\n" >&2; exit 1'
 	labctl_run incus exec "$instance" -- docker info
+}
+
+labctl_incus_configure_network() {
+	local instance=$1 docker_daemon_json command
+	local -a dns_servers
+	mapfile -t dns_servers < <(tr ',' '\n' <<<"$LABCTL_DOCKER_DNS_SERVERS")
+	docker_daemon_json=$(labctl_incus_docker_daemon_json) || return 1
+	# shellcheck disable=SC2016 # The guest shell expands its positional DNS arguments.
+	printf -v command 'set -euo pipefail; rm -f /etc/resolv.conf; : >/etc/resolv.conf; for server in "$@"; do printf "nameserver %%s\\n" "$server" >>/etc/resolv.conf; done; install -d -m 0755 /etc/docker; cat >/etc/docker/daemon.json <<%q\n%s\n%q\n' \
+		'LABCTL_DOCKER_DAEMON_JSON' "$docker_daemon_json" 'LABCTL_DOCKER_DAEMON_JSON'
+	# The private DNS and registry values are arguments, never printed in the lifecycle log.
+	labctl_run incus exec "$instance" -- bash -c "$command" -- "${dns_servers[@]}"
 }
 
 labctl_incus_configure_git_safe_directories() {
@@ -355,6 +368,7 @@ labctl_incus_start() {
 		labctl_run incus start "$instance"
 	fi
 	labctl_incus_wait_ready "$instance"
+	labctl_incus_configure_network "$instance"
 	labctl_stack_up "$instance"
 }
 
