@@ -225,6 +225,7 @@ labctl_incus_wait_ready() {
 	local instance=$1
 	# shellcheck disable=SC2016 # The guest shell expands its positional user argument.
 	labctl_run incus exec "$instance" -- bash -c 'set -euo pipefail; id "$1" >/dev/null 2>&1 || useradd --create-home --shell /bin/bash --groups docker,sudo "$1"; install -d -m 0755 -o "$1" -g "$1" "/home/$1"' -- "$LABCTL_INSTANCE_USER"
+	labctl_run incus exec "$instance" -- systemctl start docker
 	labctl_run incus exec "$instance" -- docker info
 }
 
