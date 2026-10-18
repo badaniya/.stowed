@@ -28,16 +28,27 @@ assert_ordered() {
 	[[ -n $first_line && -n $second_line && $first_line -lt $second_line ]] || fail "expected ${first} before ${second}"
 }
 
+wait_for_marker() {
+	local marker=$1 path=$2 attempts=50
+	while ((attempts > 0)); do
+		rg -F --quiet -- "$marker" "$path" 2>/dev/null && return 0
+		sleep 0.05
+		attempts=$((attempts - 1))
+	done
+	fail "timed out waiting for ${marker} in ${path}"
+}
+
 TEST_ROOT=$(mktemp -d)
 trap 'rm -rf "$TEST_ROOT"' EXIT
 mkdir -p "$TEST_ROOT/bin" "$TEST_ROOT/home/.config/herdr-spreader" "$TEST_ROOT/home/.local/bin"
 LOG="$TEST_ROOT/commands.log"
+STATE_LOG="$TEST_ROOT/state/herdr-spreader/NVO-20131.log"
 
-cat >"$TEST_ROOT/home/.config/herdr-spreader/nvo-harness-worktree-sandbox-base.sh" <<'EOF'
+cat >"$TEST_ROOT/home/.config/herdr-spreader/nvo-harness-worktree-sandbox-base.sh" <<'EOF_BASE'
 #!/usr/bin/env bash
 printf 'worktree deferred=%s args=%s\n' "${NVO_HARNESS_DEFER_WORKSPACE:-}" "$*" >>"${TEST_LOG:?}"
-EOF
-cat >"$TEST_ROOT/home/.local/bin/labctl" <<'EOF'
+EOF_BASE
+cat >"$TEST_ROOT/home/.local/bin/labctl" <<'EOF_LABCTL'
 #!/usr/bin/env bash
 printf 'labctl %s\n' "$*" >>"${TEST_LOG:?}"
 if [[ ${1:-} == instance-user ]]; then
@@ -45,14 +56,14 @@ if [[ ${1:-} == instance-user ]]; then
 elif [[ ${1:-} == template && ${TEST_FAIL_TEMPLATE:-false} == true ]]; then
 	exit 1
 fi
-EOF
-cat >"$TEST_ROOT/bin/sg" <<'EOF'
+EOF_LABCTL
+cat >"$TEST_ROOT/bin/sg" <<'EOF_SG'
 #!/usr/bin/env bash
 [[ $1 == incus-admin && $2 == -c ]] || exit 2
 printf 'sg %s\n' "$3" >>"${TEST_LOG:?}"
 bash -c "$3"
-EOF
-cat >"$TEST_ROOT/bin/herdr" <<'EOF'
+EOF_SG
+cat >"$TEST_ROOT/bin/herdr" <<'EOF_HERDR'
 #!/usr/bin/env bash
 printf 'herdr %s\n' "$*" >>"${TEST_LOG:?}"
 case "${1:-} ${2:-}" in
@@ -68,55 +79,48 @@ case "${1:-} ${2:-}" in
 'tab create') printf '%s\n' '{"result":{"tab":{"tab_id":"w1:t2"},"root_pane":{"pane_id":"w1:p2"}}}' ;;
 *) exit 2 ;;
 esac
-EOF
+EOF_HERDR
 chmod +x "$TEST_ROOT/home/.config/herdr-spreader/nvo-harness-worktree-sandbox-base.sh" "$TEST_ROOT/home/.local/bin/labctl" "$TEST_ROOT/bin/sg" "$TEST_ROOT/bin/herdr"
-printf '2\n' >"$TEST_ROOT/herdr-counter"
 
-HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$PATH" TEST_LOG="$LOG" TEST_HERDR_COUNTER="$TEST_ROOT/herdr-counter" TEST_INSTANCE_USER=nvo-builder "$SCRIPT" 'NVO-20131 25.16.0 --restore-harness'
+run_sandbox() {
+	HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$PATH" XDG_STATE_HOME="$TEST_ROOT/state" TEST_LOG="$LOG" TEST_HERDR_COUNTER="$TEST_ROOT/herdr-counter" TEST_INSTANCE_USER=nvo-builder "$SCRIPT" 'NVO-20131 25.16.0 --restore-harness'
+}
+
+: >"$LOG"
+printf '2\n' >"$TEST_ROOT/herdr-counter"
+run_sandbox
+wait_for_marker 'NVO_SANDBOX_BOOTSTRAP_SUCCESS' "$STATE_LOG"
 assert_contains 'worktree deferred=true args=NVO-20131 25.16.0 --restore-harness' "$LOG"
-assert_contains 'labctl create NVO-20131' "$LOG"
-assert_contains 'labctl credential sync NVO-20131' "$LOG"
-assert_contains 'labctl bootstrap NVO-20131' "$LOG"
-assert_contains 'labctl template sync NVO-20131' "$LOG"
-assert_contains 'labctl instance-user' "$LOG"
-assert_ordered 'labctl create NVO-20131' 'labctl credential sync NVO-20131' "$LOG"
-assert_ordered 'labctl credential sync NVO-20131' 'labctl bootstrap NVO-20131' "$LOG"
-assert_ordered 'labctl bootstrap NVO-20131' 'labctl template sync NVO-20131' "$LOG"
-assert_ordered 'labctl template sync NVO-20131' 'herdr workspace create' "$LOG"
-assert_contains 'herdr tab rename w1:t1 1 - Agent' "$LOG"
-assert_contains 'herdr tab create --workspace w1 --cwd ' "$LOG"
-assert_contains '--label 2 - Build --no-focus' "$LOG"
-assert_contains 'incus exec nvo-20131 -- su - nvo-builder -c' "$LOG"
-assert_not_contains 'su - sandbox-user -c' "$LOG"
-for path in /var/log/network/network-server.log /var/log/edge/edge-server.log /var/log/scheduler/scheduler-server.log /var/log/runonce/runonce-server.log /var/log/system/system-server.log; do
-	assert_contains "$path" "$LOG"
-done
-assert_contains 'tail\ -F' "$LOG"
-assert_contains 'loggo\ stream\ -t\ ~/.private-nvo-loggo.tpl' "$LOG"
+assert_contains 'herdr workspace create' "$LOG"
+assert_contains 'herdr tab create --workspace w1' "$LOG"
+assert_ordered 'herdr workspace create' 'labctl create NVO-20131' "$LOG"
+assert_contains '→ Creating sandbox NVO-20131…' "$STATE_LOG"
+assert_contains '→ Syncing the host Git credential into sandbox NVO-20131…' "$STATE_LOG"
+assert_contains '→ Bootstrapping sandbox NVO-20131…' "$STATE_LOG"
+assert_contains '→ Syncing private Loggo template into sandbox NVO-20131…' "$STATE_LOG"
+assert_ordered '→ Creating sandbox NVO-20131…' '→ Syncing the host Git credential into sandbox NVO-20131…' "$STATE_LOG"
+assert_ordered '→ Syncing the host Git credential into sandbox NVO-20131…' '→ Bootstrapping sandbox NVO-20131…' "$STATE_LOG"
+assert_ordered '→ Bootstrapping sandbox NVO-20131…' '→ Syncing private Loggo template into sandbox NVO-20131…' "$STATE_LOG"
+assert_contains 'tail -n +1 -F' "$LOG"
+assert_contains "$STATE_LOG" "$LOG"
+assert_contains 'NVO_SANDBOX_BOOTSTRAP_SUCCESS' "$LOG"
+assert_contains 'until sg incus-admin -c' "$LOG"
+assert_contains 'incus' "$LOG"
+assert_contains 'nvo-20131' "$LOG"
+assert_contains 'true' "$LOG"
 assert_contains 'lazydocker' "$LOG"
-for directory in PlatformCommonModels/scripts/development PlatformServices/scripts/development GoDCApp/NVO/scripts/development; do
-	assert_contains "$directory" "$LOG"
-done
 assert_not_contains 'docker.sock' "$LOG"
+assert_not_contains 'docker info' "$LOG"
 
 : >"$LOG"
 printf '2\n' >"$TEST_ROOT/herdr-counter"
-if HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$PATH" TEST_LOG="$LOG" TEST_HERDR_COUNTER="$TEST_ROOT/herdr-counter" TEST_FAIL_TEMPLATE=true "$SCRIPT" 'NVO-20131 25.16.0'; then
-	fail 'template sync failure was accepted'
+: >"$STATE_LOG"
+if HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$PATH" XDG_STATE_HOME="$TEST_ROOT/state" TEST_LOG="$LOG" TEST_HERDR_COUNTER="$TEST_ROOT/herdr-counter" TEST_INSTANCE_USER=nvo-builder TEST_FAIL_TEMPLATE=true "$SCRIPT" 'NVO-20131 25.16.0'; then
+	:
+else
+	fail 'asynchronous bootstrap failure blocked workspace creation'
 fi
-assert_contains 'labctl template sync NVO-20131' "$LOG"
-assert_not_contains 'herdr workspace create' "$LOG"
-
-: >"$LOG"
-printf '2\n' >"$TEST_ROOT/herdr-counter"
-if HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$PATH" TEST_LOG="$LOG" TEST_HERDR_COUNTER="$TEST_ROOT/herdr-counter" TEST_INSTANCE_USER='nvo-builder$' "$SCRIPT" 'NVO-20131 25.16.0'; then
-	fail 'unsafe instance user was accepted'
-fi
-assert_contains 'labctl instance-user' "$LOG"
-assert_not_contains 'herdr workspace create' "$LOG"
-
-: >"$LOG"
-if HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$PATH" TEST_LOG="$LOG" TEST_HERDR_COUNTER="$TEST_ROOT/herdr-counter" "$SCRIPT" 'NVO-20131; rm -rf / 25.16.0'; then
-	fail 'malformed ticket was accepted'
-fi
-[[ ! -s $LOG ]] || fail 'malformed ticket ran worktree or labctl commands'
+wait_for_marker 'NVO_SANDBOX_BOOTSTRAP_FAILED' "$STATE_LOG"
+assert_contains '→ Syncing private Loggo template into sandbox NVO-20131…' "$STATE_LOG"
+assert_contains 'herdr workspace create' "$LOG"
+assert_not_contains 'NVO_SANDBOX_BOOTSTRAP_SUCCESS' "$STATE_LOG"

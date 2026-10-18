@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# nvo-harness-worktree-sandbox — create/reuse an NVO harness worktree, bootstrap
-# its ticket-scoped Incus sandbox, then open an agent/build Herdr workspace.
+# nvo-harness-worktree-sandbox — create/reuse an NVO harness worktree, then open
+# its agent/build Herdr workspace while the ticket-scoped Incus sandbox bootstraps.
 set -euo pipefail
 
 if [[ $# -lt 1 ]]; then
@@ -26,6 +26,8 @@ labctl="${HOME}/.local/bin/labctl"
 workspace_owner=${NVO_WORKSPACE_OWNER:-${USER:?}}
 workspace_root=${NVO_WORKSPACE_ROOT:-"${HOME}/workspace/${workspace_owner}"}
 project_dir="${workspace_root}/${ticket}"
+state_dir="${XDG_STATE_HOME:-${HOME}/.local/state}/herdr-spreader"
+state_log="${state_dir}/${ticket}.log"
 
 [[ -x $labctl ]] || {
 	printf 'Error: labctl is unavailable at %s; stow the incus package first\n' "$labctl" >&2
@@ -33,7 +35,8 @@ project_dir="${workspace_root}/${ticket}"
 }
 
 # The standard creator remains responsible for worktrees and aggregate context.
-# Its normal one-tab workspace is deliberately deferred until the guest is ready.
+# Its normal one-tab workspace is deliberately deferred while this script creates
+# the agent and build tabs below.
 NVO_HARNESS_DEFER_WORKSPACE=true bash "${spreader_dir}/nvo-harness-worktree-sandbox-base.sh" "${args[@]}"
 
 run_labctl() {
@@ -48,24 +51,74 @@ run_labctl_without_ticket() {
 	sg incus-admin -c "$command"
 }
 
-printf '→ Creating sandbox %s…\n' "$ticket"
-run_labctl create
-printf '→ Syncing the host Git credential into sandbox %s…\n' "$ticket"
-run_labctl credential sync
-printf '→ Bootstrapping sandbox %s…\n' "$ticket"
-run_labctl bootstrap
-printf '→ Syncing private Loggo template into sandbox %s…\n' "$ticket"
-run_labctl template sync
+bootstrap_sandbox() {
+	local instance_user
 
-instance_user=$(run_labctl_without_ticket instance-user)
-[[ $instance_user =~ ^[a-z_][a-z0-9_-]*$ ]] || {
-	printf 'Error: labctl returned an unsafe sandbox user name\n' >&2
-	exit 1
+	printf '%s\n' 'NVO_SANDBOX_BOOTSTRAP_STARTED'
+	printf '→ Creating sandbox %s…\n' "$ticket"
+	run_labctl create || return 1
+	printf '→ Syncing the host Git credential into sandbox %s…\n' "$ticket"
+	run_labctl credential sync || return 1
+	printf '→ Bootstrapping sandbox %s…\n' "$ticket"
+	run_labctl bootstrap || return 1
+	printf '→ Syncing private Loggo template into sandbox %s…\n' "$ticket"
+	run_labctl template sync || return 1
+
+	instance_user=$(run_labctl_without_ticket instance-user) || return 1
+	[[ $instance_user =~ ^[a-z_][a-z0-9_-]*$ ]] || {
+		printf 'Error: labctl returned an unsafe sandbox user name\n' >&2
+		return 1
+	}
+	printf 'NVO_SANDBOX_INSTANCE_USER=%s\n' "$instance_user"
+	printf '%s\n' 'NVO_SANDBOX_BOOTSTRAP_SUCCESS'
 }
 
-incus_command() {
+prepare_state_log() {
+	mkdir -p "$state_dir"
+	: >"$state_log"
+}
+
+start_bootstrap() {
+	(
+		if ! bootstrap_sandbox; then
+			printf '%s\n' 'NVO_SANDBOX_BOOTSTRAP_FAILED'
+		fi
+	) >>"$state_log" 2>&1 &
+}
+
+instance_user_setup() {
+	local setup
+	# shellcheck disable=SC2016 # Build pane must expand this at runtime, after bootstrap writes the state log.
+	printf -v setup 'instance_user=$(awk -F= %q %q); [[ $instance_user =~ ^[a-z_][a-z0-9_-]*$ ]] || { printf %q >&2; exit 1; }' \
+		'/^NVO_SANDBOX_INSTANCE_USER=/{print $2; exit}' "$state_log" 'Sandbox bootstrap did not provide a safe instance user\n'
+	printf '%s\n' "$setup"
+}
+
+guest_exec_command() {
 	local guest_command=$1 command
-	printf -v command 'incus exec %q -- su - %q -c %q' "$normalized_ticket" "$instance_user" "$guest_command"
+	# shellcheck disable=SC2016 # Build pane obtains and validates this value at runtime.
+	printf -v command 'incus exec %q -- su - "$instance_user" -c %q' "$normalized_ticket" "$guest_command"
+	printf '%s\n' "$command"
+}
+
+monitor_command() {
+	local guest_command guest_exec setup command
+	guest_command='tail -F /var/log/network/network-server.log /var/log/edge/edge-server.log /var/log/scheduler/scheduler-server.log /var/log/runonce/runonce-server.log /var/log/system/system-server.log | loggo stream -t ~/.private-nvo-loggo.tpl'
+	guest_exec=$(guest_exec_command "$guest_command")
+	setup=$(instance_user_setup)
+	# shellcheck disable=SC2016 # The generated Build-pane command owns its tail process.
+	printf -v command 'tail -n +1 -F %q & log_pid=$!; trap %q EXIT; until rg -Fxq %q %q; do if rg -Fxq %q %q; then kill "$log_pid" 2>/dev/null || true; wait "$log_pid" 2>/dev/null || true; exit 1; fi; sleep 1; done; %s; exec sg incus-admin -c %q' \
+		"$state_log" 'kill "$log_pid" 2>/dev/null || true' 'NVO_SANDBOX_BOOTSTRAP_SUCCESS' "$state_log" 'NVO_SANDBOX_BOOTSTRAP_FAILED' "$state_log" "$setup" "$guest_exec"
+	printf '%s\n' "$command"
+}
+
+ready_guest_command() {
+	local guest_command=$1 readiness guest_exec setup command
+	printf -v readiness 'incus exec %q -- true' "$normalized_ticket"
+	guest_exec=$(guest_exec_command "$guest_command")
+	setup=$(instance_user_setup)
+	printf -v command 'until sg incus-admin -c %q; do printf %q; sleep 2; done; %s; exec sg incus-admin -c %q' \
+		"$readiness" "Waiting for sandbox ${ticket} to become ready…\\n" "$setup" "$guest_exec"
 	printf '%s\n' "$command"
 }
 
@@ -82,11 +135,11 @@ create_workspace() {
 	build_pane_id=$(jq -er '.result.root_pane.pane_id' <<<"$build_json")
 
 	local monitor lazydocker pcm platform godcapp
-	monitor=$(incus_command 'tail -F /var/log/network/network-server.log /var/log/edge/edge-server.log /var/log/scheduler/scheduler-server.log /var/log/runonce/runonce-server.log /var/log/system/system-server.log | loggo stream -t ~/.private-nvo-loggo.tpl')
-	lazydocker=$(incus_command 'lazydocker')
-	pcm=$(incus_command "cd $(printf '%q' "${project_dir}/PlatformCommonModels/scripts/development") && exec bash -l")
-	platform=$(incus_command "cd $(printf '%q' "${project_dir}/PlatformServices/scripts/development") && exec bash -l")
-	godcapp=$(incus_command "cd $(printf '%q' "${project_dir}/GoDCApp/NVO/scripts/development") && exec bash -l")
+	monitor=$(monitor_command)
+	lazydocker=$(ready_guest_command 'lazydocker')
+	pcm=$(ready_guest_command "cd $(printf '%q' "${project_dir}/PlatformCommonModels/scripts/development") && exec bash -l")
+	platform=$(ready_guest_command "cd $(printf '%q' "${project_dir}/PlatformServices/scripts/development") && exec bash -l")
+	godcapp=$(ready_guest_command "cd $(printf '%q' "${project_dir}/GoDCApp/NVO/scripts/development") && exec bash -l")
 
 	herdr pane run "$build_pane_id" "$monitor"
 	lazy_json=$(herdr pane split "$build_pane_id" --direction down --ratio 0.42 --cwd "$project_dir" --no-focus)
@@ -103,4 +156,8 @@ create_workspace() {
 	herdr pane run "$godcapp_pane_id" "$godcapp"
 }
 
+# Make the log available before the Build top pane starts tailing it. Tabs are
+# then usable immediately while the worker records the bootstrap outcome.
+prepare_state_log
 create_workspace
+start_bootstrap
