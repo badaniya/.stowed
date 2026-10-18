@@ -241,7 +241,11 @@ labctl_incus_configure_network() {
 	printf -v command 'set -euo pipefail; rm -f /etc/resolv.conf; : >/etc/resolv.conf; for server in "$@"; do printf "nameserver %%s\\n" "$server" >>/etc/resolv.conf; done; install -d -m 0755 /etc/docker; cat >/etc/docker/daemon.json <<%q\n%s\n%q\n' \
 		'LABCTL_DOCKER_DAEMON_JSON' "$docker_daemon_json" 'LABCTL_DOCKER_DAEMON_JSON'
 	# The private DNS and registry values are arguments, never printed in the lifecycle log.
-	labctl_run incus exec "$instance" -- bash -c "$command" -- "${dns_servers[@]}"
+	printf '+ incus exec %q -- bash -c [private network configuration]\n' "$instance"
+	if [[ ${LABCTL_DRY_RUN:-false} == true ]]; then
+		return 0
+	fi
+	LABCTL_FAKE_PRIVATE_NETWORK_CONFIGURATION=true incus --project "$LABCTL_INCUS_PROJECT" exec "$instance" -- bash -c "$command" -- "${dns_servers[@]}"
 }
 
 labctl_incus_configure_git_safe_directories() {

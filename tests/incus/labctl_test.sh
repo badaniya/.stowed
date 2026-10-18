@@ -263,6 +263,10 @@ while (($#)); do
 	shift
 done
 set -- "${args[@]}"
+if [[ ${LABCTL_FAKE_PRIVATE_NETWORK_CONFIGURATION:-false} == true ]]; then
+	printf 'incus private-network-configuration\n' >>"$COMMAND_LOG"
+	exit 0
+fi
 logged=("$@")
 if [[ ${logged[0]:-} == query ]]; then
 	logged[1]=${logged[1]%%\?project=*}
