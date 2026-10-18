@@ -74,10 +74,12 @@ printf '2\n' >"$TEST_ROOT/herdr-counter"
 
 HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$PATH" TEST_LOG="$LOG" TEST_HERDR_COUNTER="$TEST_ROOT/herdr-counter" TEST_INSTANCE_USER=nvo-builder "$SCRIPT" 'NVO-20131 25.16.0 --restore-harness'
 assert_contains 'worktree deferred=true args=NVO-20131 25.16.0 --restore-harness' "$LOG"
+assert_contains 'labctl create NVO-20131' "$LOG"
 assert_contains 'labctl credential sync NVO-20131' "$LOG"
 assert_contains 'labctl bootstrap NVO-20131' "$LOG"
 assert_contains 'labctl template sync NVO-20131' "$LOG"
 assert_contains 'labctl instance-user' "$LOG"
+assert_ordered 'labctl create NVO-20131' 'labctl credential sync NVO-20131' "$LOG"
 assert_ordered 'labctl credential sync NVO-20131' 'labctl bootstrap NVO-20131' "$LOG"
 assert_ordered 'labctl bootstrap NVO-20131' 'labctl template sync NVO-20131' "$LOG"
 assert_ordered 'labctl template sync NVO-20131' 'herdr workspace create' "$LOG"

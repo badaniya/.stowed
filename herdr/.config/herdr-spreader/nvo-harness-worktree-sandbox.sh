@@ -48,9 +48,11 @@ run_labctl_without_ticket() {
 	sg incus-admin -c "$command"
 }
 
+printf '→ Creating sandbox %s…\n' "$ticket"
+run_labctl create
 printf '→ Syncing the host Git credential into sandbox %s…\n' "$ticket"
 run_labctl credential sync
-printf '→ Creating and bootstrapping sandbox %s…\n' "$ticket"
+printf '→ Bootstrapping sandbox %s…\n' "$ticket"
 run_labctl bootstrap
 printf '→ Syncing private Loggo template into sandbox %s…\n' "$ticket"
 run_labctl template sync
