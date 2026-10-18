@@ -107,7 +107,7 @@ monitor_command() {
 	guest_exec=$(guest_exec_command "$guest_command")
 	setup=$(instance_user_setup)
 	# shellcheck disable=SC2016 # The generated Build-pane command owns its tail process.
-	printf -v command 'tail -n +1 -F %q & log_pid=$!; trap %q EXIT; until rg -Fxq %q %q; do if rg -Fxq %q %q; then kill "$log_pid" 2>/dev/null || true; wait "$log_pid" 2>/dev/null || true; exit 1; fi; sleep 1; done; %s; exec sg incus-admin -c %q' \
+	printf -v command 'tail -n +1 -F %q & log_pid=$!; trap %q EXIT; until rg -Fxq %q %q; do if rg -Fxq %q %q; then kill "$log_pid" 2>/dev/null || true; wait "$log_pid" 2>/dev/null || true; exit 1; fi; sleep 1; done; %s; export instance_user; exec sg incus-admin -c %q' \
 		"$state_log" 'kill "$log_pid" 2>/dev/null || true' 'NVO_SANDBOX_BOOTSTRAP_SUCCESS' "$state_log" 'NVO_SANDBOX_BOOTSTRAP_FAILED' "$state_log" "$setup" "$guest_exec"
 	printf '%s\n' "$command"
 }
@@ -117,7 +117,7 @@ ready_guest_command() {
 	printf -v readiness 'incus exec %q -- true' "$normalized_ticket"
 	guest_exec=$(guest_exec_command "$guest_command")
 	setup=$(instance_user_setup)
-	printf -v command 'until sg incus-admin -c %q; do printf %q; sleep 2; done; %s; exec sg incus-admin -c %q' \
+	printf -v command 'until sg incus-admin -c %q; do printf %q; sleep 2; done; %s; export instance_user; exec sg incus-admin -c %q' \
 		"$readiness" "Waiting for sandbox ${ticket} to become ready…\\n" "$setup" "$guest_exec"
 	printf '%s\n' "$command"
 }
