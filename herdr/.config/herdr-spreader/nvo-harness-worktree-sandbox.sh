@@ -227,7 +227,7 @@ monitor_command() {
 	guest_exec=$(guest_exec_command "$guest_command" true)
 	setup=$(instance_user_setup)
 	# shellcheck disable=SC2016 # The generated Build-pane command owns its tail process.
-	printf -v command 'tail -n +1 -F %q & log_pid=$!; trap %q EXIT; until rg -Fxq %q %q; do if rg -Fxq %q %q; then kill "$log_pid" 2>/dev/null || true; wait "$log_pid" 2>/dev/null || true; printf %q >&2; exec bash; fi; sleep 1; done; %s; export instance_user; sg incus-admin -c %q || { printf %q >&2; exec bash; }' \
+	printf -v command 'tail -n +1 -F %q & log_pid=$!; trap %q EXIT; until rg -Fxq %q %q; do if rg -Fxq %q %q; then kill "$log_pid" 2>/dev/null || true; wait "$log_pid" 2>/dev/null || true; printf %q >&2; exec bash; fi; sleep 1; done; %s; export instance_user instance_project; sg incus-admin -c %q || { printf %q >&2; exec bash; }' \
 		"$state_log" 'kill "$log_pid" 2>/dev/null || true' 'NVO_SANDBOX_BOOTSTRAP_SUCCESS' "$state_log" 'NVO_SANDBOX_BOOTSTRAP_FAILED' "$state_log" 'Sandbox bootstrap failed; inspect the log above.\n' "$setup" "$guest_exec" 'Loggo monitor exited; inspect the command and bootstrap log above.\n'
 	printf '%s\n' "$command"
 }
@@ -255,7 +255,7 @@ stage_pane_command() {
 	guest_exec=$(guest_exec_command "cd $(printf '%q' "$directory") && exec bash -l" true)
 	setup=$(instance_user_setup)
 	# shellcheck disable=SC2016 # Pane tails all owned stage logs, then opens the guest directory after the final stage succeeds.
-	printf -v command 'tail -q -n +1 -F%s & stage_log_pid=$!; trap %q EXIT; until [[ -f %q || -f %q ]]; do sleep 0.2; done; if [[ -f %q ]]; then printf %q >&2; exec bash; fi; kill "$stage_log_pid" 2>/dev/null || true; wait "$stage_log_pid" 2>/dev/null || true; %s; export instance_user; sg incus-admin -c %q || { printf %q >&2; exec bash; }' \
+	printf -v command 'tail -q -n +1 -F%s & stage_log_pid=$!; trap %q EXIT; until [[ -f %q || -f %q ]]; do sleep 0.2; done; if [[ -f %q ]]; then printf %q >&2; exec bash; fi; kill "$stage_log_pid" 2>/dev/null || true; wait "$stage_log_pid" 2>/dev/null || true; %s; export instance_user instance_project; sg incus-admin -c %q || { printf %q >&2; exec bash; }' \
 		"$logs" 'kill "$stage_log_pid" 2>/dev/null || true' "$ready" "$failed" "$failed" "Stage ${final_stage} failed; inspect the stage logs above.\n" "$setup" "$guest_exec" 'Sandbox attachment exited; inspect the command above.\n'
 	printf '%s\n' "$command"
 }
