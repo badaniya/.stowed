@@ -285,7 +285,10 @@ template)
 	;;
 instance-user)
 	labctl_config_load "$config_path"
-	[[ $# -eq 0 ]] || { labctl_die 'instance-user takes no arguments'; exit 1; }
+	[[ $# -eq 0 ]] || {
+		labctl_die 'instance-user takes no arguments'
+		exit 1
+	}
 	printf '%s\n' "$LABCTL_INSTANCE_USER"
 	;;
 create | bootstrap | start | stop | status | verify | destroy | cleanup-worktree)
