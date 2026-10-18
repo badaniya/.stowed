@@ -220,7 +220,10 @@ labctl_stage() {
 
 labctl_nvo_env() {
 	local action=$1 ticket=$2
-	[[ $action == sync ]] || { labctl_die 'nvo-env requires: nvo-env sync TICKET'; return 1; }
+	[[ $action == sync ]] || {
+		labctl_die 'nvo-env requires: nvo-env sync TICKET'
+		return 1
+	}
 	ticket=$(labctl_normalize_ticket "$ticket") || return 1
 	labctl_incus_sync_nvo_environment "$ticket" "$ticket"
 }
@@ -302,7 +305,10 @@ template)
 	;;
 nvo-env)
 	labctl_config_load "$config_path"
-	[[ $# -eq 2 ]] || { labctl_die 'nvo-env requires exactly: nvo-env sync TICKET'; exit 1; }
+	[[ $# -eq 2 ]] || {
+		labctl_die 'nvo-env requires exactly: nvo-env sync TICKET'
+		exit 1
+	}
 	labctl_nvo_env "$1" "$2"
 	;;
 stage)
