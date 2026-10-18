@@ -123,9 +123,18 @@ ready_guest_command() {
 	printf '%s\n' "$command"
 }
 
+workspace_label() {
+	local title
+	title=$(jira issue view "$ticket" --raw 2>/dev/null | jq -r '.fields.summary // empty' 2>/dev/null || true)
+	title=${title//$'\n'/ }
+	[[ -n $title ]] || title='NVO Workspace'
+	printf '%s - %s\n' "$ticket" "$title"
+}
+
 create_workspace() {
-	local workspace_json workspace_id agent_tab_id agent_pane_id build_json build_pane_id
-	workspace_json=$(herdr workspace create --cwd "$project_dir" --label "$ticket - NVO Workspace" --focus)
+	local workspace_json workspace_id agent_tab_id agent_pane_id build_json build_pane_id label
+	label=$(workspace_label)
+	workspace_json=$(herdr workspace create --cwd "$project_dir" --label "$label" --focus)
 	workspace_id=$(jq -er '.result.workspace.workspace_id' <<<"$workspace_json")
 	agent_tab_id=$(jq -er '.result.tab.tab_id' <<<"$workspace_json")
 	agent_pane_id=$(jq -er '.result.root_pane.pane_id' <<<"$workspace_json")

@@ -63,6 +63,11 @@ cat >"$TEST_ROOT/bin/sg" <<'EOF_SG'
 printf 'sg %s\n' "$3" >>"${TEST_LOG:?}"
 bash -c "$3"
 EOF_SG
+cat >"$TEST_ROOT/bin/jira" <<'EOF_JIRA'
+#!/usr/bin/env bash
+[[ $1 == issue && $2 == view && $3 == NVO-20131 && $4 == --raw ]] || exit 2
+printf '%s\n' '{"fields":{"summary":"Sandbox workspace title"}}'
+EOF_JIRA
 cat >"$TEST_ROOT/bin/herdr" <<'EOF_HERDR'
 #!/usr/bin/env bash
 printf 'herdr %s\n' "$*" >>"${TEST_LOG:?}"
@@ -80,7 +85,7 @@ case "${1:-} ${2:-}" in
 *) exit 2 ;;
 esac
 EOF_HERDR
-chmod +x "$TEST_ROOT/home/.config/herdr-spreader/nvo-harness-worktree-sandbox-base.sh" "$TEST_ROOT/home/.local/bin/labctl" "$TEST_ROOT/bin/sg" "$TEST_ROOT/bin/herdr"
+chmod +x "$TEST_ROOT/home/.config/herdr-spreader/nvo-harness-worktree-sandbox-base.sh" "$TEST_ROOT/home/.local/bin/labctl" "$TEST_ROOT/bin/sg" "$TEST_ROOT/bin/jira" "$TEST_ROOT/bin/herdr"
 
 run_sandbox() {
 	HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$PATH" XDG_STATE_HOME="$TEST_ROOT/state" TEST_LOG="$LOG" TEST_HERDR_COUNTER="$TEST_ROOT/herdr-counter" TEST_INSTANCE_USER=nvo-builder "$SCRIPT" 'NVO-20131 25.16.0 --restore-harness'
@@ -92,6 +97,7 @@ run_sandbox
 wait_for_marker 'NVO_SANDBOX_BOOTSTRAP_SUCCESS' "$STATE_LOG"
 assert_contains 'worktree deferred=true args=NVO-20131 25.16.0 --restore-harness' "$LOG"
 assert_contains 'herdr workspace create' "$LOG"
+assert_contains 'NVO-20131 - Sandbox workspace title' "$LOG"
 assert_contains 'herdr tab create --workspace w1' "$LOG"
 assert_ordered 'herdr workspace create' 'labctl create NVO-20131' "$LOG"
 assert_contains '→ Creating sandbox NVO-20131…' "$STATE_LOG"
