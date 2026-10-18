@@ -371,8 +371,8 @@ labctl_incus_start() {
 	if ! labctl_incus_is_running "$instance"; then
 		labctl_run incus start "$instance"
 	fi
-	labctl_incus_wait_ready "$instance"
 	labctl_incus_configure_network "$instance"
+	labctl_incus_wait_ready "$instance"
 	labctl_stack_up "$instance"
 }
 

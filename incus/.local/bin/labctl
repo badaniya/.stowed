@@ -117,6 +117,7 @@ labctl_create() {
 	fi
 	labctl_incus_launch "$instance" "$ip"
 	labctl_incus_attach_workspace "$instance" "$root"
+	labctl_incus_configure_network "$instance"
 	labctl_incus_wait_ready "$instance"
 	labctl_incus_configure_git_safe_directories "$instance" "$root"
 	if [[ ${LABCTL_DRY_RUN:-false} != true ]]; then
