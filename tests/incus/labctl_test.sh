@@ -609,10 +609,10 @@ assert_command_log_contains 'config device override jira-# eth0 ipv4.address=10.
 assert_command_log_not_contains 'config device set jira-# eth0 ipv4.address='
 assert_command_log_ordered 'init images:ubuntu/24.04 jira-# --profile default --profile agent-dev-env' 'config device override jira-# eth0 ipv4.address=10.42.0.10'
 assert_command_log_ordered 'config device override jira-# eth0 ipv4.address=10.42.0.10' 'start jira-#'
-assert_command_log_ordered 'start jira-#' 'exec jira-# -- cloud-init status --wait'
+assert_command_log_ordered 'start jira-#' 'exec jira-# -- bash -c set'
 # After both idmapped mounts and guest readiness, configure only direct ticket
 # worktrees in the instance user's global Git configuration.
-assert_command_log_ordered 'config device add jira-# ticket-workspace disk' 'exec jira-# -- cloud-init status --wait'
+assert_command_log_ordered 'config device add jira-# ticket-workspace disk' 'exec jira-# -- bash -c set'
 assert_command_log_ordered 'exec jira-# -- docker info' 'git config --global --add safe.directory'
 assert_command_log_contains "exec jira-# -- git config --global --add safe.directory ${TEST_ROOT}/workspace/jira-#/one"
 assert_command_log_contains "exec jira-# -- git config --global --add safe.directory ${TEST_ROOT}/workspace/jira-#/two"
@@ -762,7 +762,7 @@ printf '%s\n' Stopped >"$LABCTL_FAKE_INSTANCE_STATE_FILE"
 : >"$COMMAND_LOG"
 PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_REJECT_DUPLICATE_START=true assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" start 'JIRA-#'
 assert_command_log_contains 'start jira-#'
-assert_command_log_ordered 'start jira-#' 'exec jira-# -- cloud-init status --wait'
+assert_command_log_ordered 'start jira-#' 'exec jira-# -- bash -c set'
 assert_equals '1' "$(rg -F -c 'exec jira-# -- bash -s --' "$COMMAND_LOG" || true)"
 unset LABCTL_FAKE_INSTANCE_STATE_FILE
 
@@ -1003,6 +1003,7 @@ PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=false assert_succeeds "$LAB
 assert_command_log_contains 'incus init images:ubuntu/24.04 golden-builder-2026-10-18-1 --profile default --profile agent-dev-env'
 assert_command_log_contains 'incus publish golden-builder-2026-10-18-1 --alias golden:2026-10-18-1'
 assert_command_log_contains 'incus delete golden-builder-2026-10-18-1'
+assert_command_log_ordered 'incus start golden-builder-2026-10-18-1' 'incus exec golden-builder-2026-10-18-1 -- bash -s'
 assert_command_log_ordered 'incus exec golden-builder-2026-10-18-1 -- bash -s' 'incus publish golden-builder-2026-10-18-1 --alias golden:2026-10-18-1'
 
 finish_tests

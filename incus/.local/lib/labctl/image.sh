@@ -53,24 +53,43 @@ done
 SCRIPT
 }
 
+labctl_image_provision_command() {
+	cat <<SCRIPT
+set -euo pipefail
+export DEBIAN_FRONTEND=noninteractive
+apt-get update
+apt-get install -y build-essential ca-certificates cloud-init curl git gzip jq make net-tools openssh-client ripgrep screen sudo tar wget docker.io docker-compose-v2
+rm -rf /usr/local/go
+curl -fsSL https://go.dev/dl/go${LABCTL_GO_VERSION}.linux-amd64.tar.gz -o /tmp/labctl-go.tar.gz
+tar -C /usr/local -xzf /tmp/labctl-go.tar.gz
+rm -f /tmp/labctl-go.tar.gz
+ln -sf /usr/local/go/bin/go /usr/local/bin/go
+HOME=/root GOPATH=/root/go GOCACHE=/root/.cache/go-build GOBIN=/usr/local/bin /usr/local/go/bin/go install github.com/badaniya/loggo@6dba9bab7c9491890349935da50c14f2f346912d
+HOME=/root GOPATH=/root/go GOCACHE=/root/.cache/go-build GOBIN=/usr/local/bin /usr/local/go/bin/go install github.com/jesseduffield/lazydocker@v0.25.2
+printf '%s\\n' 'export PATH="/usr/local/go/bin:\$PATH"' >/etc/profile.d/labctl-go.sh
+printf '%s\\n' 'policy: enabled' >/etc/cloud/ds-identify.cfg
+systemctl enable docker
+SCRIPT
+}
+
 labctl_image_build() {
-	local version=$1 alias builder cleanup=false provision='cloud-init status --wait'
+	local version=$1 alias builder cleanup=false
 	alias=$(labctl_image_alias "$version") || return 1
 	builder=$(labctl_image_builder_name "$version") || return 1
-	trap 'if [[ $cleanup == true ]]; then incus --project "$LABCTL_INCUS_PROJECT" delete "$builder" --force >/dev/null 2>&1 || true; fi' RETURN
 	incus --project "$LABCTL_INCUS_PROJECT" info "$builder" >/dev/null 2>&1 && {
 		labctl_die "golden image builder already exists: $builder"
 		return 1
 	}
 	cleanup=true
+	trap 'if [[ $cleanup == true ]]; then incus --project "$LABCTL_INCUS_PROJECT" delete "$builder" --force >/dev/null 2>&1 || true; fi' ERR RETURN
 	labctl_run incus --project "$LABCTL_INCUS_PROJECT" init "$LABCTL_GOLDEN_IMAGE_BASE" "$builder" --profile default --profile "$LABCTL_INCUS_PROFILE"
 	labctl_run incus --project "$LABCTL_INCUS_PROJECT" start "$builder"
-	labctl_run incus --project "$LABCTL_INCUS_PROJECT" exec "$builder" -- bash -lc "$provision"
+	labctl_run incus --project "$LABCTL_INCUS_PROJECT" exec "$builder" -- bash -s <<<"$(labctl_image_provision_command)"
 	labctl_run incus --project "$LABCTL_INCUS_PROJECT" exec "$builder" -- bash -s <<<"$(labctl_image_scrub_command)"
 	labctl_run incus --project "$LABCTL_INCUS_PROJECT" exec "$builder" -- bash -s <<<"$(labctl_image_verify_command)"
 	labctl_run incus --project "$LABCTL_INCUS_PROJECT" stop "$builder"
 	labctl_run incus --project "$LABCTL_INCUS_PROJECT" publish "$builder" --alias "$alias"
 	labctl_run incus --project "$LABCTL_INCUS_PROJECT" delete "$builder"
 	cleanup=false
-	trap - RETURN
+	trap - ERR RETURN
 }
