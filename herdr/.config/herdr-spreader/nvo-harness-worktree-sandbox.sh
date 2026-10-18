@@ -203,9 +203,9 @@ guest_exec_command() {
 	local guest_command=$1 interactive=${2:-false} command
 	# shellcheck disable=SC2016 # Build pane obtains and validates this value at runtime.
 	if [[ $interactive == true ]]; then
-		local interactive_command
-		printf -v interactive_command 'incus exec --force-interactive %q -- su - "$instance_user" -c %q' "$normalized_ticket" "$guest_command"
-		printf -v command 'script -qefc %q /dev/null' "$interactive_command"
+		local guest_tty_command
+		printf -v guest_tty_command 'script -qefc %q /dev/null' "$guest_command"
+		printf -v command 'incus exec --force-interactive %q -- su - "$instance_user" -c %q' "$normalized_ticket" "$guest_tty_command"
 	else
 		printf -v command 'incus exec %q -- su - "$instance_user" -c %q' "$normalized_ticket" "$guest_command"
 	fi
