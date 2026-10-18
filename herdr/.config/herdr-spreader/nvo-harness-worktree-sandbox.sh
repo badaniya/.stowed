@@ -142,6 +142,12 @@ bootstrap_sandbox() {
 	printf '%s\n' 'NVO_SANDBOX_BOOTSTRAP_STARTED'
 	printf '→ Creating sandbox %s…\n' "$ticket"
 	run_labctl create || return 1
+	instance_user=$(run_labctl_without_ticket instance-user) || return 1
+	[[ $instance_user =~ ^[a-z_][a-z0-9_-]*$ ]] || {
+		printf 'Error: labctl returned an unsafe sandbox user name\n' >&2
+		return 1
+	}
+	printf 'NVO_SANDBOX_INSTANCE_USER=%s\n' "$instance_user"
 	printf '→ Syncing the host Git credential into sandbox %s…\n' "$ticket"
 	run_labctl credential sync || return 1
 	printf '→ Running shared sandbox preparation for %s…\n' "$ticket"
@@ -163,12 +169,6 @@ bootstrap_sandbox() {
 
 	printf '→ Syncing private Loggo template into sandbox %s…\n' "$ticket"
 	run_labctl template sync || return 1
-	instance_user=$(run_labctl_without_ticket instance-user) || return 1
-	[[ $instance_user =~ ^[a-z_][a-z0-9_-]*$ ]] || {
-		printf 'Error: labctl returned an unsafe sandbox user name\n' >&2
-		return 1
-	}
-	printf 'NVO_SANDBOX_INSTANCE_USER=%s\n' "$instance_user"
 	printf '%s\n' 'NVO_SANDBOX_BOOTSTRAP_SUCCESS'
 }
 
