@@ -146,6 +146,11 @@ assert_fails labctl_config_load "$DUPLICATE_PORT_CONFIG"
 
 labctl_config_load "$CONFIG_PATH"
 
+# Regression: instance exec must not consume the linked-worktree enumerator's
+# stdin; otherwise only one safe.directory entry reaches root/the guest user.
+# shellcheck disable=SC2016 # Match the literal worktree argument in the helper.
+assert_succeeds rg -F --quiet 'safe.directory "$worktree" </dev/null' "${LABCTL_LIB}/incus.sh"
+
 # Regression: lifecycle Git configuration uses `su -` and therefore requires a
 # writable configured-user home even when cloud image ownership is incorrect.
 CLOUD_INIT_PATH="${TEST_ROOT}/cloud-init.yaml"
