@@ -48,6 +48,7 @@ Commands:
   template sync TICKET                       Copy the private Loggo template into the sandbox
   nvo-env sync TICKET                        Sync the private rendered NVO environment into the sandbox
   instance-user                              Print the configured sandbox user
+  instance-project                           Print the configured Incus project
 USAGE
 }
 
@@ -326,6 +327,14 @@ instance-user)
 		exit 1
 	}
 	printf '%s\n' "$LABCTL_INSTANCE_USER"
+	;;
+instance-project)
+	labctl_config_load "$config_path"
+	[[ $# -eq 0 ]] || {
+		labctl_die 'instance-project takes no arguments'
+		exit 1
+	}
+	printf '%s\n' "$LABCTL_INCUS_PROJECT"
 	;;
 create | bootstrap | start | stop | status | verify | destroy | cleanup-worktree)
 	labctl_config_load "$config_path"

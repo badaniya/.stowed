@@ -202,8 +202,8 @@ start_bootstrap() {
 instance_user_setup() {
 	local setup
 	# shellcheck disable=SC2016 # Build pane expands this only after bootstrap writes its state log.
-	printf -v setup 'until instance_user=$(awk -F= %q %q) && [[ $instance_user =~ ^[a-z_][a-z0-9_-]*$ ]]; do if rg -Fxq %q %q; then printf %q >&2; exit 1; fi; sleep 0.2; done' \
-		'/^NVO_SANDBOX_INSTANCE_USER=/{print $2; exit}' "$state_log" 'NVO_SANDBOX_BOOTSTRAP_FAILED' "$state_log" 'Sandbox bootstrap did not provide a safe instance user\n'
+	printf -v setup 'until instance_user=$(awk -F= %q %q) && [[ $instance_user =~ ^[a-z_][a-z0-9_-]*$ ]]; do if rg -Fxq %q %q; then printf %q >&2; exit 1; fi; sleep 0.2; done; instance_project=$(sg incus-admin -c %q) && [[ $instance_project =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*$ ]] || { printf %q >&2; exit 1; }' \
+		'/^NVO_SANDBOX_INSTANCE_USER=/{print $2; exit}' "$state_log" 'NVO_SANDBOX_BOOTSTRAP_FAILED' "$state_log" 'Sandbox bootstrap did not provide a safe instance user\n' "$labctl instance-project" 'Sandbox bootstrap did not provide a safe instance project\n'
 	printf '%s\n' "$setup"
 }
 
@@ -214,9 +214,9 @@ guest_exec_command() {
 		local guest_setpriv_command guest_login_command
 		printf -v guest_login_command 'cd "$HOME" && exec %s' "$guest_command"
 		printf -v guest_setpriv_command 'exec setpriv --reset-env --reuid "$1" --regid "$(id -g "$1")" --init-groups bash -lc %q' "$guest_login_command"
-		printf -v command 'incus exec --force-interactive %q -- bash -lc %q _ "$instance_user"' "$normalized_ticket" "$guest_setpriv_command"
+		printf -v command 'incus --project "$instance_project" exec --force-interactive %q -- bash -lc %q _ "$instance_user"' "$normalized_ticket" "$guest_setpriv_command"
 	else
-		printf -v command 'incus exec %q -- su - "$instance_user" -c %q' "$normalized_ticket" "$guest_command"
+		printf -v command 'incus --project "$instance_project" exec %q -- su - "$instance_user" -c %q' "$normalized_ticket" "$guest_command"
 	fi
 	printf '%s\n' "$command"
 }
@@ -234,7 +234,8 @@ monitor_command() {
 
 ready_guest_command() {
 	local guest_command=$1 interactive=${2:-false} readiness guest_exec setup command
-	printf -v readiness 'incus exec %q -- true' "$normalized_ticket"
+	# shellcheck disable=SC2016 # The generated pane expands its resolved project at runtime.
+	printf -v readiness 'incus --project "$instance_project" exec %q -- true' "$normalized_ticket"
 	guest_exec=$(guest_exec_command "$guest_command" "$interactive")
 	setup=$(instance_user_setup)
 	# shellcheck disable=SC2016 # The generated pane shell expands after the guest is ready.

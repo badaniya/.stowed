@@ -74,6 +74,8 @@ cat >"$TEST_ROOT/home/.local/bin/labctl" <<'EOF_LABCTL'
 printf 'labctl %s\n' "$*" >>"${TEST_LOG:?}"
 if [[ ${1:-} == instance-user ]]; then
 	printf '%s\n' "${TEST_INSTANCE_USER:-sandbox-user}"
+elif [[ ${1:-} == instance-project ]]; then
+	printf '%s\n' "${TEST_INSTANCE_PROJECT:-agent-sandbox}"
 elif [[ ${1:-} == stage ]]; then
 	printf 'stage %s\n' "${3:-}" >>"${TEST_LOG:?}"
 	[[ ${TEST_FAIL_STAGE:-} != "${3:-}" ]] || exit 1
