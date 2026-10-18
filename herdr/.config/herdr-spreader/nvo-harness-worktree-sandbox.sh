@@ -239,8 +239,8 @@ ready_guest_command() {
 	guest_exec=$(guest_exec_command "$guest_command" "$interactive")
 	setup=$(instance_user_setup)
 	# shellcheck disable=SC2016 # The generated pane shell expands after the guest is ready.
-	printf -v command 'until sg incus-admin -c %q; do sleep 0.2; done; %s; export instance_user; sg incus-admin -c %q || { printf %q >&2; exec bash; }' \
-		"$readiness" "$setup" "$guest_exec" 'Sandbox attachment exited; inspect the command above.\n'
+	printf -v command '%s; until sg incus-admin -c %q; do sleep 0.2; done; export instance_user instance_project; sg incus-admin -c %q || { printf %q >&2; exec bash; }' \
+		"$setup" "$readiness" "$guest_exec" 'Sandbox attachment exited; inspect the command above.\n'
 	printf '%s\n' "$command"
 }
 
