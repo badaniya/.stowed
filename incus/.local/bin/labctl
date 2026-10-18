@@ -43,6 +43,7 @@ Commands:
   credential sync TICKET                     Sync host Git credential into the sandbox
   credential unset TICKET                    Remove the sandbox Git credential
   template sync TICKET                       Copy the private Loggo template into the sandbox
+  instance-user                              Print the configured sandbox user
 USAGE
 }
 
@@ -281,6 +282,11 @@ credential)
 template)
 	labctl_config_load "$config_path"
 	labctl_template "$@"
+	;;
+instance-user)
+	labctl_config_load "$config_path"
+	[[ $# -eq 0 ]] || { labctl_die 'instance-user takes no arguments'; exit 1; }
+	printf '%s\n' "$LABCTL_INSTANCE_USER"
 	;;
 create | bootstrap | start | stop | status | verify | destroy | cleanup-worktree)
 	labctl_config_load "$config_path"
