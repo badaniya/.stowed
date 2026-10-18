@@ -47,7 +47,9 @@ STATE_LOG="$TEST_ROOT/state/herdr-spreader/NVO-20131.log"
 # Build panes must tail their named stage logs rather than opening an empty
 # directory shell while the coordinator performs a monolithic bootstrap.
 assert_contains 'stage_pane_command' "$SCRIPT"
-assert_contains 'tail -n +1 -F' "$SCRIPT"
+assert_contains 'tail --retry -F /var/log/network/network-server.log' "$SCRIPT"
+# shellcheck disable=SC2016 # Match the literal interactive monitor handoff.
+assert_contains 'guest_exec=$(guest_exec_command "$guest_command" true)' "$SCRIPT"
 # shellcheck disable=SC2016 # Match the literal pipeline emitted by the script.
 # shellcheck disable=SC2016 # Match the literal streaming pipeline in the script.
 assert_contains 'stdbuf -oL tr -cd' "$SCRIPT"

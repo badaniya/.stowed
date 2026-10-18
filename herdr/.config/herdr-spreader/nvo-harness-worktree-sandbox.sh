@@ -214,8 +214,8 @@ guest_exec_command() {
 
 monitor_command() {
 	local guest_command guest_exec setup command
-	guest_command='tail -F /var/log/network/network-server.log /var/log/edge/edge-server.log /var/log/scheduler/scheduler-server.log /var/log/runonce/runonce-server.log /var/log/system/system-server.log | /usr/local/bin/loggo stream -t ~/.private-nvo-loggo.tpl'
-	guest_exec=$(guest_exec_command "$guest_command")
+	guest_command='tail --retry -F /var/log/network/network-server.log /var/log/edge/edge-server.log /var/log/scheduler/scheduler-server.log /var/log/system/system-server.log | /usr/local/bin/loggo stream -t ~/.private-nvo-loggo.tpl'
+	guest_exec=$(guest_exec_command "$guest_command" true)
 	setup=$(instance_user_setup)
 	# shellcheck disable=SC2016 # The generated Build-pane command owns its tail process.
 	printf -v command 'tail -n +1 -F %q & log_pid=$!; trap %q EXIT; until rg -Fxq %q %q; do if rg -Fxq %q %q; then kill "$log_pid" 2>/dev/null || true; wait "$log_pid" 2>/dev/null || true; printf %q >&2; exec bash; fi; sleep 1; done; %s; export instance_user; sg incus-admin -c %q || { printf %q >&2; exec bash; }' \
