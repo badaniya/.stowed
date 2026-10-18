@@ -591,13 +591,15 @@ assert_command_log_ordered 'start jira-#' 'exec jira-# -- cloud-init status --wa
 # worktrees in the instance user's global Git configuration.
 assert_command_log_ordered 'config device add jira-# ticket-workspace disk' 'exec jira-# -- cloud-init status --wait'
 assert_command_log_ordered 'exec jira-# -- docker info' 'git config --global --add safe.directory'
+assert_command_log_contains "exec jira-# -- git config --global --add safe.directory ${TEST_ROOT}/workspace/jira-#/one"
+assert_command_log_contains "exec jira-# -- git config --global --add safe.directory ${TEST_ROOT}/workspace/jira-#/two"
 assert_command_log_contains "exec jira-# -- su - ubuntu -c git config --global --add safe.directory ${TEST_ROOT}/workspace/jira-#/one"
 assert_command_log_contains "exec jira-# -- su - ubuntu -c git config --global --add safe.directory ${TEST_ROOT}/workspace/jira-#/two"
 assert_command_log_not_contains "safe.directory ${TEST_ROOT}/workspace/master"
 assert_command_log_not_contains "safe.directory ${TEST_ROOT}/workspace/jira-# "
 assert_command_log_not_contains "safe.directory ${TEST_ROOT}/workspace/jira-#/one/vendor/nested"
 assert_command_log_not_contains 'safe.directory *'
-assert_equals '2' "$(rg -F -c 'git config --global --add safe.directory' "$COMMAND_LOG" || true)"
+assert_equals '4' "$(rg -F -c 'git config --global --add safe.directory' "$COMMAND_LOG" || true)"
 
 # A failed historical create could leave an empty IP in its existing record.
 # Create must replace that incomplete reservation before launch, then persist and
@@ -768,6 +770,12 @@ assert_command_log_contains 'init images:ubuntu/24.04 bootstrap-new'
 assert_equals '1' "$(rg -F -c 'start bootstrap-new' "$COMMAND_LOG" || true)"
 assert_equals '1' "$(rg -F -c 'exec bootstrap-new -- bash -s --' "$COMMAND_LOG" || true)"
 assert_equals 'running' "$(labctl_state_lookup 'bootstrap-new' | jq -r '.status')"
+# Root executes the product stack hook, so both root and the configured guest
+# user must trust each idmapped linked worktree—never a wildcard directory.
+for worktree in one two; do
+	assert_command_log_contains "exec bootstrap-new -- git config --global --add safe.directory ${TEST_ROOT}/workspace/bootstrap-new/${worktree}"
+	assert_command_log_contains "exec bootstrap-new -- su - ubuntu -c git config --global --add safe.directory ${TEST_ROOT}/workspace/bootstrap-new/${worktree}"
+done
 unset LABCTL_FAKE_INSTANCE_DIRECTORY
 
 # Stages are fixed identifiers that select private configuration commands. The
