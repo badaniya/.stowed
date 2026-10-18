@@ -117,8 +117,9 @@ ready_guest_command() {
 	printf -v readiness 'incus exec %q -- true' "$normalized_ticket"
 	guest_exec=$(guest_exec_command "$guest_command")
 	setup=$(instance_user_setup)
-	printf -v command 'until sg incus-admin -c %q; do printf %q; sleep 2; done; %s; export instance_user; sg incus-admin -c %q || { printf %q >&2; exec bash; }' \
-		"$readiness" "Waiting for sandbox ${ticket} to become ready…\\n" "$setup" "$guest_exec" 'Sandbox attachment exited; inspect the command above.'
+	# shellcheck disable=SC2016 # The generated pane shell expands the spinner expression at runtime.
+	printf -v command 'spinner=("⠋" "⠙" "⠹" "⠸" "⠼" "⠴" "⠦" "⠧" "⠇" "⠏"); spin=0; until sg incus-admin -c %q; do printf "\\r\\033[K%%s Waiting for sandbox %s to become ready…" "${spinner[spin %% ${#spinner[@]}]}"; spin=$((spin + 1)); sleep 0.12; done; printf "\\r\\033[K"; %s; export instance_user; sg incus-admin -c %q || { printf %q >&2; exec bash; }' \
+		"$readiness" "$ticket" "$setup" "$guest_exec" 'Sandbox attachment exited; inspect the command above.'
 	printf '%s\n' "$command"
 }
 
