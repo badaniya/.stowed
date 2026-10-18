@@ -34,7 +34,7 @@ project_dir="${workspace_root}/${ticket}"
 
 # The standard creator remains responsible for worktrees and aggregate context.
 # Its normal one-tab workspace is deliberately deferred until the guest is ready.
-NVO_HARNESS_DEFER_WORKSPACE=true bash "${spreader_dir}/nvo-harness-worktree.sh" "${args[@]}"
+NVO_HARNESS_DEFER_WORKSPACE=true bash "${spreader_dir}/nvo-harness-worktree-sandbox-base.sh" "${args[@]}"
 
 run_labctl() {
 	local command

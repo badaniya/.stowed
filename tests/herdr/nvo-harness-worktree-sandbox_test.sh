@@ -33,7 +33,7 @@ trap 'rm -rf "$TEST_ROOT"' EXIT
 mkdir -p "$TEST_ROOT/bin" "$TEST_ROOT/home/.config/herdr-spreader" "$TEST_ROOT/home/.local/bin"
 LOG="$TEST_ROOT/commands.log"
 
-cat >"$TEST_ROOT/home/.config/herdr-spreader/nvo-harness-worktree.sh" <<'EOF'
+cat >"$TEST_ROOT/home/.config/herdr-spreader/nvo-harness-worktree-sandbox-base.sh" <<'EOF'
 #!/usr/bin/env bash
 printf 'worktree deferred=%s args=%s\n' "${NVO_HARNESS_DEFER_WORKSPACE:-}" "$*" >>"${TEST_LOG:?}"
 EOF
@@ -69,7 +69,7 @@ case "${1:-} ${2:-}" in
 *) exit 2 ;;
 esac
 EOF
-chmod +x "$TEST_ROOT/home/.config/herdr-spreader/nvo-harness-worktree.sh" "$TEST_ROOT/home/.local/bin/labctl" "$TEST_ROOT/bin/sg" "$TEST_ROOT/bin/herdr"
+chmod +x "$TEST_ROOT/home/.config/herdr-spreader/nvo-harness-worktree-sandbox-base.sh" "$TEST_ROOT/home/.local/bin/labctl" "$TEST_ROOT/bin/sg" "$TEST_ROOT/bin/herdr"
 printf '2\n' >"$TEST_ROOT/herdr-counter"
 
 HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$PATH" TEST_LOG="$LOG" TEST_HERDR_COUNTER="$TEST_ROOT/herdr-counter" TEST_INSTANCE_USER=nvo-builder "$SCRIPT" 'NVO-20131 25.16.0 --restore-harness'
