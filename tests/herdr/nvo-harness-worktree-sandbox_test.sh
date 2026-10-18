@@ -54,6 +54,12 @@ assert_contains 'stdbuf -oL tr -cd' "$SCRIPT"
 # shellcheck disable=SC2016 # Match the literal raw artifact tee in the script.
 assert_contains 'tee "$raw"' "$SCRIPT"
 assert_contains 'for stage in shared pcm-db' "$SCRIPT"
+# shellcheck disable=SC2016 # Match the literal generated pane assignments.
+assert_contains 'platform=$(stage_pane_command platform-tagging-start' "$SCRIPT"
+assert_contains 'platform-tagging-build platform-tagging-start)' "$SCRIPT"
+# shellcheck disable=SC2016 # Match the literal generated pane assignments.
+assert_contains 'godcapp=$(stage_pane_command godcapp-services' "$SCRIPT"
+assert_contains 'godcapp-build godcapp-infra godcapp-services)' "$SCRIPT"
 
 cat >"$TEST_ROOT/home/.config/herdr-spreader/nvo-harness-worktree-sandbox-base.sh" <<'EOF_BASE'
 #!/usr/bin/env bash

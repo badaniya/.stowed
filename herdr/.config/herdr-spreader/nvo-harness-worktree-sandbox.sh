@@ -235,15 +235,18 @@ ready_guest_command() {
 }
 
 stage_pane_command() {
-	local stage=$1 directory=$2 guest_exec setup command log ready failed
-	log=$(stage_log_path "$stage")
-	ready=$(stage_marker_path "$stage" ready)
-	failed=$(stage_marker_path "$stage" failed)
+	local final_stage=$1 directory=$2 stage guest_exec setup command logs='' ready failed
+	shift 2
+	for stage in "$@"; do
+		printf -v logs '%s %q' "$logs" "$(stage_log_path "$stage")"
+	done
+	ready=$(stage_marker_path "$final_stage" ready)
+	failed=$(stage_marker_path "$final_stage" failed)
 	guest_exec=$(guest_exec_command "cd $(printf '%q' "$directory") && exec bash -l")
 	setup=$(instance_user_setup)
-	# shellcheck disable=SC2016 # Pane tails stage output then opens the guest directory after success.
-	printf -v command 'tail -n +1 -F %q & stage_log_pid=$!; trap %q EXIT; until [[ -f %q || -f %q ]]; do sleep 0.2; done; if [[ -f %q ]]; then printf %q >&2; exec bash; fi; kill "$stage_log_pid" 2>/dev/null || true; wait "$stage_log_pid" 2>/dev/null || true; %s; export instance_user; sg incus-admin -c %q || { printf %q >&2; exec bash; }' \
-		"$log" 'kill "$stage_log_pid" 2>/dev/null || true' "$ready" "$failed" "$failed" "Stage ${stage} failed; inspect ${log}.\n" "$setup" "$guest_exec" 'Sandbox attachment exited; inspect the command above.\n'
+	# shellcheck disable=SC2016 # Pane tails all owned stage logs, then opens the guest directory after the final stage succeeds.
+	printf -v command 'tail -q -n +1 -F%s & stage_log_pid=$!; trap %q EXIT; until [[ -f %q || -f %q ]]; do sleep 0.2; done; if [[ -f %q ]]; then printf %q >&2; exec bash; fi; kill "$stage_log_pid" 2>/dev/null || true; wait "$stage_log_pid" 2>/dev/null || true; %s; export instance_user; sg incus-admin -c %q || { printf %q >&2; exec bash; }' \
+		"$logs" 'kill "$stage_log_pid" 2>/dev/null || true' "$ready" "$failed" "$failed" "Stage ${final_stage} failed; inspect the stage logs above.\n" "$setup" "$guest_exec" 'Sandbox attachment exited; inspect the command above.\n'
 	printf '%s\n' "$command"
 }
 
@@ -271,9 +274,9 @@ create_workspace() {
 	local monitor lazydocker pcm platform godcapp
 	monitor=$(monitor_command)
 	lazydocker=$(ready_guest_command 'lazydocker' true)
-	pcm=$(stage_pane_command pcm-db "${project_dir}/PlatformCommonModels/scripts/development")
-	platform=$(stage_pane_command platform-tagging-start "${project_dir}/PlatformServices/scripts/development")
-	godcapp=$(stage_pane_command godcapp-services "${project_dir}/GoDCApp/NVO/scripts/development")
+	pcm=$(stage_pane_command pcm-db "${project_dir}/PlatformCommonModels/scripts/development" pcm-db)
+	platform=$(stage_pane_command platform-tagging-start "${project_dir}/PlatformServices/scripts/development" platform-tagging-build platform-tagging-start)
+	godcapp=$(stage_pane_command godcapp-services "${project_dir}/GoDCApp/NVO/scripts/development" godcapp-build godcapp-infra godcapp-services)
 
 	herdr pane run "$build_pane_id" "$monitor"
 	lazy_json=$(herdr pane split "$build_pane_id" --direction down --ratio 0.42 --cwd "$project_dir" --no-focus)
