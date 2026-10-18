@@ -212,7 +212,7 @@ guest_exec_command() {
 	# shellcheck disable=SC2016 # Build pane obtains and validates this value at runtime.
 	if [[ $interactive == true ]]; then
 		local guest_setpriv_command guest_login_command
-		printf -v guest_login_command 'cd "$HOME" && exec %s' "$guest_command"
+		printf -v guest_login_command 'cd "$HOME" && %s' "$guest_command"
 		printf -v guest_setpriv_command 'exec setpriv --reset-env --reuid "$1" --regid "$(id -g "$1")" --init-groups bash -lc %q' "$guest_login_command"
 		printf -v command 'incus --project "$instance_project" exec --force-interactive %q -- bash -lc %q _ "$instance_user"' "$normalized_ticket" "$guest_setpriv_command"
 	else
