@@ -233,19 +233,21 @@ labctl_incus_wait_ready() {
 }
 
 labctl_incus_configure_network() {
-	local instance=$1 docker_daemon_json command
+	local instance=$1 docker_daemon_json command ip prefix
 	local -a dns_servers
 	mapfile -t dns_servers < <(tr ',' '\n' <<<"$LABCTL_DOCKER_DNS_SERVERS")
+	ip=$(labctl_incus_instance_ip "$instance") || return 1
+	prefix=${LABCTL_AGENT_CIDR#*/}
 	docker_daemon_json=$(labctl_incus_docker_daemon_json) || return 1
 	# shellcheck disable=SC2016 # The guest shell expands its positional DNS arguments.
-	printf -v command 'set -euo pipefail; rm -f /etc/resolv.conf; : >/etc/resolv.conf; for server in "$@"; do printf "nameserver %%s\\n" "$server" >>/etc/resolv.conf; done; install -d -m 0755 /etc/docker; cat >/etc/docker/daemon.json <<%q\n%s\n%q\n' \
+	printf -v command 'set -euo pipefail; ip link set eth0 up; ip addr replace "$1/$2" dev eth0; ip route replace default via "$3" dev eth0; shift 3; rm -f /etc/resolv.conf; : >/etc/resolv.conf; for server in "$@"; do printf "nameserver %%s\\n" "$server" >>/etc/resolv.conf; done; install -d -m 0755 /etc/docker; cat >/etc/docker/daemon.json <<%q\n%s\n%q\n' \
 		'LABCTL_DOCKER_DAEMON_JSON' "$docker_daemon_json" 'LABCTL_DOCKER_DAEMON_JSON'
 	# The private DNS and registry values are arguments, never printed in the lifecycle log.
 	printf '+ incus exec %q -- bash -c [private network configuration]\n' "$instance"
 	if [[ ${LABCTL_DRY_RUN:-false} == true ]]; then
 		return 0
 	fi
-	LABCTL_FAKE_PRIVATE_NETWORK_CONFIGURATION=true incus --project "$LABCTL_INCUS_PROJECT" exec "$instance" -- bash -c "$command" -- "${dns_servers[@]}"
+	LABCTL_FAKE_PRIVATE_NETWORK_CONFIGURATION=true incus --project "$LABCTL_INCUS_PROJECT" exec "$instance" -- bash -c "$command" -- "$ip" "$prefix" "$LABCTL_AGENT_GATEWAY" "${dns_servers[@]}"
 }
 
 labctl_incus_configure_git_safe_directories() {
