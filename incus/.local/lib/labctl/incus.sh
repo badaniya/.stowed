@@ -134,30 +134,14 @@ labctl_incus_set_cloud_init() {
 }
 
 labctl_incus_launch() {
-	local ticket=$1 ip=$2 instance cloud_init
+	local ticket=$1 ip=$2 instance
 	instance=$(labctl_normalize_ticket "$ticket") || return 1
 	labctl_config_is_ipv4 "$ip" || {
 		labctl_die "invalid sandbox IP address: $ip"
 		return 1
 	}
-	cloud_init=$(mktemp "${TMPDIR:-/tmp}/labctl-cloud-init.XXXXXX") || return 1
-	labctl_incus_render_cloud_init "$cloud_init" || {
-		rm -f "$cloud_init"
-		return 1
-	}
-	labctl_incus_validate_launch_profiles || {
-		rm -f "$cloud_init"
-		return 1
-	}
-	labctl_run incus init "$LABCTL_INSTANCE_IMAGE" "$instance" --profile default --profile "$LABCTL_INCUS_PROFILE" || {
-		rm -f "$cloud_init"
-		return 1
-	}
-	labctl_incus_set_cloud_init "$instance" "$cloud_init" || {
-		rm -f "$cloud_init"
-		return 1
-	}
-	rm -f "$cloud_init"
+	labctl_incus_validate_launch_profiles || return 1
+	labctl_run incus init "$LABCTL_INSTANCE_IMAGE" "$instance" --profile default --profile "$LABCTL_INCUS_PROFILE"
 	labctl_run incus config device override "$instance" eth0 ipv4.address="$ip"
 	labctl_run incus start "$instance"
 }

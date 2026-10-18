@@ -58,7 +58,7 @@ labctl_image_provision_command() {
 set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
-apt-get install -y build-essential ca-certificates cloud-init curl git gzip jq make net-tools openssh-client ripgrep screen sudo tar wget docker.io docker-compose-v2
+apt-get install -y build-essential ca-certificates curl git gzip jq make net-tools openssh-client ripgrep screen sudo tar wget docker.io docker-compose-v2
 rm -rf /usr/local/go
 curl -fsSL https://go.dev/dl/go${LABCTL_GO_VERSION}.linux-amd64.tar.gz -o /tmp/labctl-go.tar.gz
 tar -C /usr/local -xzf /tmp/labctl-go.tar.gz
@@ -67,7 +67,6 @@ ln -sf /usr/local/go/bin/go /usr/local/bin/go
 HOME=/root GOPATH=/root/go GOCACHE=/root/.cache/go-build GOBIN=/usr/local/bin /usr/local/go/bin/go install github.com/badaniya/loggo@6dba9bab7c9491890349935da50c14f2f346912d
 HOME=/root GOPATH=/root/go GOCACHE=/root/.cache/go-build GOBIN=/usr/local/bin /usr/local/go/bin/go install github.com/jesseduffield/lazydocker@v0.25.2
 printf '%s\\n' 'export PATH="/usr/local/go/bin:\$PATH"' >/etc/profile.d/labctl-go.sh
-printf '%s\\n' 'policy: enabled' >/etc/cloud/ds-identify.cfg
 systemctl enable docker
 SCRIPT
 }
