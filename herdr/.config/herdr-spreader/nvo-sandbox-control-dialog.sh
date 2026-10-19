@@ -76,8 +76,9 @@ if [[ $operation != status ]]; then
 	fi
 	printf 'Press Enter to continue or Escape to cancel.\n'
 	key=''
-	if ! IFS= read -r -s -n 1 key 2>/dev/null </dev/tty; then
-		IFS= read -r -s -n 1 key || key=''
+	if ! IFS= read -r -s -n 1 key 2>/dev/null </dev/tty && ! IFS= read -r -s -n 1 key; then
+		printf 'Cancelled. Confirmation input was unavailable. No sandbox lifecycle commands were run.\n'
+		open_result_shell
 	fi
 	if [[ $key == $'\e' ]]; then
 		printf 'Cancelled. No sandbox lifecycle commands were run.\n'

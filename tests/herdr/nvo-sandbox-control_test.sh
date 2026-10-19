@@ -183,6 +183,15 @@ if rg -q '^labctl (start|stop|restart) ' "$LOG"; then
 	fail 'escape invoked a lifecycle command'
 fi
 
+# Closed stdin with no usable controlling TTY cancels a mutation and deletes its trusted plan.
+: >"$LOG"
+write_plan stop explicit NVO-20130
+run_dialog </dev/null
+[[ ! -e $DIALOG_PLAN ]] || fail 'EOF-cancelled dialog did not delete its plan'
+if rg -q '^labctl (start|stop|restart) ' "$LOG"; then
+	fail 'EOF invoked a lifecycle command'
+fi
+
 # Restart continues independently: an earlier stop failure cannot skip a later ticket.
 : >"$LOG"
 write_plan restart explicit NVO-20130 NVO-20224
