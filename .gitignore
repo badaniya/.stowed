@@ -12,6 +12,7 @@ goose/**/githubcopilot
 goose/**/*.bak*
 goose/**/*.yaml
 goose/**/history.txt
+docs/
 
 # Dependencies
 **/node_modules/
@@ -32,3 +33,4 @@ pi-session-*.html
 **/skills/*/tmp/.sisyphus/
 agents/.agents/skills/dev-browser/tmp/
 .superpowers/
+.archify/

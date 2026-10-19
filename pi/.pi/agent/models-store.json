@@ -46,7 +46,7 @@
         }
       }
     ],
-    "checkedAt": 1792179806326
+    "checkedAt": 1792376573960
   },
   "github-copilot": {
     "models": [
@@ -1835,7 +1835,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
+          "X-Task-ID": "01M5345D44YTZAAB40JN1411C4",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -1868,14 +1868,14 @@
         "thinkingLevelMap": {
           "off": "none",
           "minimal": null,
-          "low": "low",
+          "low": null,
           "medium": "medium",
           "high": "high",
           "xhigh": null
         },
         "modelsDev": {
           "id": "nvidia/nemotron-3.5-super-vl",
-          "name": "NVIDIA Nemotron 3.5 Super VL",
+          "name": "Nvidia Nemotron 3.5 Super VL",
           "family": "nemotron"
         },
         "api": "openai-completions",
@@ -1884,7 +1884,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
+          "X-Task-ID": "01M5345D44YTZAAB40JN1411C4",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -1924,7 +1924,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
+          "X-Task-ID": "01M5345D44YTZAAB40JN1411C4",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -1953,9 +1953,17 @@
         "contextWindow": 65536,
         "maxTokens": 8192,
         "_pricingKnown": true,
+        "thinkingLevelMap": {
+          "off": null,
+          "minimal": "minimal",
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
+          "xhigh": "xhigh"
+        },
         "modelsDev": {
-          "id": "liquid/lfm-2.5-2.6b:free",
-          "name": "LFM2.5-2.6B (free)",
+          "id": "liquid/lfm-2.5-2.6b",
+          "name": "LFM2.5 2.6B",
           "family": "liquid"
         },
         "api": "openai-completions",
@@ -1964,7 +1972,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
+          "X-Task-ID": "01M5345D44YTZAAB40JN1411C4",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -1993,9 +2001,17 @@
         "contextWindow": 1000000,
         "maxTokens": 65536,
         "_pricingKnown": true,
+        "thinkingLevelMap": {
+          "off": "none",
+          "minimal": null,
+          "low": null,
+          "medium": null,
+          "high": "high",
+          "xhigh": null
+        },
         "modelsDev": {
-          "id": "nvidia/nemotron-3.5-lightning-free",
-          "name": "Nemotron 3.5 Lightning Free",
+          "id": "nvidia/nemotron-3.5-lightning",
+          "name": "Nvidia Nemotron 3.5 Lightning",
           "family": "nemotron"
         },
         "api": "openai-completions",
@@ -2004,7 +2020,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
+          "X-Task-ID": "01M5345D44YTZAAB40JN1411C4",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2034,6 +2050,14 @@
         "contextWindow": 1048576,
         "maxTokens": 262144,
         "_pricingKnown": true,
+        "thinkingLevelMap": {
+          "off": "none",
+          "minimal": "minimal",
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
+          "xhigh": "xhigh"
+        },
         "modelsDev": {
           "id": "thinkingmachines/inkling-small",
           "name": "Inkling Small",
@@ -2045,7 +2069,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
+          "X-Task-ID": "01M5345D44YTZAAB40JN1411C4",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2074,14 +2098,6 @@
         "contextWindow": 262144,
         "maxTokens": 32768,
         "_pricingKnown": true,
-        "thinkingLevelMap": {
-          "off": null,
-          "minimal": null,
-          "low": "low",
-          "medium": "medium",
-          "high": "high",
-          "xhigh": null
-        },
         "modelsDev": {
           "id": "poolside/laguna-s-2.1",
           "name": "Laguna S 2.1",
@@ -2093,7 +2109,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
+          "X-Task-ID": "01M5345D44YTZAAB40JN1411C4",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2125,14 +2141,14 @@
         "_pricingKnown": true,
         "thinkingLevelMap": {
           "off": "none",
-          "minimal": null,
+          "minimal": "minimal",
           "low": "low",
           "medium": "medium",
           "high": "high",
           "xhigh": "xhigh"
         },
         "modelsDev": {
-          "id": "thinkingmachines/Inkling",
+          "id": "thinkingmachines/inkling",
           "name": "Inkling",
           "family": "ling"
         },
@@ -2142,7 +2158,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
+          "X-Task-ID": "01M5345D44YTZAAB40JN1411C4",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2182,7 +2198,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
+          "X-Task-ID": "01M5345D44YTZAAB40JN1411C4",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2222,7 +2238,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
+          "X-Task-ID": "01M5345D44YTZAAB40JN1411C4",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2249,7 +2265,7 @@
           "cacheRead": 0,
           "cacheWrite": 0
         },
-        "contextWindow": 128000,
+        "contextWindow": 131072,
         "maxTokens": 8192,
         "_pricingKnown": true,
         "modelsDev": {
@@ -2263,7 +2279,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
+          "X-Task-ID": "01M5345D44YTZAAB40JN1411C4",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2303,7 +2319,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
+          "X-Task-ID": "01M5345D44YTZAAB40JN1411C4",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2334,8 +2350,8 @@
         "maxTokens": 65536,
         "_pricingKnown": true,
         "modelsDev": {
-          "id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
-          "name": "Nemotron 3 Nano Omni",
+          "id": "nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning",
+          "name": "Nemotron 3 Nano Omni 30B A3B Reasoning",
           "family": "nemotron"
         },
         "api": "openai-completions",
@@ -2344,7 +2360,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
+          "X-Task-ID": "01M5345D44YTZAAB40JN1411C4",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2376,7 +2392,7 @@
         "_pricingKnown": true,
         "modelsDev": {
           "id": "google/gemma-4-26B-A4B-it",
-          "name": "Gemma 4 26B A4B IT",
+          "name": "Gemma 4 26B A4B",
           "family": "gemma"
         },
         "api": "openai-completions",
@@ -2385,7 +2401,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
+          "X-Task-ID": "01M5345D44YTZAAB40JN1411C4",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2417,7 +2433,7 @@
         "_pricingKnown": true,
         "modelsDev": {
           "id": "google/gemma-4-31B-it",
-          "name": "Gemma 4 31B IT",
+          "name": "Gemma 4 31B",
           "family": "gemma"
         },
         "api": "openai-completions",
@@ -2426,7 +2442,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
+          "X-Task-ID": "01M5345D44YTZAAB40JN1411C4",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2467,7 +2483,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
+          "X-Task-ID": "01M5345D44YTZAAB40JN1411C4",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2508,7 +2524,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
+          "X-Task-ID": "01M5345D44YTZAAB40JN1411C4",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2537,17 +2553,9 @@
         "contextWindow": 262144,
         "maxTokens": 235929,
         "_pricingKnown": true,
-        "thinkingLevelMap": {
-          "off": "none",
-          "minimal": null,
-          "low": "low",
-          "medium": null,
-          "high": "high",
-          "xhigh": null
-        },
         "modelsDev": {
           "id": "nvidia/nemotron-3-super-120b-a12b",
-          "name": "NVIDIA Nemotron 3 Super 120B A12B",
+          "name": "Nvidia Nemotron 3 Super 120B",
           "family": "nemotron"
         },
         "api": "openai-completions",
@@ -2556,7 +2564,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
+          "X-Task-ID": "01M5345D44YTZAAB40JN1411C4",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2596,7 +2604,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
+          "X-Task-ID": "01M5345D44YTZAAB40JN1411C4",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2612,7 +2620,7 @@
       {
         "id": "cline-free/nemotron-3.5-super-vl",
         "name": "nemotron-3.5-super-vl (Cline)",
-        "reasoning": false,
+        "reasoning": true,
         "input": [
           "text",
           "image"
@@ -2626,9 +2634,17 @@
         "contextWindow": 1000000,
         "maxTokens": 65536,
         "_pricingKnown": true,
+        "thinkingLevelMap": {
+          "off": "none",
+          "minimal": null,
+          "low": null,
+          "medium": "medium",
+          "high": "high",
+          "xhigh": null
+        },
         "modelsDev": {
-          "id": "nemotron-3.5-super-vl",
-          "name": "NVIDIA Nemotron 3.5 Super VL",
+          "id": "nvidia/nemotron-3.5-super-vl",
+          "name": "Nvidia Nemotron 3.5 Super VL",
           "family": "nemotron"
         },
         "api": "openai-completions",
@@ -2637,7 +2653,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
+          "X-Task-ID": "01M5345D44YTZAAB40JN1411C4",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2667,6 +2683,14 @@
         "contextWindow": 1000000,
         "maxTokens": 65536,
         "_pricingKnown": true,
+        "thinkingLevelMap": {
+          "off": "none",
+          "minimal": "minimal",
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
+          "xhigh": "xhigh"
+        },
         "compat": {
           "supportsStore": false,
           "supportsDeveloperRole": false,
@@ -2674,8 +2698,8 @@
           "requiresReasoningContentOnAssistantMessages": true
         },
         "modelsDev": {
-          "id": "mimo-v2.6-flash",
-          "name": "MiMo-V2.6-Flash",
+          "id": "deepinfra/mimo-v2.6-flash",
+          "name": "MiMo V2.6 Flash (DeepInfra)",
           "family": "mimo"
         },
         "api": "openai-completions",
@@ -2684,7 +2708,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
+          "X-Task-ID": "01M5345D44YTZAAB40JN1411C4",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2730,7 +2754,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
+          "X-Task-ID": "01M5345D44YTZAAB40JN1411C4",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2746,7 +2770,7 @@
       {
         "id": "cline-free/solar-mini4",
         "name": "Solar Mini 4 (Cline)",
-        "reasoning": true,
+        "reasoning": false,
         "input": [
           "text"
         ],
@@ -2759,18 +2783,10 @@
         "contextWindow": 1000000,
         "maxTokens": 65536,
         "_pricingKnown": true,
-        "thinkingLevelMap": {
-          "off": "none",
-          "minimal": "minimal",
-          "low": "low",
-          "medium": "medium",
-          "high": "high",
-          "xhigh": "xhigh"
-        },
         "modelsDev": {
           "id": "upstage/solar-mini4",
           "name": "Solar Mini 4",
-          "family": "solar"
+          "family": "solar-mini"
         },
         "api": "openai-completions",
         "provider": "cline",
@@ -2778,7 +2794,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M533V1VRJ5FHMSQG8VYTD5VA",
+          "X-Task-ID": "01M5345D44YTZAAB40JN1411C4",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2792,7 +2808,7 @@
         }
       }
     ],
-    "checkedAt": 1792179806495
+    "checkedAt": 1792376574107
   },
   "fastrouter": {
     "models": [
@@ -3063,7 +3079,7 @@
         }
       }
     ],
-    "checkedAt": 1792179806555
+    "checkedAt": 1792376574162
   },
   "anthropic": {
     "models": [
