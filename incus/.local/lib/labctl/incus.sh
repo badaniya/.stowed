@@ -199,6 +199,98 @@ labctl_incus_is_running() {
 	labctl_incus_instance_query "$1" | jq -e '.status == "Running"' >/dev/null
 }
 
+labctl_incus_resolve_workspace_identity() {
+	local master_root=$1 ticket_root=$2 master_metadata ticket_metadata
+	local master_uid master_gid master_mode ticket_uid ticket_gid ticket_mode
+	local candidate_uid passwd_entry username account_uid primary_gid candidate_groups
+	local root root_index root_uid root_gid root_mode candidate_group permission_bits access_class
+	local candidate_has_group candidate_is_eligible minimum_class total_class
+	local selected_username='' selected_uid='' selected_gid='' selected_minimum_class=0 selected_total_class=0
+	local -a candidate_uids root_uids root_gids root_modes groups
+
+	for root in "$master_root" "$ticket_root"; do
+		[[ -d $root ]] || {
+			labctl_die "workspace root is missing or not a directory: $root"
+			return 1
+		}
+	done
+	master_metadata=$(stat -c '%u %g %a' -- "$master_root") || {
+		labctl_die "unable to inspect workspace root: $master_root"
+		return 1
+	}
+	ticket_metadata=$(stat -c '%u %g %a' -- "$ticket_root") || {
+		labctl_die "unable to inspect workspace root: $ticket_root"
+		return 1
+	}
+	read -r master_uid master_gid master_mode <<<"$master_metadata"
+	read -r ticket_uid ticket_gid ticket_mode <<<"$ticket_metadata"
+	[[ $master_uid =~ ^[0-9]+$ && $master_gid =~ ^[0-9]+$ && $master_mode =~ ^[0-7]{3,4}$ && $ticket_uid =~ ^[0-9]+$ && $ticket_gid =~ ^[0-9]+$ && $ticket_mode =~ ^[0-7]{3,4}$ ]] || {
+		labctl_die 'unable to read numeric workspace ownership and mode metadata'
+		return 1
+	}
+
+	candidate_uids=("$master_uid")
+	[[ $ticket_uid == "$master_uid" ]] || candidate_uids+=("$ticket_uid")
+	root_uids=("$master_uid" "$ticket_uid")
+	root_gids=("$master_gid" "$ticket_gid")
+	root_modes=("${master_mode: -3}" "${ticket_mode: -3}")
+	for candidate_uid in "${candidate_uids[@]}"; do
+		[[ $candidate_uid != 0 ]] || continue
+		passwd_entry=$(getent passwd "$candidate_uid") || continue
+		IFS=: read -r username _ account_uid primary_gid _ <<<"$passwd_entry"
+		[[ -n $username && $account_uid == "$candidate_uid" && $primary_gid =~ ^[0-9]+$ ]] || continue
+		candidate_groups=$(id -G "$username") || continue
+		IFS=' ' read -r -a groups <<<"$candidate_groups"
+
+		candidate_is_eligible=true
+		minimum_class=4
+		total_class=0
+		for root_index in 0 1; do
+			root_uid=${root_uids[$root_index]}
+			root_gid=${root_gids[$root_index]}
+			root_mode=${root_modes[$root_index]}
+			if [[ $candidate_uid == "$root_uid" ]]; then
+				access_class=3
+				permission_bits=$((8#${root_mode:0:1}))
+			else
+				candidate_has_group=false
+				for candidate_group in "${groups[@]}"; do
+					if [[ $candidate_group == "$root_gid" ]]; then
+						candidate_has_group=true
+						break
+					fi
+				done
+				if [[ $candidate_has_group == true ]]; then
+					access_class=2
+					permission_bits=$((8#${root_mode:1:1}))
+				else
+					access_class=1
+					permission_bits=$((8#${root_mode:2:1}))
+				fi
+			fi
+			if (( (permission_bits & 3) != 3 )); then
+				candidate_is_eligible=false
+				break
+			fi
+			(( access_class < minimum_class )) && minimum_class=$access_class
+			total_class=$((total_class + access_class))
+		done
+		[[ $candidate_is_eligible == true ]] || continue
+		if (( minimum_class > selected_minimum_class || (minimum_class == selected_minimum_class && total_class > selected_total_class) )); then
+			selected_username=$username
+			selected_uid=$candidate_uid
+			selected_gid=$primary_gid
+			selected_minimum_class=$minimum_class
+			selected_total_class=$total_class
+		fi
+	done
+	[[ -n $selected_username ]] || {
+		labctl_die 'no common writable host identity'
+		return 1
+	}
+	printf '%s\n%s\n%s\n' "$selected_username" "$selected_uid" "$selected_gid"
+}
+
 labctl_incus_attach_workspace() {
 	local instance=$1 ticket_root=$2
 	labctl_run incus config device add "$instance" git-master disk source="$LABCTL_MASTER_ROOT" path="$LABCTL_MASTER_ROOT" shift=true readonly=false
