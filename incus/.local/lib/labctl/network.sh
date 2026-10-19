@@ -76,7 +76,8 @@ labctl_verify_ports() {
 }
 
 labctl_verify() {
-	local ticket=$1 root
+	local ticket=$1 root identity uid gid
+	local -a identity_fields
 	ticket=$(labctl_normalize_ticket "$ticket") || return 1
 	root=$(labctl_workspace_ticket_root "$ticket") || return 1
 	labctl_incus_instance_exists "$ticket" || {
@@ -92,6 +93,53 @@ labctl_verify() {
 		return 1
 	}
 	labctl_incus_verify_isolation "$ticket" || return 1
+	identity=$(labctl_incus_resolve_workspace_identity "$LABCTL_MASTER_ROOT" "$root") || return 1
+	mapfile -t identity_fields <<<"$identity"
+	[[ ${#identity_fields[@]} == 3 ]] || {
+		labctl_die 'workspace identity resolver returned an invalid identity'
+		return 1
+	}
+	uid=${identity_fields[1]}
+	gid=${identity_fields[2]}
+	[[ $uid =~ ^[0-9]+$ && $gid =~ ^[0-9]+$ ]] || {
+		labctl_die 'workspace identity resolver returned an invalid identity'
+		return 1
+	}
+	# shellcheck disable=SC2016 # The guest shell validates its positional arguments and owns probe cleanup.
+	labctl_run incus exec "$ticket" -- su - "$LABCTL_INSTANCE_USER" -c 'set -euo pipefail
+instance_user=$1
+expected_uid=$2
+expected_gid=$3
+shifted_mounts=("$4" "$5")
+[[ $# == 5 && $expected_uid =~ ^[0-9]+$ && $expected_gid =~ ^[0-9]+$ ]] || {
+	printf "invalid workspace identity verification arguments\\n" >&2
+	exit 1
+}
+[[ $(id -u "$instance_user") == "$expected_uid" ]] || {
+	printf "guest user UID does not match workspace identity\\n" >&2
+	exit 1
+}
+[[ $(id -g "$instance_user") == "$expected_gid" ]] || {
+	printf "guest user GID does not match workspace identity\\n" >&2
+	exit 1
+}
+probes=()
+cleanup() {
+	local status=$? probe
+	for probe in "${probes[@]}"; do
+		rm -rf -- "$probe" || true
+	done
+	exit "$status"
+}
+trap cleanup EXIT
+for mount in "${shifted_mounts[@]}"; do
+	[[ $(stat -c '\''%u:%g'\'' -- "$mount") == "$expected_uid:$expected_gid" ]] || {
+		printf "shifted mount ownership does not match workspace identity: %s\\n" "$mount" >&2
+		exit 1
+	}
+	probe=$(mktemp -d "$mount/.labctl-write-probe.XXXXXX")
+	probes+=("$probe")
+done' -- "$LABCTL_INSTANCE_USER" "$uid" "$gid" "$LABCTL_MASTER_ROOT" "$root" || return 1
 	labctl_run incus exec "$ticket" -- docker info
 	labctl_stack_health "$ticket"
 	labctl_verify_ports "$ticket"

@@ -245,4 +245,71 @@ usermod --append --groups sudo,docker $created_user"
 capture_guest_command badaniya 1000 1000
 assert_failure "recreate the sandbox"
 
-printf 'PASS: workspace identity resolution and guest provisioning\n'
+# shellcheck source=../.local/lib/labctl/network.sh
+source "$repo_root/incus/.local/lib/labctl/network.sh"
+
+verify_ticket=verify-ticket
+verify_ticket_root=$temp_dir/verify-ticket-root
+verify_master_root=$temp_dir/verify-master-root
+mkdir -p "$verify_ticket_root" "$verify_master_root"
+LABCTL_MASTER_ROOT=$verify_master_root
+LABCTL_INSTANCE_USER=badaniya
+
+labctl_normalize_ticket() { printf '%s\n' "$1"; }
+labctl_workspace_ticket_root() { printf '%s\n' "$verify_ticket_root"; }
+labctl_incus_instance_exists() { :; }
+labctl_incus_is_running() { :; }
+labctl_incus_workspace_is_mounted() { :; }
+labctl_incus_verify_isolation() { :; }
+labctl_stack_health() { :; }
+labctl_verify_ports() { :; }
+labctl_incus_resolve_workspace_identity() { printf 'host-owner\n1000\n1000\n'; }
+
+verify_runs=()
+labctl_run() {
+  verify_runs+=("$*")
+}
+
+labctl_verify "$verify_ticket"
+verify_guest_command=${verify_runs[0]:-}
+[[ $verify_guest_command == *'su - badaniya'* ]] || {
+  printf 'expected identity verification to run as the configured guest user, got:\n%s\n' "$verify_guest_command" >&2
+  exit 1
+}
+assert_contains_verify() {
+  local expected=$1
+  [[ $verify_guest_command == *"$expected"* ]] || {
+    printf 'expected identity verification command to contain %q, got:\n%s\n' "$expected" "$verify_guest_command" >&2
+    exit 1
+  }
+}
+assert_contains_verify "id -u \"\$instance_user\""
+assert_contains_verify "id -g \"\$instance_user\""
+assert_contains_verify "stat -c '%u:%g'"
+assert_contains_verify "mktemp -d \"\$mount/.labctl-write-probe.XXXXXX\""
+assert_contains_verify "rm -rf -- \"\$probe\""
+assert_contains_verify 'trap'
+assert_contains_verify "$verify_master_root"
+assert_contains_verify "$verify_ticket_root"
+[[ $verify_guest_command != *chown* ]] || {
+  printf 'identity verification must not change host ownership, got:\n%s\n' "$verify_guest_command" >&2
+  exit 1
+}
+
+# A failing guest-side identity check makes verify fail without a host ownership mutation.
+verify_metadata_before=$(<"$metadata_file")
+labctl_run() {
+  verify_runs+=("$*")
+  [[ $* == *'labctl-write-probe'* ]] && return 1
+  return 0
+}
+if labctl_verify "$verify_ticket"; then
+  printf 'expected verify to fail when the guest identity check fails\n' >&2
+  exit 1
+fi
+[[ $(<"$metadata_file") == "$verify_metadata_before" ]] || {
+  printf 'verify changed host workspace ownership metadata\n' >&2
+  exit 1
+}
+
+printf 'PASS: workspace identity resolution, guest provisioning, and verification\n'
