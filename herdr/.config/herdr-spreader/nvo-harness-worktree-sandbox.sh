@@ -40,6 +40,7 @@ state_dir="${XDG_STATE_HOME:-${HOME}/.local/state}/herdr-spreader"
 state_log="${state_dir}/${ticket}.log"
 stage_dir="${state_dir}/${ticket}.stages"
 bootstrap_ready_file="${state_log}.worker-ready"
+monitor_pane_file="${state_log}.monitor-pane"
 
 [[ -x $labctl ]] || {
 	printf 'Error: labctl is unavailable at %s; stow the incus package first\n' "$labctl" >&2
@@ -155,6 +156,7 @@ bootstrap_sandbox() {
 	printf '%s\n' 'NVO_SANDBOX_BOOTSTRAP_STARTED'
 	printf '→ Creating sandbox %s…\n' "$ticket"
 	run_labctl create || return 1
+	publish_monitor_label || return 1
 	instance_user=$(run_labctl_without_ticket instance-user) || return 1
 	[[ $instance_user =~ ^[a-z_][a-z0-9_-]*$ ]] || {
 		printf 'Error: labctl returned an unsafe sandbox user name\n' >&2
@@ -190,7 +192,7 @@ bootstrap_sandbox() {
 prepare_state() {
 	mkdir -p "$state_dir"
 	: >"$state_log"
-	rm -f -- "$bootstrap_ready_file"
+	rm -f -- "$bootstrap_ready_file" "$monitor_pane_file"
 	rm -rf -- "$stage_dir"
 	mkdir -m 0700 "$stage_dir"
 	local stage
@@ -301,8 +303,19 @@ monitor_label() {
 	printf '%s\n' "$ip"
 }
 
+publish_monitor_label() {
+	local pane_id ip
+	pane_id=$(<"$monitor_pane_file")
+	[[ $pane_id =~ ^w[A-Za-z0-9]+:p[A-Za-z0-9]+$ ]] || {
+		printf '%s\n' 'Sandbox bootstrap did not receive a safe Monitor pane ID' >&2
+		return 1
+	}
+	ip=$(monitor_label) || return 1
+	herdr pane rename "$pane_id" "$ip"
+}
+
 create_workspace() {
-	local workspace_json workspace_id agent_tab_id agent_pane_id build_json build_pane_id label monitor_label
+	local workspace_json workspace_id agent_tab_id agent_pane_id build_json build_pane_id label
 	label=$(workspace_label)
 	workspace_json=$(herdr workspace create --cwd "$project_dir" --label "$label" --focus)
 	workspace_id=$(jq -er '.result.workspace.workspace_id' <<<"$workspace_json")
@@ -315,14 +328,14 @@ create_workspace() {
 	build_pane_id=$(jq -er '.result.root_pane.pane_id' <<<"$build_json")
 
 	local monitor lazydocker pcm platform godcapp
-	monitor_label=$(monitor_label)
 	monitor=$(monitor_command)
 	lazydocker=$(ready_guest_command 'lazydocker' true)
 	pcm=$(stage_pane_command pcm-db "${project_dir}/PlatformCommonModels/scripts/development" pcm-db)
 	platform=$(stage_pane_command platform-tagging-start "${project_dir}/PlatformServices/scripts/development" platform-tagging-build platform-tagging-start)
 	godcapp=$(stage_pane_command godcapp-services "${project_dir}/GoDCApp/NVO/scripts/development" godcapp-build godcapp-infra godcapp-services)
 
-	herdr pane rename "$build_pane_id" "$monitor_label"
+	herdr pane rename "$build_pane_id" Monitor
+	printf '%s\n' "$build_pane_id" >"$monitor_pane_file"
 	herdr pane run "$build_pane_id" "$monitor"
 	lazy_json=$(herdr pane split "$build_pane_id" --direction down --ratio 0.42 --cwd "$project_dir" --no-focus)
 	lazy_pane_id=$(jq -er '.result.pane.pane_id' <<<"$lazy_json")
