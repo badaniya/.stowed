@@ -34,7 +34,7 @@ declare -a tickets=()
 declare -A seen=()
 if [[ $target_input == all ]]; then
 	scope=all
-	mapfile -t tickets < <(jq -er '.sandboxes | to_entries[] | select((.key | test("^[A-Z][A-Z0-9]+-[0-9]+$")) and .value.status != "destroyed") | .key' "$state_file") || die 'unable to resolve sandbox targets'
+	mapfile -t tickets < <(jq -er '.sandboxes | to_entries[] | select((.key | test("^[a-z][a-z0-9]+-[0-9]+$")) and .value.status != "destroyed") | .key | ascii_upcase' "$state_file") || die 'unable to resolve sandbox targets'
 else
 	scope=explicit
 	[[ $target_input != ,* && $target_input != *, && $target_input != *,,* ]] || die 'sandbox target list contains an empty value'
@@ -44,7 +44,8 @@ else
 		[[ $ticket =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ]] || die "invalid sandbox ticket: $ticket"
 		[[ ! ${seen[$ticket]+x} ]] || die "duplicate sandbox ticket: $ticket"
 		seen[$ticket]=1
-		jq -e --arg ticket "$ticket" '.sandboxes[$ticket] != null and .sandboxes[$ticket].status != "destroyed"' "$state_file" >/dev/null || die "sandbox is not eligible: $ticket"
+		normalized_ticket=${ticket,,}
+		jq -e --arg ticket "$normalized_ticket" '.sandboxes[$ticket] != null and .sandboxes[$ticket].status != "destroyed"' "$state_file" >/dev/null || die "sandbox is not eligible: $ticket"
 	done
 fi
 

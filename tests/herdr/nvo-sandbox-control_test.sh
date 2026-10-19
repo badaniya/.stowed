@@ -31,9 +31,9 @@ cat >"$TEST_ROOT/state/labctl/sandboxes.json" <<'EOF_REGISTRY'
 {
   "schema_version": 1,
   "sandboxes": {
-    "NVO-20130": {"status": "running"},
-    "NVO-20224": {"status": "stopped"},
-    "NVO-20999": {"status": "destroyed"},
+    "nvo-20130": {"status": "running"},
+    "nvo-20224": {"status": "stopped"},
+    "nvo-20999": {"status": "destroyed"},
     "not-a-ticket": {"status": "running"}
   }
 }

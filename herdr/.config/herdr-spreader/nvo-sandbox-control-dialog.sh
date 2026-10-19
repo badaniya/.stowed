@@ -61,8 +61,9 @@ done
 
 state_file="${XDG_STATE_HOME:-$HOME/.local/state}/labctl/sandboxes.json"
 validate_target() {
-	local ticket=$1
-	[[ -f $state_file ]] && jq -e --arg ticket "$ticket" \
+	local ticket=$1 normalized_ticket
+	normalized_ticket=${ticket,,}
+	[[ -f $state_file ]] && jq -e --arg ticket "$normalized_ticket" \
 		'.schema_version == 1 and (.sandboxes | type == "object") and .sandboxes[$ticket] != null and .sandboxes[$ticket].status != "destroyed"' \
 		"$state_file" >/dev/null
 }
