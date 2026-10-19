@@ -71,6 +71,7 @@ export ATLAS_VERSION=v0.37.0
 curl -fsSL https://atlasgo.sh | sh -s -- --no-install -y -o /root/go/bin
 chmod 0755 /root/go/bin/atlas-linux-amd64-v0.37.0
 ln -sf /root/go/bin/atlas-linux-amd64-v0.37.0 /root/go/bin/atlas
+ln -sf /root/go/bin/atlas /usr/local/bin/atlas
 printf '%s\\n' 'export PATH="/usr/local/go/bin:\$PATH"' >/etc/profile.d/labctl-go.sh
 systemctl enable docker
 SCRIPT
