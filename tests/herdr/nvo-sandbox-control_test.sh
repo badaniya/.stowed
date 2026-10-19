@@ -79,13 +79,14 @@ run_controller() {
 }
 
 write_plan() {
-	local operation=$1
-	shift
+	local operation=$1 scope=$2
+	shift 2
 	DIALOG_PLAN="$TEST_ROOT/state/herdr-spreader/nvo-sandbox-control.dialog-test"
 	mkdir -p "${DIALOG_PLAN%/*}"
 	chmod 0700 "${DIALOG_PLAN%/*}"
 	{
 		printf 'operation=%s\n' "$operation"
+		printf 'scope=%s\n' "$scope"
 		printf '%s\n' "$@"
 	} >"$DIALOG_PLAN"
 	chmod 0600 "$DIALOG_PLAN"
@@ -101,7 +102,7 @@ run_controller status NVO-20130,NVO-20224
 PLAN_PATH=$(<"$PLAN_PATH_FILE")
 [[ -f $PLAN_PATH ]] || fail 'controller did not create the plan file'
 [[ $(stat -c '%a' "$PLAN_PATH") == 600 ]] || fail 'plan file is not owner-only'
-assert_file_equals $'operation=status\nNVO-20130\nNVO-20224' "$PLAN_PATH"
+assert_file_equals $'operation=status\nscope=explicit\nNVO-20130\nNVO-20224' "$PLAN_PATH"
 assert_equals 1 "$(rg -c '^herdr pane split ' "$LOG")" 'expected one focused pane split'
 assert_equals 1 "$(rg -c '^herdr pane run ' "$LOG")" 'expected one dialog command'
 
@@ -109,7 +110,7 @@ assert_equals 1 "$(rg -c '^herdr pane run ' "$LOG")" 'expected one dialog comman
 : >"$LOG"
 run_controller status all
 PLAN_PATH=$(<"$PLAN_PATH_FILE")
-assert_file_equals $'operation=status\nNVO-20130\nNVO-20224' "$PLAN_PATH"
+assert_file_equals $'operation=status\nscope=all\nNVO-20130\nNVO-20224' "$PLAN_PATH"
 assert_equals 1 "$(rg -c '^herdr pane split ' "$LOG")" 'expected one focused pane split for all'
 
 # Invalid or duplicate targets fail before any Herdr pane mutation.
@@ -147,7 +148,7 @@ fi
 
 # Status acts on every planned target immediately and never reads a confirmation key.
 : >"$LOG"
-write_plan status NVO-20130 NVO-20224
+write_plan status explicit NVO-20130 NVO-20224
 run_dialog </dev/null
 [[ ! -e $DIALOG_PLAN ]] || fail 'status dialog did not delete its plan'
 assert_equals 2 "$(rg -c '^labctl status ' "$LOG")" 'status did not run once per target'
@@ -157,14 +158,25 @@ fi
 
 # Enter confirms start and invokes labctl once per target.
 : >"$LOG"
-write_plan start NVO-20130 NVO-20224
+write_plan start explicit NVO-20130 NVO-20224
 printf '\n' | run_dialog
 [[ ! -e $DIALOG_PLAN ]] || fail 'start dialog did not delete its plan'
 assert_equals 2 "$(rg -c '^labctl start ' "$LOG")" 'start did not run once per target'
 
+# An all-scope mutation visibly warns before presenting the Enter confirmation.
+: >"$LOG"
+DIALOG_OUTPUT="$TEST_ROOT/dialog-output"
+write_plan start all NVO-20130
+printf '\n' | run_dialog >"$DIALOG_OUTPUT"
+[[ ! -e $DIALOG_PLAN ]] || fail 'all-scope dialog did not delete its plan'
+warning_line=$(rg -n 'WARNING:.*all registered sandboxes' "$DIALOG_OUTPUT" | cut -d: -f1)
+prompt_line=$(rg -n 'Press Enter to continue' "$DIALOG_OUTPUT" | cut -d: -f1)
+[[ -n $warning_line && -n $prompt_line && $warning_line -lt $prompt_line ]] || fail 'all-scope warning was not visible before Enter confirmation'
+assert_equals 1 "$(rg -c '^labctl start ' "$LOG")" 'all-scope start did not run after Enter confirmation'
+
 # Escape cancels a mutation, invokes no lifecycle action, and still deletes the plan.
 : >"$LOG"
-write_plan stop NVO-20130
+write_plan stop explicit NVO-20130
 printf '\e' | run_dialog
 [[ ! -e $DIALOG_PLAN ]] || fail 'cancelled dialog did not delete its plan'
 if rg -q '^labctl (start|stop|restart) ' "$LOG"; then
@@ -173,7 +185,7 @@ fi
 
 # Restart continues independently: an earlier stop failure cannot skip a later ticket.
 : >"$LOG"
-write_plan restart NVO-20130 NVO-20224
+write_plan restart explicit NVO-20130 NVO-20224
 printf '\n' | TEST_FAIL_STOP_FOR=NVO-20130 run_dialog
 [[ ! -e $DIALOG_PLAN ]] || fail 'restart dialog did not delete its plan'
 assert_equals 2 "$(rg -c '^labctl stop ' "$LOG")" 'restart did not stop every target'

@@ -34,7 +34,7 @@ open_result_shell() {
 trap cleanup EXIT
 
 mapfile -t plan_lines <"$plan_file" || die 'unable to read plan file'
-((${#plan_lines[@]} >= 2)) || die 'plan file has no targets'
+((${#plan_lines[@]} >= 3)) || die 'plan file has no targets'
 
 case ${plan_lines[0]} in
 operation=status) operation=status ;;
@@ -44,9 +44,15 @@ operation=restart) operation=restart ;;
 *) die 'plan operation is invalid' ;;
 esac
 
+case ${plan_lines[1]} in
+scope=explicit) scope=explicit ;;
+scope=all) scope=all ;;
+*) die 'plan scope is invalid' ;;
+esac
+
 declare -A seen=()
 declare -a tickets=()
-for ticket in "${plan_lines[@]:1}"; do
+for ticket in "${plan_lines[@]:2}"; do
 	[[ $ticket =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ]] || die "plan ticket is invalid: $ticket"
 	[[ ! ${seen[$ticket]+x} ]] || die "plan ticket is duplicated: $ticket"
 	seen[$ticket]=1
@@ -65,6 +71,9 @@ printf 'Sandbox operation: %s\nTargets:\n' "$operation"
 printf '  %s\n' "${tickets[@]}"
 
 if [[ $operation != status ]]; then
+	if [[ $scope == all ]]; then
+		printf 'WARNING: This action applies to all registered sandboxes shown above.\n'
+	fi
 	printf 'Press Enter to continue or Escape to cancel.\n'
 	key=''
 	if ! IFS= read -r -s -n 1 key 2>/dev/null </dev/tty; then

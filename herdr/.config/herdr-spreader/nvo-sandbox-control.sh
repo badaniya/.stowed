@@ -33,8 +33,10 @@ jq -e '.schema_version == 1 and (.sandboxes | type == "object")' "$state_file" >
 declare -a tickets=()
 declare -A seen=()
 if [[ $target_input == all ]]; then
+	scope=all
 	mapfile -t tickets < <(jq -er '.sandboxes | to_entries[] | select((.key | test("^[A-Z][A-Z0-9]+-[0-9]+$")) and .value.status != "destroyed") | .key' "$state_file") || die 'unable to resolve sandbox targets'
 else
+	scope=explicit
 	[[ $target_input != ,* && $target_input != *, && $target_input != *,,* ]] || die 'sandbox target list contains an empty value'
 	IFS=',' read -r -a tickets <<<"$target_input"
 	((${#tickets[@]} > 0)) || die 'at least one sandbox target is required'
@@ -63,6 +65,7 @@ trap cleanup EXIT
 
 {
 	printf 'operation=%s\n' "$operation"
+	printf 'scope=%s\n' "$scope"
 	printf '%s\n' "${tickets[@]}"
 } >"$plan_file"
 
