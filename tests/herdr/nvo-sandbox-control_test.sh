@@ -97,6 +97,25 @@ if run_controller start NVO-20130,NVO-20130,not-a-ticket; then
 fi
 [[ ! -s $LOG ]] || fail 'invalid target list mutated Herdr or invoked a command'
 
+# Empty CSV fields must fail before any Herdr pane split or dialog command.
+: >"$LOG"
+if run_controller status 'NVO-20130,'; then
+	fail 'trailing empty CSV field unexpectedly succeeded'
+fi
+[[ ! -s $LOG ]] || fail 'trailing empty CSV field split or ran a Herdr pane'
+
+: >"$LOG"
+if run_controller status ',NVO-20130'; then
+	fail 'leading empty CSV field unexpectedly succeeded'
+fi
+[[ ! -s $LOG ]] || fail 'leading empty CSV field split or ran a Herdr pane'
+
+: >"$LOG"
+if run_controller status 'NVO-20130,,NVO-20224'; then
+	fail 'adjacent empty CSV fields unexpectedly succeeded'
+fi
+[[ ! -s $LOG ]] || fail 'adjacent empty CSV fields split or ran a Herdr pane'
+
 # The invoking pane must be available and valid before a focused sibling can open.
 : >"$LOG"
 if TEST_PANE_ID='' run_controller status NVO-20130; then
