@@ -73,7 +73,7 @@ dialog_script="$HOME/.config/herdr-spreader/nvo-sandbox-control-dialog.sh"
 dialog_pane_id=''
 rollback_dialog_pane() {
 	[[ -n $dialog_pane_id ]] || return 0
-	herdr pane close "$dialog_pane_id" >/dev/null 2>&1 || true
+	herdr pane close -- "$dialog_pane_id" >/dev/null 2>&1 || true
 }
 split_json=$(herdr pane split "$pane_id" --direction down --focus) || die 'unable to open sandbox control pane'
 dialog_pane_id=$(jq -er '.result.pane.pane_id' <<<"$split_json") || die 'Herdr returned an invalid sandbox control pane'

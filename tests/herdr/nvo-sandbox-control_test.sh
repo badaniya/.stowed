@@ -56,7 +56,7 @@ case "${1:-} ${2:-}" in
 	[[ ${TEST_FAIL_PANE_RUN:-} != true ]]
 	;;
 'pane close')
-	[[ ${3:-} == "${TEST_EXPECT_CLOSED_PANE:-w1:p2}" && $# -eq 3 ]] || exit 2
+	[[ ${3:-} == -- && ${4:-} == "${TEST_EXPECT_CLOSED_PANE:-w1:p2}" && $# -eq 4 ]] || exit 2
 	;;
 *) exit 2 ;;
 esac
@@ -152,16 +152,16 @@ if TEST_PANE_ID='' run_controller status NVO-20130; then
 fi
 [[ ! -s $LOG ]] || fail 'missing pane ID mutated Herdr or invoked a command'
 
-# An unsafe split response still triggers a best-effort close of the newly returned pane and removes its plan.
+# An option-shaped split response is rejected, but rollback treats it as a close target rather than a close option.
 : >"$LOG"
 plans_before=$(rg --files -g 'nvo-sandbox-control.*' "$TEST_ROOT/state/herdr-spreader" | wc -l)
-unsafe_pane_id='w1:p2-invalid'
+unsafe_pane_id='--all'
 printf -v unsafe_split_response '{"result":{"pane":{"pane_id":"%s"}}}' "$unsafe_pane_id"
 if TEST_SPLIT_RESPONSE="$unsafe_split_response" TEST_EXPECT_CLOSED_PANE="$unsafe_pane_id" run_controller status NVO-20130; then
 	fail 'controller unexpectedly accepted an unsafe sandbox control pane ID'
 fi
 assert_equals 1 "$(rg -c '^herdr pane split ' "$LOG")" 'expected one focused pane split before response validation failure'
-assert_equals 1 "$(rg -F -c "herdr pane close $unsafe_pane_id" "$LOG")" 'controller did not roll back the pane after response validation failure'
+assert_equals 1 "$(rg -F -c "herdr pane close -- $unsafe_pane_id" "$LOG")" 'controller did not guard the option-shaped rollback pane ID'
 assert_equals "$plans_before" "$(rg --files -g 'nvo-sandbox-control.*' "$TEST_ROOT/state/herdr-spreader" | wc -l)" 'controller did not remove the response-validation-failed plan file'
 
 # If queuing the dialog fails after a focused split, the controller closes only that new pane and removes its plan.
@@ -171,7 +171,7 @@ if TEST_FAIL_PANE_RUN=true run_controller status NVO-20130; then
 fi
 assert_equals 1 "$(rg -c '^herdr pane split ' "$LOG")" 'expected one focused pane split before pane-run failure'
 assert_equals 1 "$(rg -c '^herdr pane run ' "$LOG")" 'expected one pane-run attempt'
-assert_equals 1 "$(rg -c '^herdr pane close w1:p2$' "$LOG")" 'controller did not roll back the newly created pane'
+assert_equals 1 "$(rg -c '^herdr pane close -- w1:p2$' "$LOG")" 'controller did not roll back the newly created pane'
 PLAN_PATH=$(<"$PLAN_PATH_FILE")
 [[ ! -e $PLAN_PATH ]] || fail 'controller did not remove the rolled-back plan file'
 
