@@ -3,6 +3,7 @@ set -euo pipefail
 
 REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 SCRIPT="${REPO_ROOT}/herdr/.config/herdr-spreader/nvo-sandbox-control.sh"
+DIALOG_SCRIPT="${REPO_ROOT}/herdr/.config/herdr-spreader/nvo-sandbox-control-dialog.sh"
 
 fail() {
 	printf 'FAIL: %s\n' "$*" >&2
@@ -65,12 +66,33 @@ EOF_SG
 
 cat >"$TEST_ROOT/home/.local/bin/labctl" <<'EOF_LABCTL'
 #!/usr/bin/env bash
+set -euo pipefail
 printf 'labctl %s\n' "$*" >>"${TEST_LOG:?}"
+if [[ ${TEST_FAIL_STOP_FOR:-} == "$2" && $1 == stop ]]; then
+	exit 1
+fi
 EOF_LABCTL
 chmod +x "$TEST_ROOT/bin/herdr" "$TEST_ROOT/bin/sg" "$TEST_ROOT/home/.local/bin/labctl"
 
 run_controller() {
-	HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$PATH" XDG_STATE_HOME="$TEST_ROOT/state" TEST_LOG="$LOG" TEST_PLAN_PATH="$PLAN_PATH_FILE" HERDR_PLUS_PANE_ID="${TEST_PANE_ID-w1:p1}" "$SCRIPT" "$@"
+	HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$TEST_ROOT/home/.local/bin:$PATH" XDG_STATE_HOME="$TEST_ROOT/state" TEST_LOG="$LOG" TEST_PLAN_PATH="$PLAN_PATH_FILE" HERDR_PLUS_PANE_ID="${TEST_PANE_ID-w1:p1}" "$SCRIPT" "$@"
+}
+
+write_plan() {
+	local operation=$1
+	shift
+	DIALOG_PLAN="$TEST_ROOT/state/herdr-spreader/nvo-sandbox-control.dialog-test"
+	mkdir -p "${DIALOG_PLAN%/*}"
+	chmod 0700 "${DIALOG_PLAN%/*}"
+	{
+		printf 'operation=%s\n' "$operation"
+		printf '%s\n' "$@"
+	} >"$DIALOG_PLAN"
+	chmod 0600 "$DIALOG_PLAN"
+}
+
+run_dialog() {
+	HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$TEST_ROOT/home/.local/bin:$PATH" XDG_STATE_HOME="$TEST_ROOT/state" TEST_LOG="$LOG" "$DIALOG_SCRIPT" --plan "$DIALOG_PLAN"
 }
 
 # status NVO-20130,NVO-20224 creates one ordered plan and one focused sibling pane.
@@ -122,5 +144,39 @@ if TEST_PANE_ID='' run_controller status NVO-20130; then
 	fail 'missing HERDR_PLUS_PANE_ID unexpectedly succeeded'
 fi
 [[ ! -s $LOG ]] || fail 'missing pane ID mutated Herdr or invoked a command'
+
+# Status acts on every planned target immediately and never reads a confirmation key.
+: >"$LOG"
+write_plan status NVO-20130 NVO-20224
+run_dialog </dev/null
+[[ ! -e $DIALOG_PLAN ]] || fail 'status dialog did not delete its plan'
+assert_equals 2 "$(rg -c '^labctl status ' "$LOG")" 'status did not run once per target'
+if rg -q '^labctl (start|stop|restart) ' "$LOG"; then
+	fail 'status ran a mutating lifecycle command'
+fi
+
+# Enter confirms start and invokes labctl once per target.
+: >"$LOG"
+write_plan start NVO-20130 NVO-20224
+printf '\n' | run_dialog
+[[ ! -e $DIALOG_PLAN ]] || fail 'start dialog did not delete its plan'
+assert_equals 2 "$(rg -c '^labctl start ' "$LOG")" 'start did not run once per target'
+
+# Escape cancels a mutation, invokes no lifecycle action, and still deletes the plan.
+: >"$LOG"
+write_plan stop NVO-20130
+printf '\e' | run_dialog
+[[ ! -e $DIALOG_PLAN ]] || fail 'cancelled dialog did not delete its plan'
+if rg -q '^labctl (start|stop|restart) ' "$LOG"; then
+	fail 'escape invoked a lifecycle command'
+fi
+
+# Restart continues independently: an earlier stop failure cannot skip a later ticket.
+: >"$LOG"
+write_plan restart NVO-20130 NVO-20224
+printf '\n' | TEST_FAIL_STOP_FOR=NVO-20130 run_dialog
+[[ ! -e $DIALOG_PLAN ]] || fail 'restart dialog did not delete its plan'
+assert_equals 2 "$(rg -c '^labctl stop ' "$LOG")" 'restart did not stop every target'
+assert_equals 2 "$(rg -c '^labctl start ' "$LOG")" 'restart did not start every target'
 
 printf '%s\n' 'PASS: nvo-sandbox-control'
