@@ -70,9 +70,20 @@ trap cleanup EXIT
 } >"$plan_file"
 
 dialog_script="$HOME/.config/herdr-spreader/nvo-sandbox-control-dialog.sh"
+dialog_pane_id=''
+rollback_dialog_pane() {
+	[[ -n $dialog_pane_id ]] || return 0
+	herdr pane close "$dialog_pane_id" >/dev/null 2>&1 || true
+}
 split_json=$(herdr pane split "$pane_id" --direction down --focus) || die 'unable to open sandbox control pane'
 dialog_pane_id=$(jq -er '.result.pane.pane_id' <<<"$split_json") || die 'Herdr returned an invalid sandbox control pane'
-[[ $dialog_pane_id =~ ^w[A-Za-z0-9]+:p[A-Za-z0-9]+$ ]] || die 'Herdr returned an unsafe sandbox control pane ID'
+if [[ ! $dialog_pane_id =~ ^w[A-Za-z0-9]+:p[A-Za-z0-9]+$ ]]; then
+	rollback_dialog_pane
+	die 'Herdr returned an unsafe sandbox control pane ID'
+fi
 printf -v dialog_command '%q %q %q %q' bash "$dialog_script" --plan "$plan_file"
-herdr pane run "$dialog_pane_id" "$dialog_command" || die 'unable to start sandbox control dialog'
+if ! herdr pane run "$dialog_pane_id" "$dialog_command"; then
+	rollback_dialog_pane
+	die 'unable to start sandbox control dialog'
+fi
 cleanup_plan=false

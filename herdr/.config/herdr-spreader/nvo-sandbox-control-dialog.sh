@@ -98,7 +98,9 @@ run_action() {
 		failures=$((failures + 1))
 		return
 	fi
-	if sg incus-admin -c "labctl $action $ticket"; then
+	local lifecycle_command
+	printf -v lifecycle_command '%q %q %q' "$HOME/.local/bin/labctl" "$action" "$ticket"
+	if sg incus-admin -c "$lifecycle_command"; then
 		printf '%s %s: succeeded\n' "$action" "$ticket"
 	else
 		printf '%s %s: FAILED\n' "$action" "$ticket"

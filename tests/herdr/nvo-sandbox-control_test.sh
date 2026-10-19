@@ -46,11 +46,17 @@ printf 'herdr %s\n' "$*" >>"${TEST_LOG:?}"
 case "${1:-} ${2:-}" in
 'pane split')
 	[[ ${3:-} == "w1:p1" && ${4:-} == --direction && ${5:-} == down && ${6:-} == --focus ]] || exit 2
-	printf '%s\n' '{"result":{"pane":{"pane_id":"w1:p2"}}}'
+	split_response=${TEST_SPLIT_RESPONSE:-}
+	[[ -n $split_response ]] || split_response='{"result":{"pane":{"pane_id":"w1:p2"}}}'
+	printf '%s\n' "$split_response"
 	;;
 'pane run')
 	[[ ${4:-} =~ --plan[[:space:]]([^[:space:]]+) ]] || exit 2
 	printf '%s\n' "${BASH_REMATCH[1]}" >"${TEST_PLAN_PATH:?}"
+	[[ ${TEST_FAIL_PANE_RUN:-} != true ]]
+	;;
+'pane close')
+	[[ ${3:-} == "${TEST_EXPECT_CLOSED_PANE:-w1:p2}" && $# -eq 3 ]] || exit 2
 	;;
 *) exit 2 ;;
 esac
@@ -93,7 +99,7 @@ write_plan() {
 }
 
 run_dialog() {
-	HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$TEST_ROOT/home/.local/bin:$PATH" XDG_STATE_HOME="$TEST_ROOT/state" TEST_LOG="$LOG" "$DIALOG_SCRIPT" --plan "$DIALOG_PLAN"
+	HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$PATH" XDG_STATE_HOME="$TEST_ROOT/state" TEST_LOG="$LOG" "$DIALOG_SCRIPT" --plan "$DIALOG_PLAN"
 }
 
 # status NVO-20130,NVO-20224 creates one ordered plan and one focused sibling pane.
@@ -146,12 +152,36 @@ if TEST_PANE_ID='' run_controller status NVO-20130; then
 fi
 [[ ! -s $LOG ]] || fail 'missing pane ID mutated Herdr or invoked a command'
 
+# An unsafe split response still triggers a best-effort close of the newly returned pane and removes its plan.
+: >"$LOG"
+plans_before=$(rg --files -g 'nvo-sandbox-control.*' "$TEST_ROOT/state/herdr-spreader" | wc -l)
+unsafe_pane_id='w1:p2-invalid'
+printf -v unsafe_split_response '{"result":{"pane":{"pane_id":"%s"}}}' "$unsafe_pane_id"
+if TEST_SPLIT_RESPONSE="$unsafe_split_response" TEST_EXPECT_CLOSED_PANE="$unsafe_pane_id" run_controller status NVO-20130; then
+	fail 'controller unexpectedly accepted an unsafe sandbox control pane ID'
+fi
+assert_equals 1 "$(rg -c '^herdr pane split ' "$LOG")" 'expected one focused pane split before response validation failure'
+assert_equals 1 "$(rg -F -c "herdr pane close $unsafe_pane_id" "$LOG")" 'controller did not roll back the pane after response validation failure'
+assert_equals "$plans_before" "$(rg --files -g 'nvo-sandbox-control.*' "$TEST_ROOT/state/herdr-spreader" | wc -l)" 'controller did not remove the response-validation-failed plan file'
+
+# If queuing the dialog fails after a focused split, the controller closes only that new pane and removes its plan.
+: >"$LOG"
+if TEST_FAIL_PANE_RUN=true run_controller status NVO-20130; then
+	fail 'controller unexpectedly succeeded when the dialog could not start'
+fi
+assert_equals 1 "$(rg -c '^herdr pane split ' "$LOG")" 'expected one focused pane split before pane-run failure'
+assert_equals 1 "$(rg -c '^herdr pane run ' "$LOG")" 'expected one pane-run attempt'
+assert_equals 1 "$(rg -c '^herdr pane close w1:p2$' "$LOG")" 'controller did not roll back the newly created pane'
+PLAN_PATH=$(<"$PLAN_PATH_FILE")
+[[ ! -e $PLAN_PATH ]] || fail 'controller did not remove the rolled-back plan file'
+
 # Status acts on every planned target immediately and never reads a confirmation key.
 : >"$LOG"
 write_plan status explicit NVO-20130 NVO-20224
 run_dialog </dev/null
 [[ ! -e $DIALOG_PLAN ]] || fail 'status dialog did not delete its plan'
 assert_equals 2 "$(rg -c '^labctl status ' "$LOG")" 'status did not run once per target'
+assert_equals 2 "$(rg -F -c "sg incus-admin -c $TEST_ROOT/home/.local/bin/labctl status" "$LOG")" 'status did not explicitly invoke the active labctl executable'
 if rg -q '^labctl (start|stop|restart) ' "$LOG"; then
 	fail 'status ran a mutating lifecycle command'
 fi
