@@ -15,16 +15,20 @@ else
 fi
 
 ticket=${args[0]:-}
+bootstrap_worker=${NVO_HARNESS_SANDBOX_BOOTSTRAP_WORKER:-false}
 [[ $ticket =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ]] || {
 	printf 'Error: ticket must use a Jira key such as NVO-123 or CFD-123\n' >&2
 	exit 1
 }
 # Creation must prove Jira availability before creating any worktree, workspace,
-# or instance. The destructive cleanup action intentionally skips this lookup.
-jira issue view "$ticket" --raw >/dev/null || {
-	printf 'Error: Jira ticket is unavailable: %s\n' "$ticket" >&2
-	exit 1
-}
+# or instance. The detached worker only continues a creation already validated
+# by its launcher.
+if [[ $bootstrap_worker != true ]]; then
+	jira issue view "$ticket" --raw >/dev/null || {
+		printf 'Error: Jira ticket is unavailable: %s\n' "$ticket" >&2
+		exit 1
+	}
+fi
 normalized_ticket=${ticket,,}
 
 spreader_dir="${HOME}/.config/herdr-spreader"
@@ -35,6 +39,7 @@ project_dir="${workspace_root}/${ticket}"
 state_dir="${XDG_STATE_HOME:-${HOME}/.local/state}/herdr-spreader"
 state_log="${state_dir}/${ticket}.log"
 stage_dir="${state_dir}/${ticket}.stages"
+bootstrap_ready_file="${state_log}.worker-ready"
 
 [[ -x $labctl ]] || {
 	printf 'Error: labctl is unavailable at %s; stow the incus package first\n' "$labctl" >&2
@@ -42,7 +47,9 @@ stage_dir="${state_dir}/${ticket}.stages"
 }
 
 # The standard creator remains responsible for worktrees and aggregate context.
-NVO_HARNESS_DEFER_WORKSPACE=true bash "${spreader_dir}/nvo-harness-worktree-sandbox-base.sh" "${args[@]}"
+if [[ $bootstrap_worker != true ]]; then
+	NVO_HARNESS_DEFER_WORKSPACE=true bash "${spreader_dir}/nvo-harness-worktree-sandbox-base.sh" "${args[@]}"
+fi
 
 run_labctl() {
 	local command
@@ -183,6 +190,7 @@ bootstrap_sandbox() {
 prepare_state() {
 	mkdir -p "$state_dir"
 	: >"$state_log"
+	rm -f -- "$bootstrap_ready_file"
 	rm -rf -- "$stage_dir"
 	mkdir -m 0700 "$stage_dir"
 	local stage
@@ -192,11 +200,16 @@ prepare_state() {
 }
 
 start_bootstrap() {
-	(
-		if ! bootstrap_sandbox; then
-			printf '%s\n' 'NVO_SANDBOX_BOOTSTRAP_FAILED'
-		fi
-	) >>"$state_log" 2>&1 &
+	local attempts=100
+	NVO_HARNESS_SANDBOX_BOOTSTRAP_WORKER=true setsid "$BASH" "$0" "${args[@]}" </dev/null >>"$state_log" 2>&1 &
+	until [[ -f $bootstrap_ready_file ]]; do
+		((attempts-- > 0)) || {
+			printf '%s\n' 'NVO_SANDBOX_BOOTSTRAP_FAILED' >>"$state_log"
+			printf '%s\n' 'Sandbox bootstrap worker did not detach' >&2
+			return 1
+		}
+		sleep 0.05
+	done
 }
 
 instance_user_setup() {
@@ -268,8 +281,28 @@ workspace_label() {
 	printf '%s - %s\n' "$ticket" "$title"
 }
 
+monitor_label() {
+	local instance_project command ip
+	instance_project=$(run_labctl_without_ticket instance-project)
+	[[ $instance_project =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*$ ]] || {
+		printf '%s\n' 'Sandbox bootstrap did not provide a safe instance project' >&2
+		return 1
+	}
+	printf -v command 'incus --project %q list %q --format json | jq -er %q' \
+		"$instance_project" "$normalized_ticket" '[.[].state.network.eth0.addresses[] | select(.family == "inet" and .scope == "global") | .address] | first'
+	ip=$(sg incus-admin -c "$command") || {
+		printf '%s\n' 'Sandbox has no accessible external IPv4 address' >&2
+		return 1
+	}
+	[[ $ip =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || {
+		printf '%s\n' 'Sandbox did not provide a safe external IPv4 address' >&2
+		return 1
+	}
+	printf '%s\n' "$ip"
+}
+
 create_workspace() {
-	local workspace_json workspace_id agent_tab_id agent_pane_id build_json build_pane_id label
+	local workspace_json workspace_id agent_tab_id agent_pane_id build_json build_pane_id label monitor_label
 	label=$(workspace_label)
 	workspace_json=$(herdr workspace create --cwd "$project_dir" --label "$label" --focus)
 	workspace_id=$(jq -er '.result.workspace.workspace_id' <<<"$workspace_json")
@@ -282,13 +315,14 @@ create_workspace() {
 	build_pane_id=$(jq -er '.result.root_pane.pane_id' <<<"$build_json")
 
 	local monitor lazydocker pcm platform godcapp
+	monitor_label=$(monitor_label)
 	monitor=$(monitor_command)
 	lazydocker=$(ready_guest_command 'lazydocker' true)
 	pcm=$(stage_pane_command pcm-db "${project_dir}/PlatformCommonModels/scripts/development" pcm-db)
 	platform=$(stage_pane_command platform-tagging-start "${project_dir}/PlatformServices/scripts/development" platform-tagging-build platform-tagging-start)
 	godcapp=$(stage_pane_command godcapp-services "${project_dir}/GoDCApp/NVO/scripts/development" godcapp-build godcapp-infra godcapp-services)
 
-	herdr pane rename "$build_pane_id" Monitor
+	herdr pane rename "$build_pane_id" "$monitor_label"
 	herdr pane run "$build_pane_id" "$monitor"
 	lazy_json=$(herdr pane split "$build_pane_id" --direction down --ratio 0.42 --cwd "$project_dir" --no-focus)
 	lazy_pane_id=$(jq -er '.result.pane.pane_id' <<<"$lazy_json")
@@ -308,8 +342,17 @@ create_workspace() {
 	herdr pane run "$godcapp_pane_id" "$godcapp"
 }
 
+if [[ $bootstrap_worker == true ]]; then
+	: >"$bootstrap_ready_file"
+	if ! bootstrap_sandbox; then
+		printf '%s\n' 'NVO_SANDBOX_BOOTSTRAP_FAILED'
+		exit 1
+	fi
+	exit 0
+fi
+
 # Make state available before the Build top pane starts tailing it. Tabs are
-# usable immediately while the worker records the stage outcomes.
+# usable immediately while the detached worker records the stage outcomes.
 prepare_state
 create_workspace
 start_bootstrap

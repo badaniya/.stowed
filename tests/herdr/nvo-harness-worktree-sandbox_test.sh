@@ -72,7 +72,9 @@ EOF_BASE
 cat >"$TEST_ROOT/home/.local/bin/labctl" <<'EOF_LABCTL'
 #!/usr/bin/env bash
 printf 'labctl %s\n' "$*" >>"${TEST_LOG:?}"
-if [[ ${1:-} == instance-user ]]; then
+if [[ ${1:-} == create && ${TEST_DELAY_CREATE:-false} == true ]]; then
+	sleep 1
+elif [[ ${1:-} == instance-user ]]; then
 	printf '%s\n' "${TEST_INSTANCE_USER:-sandbox-user}"
 elif [[ ${1:-} == instance-project ]]; then
 	printf '%s\n' "${TEST_INSTANCE_PROJECT:-agent-sandbox}"
@@ -94,6 +96,11 @@ cat >"$TEST_ROOT/bin/jira" <<'EOF_JIRA'
 [[ $1 == issue && $2 == view && $3 == NVO-20131 && $4 == --raw ]] || exit 2
 printf '%s\n' '{"fields":{"summary":"Sandbox workspace title"}}'
 EOF_JIRA
+cat >"$TEST_ROOT/bin/incus" <<'EOF_INCUS'
+#!/usr/bin/env bash
+[[ $1 == --project && $2 == agent-sandbox && $3 == list && $4 == nvo-20131 && $5 == --format && $6 == json ]] || exit 2
+printf '%s\n' '[{"state":{"network":{"eth0":{"addresses":[{"family":"inet","scope":"link","address":"169.254.1.1"},{"family":"inet","scope":"global","address":"10.42.0.31"}]}}}}]'
+EOF_INCUS
 cat >"$TEST_ROOT/bin/herdr" <<'EOF_HERDR'
 #!/usr/bin/env bash
 printf 'herdr %s\n' "$*" >>"${TEST_LOG:?}"
@@ -111,10 +118,17 @@ case "${1:-} ${2:-}" in
 *) exit 2 ;;
 esac
 EOF_HERDR
-chmod +x "$TEST_ROOT/home/.config/herdr-spreader/nvo-harness-worktree-sandbox-base.sh" "$TEST_ROOT/home/.local/bin/labctl" "$TEST_ROOT/bin/sg" "$TEST_ROOT/bin/jira" "$TEST_ROOT/bin/herdr"
+chmod +x "$TEST_ROOT/home/.config/herdr-spreader/nvo-harness-worktree-sandbox-base.sh" "$TEST_ROOT/home/.local/bin/labctl" "$TEST_ROOT/bin/sg" "$TEST_ROOT/bin/jira" "$TEST_ROOT/bin/incus" "$TEST_ROOT/bin/herdr"
 
 run_sandbox() {
 	HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$PATH" XDG_STATE_HOME="$TEST_ROOT/state" TEST_LOG="$LOG" TEST_HERDR_COUNTER="$TEST_ROOT/herdr-counter" TEST_INSTANCE_USER=nvo-builder "$SCRIPT" 'NVO-20131 25.16.0 --restore-harness'
+}
+
+run_sandbox_after_launcher_cleanup() {
+	HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$PATH" XDG_STATE_HOME="$TEST_ROOT/state" TEST_LOG="$LOG" TEST_HERDR_COUNTER="$TEST_ROOT/herdr-counter" TEST_INSTANCE_USER=nvo-builder TEST_DELAY_CREATE=true setsid bash "$SCRIPT" 'NVO-20131 25.16.0 --restore-harness' &
+	local launcher_pid=$!
+	wait "$launcher_pid"
+	kill -HUP -- "-${launcher_pid}" 2>/dev/null || true
 }
 
 : >"$LOG"
@@ -125,7 +139,7 @@ assert_contains 'worktree deferred=true args=NVO-20131 25.16.0 --restore-harness
 assert_contains 'herdr workspace create' "$LOG"
 assert_contains 'NVO-20131 - Sandbox workspace title' "$LOG"
 assert_contains 'herdr tab create --workspace w1' "$LOG"
-assert_contains 'herdr pane rename w1:p2 Monitor' "$LOG"
+assert_contains 'herdr pane rename w1:p2 10.42.0.31' "$LOG"
 assert_contains 'herdr pane rename w1:p3 LazyDocker' "$LOG"
 assert_contains 'herdr pane rename w1:p4 PlatformCommonModels' "$LOG"
 assert_contains 'herdr pane rename w1:p5 PlatformServices' "$LOG"
@@ -177,6 +191,14 @@ assert_contains 'cd "$HOME" && %s' "$SCRIPT"
 assert_not_contains 'cd "$HOME" && exec %s' "$SCRIPT"
 assert_not_contains 'docker.sock' "$LOG"
 assert_not_contains 'docker info' "$LOG"
+
+# Herdr Plus closes the quick-action launcher as soon as the action returns. The
+# detached bootstrap must survive that launcher process group's teardown.
+: >"$LOG"
+printf '2\n' >"$TEST_ROOT/herdr-counter"
+: >"$STATE_LOG"
+run_sandbox_after_launcher_cleanup
+wait_for_marker 'NVO_SANDBOX_BOOTSTRAP_SUCCESS' "$STATE_LOG"
 
 : >"$LOG"
 printf '2\n' >"$TEST_ROOT/herdr-counter"
