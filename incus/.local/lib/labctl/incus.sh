@@ -297,10 +297,78 @@ labctl_incus_attach_workspace() {
 	labctl_run incus config device add "$instance" ticket-workspace disk source="$ticket_root" path="$ticket_root" shift=true readonly=false
 }
 
+labctl_incus_ensure_instance_user() {
+	local instance=$1 username=$2 uid=$3 gid=$4
+	# shellcheck disable=SC2016 # The guest shell validates and expands only its positional arguments.
+	labctl_run incus exec "$instance" -- bash -c 'set -euo pipefail
+username=$1
+uid=$2
+gid=$3
+[[ $# == 3 && $username =~ ^[a-z_][a-z0-9_-]*[$]?$ && $uid =~ ^[1-9][0-9]*$ && $gid =~ ^[1-9][0-9]*$ ]] || {
+	printf "invalid requested guest identity\\n" >&2
+	exit 1
+}
+if getent passwd "$username" >/dev/null; then
+	[[ $(id -u "$username") == "$uid" && $(id -g "$username") == "$gid" ]] || {
+		printf "guest user %s does not match requested UID:GID %s:%s; recreate the sandbox\\n" "$username" "$uid" "$gid" >&2
+		exit 1
+	}
+else
+	for supplementary_group in sudo docker; do
+		getent group "$supplementary_group" >/dev/null || {
+			printf "required guest group is missing: %s\\n" "$supplementary_group" >&2
+			exit 1
+		}
+	done
+	if [[ $uid == 1000 && $gid == 1000 ]] && getent passwd ubuntu >/dev/null && [[ $(id -u ubuntu) == 1000 && $(id -g ubuntu) == 1000 ]] && ubuntu_group=$(getent group ubuntu) && [[ ${ubuntu_group#*:*:} == 1000:* ]]; then
+		getent group "$username" >/dev/null && {
+			printf "guest group name is already in use: %s; recreate the sandbox\\n" "$username" >&2
+			exit 1
+		}
+		[[ ! -e "/home/$username" ]] || {
+			printf "guest home already exists: /home/%s; recreate the sandbox\\n" "$username" >&2
+			exit 1
+		}
+		usermod --login "$username" --home "/home/$username" --move-home ubuntu
+		groupmod --new-name "$username" ubuntu
+	else
+		getent passwd "$uid" >/dev/null && {
+			printf "guest UID is already in use: %s; recreate the sandbox\\n" "$uid" >&2
+			exit 1
+		}
+		getent group "$gid" >/dev/null && {
+			printf "guest GID is already in use: %s; recreate the sandbox\\n" "$gid" >&2
+			exit 1
+		}
+		getent group "$username" >/dev/null && {
+			printf "guest group name is already in use: %s; recreate the sandbox\\n" "$username" >&2
+			exit 1
+		}
+		groupadd --gid "$gid" "$username"
+		useradd --uid "$uid" --gid "$gid" --create-home --shell /bin/bash "$username"
+	fi
+fi
+install -d -m 0755 -o "$username" -g "$gid" "/home/$username"
+usermod --append --groups sudo,docker "$username"' -- "$username" "$uid" "$gid"
+}
+
 labctl_incus_wait_ready() {
-	local instance=$1
-	# shellcheck disable=SC2016 # The guest shell expands its positional user argument.
-	labctl_run incus exec "$instance" -- bash -c 'set -euo pipefail; id "$1" >/dev/null 2>&1 || useradd --create-home --shell /bin/bash --groups docker,sudo "$1"; install -d -m 0755 -o "$1" -g "$1" "/home/$1"' -- "$LABCTL_INSTANCE_USER"
+	local instance=$1 ticket_root=$2 identity username uid gid
+	local -a identity_fields
+	identity=$(labctl_incus_resolve_workspace_identity "$LABCTL_MASTER_ROOT" "$ticket_root") || return 1
+	mapfile -t identity_fields <<<"$identity"
+	[[ ${#identity_fields[@]} == 3 ]] || {
+		labctl_die 'workspace identity resolver returned an invalid identity'
+		return 1
+	}
+	username=${identity_fields[0]}
+	uid=${identity_fields[1]}
+	gid=${identity_fields[2]}
+	[[ -n $username && $uid =~ ^[0-9]+$ && $gid =~ ^[0-9]+$ ]] || {
+		labctl_die 'workspace identity resolver returned an invalid identity'
+		return 1
+	}
+	labctl_incus_ensure_instance_user "$instance" "$LABCTL_INSTANCE_USER" "$uid" "$gid"
 	# Docker may be started by the guest init system after Incus reports the container running.
 	# Do not require a systemd bus; wait for the daemon socket with a bounded retry.
 	# shellcheck disable=SC2016 # The guest shell evaluates the retry loop.
@@ -450,7 +518,7 @@ labctl_incus_start() {
 		labctl_run incus start "$instance"
 	fi
 	labctl_incus_configure_network "$instance"
-	labctl_incus_wait_ready "$instance"
+	labctl_incus_wait_ready "$instance" "$ticket_root"
 	labctl_stack_up "$instance"
 }
 

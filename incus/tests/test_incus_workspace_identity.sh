@@ -65,7 +65,7 @@ assert_identity() {
   }
 }
 
-assert_failure() {
+assert_resolver_failure() {
   local expected_message=$1 output error_file=$temp_dir/resolver-error
   if output=$(labctl_incus_resolve_workspace_identity "$LABCTL_MASTER_ROOT" "$ticket_root" 2>"$error_file"); then
     printf 'expected resolver failure, got %q\n' "$output" >&2
@@ -106,6 +106,124 @@ assert_identity "developer" "1001" "1001"
 
 # No common non-root writable identity returns nonzero and does not emit one.
 set_fixture 0 0 0700 1002 1002 0700
-assert_failure "no common writable host identity"
+assert_resolver_failure "no common writable host identity"
 
-printf 'PASS: workspace identity resolution\n'
+captured_run=()
+labctl_run() {
+  captured_run=("$@")
+}
+
+assert_contains() {
+  local expected=$1
+  [[ $guest_command == *"$expected"* ]] || {
+    printf 'expected guest command to contain %q, got:\n%s\n' "$expected" "$guest_command" >&2
+    return 1
+  }
+}
+
+assert_not_contains() {
+  local unexpected=$1
+  [[ $guest_command != *"$unexpected"* ]] || {
+    printf 'expected guest command not to contain %q, got:\n%s\n' "$unexpected" "$guest_command" >&2
+    return 1
+  }
+}
+
+capture_guest_command() {
+  local username=$1 uid=$2 gid=$3
+  captured_run=()
+  labctl_incus_ensure_instance_user test-instance "$username" "$uid" "$gid"
+  guest_command=${captured_run[6]:-}
+  [[ -n $guest_command ]] || {
+    printf 'expected guest reconciliation command to be captured\n' >&2
+    return 1
+  }
+}
+
+assert_failure() {
+  local expected_message=$1 error_file=$temp_dir/guest-error
+  : >"$temp_dir/account-mutations"
+  if PATH="$stub_dir:$PATH" LABCTL_TEST_GUEST_STATE=mismatched LABCTL_TEST_MUTATIONS="$temp_dir/account-mutations" \
+    bash -c "$guest_command" -- badaniya 1000 1000 2>"$error_file"; then
+    printf 'expected guest reconciliation command to fail\n' >&2
+    return 1
+  fi
+  rg -F --quiet -- "$expected_message" "$error_file" || {
+    printf 'expected failure message %q, got:\n' "$expected_message" >&2
+    cat "$error_file" >&2
+    return 1
+  }
+  [[ ! -s $temp_dir/account-mutations ]] || {
+    printf 'guest reconciliation mutated accounts before failing:\n' >&2
+    cat "$temp_dir/account-mutations" >&2
+    return 1
+  }
+}
+
+cat >"$stub_dir/id" <<'SCRIPT'
+#!/usr/bin/env bash
+set -euo pipefail
+case "${LABCTL_TEST_GUEST_STATE:-}" in
+mismatched)
+  case "$1:$2" in
+  -u:badaniya) printf '1001\n' ;;
+  -g:badaniya) printf '1001\n' ;;
+  *) exit 1 ;;
+  esac
+  ;;
+*)
+  [[ $1 == -G ]] || exit 2
+  case $2 in
+  badaniya) printf '1000\n' ;;
+  developer) printf '1001\n' ;;
+  reviewer) printf '1002\n' ;;
+  *) exit 1 ;;
+  esac
+  ;;
+esac
+SCRIPT
+cat >"$stub_dir/getent" <<'SCRIPT'
+#!/usr/bin/env bash
+set -euo pipefail
+if [[ ${LABCTL_TEST_GUEST_STATE:-} == mismatched ]]; then
+  [[ $1 == passwd && $2 == badaniya ]] && {
+    printf 'badaniya:x:1001:1001:Badaniya:/home/badaniya:/bin/bash\n'
+    exit 0
+  }
+  exit 2
+fi
+[[ $1 == passwd ]] || exit 2
+case $2 in
+0) printf 'root:x:0:0:root:/root:/bin/bash\n' ;;
+1000) printf 'badaniya:x:1000:1000:Badaniya:/home/badaniya:/bin/bash\n' ;;
+1001) printf 'developer:x:1001:1001:Developer:/home/developer:/bin/bash\n' ;;
+1002) printf 'reviewer:x:1002:1002:Reviewer:/home/reviewer:/bin/bash\n' ;;
+*) exit 2 ;;
+esac
+SCRIPT
+for command in useradd usermod groupadd groupmod; do
+  cat >"$stub_dir/$command" <<'SCRIPT'
+#!/usr/bin/env bash
+printf '%s\n' "$(basename "$0")" >>"$LABCTL_TEST_MUTATIONS"
+SCRIPT
+  chmod +x "$stub_dir/$command"
+done
+chmod +x "$stub_dir/id" "$stub_dir/getent"
+
+# The default Ubuntu identity is renamed, retaining UID/GID 1000 and its home.
+capture_guest_command badaniya 1000 1000
+assert_contains 'usermod --login "$username" --home "/home/$username" --move-home ubuntu'
+assert_contains 'groupmod --new-name "$username" ubuntu'
+assert_contains 'usermod --append --groups sudo,docker "$username"'
+
+# A non-default identity is created at the selected IDs without renaming Ubuntu.
+capture_guest_command badaniya 1001 1001
+assert_contains 'groupadd --gid "$gid" "$username"'
+assert_contains 'useradd --uid "$uid" --gid "$gid"'
+assert_not_contains '--login badaniya'
+
+# A mismatched existing identity is rejected before any account mutation.
+capture_guest_command badaniya 1000 1000
+assert_failure "recreate the sandbox"
+
+printf 'PASS: workspace identity resolution and guest provisioning\n'
