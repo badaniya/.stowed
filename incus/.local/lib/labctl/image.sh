@@ -57,6 +57,7 @@ labctl_image_provision_command() {
 	cat <<SCRIPT
 set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
+BUILDX_VERSION=v0.17.1
 apt-get update
 apt-get install -y build-essential ca-certificates curl git gzip jq make net-tools openssh-client ripgrep screen sudo tar wget docker.io docker-compose-v2
 rm -rf /usr/local/go
@@ -72,6 +73,10 @@ curl -fsSL https://atlasgo.sh | sh -s -- --no-install -y -o /root/go/bin
 chmod 0755 /root/go/bin/atlas-linux-amd64-v0.37.0
 ln -sf /root/go/bin/atlas-linux-amd64-v0.37.0 /root/go/bin/atlas
 ln -sf /root/go/bin/atlas /usr/local/bin/atlas
+install -d -m 0755 /usr/local/lib/docker/cli-plugins
+curl -fsSL https://github.com/docker/buildx/releases/download/\${BUILDX_VERSION}/buildx-\${BUILDX_VERSION}.linux-amd64 -o /usr/local/lib/docker/cli-plugins/docker-buildx
+chmod 0755 /usr/local/lib/docker/cli-plugins/docker-buildx
+docker buildx version
 printf '%s\\n' 'export PATH="/usr/local/go/bin:\$PATH"' >/etc/profile.d/labctl-go.sh
 systemctl enable docker
 SCRIPT
