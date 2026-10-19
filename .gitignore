@@ -27,6 +27,7 @@ goose/**/history.txt
 pi/.pi/agent/.update-check
 
 # Ephemeral session/tmp artifacts
+.worktrees/
 pi-session-*.html
 **/skills/*/tmp/.sisyphus/
 agents/.agents/skills/dev-browser/tmp/
