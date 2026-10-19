@@ -311,7 +311,7 @@ publish_monitor_label() {
 		return 1
 	}
 	ip=$(monitor_label) || return 1
-	herdr pane rename "$pane_id" "$ip"
+	herdr pane rename "$pane_id" "Monitor - $ip"
 }
 
 create_workspace() {
