@@ -15,9 +15,14 @@ Functions that DO compose patched leaves (``compute_v2_review_set``,
 ``security_reminder_hook.py`` for that reason.
 """
 import contextlib
+import errno
 import os
 import re
 import subprocess
+import sys
+import tempfile
+import threading
+import time
 
 from _base import debug_log
 
@@ -48,11 +53,27 @@ GIT_CMD = [
     "-c", "diff.noprefix=false",
     "-c", "diff.srcPrefix=a/",
     "-c", "diff.dstPrefix=b/",
+    # A directory with its own `.git` inside the work tree (a submodule, a
+    # vendored checkout, an unpacked archive) is another repository with its
+    # own config. To report it as modified, or to show its changes inline
+    # (diff.submodule=diff), git starts a second git inside it, which reads
+    # that config and runs the commands it names. The hook stays out of it:
+    # such a directory is left out of the review set, and a commit that moves
+    # one shows as the two commit ids.
+    "-c", "diff.ignoreSubmodules=all",
+    "-c", "diff.submodule=short",
 ]
+
+# diff.ignoreSubmodules is a default that the repository's own settings for
+# one submodule (.gitmodules, submodule.<name>.ignore) override. The option
+# cannot be overridden. Pass it to every `git status` and work-tree `git diff`.
+IGNORE_SUBMODULES = "--ignore-submodules=all"
 
 SAFE_GIT_CONFIG = (
     ("core.fsmonitor", "false"),
     ("core.hooksPath", "/dev/null"),
+    ("diff.ignoreSubmodules", "all"),
+    ("diff.submodule", "short"),
 )
 
 # The hook's git runs in the background beside the session's own git. Without
@@ -148,6 +169,119 @@ def _diff_pathspec(cwd, paths):
             continue
         rel.append(r)
     return ["--"] + rel if rel else []
+
+
+# Bytes of file paths per git call once a path list has proved too long for
+# one command. Windows caps a whole command line at 32,767 characters;
+# elsewhere the limit is about 1 MB (macOS) or 2 MB (Linux), environment
+# included.
+_MAX_PATH_ARGS_BYTES = (
+    20000 if sys.platform in ("win32", "cygwin", "msys") else 500000)
+# More commands than this and the path list is not worth diffing: each one
+# matches its paths against the whole index, and a set that large is thrown
+# away as pathological after the diff anyway.
+_MAX_PATH_BATCHES = 4
+
+
+def _arg_cost(path):
+    # The exec limit also counts a terminator and a pointer per argument.
+    return len(os.fsencode(path)) + 9
+
+
+def _path_args_budget(env=None):
+    """_MAX_PATH_ARGS_BYTES, or less where this system's own limit is lower
+    (a small stack limit, a BSD, a very large environment). Half of what the
+    system leaves after the environment, so the rest of the command fits."""
+    try:
+        arg_max = os.sysconf("SC_ARG_MAX")
+    except (AttributeError, ValueError, OSError):
+        return _MAX_PATH_ARGS_BYTES
+    env_bytes = sum(len(k) + len(v) + 2 for k, v in (env or os.environ).items())
+    return min(_MAX_PATH_ARGS_BYTES, max(4096, (arg_max - env_bytes) // 2))
+
+
+def _path_batches(paths, budget=None):
+    if budget is None:
+        budget = _MAX_PATH_ARGS_BYTES
+    batch, size = [], 0
+    for p in paths:
+        n = _arg_cost(p)
+        if batch and size + n > budget:
+            yield batch
+            batch, size = [], 0
+        batch.append(p)
+        size += n
+    if batch:
+        yield batch
+
+
+# Why a path list too long for one command left the last get_git_diff call
+# without a diff, for the Stop review's skip reason: "gave_up" (still too
+# long once cut down) or "none_reviewable".
+_path_list_too_long = set()
+
+
+def _too_many_args(e):
+    """The OS refused to start the command because its arguments are too
+    long. Windows reports ERROR_FILENAME_EXCED_RANGE, which Python turns into
+    a FileNotFoundError."""
+    return e.errno == errno.E2BIG or getattr(e, "winerror", None) == 206
+
+
+def _run_captured(cmd, timeout, **kwargs):
+    return subprocess.run(cmd, capture_output=True, timeout=timeout, **kwargs)
+
+
+def _run_git_on_review_paths(args, paths, timeout, run=_run_captured, **kwargs):
+    """Run `git <args> -- <paths>` for the Stop review; return the results.
+    `run(cmd, timeout, **kwargs)` starts each command (_run_diff_bounded for
+    the diff, so its output is never held whole).
+
+    One command with every path whenever the OS takes it. When the OS refuses
+    the argument list as too long, only reviewable source paths are kept (the
+    review drops the rest from the diff anyway) and they go out in as few
+    commands as they need, all within `timeout` seconds together. If even
+    those need more than _MAX_PATH_BATCHES commands, the refusal is raised
+    again.
+
+    Secret-shaped paths that are gone from the work tree go into every one
+    of those commands: `git diff` must still pair a rename away from such a
+    name, or the secret's content would show as a new source file. A new file
+    that only resembles the secret may be paired with it too and left out of
+    the review. Any other rename is paired only when both of its paths are
+    reviewable source and in the same command; otherwise it shows as a delete
+    or an add.
+    """
+    cmd = [*GIT_CMD, *args, "--"]
+    paths = list(paths)
+    deadline = time.monotonic() + timeout
+    try:
+        return [run(cmd + paths, timeout, **kwargs)]
+    except OSError as e:
+        if not _too_many_args(e):
+            raise
+        too_long = e
+    budget = _path_args_budget(kwargs.get("env"))
+    batches = list(_path_batches(
+        [p for p in paths if _is_reviewable_source(p)], budget))
+    root = kwargs.get("cwd") or os.getcwd()
+    secret = [p for p in paths if _is_secret_shaped(p)
+              and not os.path.lexists(os.path.join(root, p))]
+    debug_log(f"git {args[0]}: {len(paths)} paths do not fit one command; "
+              f"{len(batches)} command(s) for the reviewable ones")
+    # The secret-shaped paths ride along with every batch, so they get a
+    # small share of a command of their own.
+    if (len(batches) > _MAX_PATH_BATCHES
+            or sum(map(_arg_cost, secret)) > budget // 4):
+        raise too_long
+    cmd += secret
+    results = []
+    for batch in batches:
+        left = deadline - time.monotonic()
+        if left <= 0:
+            raise subprocess.TimeoutExpired(cmd, timeout)
+        results.append(run(cmd + batch, left, **kwargs))
+    return results
 
 
 _TEMP_INDEX_PREFIX = "security_hook_idx_"
@@ -448,9 +582,12 @@ def _copied_index(cwd, real_index, tmpdir, untracked_paths):
             # `git status` and here would silently drop ALL untracked files
             # from the diff. --ignore-missing only works with --dry-run, so
             # filter to surviving paths (lexists so dangling symlinks count).
+            # A nested repository (`dir/`) would be added as a submodule
+            # entry; see diff.ignoreSubmodules in GIT_CMD.
             surviving = [p for p in untracked_paths
-                         if os.path.lexists(os.path.join(cwd, p))]
-            add_args = ["--"] + surviving if surviving else None
+                         if not p.endswith("/")
+                         and os.path.lexists(os.path.join(cwd, p))]
+            add_args = surviving or None
         else:
             add_args = None
         if add_args:
@@ -458,11 +595,8 @@ def _copied_index(cwd, real_index, tmpdir, untracked_paths):
             # still spawns reader threads that decode stderr — git error
             # messages can reference non-ASCII filenames and crash on
             # cp1252. See #2099. Drop text=True so bytes stay raw.
-            subprocess.run(
-                [*GIT_CMD, "add", "--intent-to-add"] + add_args,
-                cwd=cwd, capture_output=True, timeout=10,
-                env=env,
-            )
+            _run_git_on_review_paths(["add", "--intent-to-add"], add_args,
+                                     timeout=10, cwd=cwd, env=env)
         yield env
     finally:
         _remove_copy(tmp_index)
@@ -485,6 +619,41 @@ def _git_toplevel(cwd):
         return path if path else None
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
         return None
+
+
+def _git_toplevel_and_head(cwd):
+    """(repo root, HEAD SHA) for `cwd` from one git call, or (None, None)
+    when git cannot give both (not a work tree, no commits)."""
+    try:
+        r = subprocess.run(
+            [*GIT_CMD, "rev-parse", "--show-toplevel", "HEAD"],
+            cwd=cwd, capture_output=True, timeout=5,
+        )
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        return None, None
+    if r.returncode != 0:
+        return None, None
+    # See #2099: the first line is a PATH, so decode the bytes manually.
+    top, _, head = r.stdout.decode("utf-8", errors="replace").strip().rpartition("\n")
+    return (top.strip() or None), (head.strip() or None)
+
+
+def _git_head_at(cwd, epoch):
+    """The SHA this checkout's HEAD pointed at just before `epoch` (seconds),
+    read from its own reflog. A checkout created after `epoch` answers with
+    the commit it was created at. None when git cannot say (no reflog)."""
+    try:
+        # Reflog times are whole seconds: ask for the second before, so a
+        # commit made in the same second as `epoch` counts as after it.
+        r = subprocess.run(
+            [*GIT_CMD, "rev-parse", "--verify", "-q", f"HEAD@{{@{int(epoch) - 1}}}"],
+            cwd=cwd, capture_output=True, timeout=5,
+        )
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError,
+            TypeError, ValueError, OverflowError):
+        return None
+    sha = r.stdout.decode("utf-8", errors="replace").strip()
+    return sha if r.returncode == 0 and sha else None
 
 
 def _git_dir(repo_root):
@@ -673,7 +842,7 @@ def _git_name_only(cwd, base, include_untracked=False):
     def _run(env):
         # core.quotePath=false comes from GIT_CMD globally (see definition).
         result = subprocess.run(
-            [*GIT_CMD, "diff", "--name-only", "-z", base],
+            [*GIT_CMD, "diff", IGNORE_SUBMODULES, "--name-only", "-z", base],
             cwd=cwd, capture_output=True, timeout=30,
             env=env,
         )
@@ -714,7 +883,7 @@ def _git_status_porcelain(cwd):
     try:
         # core.quotePath=false comes from GIT_CMD globally (see definition).
         r = subprocess.run(
-            [*GIT_CMD, "status", "--porcelain=v1", "-uall", "-z"],
+            [*GIT_CMD, "status", IGNORE_SUBMODULES, "--porcelain=v1", "-uall", "-z"],
             cwd=cwd, capture_output=True, timeout=30,
         )
         if r.returncode != 0:
@@ -732,7 +901,10 @@ def _git_status_porcelain(cwd):
                 continue
             xy, path = e[:2], e[3:]
             if xy == "??":
-                untracked.add(path)
+                # With -uall only a nested repository is listed as `dir/`.
+                # It is not a file to review; see diff.ignoreSubmodules.
+                if not path.endswith("/"):
+                    untracked.add(path)
             else:
                 tracked.add(path)
                 # Rename/copy entries are XY old\0new\0 — second NUL field is
@@ -766,6 +938,264 @@ def _is_ancestor(cwd, maybe_ancestor, descendant):
         return False
 
 
+_DEFAULT_FILE_DIFF_BYTES = 4 * 1024 * 1024
+_LATE_FILE_DIFF_BYTES = 256 * 1024
+_LAST_FILE_DIFF_BYTES = 96 * 1024
+
+
+def _file_diff_cap():
+    """SG_MAX_FILE_DIFF_BYTES, or the default when it is unset, not a number
+    or not positive. Never below what a late file keeps, which is well above
+    what the review prompt takes of one file."""
+    try:
+        n = int(os.environ.get("SG_MAX_FILE_DIFF_BYTES", ""))
+    except ValueError:
+        return _DEFAULT_FILE_DIFF_BYTES
+    if n <= 0:
+        return _DEFAULT_FILE_DIFF_BYTES
+    return max(n, _LATE_FILE_DIFF_BYTES)
+
+
+# How much of one file's diff the Stop review keeps while it reads git's
+# output: this much from the start of the file's section, and as much again
+# of the added lines after that. The review prompt takes far less of a file
+# (DIFF_PER_FILE_BYTES); the rest is for filter_preexisting_from_diff, which
+# needs the removed and the added side of a rewritten file.
+MAX_FILE_DIFF_BYTES = _file_diff_cap()
+# Past this much kept in total, a further file keeps _LATE_FILE_DIFF_BYTES
+# the same two ways; past four times as much, _LAST_FILE_DIFF_BYTES from its
+# start, which is still more than the review prompt takes of one file.
+MAX_KEPT_DIFF_BYTES = 4 * MAX_FILE_DIFF_BYTES
+_SECTION_MARK = b"\ndiff --git "
+_MAX_HEADER_BYTES = 64 * 1024
+_CUT_MARK = b"\\ [cut by security-guidance: the rest of this file's diff was not read]\n"
+
+# What the last get_git_diff read, for the Stop hook's metrics: bytes of git
+# output, reviewable files whose diff was cut and the bytes cut from them,
+# and diffs that hit the timeout during this hook run.
+_diff_read = {"bytes": 0, "cut_files": 0, "cut_bytes": 0, "timeouts": 0}
+
+
+class _DiffKeeper:
+    """Takes `git diff` output as it arrives and keeps only what the review
+    can use: the header line of every file, and a bounded part of each file
+    parse_diff_into_files would keep. A turn that wrote large data files no
+    longer puts their whole diff in memory."""
+
+    def __init__(self):
+        self.parts = []
+        self.kept = 0
+        self.seen = 0
+        self.cut_files = 0
+        self.cut_bytes = 0
+        # Unhandled input. Starts as a newline that is not git's, so a header
+        # at the very start of the output is found like any other.
+        self._pending = b"\n"
+        self._at_start = True
+        self._reviewable = True
+        self._room = self._added_room = MAX_FILE_DIFF_BYTES
+        self._cut = False
+        self._ends_nl = True
+        # Past the cut: whether the next byte starts a line, and whether the
+        # line being read is an added one.
+        self._bol = True
+        self._in_added = False
+
+    def feed(self, data):
+        buf = self._pending + data
+        pos = 0
+        while True:
+            i = buf.find(_SECTION_MARK, pos)
+            if i < 0:
+                # Hold back a tail that could be the start of a header.
+                end = max(pos, len(buf) - len(_SECTION_MARK) + 1)
+                self._keep(buf, pos, end)
+                self._pending = buf[end:]
+                return
+            j = buf.find(b"\n", i + 1)
+            if j < 0 and len(buf) - i <= _MAX_HEADER_BYTES:
+                # The header line is not complete yet.
+                self._keep(buf, pos, i)
+                self._pending = buf[i:]
+                return
+            self._keep(buf, pos, i + 1)
+            if j >= 0:
+                self._begin(buf[i + 1:j])
+            pos = i + 1
+
+    def _begin(self, header):
+        """A new file's section starts with this `diff --git ` line."""
+        self._end_section()
+        text = header[len(_SECTION_MARK) - 1:].decode("utf-8", errors="replace")
+        paths = _parse_diff_header(text)
+        # A section the parser drops, or whose header it cannot read and only
+        # counts, keeps its header line.
+        self._reviewable = bool(paths) and _section_is_reviewable(
+            paths[1] or paths[0], paths[0])
+        if not self._reviewable:
+            self._room, self._added_room = len(header) + 1, 0
+        elif self.kept > 4 * MAX_KEPT_DIFF_BYTES:
+            self._room, self._added_room = max(len(header) + 1, _LAST_FILE_DIFF_BYTES), 0
+        elif self.kept > MAX_KEPT_DIFF_BYTES:
+            self._room = self._added_room = max(len(header) + 1, _LATE_FILE_DIFF_BYTES)
+        else:
+            self._room = self._added_room = MAX_FILE_DIFF_BYTES
+        self._cut = False
+
+    def _end_section(self):
+        if not self._ends_nl:
+            # Cut inside a line: end it, so what follows starts a line.
+            self._append(b"\n")
+        if self._cut:
+            self._append(_CUT_MARK)
+
+    def _append(self, piece):
+        self.parts.append(piece)
+        self.kept += len(piece)
+        self._ends_nl = piece.endswith(b"\n")
+
+    def _keep(self, buf, start, end):
+        if self._at_start and end > start:
+            self._at_start = False
+            start += 1
+        n = end - start
+        if n <= 0:
+            return
+        self.seen += n
+        take = min(n, self._room)
+        if take:
+            self._append(buf[start:start + take])
+            self._room -= take
+        if take == n or not self._reviewable:
+            return
+        if not self._cut:
+            self._cut = True
+            self.cut_files += 1
+            self._bol = self._ends_nl
+            self._in_added = False
+        self.cut_bytes += n - take - self._keep_added(buf, start + take, end)
+
+    def _keep_added(self, buf, pos, end):
+        """Past a file's cut, keep its added lines only, up to as much again.
+        A rewritten file lists every removed line before the first added one,
+        and the review is about the added ones. Returns the bytes kept."""
+        kept = 0
+        run = -1  # where a run of added lines not yet appended starts
+        while pos < end and self._added_room > 0:
+            if self._bol:
+                self._bol = False
+                self._in_added = buf.startswith(b"+", pos)
+                if self._in_added and run < 0 and not self._ends_nl:
+                    self._append(b"\n")
+            if not self._in_added:
+                if run >= 0:
+                    self._append(buf[run:pos])
+                    run = -1
+                nxt = buf.find(b"\n+", pos, end)
+                if nxt < 0:
+                    self._bol = buf.endswith(b"\n", pos, end)
+                    break
+                pos = nxt + 1
+                self._bol = True
+                continue
+            nl = buf.find(b"\n", pos, end)
+            stop = end if nl < 0 else nl + 1
+            take = min(stop - pos, self._added_room)
+            if run < 0:
+                run = pos
+            self._added_room -= take
+            kept += take
+            self._bol = nl >= 0
+            if pos + take < stop:
+                self._append(buf[run:pos + take])
+                run = -1
+            pos = stop
+        if run >= 0:
+            self._append(buf[run:pos])
+        return kept
+
+    def result(self):
+        self._keep(self._pending, 0, len(self._pending))
+        self._pending = b""
+        self._end_section()
+        self._cut = False
+        return b"".join(self.parts)
+
+
+def _run_diff_bounded(cmd, timeout, **kwargs):
+    """subprocess.run(cmd, capture_output=True, timeout=timeout) for a
+    `git diff`, except that stdout goes through _DiffKeeper instead of being
+    held whole."""
+    keeper = _DiffKeeper()
+    deadline = time.monotonic() + timeout
+    try:
+        err = tempfile.TemporaryFile()
+    except OSError:
+        err = None
+    try:
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                             stderr=err if err is not None else subprocess.DEVNULL,
+                             **kwargs)
+        failed = []
+        given_up = []
+
+        def _read():
+            try:
+                while not given_up:
+                    chunk = p.stdout.read1(65536)
+                    if not chunk or given_up:
+                        break
+                    keeper.feed(chunk)
+            except BaseException as e:
+                failed.append(e)
+
+        # Read on a thread, so the timeout holds even while something git
+        # started still has the pipe open after git itself is gone.
+        reader = threading.Thread(target=_read, daemon=True)
+        timed_out = False
+        try:
+            try:
+                reader.start()
+            except RuntimeError as e:
+                failed.append(e)
+            else:
+                reader.join(timeout)
+                timed_out = reader.is_alive()
+            if timed_out or failed:
+                p.kill()
+            try:
+                returncode = p.wait(max(deadline - time.monotonic(), 0.1))
+            except subprocess.TimeoutExpired:
+                timed_out = True
+        finally:
+            if timed_out or failed or p.returncode is None:
+                # The reader may be left waiting on a pipe something else
+                # holds: it keeps nothing more, and the pipe stays its.
+                given_up.append(True)
+                p.kill()
+                p.wait()
+                if reader.ident is not None:
+                    reader.join(1)
+            if not reader.is_alive():
+                p.stdout.close()
+        _diff_read["bytes"] += keeper.seen
+        if timed_out:
+            _diff_read["timeouts"] += 1
+            raise subprocess.TimeoutExpired(cmd, timeout)
+        if failed:
+            raise OSError(f"reading the diff failed: {failed[0]!r}")
+        stdout = keeper.result()
+        _diff_read["cut_files"] += keeper.cut_files
+        _diff_read["cut_bytes"] += keeper.cut_bytes
+        stderr = b""
+        if err is not None:
+            err.seek(0)
+            stderr = err.read(4096)
+        return subprocess.CompletedProcess(cmd, returncode, stdout, stderr)
+    finally:
+        if err is not None:
+            err.close()
+
 
 def get_git_diff(cwd, baseline_sha, full_context=False, paths=None, untracked_paths=None):
     """
@@ -779,9 +1209,15 @@ def get_git_diff(cwd, baseline_sha, full_context=False, paths=None, untracked_pa
 
     If `paths` is given, the diff is restricted to those paths (relative to
     cwd; absolute paths are converted, paths outside cwd are dropped).
+    A path list too long for one command is cut down to reviewable source
+    files: see _run_git_on_review_paths.
     `untracked_paths` (repo-root-relative) is forwarded to _temp_index so it
     can add only those files instead of scanning the whole worktree.
+    The output is read through _DiffKeeper: files the review would drop come
+    back as their header line only, and a file's diff past
+    MAX_FILE_DIFF_BYTES is cut down to its added lines.
     """
+    _path_list_too_long.clear()
     pathspec = _diff_pathspec(cwd, paths)
     if paths and not pathspec:
         # Caller restricted to specific paths but none are inside this repo
@@ -791,24 +1227,36 @@ def get_git_diff(cwd, baseline_sha, full_context=False, paths=None, untracked_pa
         return ""
 
     # core.quotePath=false comes from GIT_CMD globally (see definition).
-    cmd = [*GIT_CMD, "diff", "--no-color", "--no-ext-diff", "--no-textconv", baseline_sha] + (["--unified=99999"] if full_context else []) + pathspec
+    args = ["diff", IGNORE_SUBMODULES, "--no-color", "--no-ext-diff", "--no-textconv", baseline_sha] + (["--unified=99999"] if full_context else [])
+    _diff_read.update(bytes=0, cut_files=0, cut_bytes=0)
+
+    def _run(env):
+        if pathspec:
+            results = _run_git_on_review_paths(args, pathspec[1:], timeout=30, run=_run_diff_bounded, cwd=cwd, env=env)
+        else:
+            results = [_run_diff_bounded([*GIT_CMD, *args], 30, cwd=cwd, env=env)]
+        if not results:
+            _path_list_too_long.add("none_reviewable")
+        for result in results:
+            if result.returncode != 0:
+                debug_log(f"git diff failed: {result.stderr[:200].decode('utf-8', errors='replace')}")
+                return None
+        # Decode with errors='replace' so binary diffs don't crash
+        return b"".join(r.stdout for r in results).decode("utf-8", errors="replace")
+
     try:
         if untracked_paths is not None and not untracked_paths:
             # Nothing to `add -N`, and the diff only reads the index.
-            result = subprocess.run(cmd, cwd=cwd, capture_output=True, timeout=30)
-        else:
-            with _temp_index(cwd, untracked_paths) as env:
-                # env is None when there is no index (bare repo / not a repo)
-                # or no copy slot — diff still runs, just without
-                # untracked-file support.
-                result = subprocess.run(cmd, cwd=cwd, capture_output=True, timeout=30, env=env)
-        if result.returncode != 0:
-            debug_log(f"git diff failed: {result.stderr[:200].decode('utf-8', errors='replace')}")
-            return None
-        # Decode with errors='replace' so binary diffs don't crash
-        return result.stdout.decode("utf-8", errors="replace")
+            return _run(None)
+        with _temp_index(cwd, untracked_paths) as env:
+            # env is None when there is no index (bare repo / not a repo)
+            # or no copy slot — diff still runs, just without
+            # untracked-file support.
+            return _run(env)
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as e:
         debug_log(f"git diff error: {e}")
+        if isinstance(e, OSError) and _too_many_args(e):
+            _path_list_too_long.add("gave_up")
         return None
 
 
@@ -874,9 +1322,12 @@ _SSH_PRIVATE_KEY_BASENAMES = frozenset((
     'id_ed25519_sk', 'id_xmss',
 ))
 _PRIVATE_KEY_NAME_SUFFIXES = ('_rsa', '_dsa', '_ecdsa', '_ed25519')
+# `.credentials.json` and `.claude.json` are Claude Code's own files: sign-in
+# tokens, a saved API key, MCP server secrets. Claude Code rewrites them as it
+# runs, so they show up as changed when its config directory is a git repo.
 _CREDENTIAL_BASENAMES = frozenset((
     'credentials', '.netrc', '.pgpass', '.npmrc', '.pypirc',
-    '.git-credentials', '.dockercfg',
+    '.git-credentials', '.dockercfg', '.credentials.json', '.claude.json',
 ))
 # chezmoi encodes a target file's attributes as stacked name prefixes
 # (`private_dot_netrc`, `encrypted_private_token`); `dot_` stands for a
@@ -932,6 +1383,42 @@ def _is_secret_shaped(file_path):
         if '.' not in name and name.endswith(_PRIVATE_KEY_NAME_SUFFIXES):
             return True
     return False
+
+
+# Data files whose name says they hold secrets (`secrets.yml`,
+# `client_secret.json`). They are reviewed like any other data file; the Stop
+# hook only counts how many are in its review set (never the names), to show
+# how common they are.
+_SECRET_NAMED_STEMS = frozenset((
+    'secret', 'secrets', 'credential', 'credentials',
+    'client_secret', 'client_secrets', 'client-secret', 'client-secrets',
+    'service-account', 'service_account', 'serviceaccount',
+    'service-account-key', 'service_account_key', 'serviceaccountkey',
+))
+_SECRET_NAMED_DATA_EXTENSIONS = frozenset((
+    '.json', '.yaml', '.yml', '.toml', '.properties', '.tfvars',
+))
+# `secrets.example.yml` is a placeholder and `secrets.enc.yaml` is ciphertext.
+_NOT_SECRET_NAME_PARTS = frozenset((
+    'example', 'sample', 'template', 'tmpl', 'dist', 'schema',
+    'enc', 'encrypted', 'sops',
+))
+
+
+def _is_secret_named(file_path):
+    base = os.path.basename(file_path.replace("\\", "/")).lower()
+    parts = base.lstrip('.').split('.')
+    if len(parts) < 2 or '.' + parts[-1] not in _SECRET_NAMED_DATA_EXTENSIONS:
+        return False
+    if _NOT_SECRET_NAME_PARTS.intersection(parts[1:-1]):
+        return False
+    stem = parts[0]
+    # Google's OAuth download is `client_secret_<client id>.json`.
+    return stem in _SECRET_NAMED_STEMS or stem.startswith('client_secret_')
+
+
+def count_secret_named(diff_files):
+    return sum(1 for file_path, _ in diff_files if _is_secret_named(file_path))
 
 
 # Path tokens that bump a file's review priority when a commit exceeds
@@ -1116,6 +1603,13 @@ def _parse_diff_header(header):
 _unparsed_diff_headers = set()
 
 
+def _section_is_reviewable(file_path, old_path):
+    """Whether a diff section is sent for review: a source file, and not one
+    renamed away from a secret-shaped name, which still carries the secret's
+    content."""
+    return _is_reviewable_source(file_path) and not _skip_secret_shaped(old_path)
+
+
 def _iter_diff_sections(diff_output):
     """Yield (new_path, old_path, lines after the header line) per file section."""
     for section in _DIFF_SECTION_RE.split(diff_output)[1:]:
@@ -1137,7 +1631,7 @@ def extract_file_paths_from_diff(diff_output):
 
     return [
         file_path for file_path, old_path, _ in _iter_diff_sections(diff_output)
-        if _is_reviewable_source(file_path) and not _skip_secret_shaped(old_path)
+        if _section_is_reviewable(file_path, old_path)
     ]
 
 
@@ -1153,7 +1647,7 @@ def parse_diff_into_files(diff_output):
     for file_path, old_path, lines in _iter_diff_sections(diff_output):
         # Filter to source code files only. A rename away from a secret-shaped
         # name still carries the secret's content, so the old name counts too.
-        if not _is_reviewable_source(file_path) or _skip_secret_shaped(old_path):
+        if not _section_is_reviewable(file_path, old_path):
             continue
 
         # Extract the diff content (from first @@ onwards)

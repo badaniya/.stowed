@@ -8,6 +8,7 @@ to work without retargeting.
 """
 import os
 import subprocess
+import sys
 import time
 
 from _base import debug_log, _PV
@@ -17,6 +18,7 @@ from gitutil import (
     _git_rev_parse_head, _is_ancestor, _git_name_only, _temp_index,
 )
 from session_state import with_locked_state
+from extensibility import _same_dir
 
 
 # =====================================================================
@@ -96,6 +98,10 @@ def consume_stop_state(session_id, clear=True):
             "touched_paths": list(state.get("touched_paths", [])),
             "baseline_sha": state.get("baseline_sha"),
             "head_at_capture": state.get("head_at_capture"),
+            # Where and when the prompt hook captured it; see baseline_origin.
+            "baseline_root": state.get("baseline_root"),
+            "prompt_at": state.get("prompt_at"),
+            "baseline_kept": state.get("baseline_kept") or 0,
             "untracked_at_baseline": (
                 dict(state["untracked_at_baseline"])
                 if isinstance(state.get("untracked_at_baseline"), dict) else {}
@@ -107,8 +113,17 @@ def consume_stop_state(session_id, clear=True):
             # State lost or overwritten since the last Stop (session_state).
             "state_resets": state.get("state_resets", 0),
             "state_overwrites": state.get("state_overwrites", 0),
+            "baseline_fail": state.get("baseline_fail") or 0,
         }
+        # touched_paths is cleared per Stop, but one baseline can be
+        # reviewed by several Stops (rewakes). turn_touched keeps every path
+        # recorded since the baseline; only telemetry reads it.
+        turn = list(dict.fromkeys(
+            [p for p in state.get("turn_touched", []) if isinstance(p, str)]
+            + snap["touched_paths"]))[-200:]
+        snap["turn_touched"] = turn
         if clear:
+            state["turn_touched"] = turn
             state["touched_paths"] = []
             state.pop("reviewed_diff_hash", None)
             state.pop("state_resets", None)
@@ -117,10 +132,68 @@ def consume_stop_state(session_id, clear=True):
 
     return with_locked_state(session_id, _snap) or {
         "touched_paths": [], "baseline_sha": None, "head_at_capture": None,
-        "untracked_at_baseline": {},
+        "untracked_at_baseline": {}, "baseline_root": None, "prompt_at": None,
+        "baseline_kept": 0,
         "fire_count": 0, "fire_count_expired": False, "previous_findings": [],
         "reviewed_diff_hash": None, "state_resets": 0, "state_overwrites": 0,
+        "baseline_fail": 0, "turn_touched": [],
     }
+
+
+# Path names compare without case where the filesystem usually does.
+_FOLD_CASE = os.name == "nt" or sys.platform == "darwin"
+
+
+def _rel_in_repo(real_root, path):
+    """`path` relative to the repo root (a real path), or None when it lies
+    outside the repo."""
+    real = os.path.realpath(path)
+    try:
+        rel = os.path.relpath(real, real_root)
+    except ValueError:  # another drive
+        return None
+    if rel == os.pardir or rel.startswith(os.pardir + os.sep):
+        return None
+    return rel.casefold() if _FOLD_CASE else rel
+
+
+def touched_scope(repo_root, cwd, touched_paths):
+    """Where the paths the session's edit tools wrote since the baseline lie:
+    (scope, repo-relative paths inside the repo). scope: 0 none recorded,
+    1 all inside the reviewed repo, 2 some outside, 3 all outside. Relative
+    paths are read against `cwd`. The list holds the newest 200 paths, so
+    this is approximate past that. Telemetry only."""
+    root = os.path.realpath(repo_root)
+    inside, outside = set(), 0
+    for p in touched_paths:
+        rel = _rel_in_repo(root, os.path.join(cwd or root, p))
+        if rel is None:
+            outside += 1
+        else:
+            inside.add(rel)
+    if not touched_paths:
+        return 0, inside
+    if not outside:
+        return 1, inside
+    return (2 if inside else 3), inside
+
+
+def review_scope_code(repo_root, scope, inside, files, base_fail):
+    """One number, for telemetry only, saying how a Stop review relates to
+    what the session's edit tools wrote since the baseline:
+
+        base_fail * 100000 + scope * 10000 + min(untouched, 9999)
+
+    scope and inside: from touched_scope. untouched: how many of `files`
+    (repo-root-relative or absolute) no edit tool wrote. base_fail: 0 the
+    review diffed against a real turn-start snapshot, 1 and 2 see
+    last_baseline_fail, 3 there was no usable snapshot. Packed into one key
+    and sent even when 0, so a row without it was cut by the metrics key cap
+    or had no repo."""
+    root = os.path.realpath(repo_root)
+    untouched = sum(1 for f in files
+                    if _rel_in_repo(root, os.path.join(root, f)) not in inside)
+    return int(base_fail or 0) * 100000 + scope * 10000 + min(untouched, 9999)
 
 
 def record_reviewed_diff(session_id, diff_hash):
@@ -153,6 +226,48 @@ def restore_unreviewed_stop_state(session_id, paths, baseline_sha):
     with_locked_state(session_id, _restore)
 
 
+# state["baseline_kept"]: why a prompt left an earlier turn's baseline in
+# place. Only telemetry reads it.
+KEPT_NO_CAPTURE = 1   # it could not capture one (not a repo, or git failed)
+KEPT_UNREVIEWED = 2   # the previous turn's edits were never reviewed
+
+# baseline_origin() values that mean "captured in another checkout".
+FOREIGN_ORIGINS = (1, 2, 3)
+
+
+def baseline_origin(repo_root, baseline_sha, baseline_root):
+    """Where the session's baseline was captured, relative to the checkout a
+    Stop review is about to read (`repo_root`):
+
+        0  that checkout (or the origin was not recorded)
+        1  another worktree of the same repository
+        2  another repository
+        3  another folder, which is gone or cannot be read as a checkout
+        4  there is no baseline
+
+    `baseline_root` is the repo root the prompt hook stored beside the SHA."""
+    if not baseline_sha:
+        return 4
+    if not baseline_root or not isinstance(baseline_root, str):
+        return 0
+    if _same_dir(baseline_root, repo_root):
+        return 0
+    if not os.path.isdir(baseline_root):
+        return 3
+    here, there = _git_dir(repo_root), _git_dir(baseline_root)
+    if not here or not there:
+        return 3
+    return 1 if _same_dir(here, there) else 2
+
+
+def baseline_origin_metric(origin, kept):
+    """The `bl_origin` number on Stop rows: baseline_origin, plus 10 or 20
+    (KEPT_*) when the baseline is an earlier turn's."""
+    if origin == 4 or kept not in (KEPT_NO_CAPTURE, KEPT_UNREVIEWED):
+        return origin
+    return origin + 10 * kept
+
+
 def get_baseline_file_content(session_id, file_path, cwd):
     """Get the content of a file at the baseline SHA. Returns None if unavailable.
 
@@ -171,19 +286,42 @@ def get_baseline_file_content(session_id, file_path, cwd):
     try:
         abs_path = os.path.abspath(file_path)
         cwd_abs = os.path.abspath(cwd) if cwd else os.getcwd()
-        try:
-            rel_path = os.path.relpath(abs_path, cwd_abs)
-        except ValueError:
-            return None
-        result = subprocess.run(
-            [*GIT_CMD, "show", f"{baseline_sha}:{rel_path}"],
-            cwd=cwd, capture_output=True, timeout=5
-        )
-        if result.returncode == 0:
-            return (result.stdout or b"").decode("utf-8", errors="replace")
+        attempts = [(abs_path, cwd_abs, cwd)]
+        # The tool's path and the session directory can name the same place
+        # through different symlinks (/tmp and /var on macOS). The relative
+        # path between the two spellings then leaves the repo and git finds
+        # nothing, so the lookup is tried again with both resolved.
+        real_path, real_cwd = os.path.realpath(abs_path), os.path.realpath(cwd_abs)
+        if (real_path, real_cwd) != (abs_path, cwd_abs):
+            attempts.append((real_path, real_cwd, real_cwd))
+        for path, start, git_cwd in attempts:
+            try:
+                rel_path = os.path.relpath(path, start)
+            except ValueError:
+                continue
+            # `<rev>:<path>` is read from the repo root unless the path starts
+            # with `./`, and takes forward slashes only. Without both, the
+            # lookup fails for a session started below the repo root, and on
+            # Windows for any file that is not directly in the session
+            # directory.
+            rel_path = rel_path.replace(os.sep, "/")
+            result = subprocess.run(
+                [*GIT_CMD, "show", f"{baseline_sha}:./{rel_path}"],
+                cwd=git_cwd, capture_output=True, timeout=5
+            )
+            if result.returncode == 0:
+                return (result.stdout or b"").decode("utf-8", errors="replace")
         return None
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError, ValueError):
         return None
+
+
+# How the last capture_git_baseline call got its SHA: 0 a real snapshot,
+# 1 `stash create` failed and HEAD was returned, 2 no index copy and HEAD was
+# returned. With 1 or 2 the next Stop review cannot tell the turn's changes
+# from uncommitted work that was already there. Stored with baseline_sha.
+# Telemetry only.
+last_baseline_fail = 0
 
 
 def capture_git_baseline(cwd):
@@ -212,6 +350,8 @@ def capture_git_baseline(cwd):
     # with `Ávila_report.txt` triggers a quotePath/locale warning) would
     # trip the stderr reader thread on Windows cp1252. Decode both streams
     # leniently for symmetry with _list_untracked. See #2056.
+    global last_baseline_fail
+    last_baseline_fail = 0
     try:
         # Check if HEAD exists (i.e., repo has at least one commit)
         head_check = subprocess.run(
@@ -233,6 +373,10 @@ def capture_git_baseline(cwd):
                     cwd=cwd, capture_output=True, timeout=15, env=env
                 )
                 sha = (result.stdout or b"").decode("utf-8", errors="replace").strip()
+                if not sha and result.returncode != 0:
+                    last_baseline_fail = 1
+            else:
+                last_baseline_fail = 2
         if sha:
             return sha
 
@@ -605,7 +749,8 @@ def _list_untracked(cwd):
         debug_log(f"_list_untracked error: {e}")
         return {}
 
-def compute_v2_review_set(cwd, baseline_sha, head_at_capture, untracked_at_baseline=None):
+def compute_v2_review_set(cwd, baseline_sha, head_at_capture, untracked_at_baseline=None,
+                          since_ns=None):
     """v2 diff strategy: derive the review set from git state alone.
 
     review_set = (files dirty vs current HEAD, plus files committed this turn
@@ -619,6 +764,10 @@ def compute_v2_review_set(cwd, baseline_sha, head_at_capture, untracked_at_basel
     snapshot a pre-existing untracked file looks "new since baseline" forever.
     A file is excluded only if it was untracked at baseline AND its mtime is
     unchanged — an in-place edit during the turn is still reviewed.
+
+    since_ns: for a checkout the prompt hook took no baseline or snapshot of
+    (the turn moved into it), the time the turn began. A dirty or untracked
+    file last written before then was already that way and is left out.
 
     Known limitation: a Bash-only turn that's interrupted before Stop fires
     leaves touched_paths empty, so the next UPS re-baselines past those edits.
@@ -662,6 +811,16 @@ def compute_v2_review_set(cwd, baseline_sha, head_at_capture, untracked_at_basel
         return max(st.st_mtime_ns, st.st_ctime_ns) < capped_at_ns - _CAPPED_BASELINE_SLACK_NS
 
     preexisting_unchanged = {p for p in untracked if _unchanged_since_baseline(p)}
+    if since_ns:
+        def _written_before_turn(p):
+            try:
+                st = os.stat(os.path.join(repo, p))
+            except OSError:
+                return False
+            return max(st.st_mtime_ns, st.st_ctime_ns) < since_ns - _CAPPED_BASELINE_SLACK_NS
+
+        preexisting_unchanged |= {p for p in untracked if _written_before_turn(p)}
+        tracked_dirty = {p for p in tracked_dirty if not _written_before_turn(p)}
     new_untracked = untracked - preexisting_unchanged
     dirty_now = tracked_dirty | new_untracked
 

@@ -17,12 +17,12 @@ Two reassignable globals here are read by handlers in
 ``_last_review_truncated_bytes``. Handlers reference them as ``llm.X`` (not via
 ``from``-import) so they observe reassignment.
 """
-import glob
 import hashlib
 import json
 import logging
 import os
 import re
+import subprocess
 import sys
 import tempfile
 import threading
@@ -30,12 +30,12 @@ import time
 import traceback
 import urllib.parse
 import urllib.request
-from typing import Optional, Tuple, Dict, Any, List
+from typing import Optional, Tuple, Dict, Any, List, Callable
 
 import extensibility
 import review_api
-from _base import debug_log, _record_usage, _record_http_error, _PV, PROVENANCE_TAG, state_dir as _resolve_state_dir  # noqa: F401
-from session_state import with_locked_state
+from _base import debug_log, _record_usage, _record_http_error, _PV, PROVENANCE_TAG, state_dir as _resolve_state_dir, agent_sdk_site_dirs  # noqa: F401
+from session_state import load_state, with_locked_state
 from gitutil import git_config_env, SAFE_GIT_CONFIG
 
 
@@ -59,17 +59,13 @@ def _inject_agent_sdk_venv_into_syspath(state_dir):
     fails with `ModuleNotFoundError: pywintypes` and the agentic reviewer
     falls back to single-shot silently. Replicate what site.py would do.
     """
-    venv_root = os.path.join(state_dir, "agent-sdk-venv")
-    candidates = (
-        glob.glob(os.path.join(venv_root, "lib", "python*", "site-packages"))
-        + glob.glob(os.path.join(venv_root, "Lib", "site-packages"))
-        # `pip install --target` fallback (ensure_agent_sdk BUILT_TARGET, used
-        # when venv can't bootstrap pip): a FLAT layout — packages sit directly
-        # in agent-sdk-libs/, not under a site-packages subdir. See #2154
-        # follow-up. The pywin32 .pth bootstrap below applies here too (target
-        # installs don't process .pth at runtime, same as a manual venv insert).
-        + [os.path.join(state_dir, "agent-sdk-libs")]
-    )
+    # `agent-sdk-libs` is the `pip install --target` fallback
+    # (ensure_agent_sdk BUILT_TARGET, used when venv can't bootstrap pip): a
+    # FLAT layout, packages sit directly in it, not under a site-packages
+    # subdir. See #2154 follow-up. The pywin32 .pth bootstrap below applies
+    # there too (target installs don't process .pth at runtime, same as a
+    # manual venv insert).
+    candidates = agent_sdk_site_dirs(state_dir)
     added = False
     for sp in candidates:
         if not os.path.isdir(sp) or sp in sys.path:
@@ -322,10 +318,12 @@ def _custom_headers() -> List[Tuple[str, str]]:
 
 
 def gateway_cfg() -> int:
-    """How the plugin's own API calls are routed, for telemetry: bit 1 when
+    """How the plugin's reviews are routed, for telemetry: bit 1 when
     ANTHROPIC_BASE_URL names a host other than api.anthropic.com, bit 2 when
-    at least one ANTHROPIC_CUSTOM_HEADERS line is sent. 0 when neither. A
-    number only: no host, header name or value."""
+    at least one ANTHROPIC_CUSTOM_HEADERS line is sent, bit 4 when reviews
+    run through the user's claude on a Claude apps gateway sign-in (see
+    gateway_review_cli). 0 when none. A number only: no host, header name
+    or value."""
     cfg = 0
     base = _anthropic_base_url()
     try:
@@ -336,6 +334,8 @@ def gateway_cfg() -> int:
         cfg |= 1
     if any(name.lower() != "anthropic-beta" for name, _ in _custom_headers()):
         cfg |= 2
+    if _gateway_cli:
+        cfg |= 4
     return cfg
 
 
@@ -558,16 +558,17 @@ def _write_review_model_cache(path, endpoint_key, model, now):
 def default_review_model() -> str:
     """Model for a review the user hasn't pinned with SECURITY_REVIEW_MODEL.
 
-    3P providers go through the Agent SDK, so the CLI alias does the work.
-    1P and gateways get the newest Opus the endpoint lists, looked up at most
-    once per _REVIEW_MODEL_TTL_SECONDS; _PINNED_REVIEW_MODEL when the lookup
-    can't answer. Never raises.
+    3P providers and Claude apps gateway sign-ins go through the Agent SDK,
+    so the CLI alias does the work. 1P and LLM gateways set with
+    ANTHROPIC_BASE_URL get the newest Opus the endpoint lists, looked up at
+    most once per _REVIEW_MODEL_TTL_SECONDS; _PINNED_REVIEW_MODEL when the
+    lookup can't answer. Never raises.
     """
     global _review_model_memo
     explicit = os.environ.get("SECURITY_REVIEW_MODEL", "").strip()
     if explicit:
         return explicit
-    if _is_3p_provider():
+    if _is_3p_provider() or _gateway_cli:
         return _CLI_OPUS_ALIAS
     if not HAS_API_CREDENTIALS:
         return _PINNED_REVIEW_MODEL
@@ -591,16 +592,165 @@ def default_review_model() -> str:
     return _review_model_memo
 
 
-def _call_claude_via_sdk(prompt, output_schema, *, max_tokens=16000, model=None):
+# A session signed in to a Claude apps gateway with /login gives hooks no
+# credential, but a child `claude` restores that sign-in by itself, so reviews
+# can run through the user's CLI without a credential entering this process.
+
+# `claude auth status` may wait for a settings helper script an administrator
+# configured, which Claude Code gives 10 s by default.
+_GATEWAY_CHECK_TIMEOUT_S = 15
+_GATEWAY_STATE_KEY = "gateway_sign_in"
+# The CLI that reviews for a signed-in gateway session, "" when this process
+# decided not to use the gateway route, None before it has decided.
+_gateway_cli: Optional[str] = None
+# True when this process asked the CLI about the sign-in and got no usable
+# answer: the reviews are skipped, but the session may well be signed in.
+_gateway_check_unanswered = False
+# True once a review through the gateway route ran out of time. What makes
+# it do so (a rejected sign-in, a gateway that cannot be reached) does not
+# depend on the model, so the Sonnet attempt is not made after it.
+_gateway_review_timed_out = False
+
+
+def _user_cli_path() -> Optional[str]:
+    """The user's own `claude`: SG_AGENTIC_CLI_PATH if set ("" selects the
+    SDK's bundled CLI), else the first of the absolute paths below that
+    exists, else None."""
+    cli_path = os.environ.get("SG_AGENTIC_CLI_PATH")
+    if cli_path is not None:
+        return cli_path
+    # CLAUDE_CODE_EXECPATH is the absolute path to the running CC binary
+    # itself (e.g. ~/.local/share/claude/versions/2.1.x — that's the binary,
+    # not a directory). Claude Code sets it for the Bash tool's shells, not for
+    # hooks, so hooks usually find the CLI at a fixed path below. We do NOT
+    # fall back to shutil.which("claude") because the hook's cwd is the
+    # user's (potentially attacker-supplied) repo, and Windows shutil.which
+    # searches cwd first — a checked-in ./claude.exe would get spawned.
+    # Absolute-path probes only.
+    for p in (
+        os.environ.get("CLAUDE_CODE_EXECPATH"),
+        os.path.expanduser("~/.local/bin/claude"),
+        "/root/.local/bin/claude",
+        # Claude Code Remote container install path.
+        "/opt/claude-code/bin/claude",
+    ):
+        if p and os.path.isfile(p):
+            return p
+    return None
+
+
+def _tolerate_unknown_sdk_messages() -> None:
+    """Make the SDK's message parser pass unknown message types through
+    instead of raising: a CLI newer than the SDK emits types the SDK does not
+    know (e.g. rate_limit_event)."""
+    try:
+        from claude_agent_sdk._internal import message_parser as _mp
+        import claude_agent_sdk._internal.client as _sdk_client
+        from claude_agent_sdk import SystemMessage as _SysMsg
+
+        _orig_parse = _mp.parse_message
+        if getattr(_orig_parse, "_sg_tolerant", False):
+            return
+
+        def _tolerant(data):
+            try:
+                return _orig_parse(data)
+            except Exception:
+                return _SysMsg(subtype=data.get("type", "unknown"), data=data)
+
+        _tolerant._sg_tolerant = True
+        _mp.parse_message = _tolerant
+        _sdk_client.parse_message = _tolerant
+    except Exception:
+        pass
+
+
+def _gateway_signed_in(cli: str) -> Optional[bool]:
+    """Whether `cli auth status --json` reports a session signed in to a
+    Claude apps gateway. None when the CLI gave no usable answer (an error, a
+    timeout, or output that is not a JSON object)."""
+    try:
+        # A process the CLI starts can keep stdout open after the CLI exits;
+        # reading a pipe would then wait out the timeout and lose the answer.
+        with tempfile.TemporaryFile() as out:
+            subprocess.run(
+                [cli, "auth", "status", "--json"], stdin=subprocess.DEVNULL,
+                stdout=out, stderr=subprocess.DEVNULL,
+                env={**os.environ, **_agentic_spawn_env()},
+                cwd=os.path.expanduser("~"),
+                timeout=_GATEWAY_CHECK_TIMEOUT_S, check=False,
+            )
+            out.seek(0)
+            status = json.loads(out.read(64 * 1024))
+    except Exception as e:
+        debug_log(f"gateway check: no usable answer from {cli} ({type(e).__name__})")
+        return None
+    if not isinstance(status, dict):
+        debug_log("gateway check: answer was not a JSON object")
+        return None
+    provider, logged_in = status.get("apiProvider"), status.get("loggedIn")
+    debug_log(f"gateway check: apiProvider={str(provider)[:40]!r} loggedIn={repr(logged_in)[:10]}")
+    # A managed machine that names a gateway but was never signed in also
+    # reports "gateway".
+    return provider == "gateway" and logged_in is True
+
+
+def gateway_review_cli(session_id) -> Optional[str]:
+    """The CLI to review through when the plugin has no credential but the
+    session is signed in to a Claude apps gateway; None otherwise. A yes or
+    no from the CLI is kept for the rest of the session, so signing in or
+    out mid-session takes effect in the next one. When the CLI gives no
+    usable answer, nothing is saved, so the next hook asks again."""
+    global _gateway_cli, _gateway_check_unanswered
+    if _gateway_cli is not None:
+        return _gateway_cli or None
+    cli = _user_cli_path() or ""
+    ok = None
+    # No skip for CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC, as on Bedrock and Vertex:
+    # the gateway docs suggest setting it, and the review goes through the
+    # gateway like the session's own requests.
+    if not os.path.isabs(cli):
+        debug_log("gateway check: skipped, SG_AGENTIC_CLI_PATH is not a full path"
+                  if "SG_AGENTIC_CLI_PATH" in os.environ
+                  else "gateway check: skipped, no claude at ~/.local/bin/claude or the other "
+                  "usual full paths (SG_AGENTIC_CLI_PATH can name one)")
+    else:
+        cached = load_state(session_id).get(_GATEWAY_STATE_KEY)
+        if (isinstance(cached, dict) and cached.get("cli") == cli
+                and isinstance(cached.get("ok"), bool)):
+            ok = cached["ok"]
+            debug_log(f"gateway check: using this session's saved answer (signed in: {ok})")
+        else:
+            ok = _gateway_signed_in(cli)
+            _gateway_check_unanswered = ok is None
+            if ok is not None:
+                def _save(state):
+                    state[_GATEWAY_STATE_KEY] = {"cli": cli, "ok": ok}
+                with_locked_state(session_id, _save)
+    _gateway_cli = cli if ok else ""
+    return _gateway_cli or None
+
+
+def can_review(session_id) -> bool:
+    """True when the plugin has a credential, or has none but the session is
+    signed in to a Claude apps gateway. Call it before reviewing: the review
+    takes the gateway route only after it has said yes in this process."""
+    return HAS_API_CREDENTIALS or gateway_review_cli(session_id) is not None
+
+
+def _call_claude_via_sdk(prompt, output_schema, *, max_tokens=16000, model=None,
+                         cli_path=None):
     """Single-turn SDK call as a substitute for the HTTP _call_claude path on
-    3P providers. Uses the same `output_format` JSON-schema contract so the
-    return value shape is identical (parsed dict or None).
+    3P providers, and, with `cli_path` set, for a session signed in to a
+    Claude apps gateway. Uses the same `output_format` JSON-schema contract so
+    the return value shape is identical (parsed dict or None).
 
     No tools (see _only_tools_args) — the security review only needs
     structured output, not Read/Grep/Glob. Single turn keeps cost predictable.
     """
-    global _last_call_claude_http_error
+    global _last_call_claude_http_error, _gateway_review_timed_out
     _last_call_claude_http_error = None
+    route = "gateway" if cli_path else "3P"
 
     try:
         import asyncio as _asyncio
@@ -625,13 +775,16 @@ def _call_claude_via_sdk(prompt, output_schema, *, max_tokens=16000, model=None)
                 query,
             )
         except Exception as e:
-            debug_log(f"3P sdk-single-turn: SDK unavailable ({e})")
+            debug_log(f"{route} sdk-single-turn: SDK unavailable ({e})")
             _last_call_claude_http_error = -1
             _record_http_error(-1)
             return None
 
     _send_sdk_logs_to_debug_log()
-    cli_path = os.environ.get("SG_AGENTIC_CLI_PATH") or None
+    if cli_path:
+        _tolerate_unknown_sdk_messages()
+    else:
+        cli_path = os.environ.get("SG_AGENTIC_CLI_PATH") or None
     default_model = default_review_model()
     chosen_model = model or default_model
 
@@ -639,6 +792,8 @@ def _call_claude_via_sdk(prompt, output_schema, *, max_tokens=16000, model=None)
     # error (auth missing, model id wrong, etc.) in the debug log instead
     # of just "exit code 1".
     _captured_stderr: List[str] = []
+    # HTTP statuses (or "no response") the CLI said it retried an API request after.
+    _retried_after: set = set()
 
     async def _arun():
         opts = ClaudeAgentOptions(
@@ -671,31 +826,46 @@ def _call_claude_via_sdk(prompt, output_schema, *, max_tokens=16000, model=None)
                     structured = msg.structured_output
                 _record_usage(getattr(msg, "usage", None) or {}, chosen_model,
                               cost_usd=getattr(msg, "total_cost_usd", None))
+            elif getattr(msg, "subtype", None) == "api_retry":
+                data = getattr(msg, "data", None)
+                status = data.get("error_status") if isinstance(data, dict) else None
+                _retried_after.add(str(status) if isinstance(status, int) else "no response")
         return structured
 
     # 60s ceiling: a single review request on a healthy 3P endpoint completes
     # in 5-15s; >60s means the child claude is hung (e.g. user has the 3P env
     # var set but no provider creds → child waits for an auth that never
     # comes). Bound the wait so a misconfigured 3P session doesn't stall the
-    # whole hook.
-    try:
-        result = _asyncio.run(_asyncio.wait_for(_arun(), timeout=60))
+    # whole hook. A gateway review gets the 120 s a direct HTTP review gets.
+    timeout_s = 120 if route == "gateway" else 60
+
+    def _log_child_stderr():
         if _captured_stderr:
-            debug_log(f"3P sdk-single-turn child stderr ({len(_captured_stderr)} lines):")
+            debug_log(f"{route} sdk-single-turn child stderr ({len(_captured_stderr)} lines):")
             for _l in _captured_stderr[:20]:
                 debug_log(f"  | {_l.rstrip()}")
+
+    try:
+        result = _run_inner_cli(
+            lambda: _asyncio.run(_asyncio.wait_for(_arun(), timeout=timeout_s)),
+            _captured_stderr)
+        _log_child_stderr()
         return result
     except _asyncio.TimeoutError:
-        debug_log("3P sdk-single-turn: timeout after 60s")
+        # The CLI retries a refused or unreachable API by itself and reports
+        # each retry in its output, not on stderr.
+        debug_log(f"{route} sdk-single-turn: timeout after {timeout_s}s"
+                  + (f"; the CLI's API requests were retried after status "
+                     f"{', '.join(sorted(_retried_after))}" if _retried_after else ""))
+        _log_child_stderr()
+        if route == "gateway":
+            _gateway_review_timed_out = True
         _last_call_claude_http_error = -1
         _record_http_error(-1)
         return None
     except Exception as e:
-        debug_log(f"3P sdk-single-turn: query failed ({e})")
-        if _captured_stderr:
-            debug_log(f"3P sdk-single-turn child stderr ({len(_captured_stderr)} lines):")
-            for _l in _captured_stderr[:20]:
-                debug_log(f"  | {_l.rstrip()}")
+        debug_log(f"{route} sdk-single-turn: query failed ({e})")
+        _log_child_stderr()
         _last_call_claude_http_error = -1
         _record_http_error(-1)
         return None
@@ -734,6 +904,13 @@ def _call_claude(prompt, output_schema, thinking_budget=10000, max_tokens=16000,
                                     max_tokens=max_tokens, model=model)
 
     if not HAS_API_CREDENTIALS:
+        if _gateway_cli:
+            # Signed in to a Claude apps gateway: the user's CLI reviews with
+            # its own stored sign-in (see gateway_review_cli).
+            if cacheable_prefix:
+                prompt = cacheable_prefix + "\n\n" + prompt
+            return _call_claude_via_sdk(prompt, output_schema, max_tokens=max_tokens,
+                                        model=model, cli_path=_gateway_cli)
         return None
 
     global _auth_prefer_token
@@ -891,6 +1068,9 @@ def _call_claude_dual_or(prompt, output_schema, *, bool_key: str, list_key: str,
 
     explicit = os.environ.get("SECURITY_REVIEW_MODEL", "").strip()
     primary = default_review_model()
+    # Through the user's CLI, the alias gives the Sonnet id the user's own
+    # sessions use on the gateway, including any ANTHROPIC_DEFAULT_SONNET_MODEL.
+    fallback = "sonnet" if _gateway_cli else "claude-sonnet-4-6"
 
     if not _dual_or_enabled():
         # Single-call path. Reuse the same sonnet-fallback retry as a dual_or
@@ -898,10 +1078,10 @@ def _call_claude_dual_or(prompt, output_schema, *, bool_key: str, list_key: str,
         r = _call_claude(prompt, output_schema, thinking_budget=thinking_budget,
                          max_tokens=max_tokens, model=primary, retry_5xx=False,
                          cacheable_prefix=cacheable_prefix)
-        if r is None and not explicit:
+        if r is None and not explicit and not _gateway_review_timed_out:
             debug_log(f"single: {primary} failed, falling back to sonnet")
             r = _call_claude(prompt, output_schema, thinking_budget=thinking_budget,
-                             max_tokens=max_tokens, model="claude-sonnet-4-6",
+                             max_tokens=max_tokens, model=fallback,
                              retry_5xx=True, cacheable_prefix=cacheable_prefix)
         return r
 
@@ -909,10 +1089,10 @@ def _call_claude_dual_or(prompt, output_schema, *, bool_key: str, list_key: str,
         r = _call_claude(prompt, output_schema, thinking_budget=thinking_budget,
                          max_tokens=max_tokens, model=primary, retry_5xx=False,
                          cacheable_prefix=cacheable_prefix)
-        if r is None and not explicit:
+        if r is None and not explicit and not _gateway_review_timed_out:
             debug_log(f"dual_or: {primary} leg failed, falling back to sonnet")
             r = _call_claude(prompt, output_schema, thinking_budget=thinking_budget,
-                             max_tokens=max_tokens, model="claude-sonnet-4-6",
+                             max_tokens=max_tokens, model=fallback,
                              retry_5xx=True, cacheable_prefix=cacheable_prefix)
         return r
 
@@ -1202,7 +1382,7 @@ def analyze_code_security(files: List[Tuple[str, str]], is_diff: bool = False, p
     """
     _review_status.failed = False
     _review_status.status = None
-    if not HAS_API_CREDENTIALS or not files:
+    if not (HAS_API_CREDENTIALS or _gateway_cli) or not files:
         return None, []
 
     # Build language context from file extensions
@@ -1419,7 +1599,42 @@ def _only_tools_args(tools: Tuple[str, ...] = ()) -> Dict[str, Optional[str]]:
     the permission mode that CLI starts in. Passed as CLI flags because not
     every Agent SDK build that can run a review has a `tools` option.
     """
-    return {"tools": ",".join(tools), "strict-mcp-config": None}
+    args: Dict[str, Optional[str]] = {"tools": ",".join(tools)}
+    if _send_strict_mcp:
+        args["strict-mcp-config"] = None
+    else:
+        # The servers an administrator delivers still start; their tools are
+        # kept from the reviewer.
+        args["disallowedTools"] = "mcp__*"
+    return args
+
+
+# Claude Code exits at startup when given --strict-mcp-config on a machine
+# whose administrator delivers the MCP servers (managed-mcp.json). The flag
+# is sent until an inner CLI refuses it.
+_send_strict_mcp = True
+
+
+def _names_strict_mcp_flag(stderr_line: Any) -> bool:
+    return "--strict-mcp-config" in str(stderr_line)
+
+
+def _run_inner_cli(start: Callable[[], Any], stderr_lines: List[str]) -> Any:
+    """start() runs one inner CLI to its result; stderr_lines receives what
+    that CLI writes to stderr. A start the CLI refused over
+    --strict-mcp-config is made once more without the flag, and the flag is
+    left out for the rest of this process."""
+    global _send_strict_mcp
+    del stderr_lines[:]
+    try:
+        return start()
+    except Exception:
+        if not any(_names_strict_mcp_flag(l) for l in stderr_lines):
+            raise
+        _send_strict_mcp = False
+        debug_log("inner CLI refused --strict-mcp-config; starting it again without the flag")
+        del stderr_lines[:]
+        return start()
 
 
 def _agentic_spawn_env() -> Dict[str, str]:
@@ -1440,6 +1655,9 @@ def _agentic_spawn_env() -> Dict[str, str]:
     is the only credential.
     """
     env = {
+        # Policy settings can enable this plugin inside the reviewing CLI too;
+        # its hooks there must not start reviews of their own.
+        "SECURITY_GUIDANCE_DISABLE": "1",
         "FALLBACK_FOR_ALL_PRIMARY_MODELS": "1",
         "CLAUDE_CODE_WEBSOCKET_AUTH_FILE_DESCRIPTOR": "",
         "CLAUDE_CODE_OAUTH_TOKEN_FILE_DESCRIPTOR": "",
@@ -1593,59 +1811,26 @@ def _agentic_review(
     # `[Request interrupted by user]` and gives up). The CLI that launched
     # this hook is by definition >= the plugin's tested floor, so it's
     # always at least as capable.
-    #
-    # CLAUDE_CODE_EXECPATH is the absolute path to the running CC binary
-    # itself (e.g. ~/.local/share/claude/versions/2.1.x — that's the binary,
-    # not a directory). It is the exact CLI that loaded this hook. We do NOT
-    # fall back to shutil.which("claude") because the hook's cwd is the
-    # user's (potentially attacker-supplied) repo, and Windows shutil.which
-    # searches cwd first — a checked-in ./claude.exe would get spawned.
-    # Absolute-path probes only.
-    #
-    # Also monkeypatch the SDK's message parser to tolerate unknown message
-    # types (newer CLI emits rate_limit_event which older SDK raises on).
-    cli_path = os.environ.get("SG_AGENTIC_CLI_PATH")
-    if cli_path is None:
-        for p in (
-            os.environ.get("CLAUDE_CODE_EXECPATH"),
-            os.path.expanduser("~/.local/bin/claude"),
-            "/root/.local/bin/claude",
-            # Claude Code Remote container install path. CLAUDE_CODE_EXECPATH
-            # is not exported to hook subprocesses there, so without this
-            # candidate cli_path resolves to None and the SDK uses its
-            # bundled CLI — which lags the running CC by builds.
-            "/opt/claude-code/bin/claude",
-        ):
-            if p and os.path.isfile(p):
-                cli_path = p
-                break
+    cli_path = _gateway_cli or _user_cli_path()
     if cli_path:
-        try:
-            from claude_agent_sdk._internal import message_parser as _mp
-            import claude_agent_sdk._internal.client as _sdk_client
-            from claude_agent_sdk import SystemMessage as _SysMsg
-
-            _orig_parse = _mp.parse_message
-
-            def _tolerant(data):
-                try:
-                    return _orig_parse(data)
-                except Exception:
-                    return _SysMsg(subtype=data.get("type", "unknown"), data=data)
-
-            _mp.parse_message = _tolerant
-            _sdk_client.parse_message = _tolerant
-        except Exception:
-            pass
+        _tolerate_unknown_sdk_messages()
 
     # Without a callback the inner CLI writes to this hook's stderr, which
     # Claude Code shows Claude as the review notice. Log it instead.
     child_stderr_lines = [0]
+    # Lines of the current start that name --strict-mcp-config (_run_inner_cli).
+    flag_refusals: List[str] = []
 
     def _child_stderr_metric() -> Dict[str, int]:
         return {"child_stderr": child_stderr_lines[0]} if child_stderr_lines[0] else {}
 
     def _on_child_stderr(line: str) -> None:
+        if _names_strict_mcp_flag(line):
+            # Not counted: where the flag is refused, every review gets this
+            # line once, from the start that is then made again.
+            flag_refusals.append(str(line))
+            debug_log(f"agentic reviewer's CLI stderr | {str(line).rstrip()}")
+            return
         child_stderr_lines[0] += 1
         metrics["child_stderr"] = child_stderr_lines[0]
         if child_stderr_lines[0] <= 20:
@@ -1756,7 +1941,9 @@ def _agentic_review(
 
     def _run(system: str, prompt: str, *, schema: Dict[str, Any]
              ) -> Tuple[Optional[Dict[str, Any]], int, Optional[str]]:
-        return _asyncio.run(_arun(system, prompt, schema=schema))
+        return _run_inner_cli(
+            lambda: _asyncio.run(_arun(system, prompt, schema=schema)),
+            flag_refusals)
 
     # Stage 1: investigate — SDK enforces _FINDINGS_SCHEMA and retries the
     # agent on mismatch, so `inv` is either a validated dict or None.

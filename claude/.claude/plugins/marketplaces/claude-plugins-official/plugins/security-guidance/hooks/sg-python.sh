@@ -106,7 +106,7 @@ probe() {
     exec "$@" -c 'import os, sys; t = (sys.argv[1:] or [""])[0]; sys.exit(3) if t and not (os.path.isfile(t) and os.access(t, os.R_OK)) else print(f"{sys.version_info[0]}.{sys.version_info[1]}")' "$SG_TARGET" 2>/dev/null
 }
 
-# Use as `v=$(probe ...) || { note_unreadable "<name>"; continue; }`.
+# Use as `ask ... || { note_unreadable "<name>"; continue; }` (see ask below).
 note_unreadable() {
     [ $? -eq 3 ] && sg_unreadable="$sg_unreadable|$1|"
     return 0
@@ -117,6 +117,49 @@ note_unreadable() {
 # when the interpreter does not exist, so missing names are skipped first.
 on_path() {
     command -v "$1" >/dev/null 2>&1
+}
+
+# How long the probes took, for the launcher_probe_max_ms / launcher_probe_ms
+# metrics the hook reports. Measurement only: `ask` is `v=$(probe ...)` with a
+# clock around it, and changes neither which interpreter runs nor how long a
+# probe may take. EPOCHREALTIME needs bash 5; older bash (macOS /bin/bash) only
+# has whole seconds, where a difference of 1 can be a few milliseconds: there
+# a single probe counts from 2 s, and the total is first probe to last.
+unset SG_LAUNCHER_PROBE_MS SG_LAUNCHER_PROBE_MAX_MS
+sg_probe_ms=0
+sg_probe_max_ms=0
+sg_probe_first=""
+sg_coarse=""
+sg_clock() {
+    # Sets $sg_now (ms) without starting a process.
+    case "${EPOCHREALTIME:-}" in
+        [0-9]*[.,][0-9][0-9][0-9][0-9][0-9][0-9])  # the decimal point follows the locale
+            sg_now=${EPOCHREALTIME//[!0-9]/}
+            sg_now=$((10#$sg_now / 1000)) ;;
+        *)
+            sg_coarse=1
+            sg_now=$((SECONDS * 1000)) ;;
+    esac
+}
+ask() {
+    # Sets $v; same exit status as probe.
+    local rc=0 t0 ms
+    sg_clock; t0=$sg_now
+    [ -n "$sg_probe_first" ] || sg_probe_first=$t0
+    v=$(probe "$@") || rc=$?
+    sg_clock; ms=$((sg_now - t0))
+    if [ -n "$sg_coarse" ]; then
+        [ "$ms" -ge 2000 ] || ms=0
+        sg_probe_ms=$((sg_now - sg_probe_first))
+        [ "$sg_probe_ms" -ge 2000 ] || sg_probe_ms=0
+    elif [ "$ms" -gt 0 ]; then
+        sg_probe_ms=$((sg_probe_ms + ms))
+    fi
+    [ "$ms" -le "$sg_probe_max_ms" ] || sg_probe_max_ms=$ms
+    if [ "$sg_probe_ms" -gt 0 ]; then
+        export SG_LAUNCHER_PROBE_MS=$sg_probe_ms SG_LAUNCHER_PROBE_MAX_MS=$sg_probe_max_ms
+    fi
+    return $rc
 }
 
 # True iff arg is a "M.m" version string >= 3.10. claude_agent_sdk requires
@@ -135,10 +178,11 @@ is_sdk_compatible() {
 # Pass 1 — try minor-versioned binaries in descending order. These are only
 # present if the user explicitly installed them (Homebrew / python.org / pyenv),
 # so picking one here always upgrades over the system `python3`. Highest
-# available wins; the user doesn't have to PATH-prefer it.
+# of these wins; the user doesn't have to PATH-prefer it. Releases newer
+# than this list are pass 2b.
 for cmd in "python3.13" "python3.12" "python3.11" "python3.10"; do
     on_path "$cmd" || continue
-    v=$(probe "$cmd") || { note_unreadable "$cmd"; continue; }
+    ask "$cmd" || { note_unreadable "$cmd"; continue; }
     v=${v%$'\r'}
     if is_sdk_compatible "$v"; then
         exec "$cmd" "$@"
@@ -153,7 +197,7 @@ for cmd in "python3" "python" "py -3"; do
     # shellcheck disable=SC2086
     on_path $cmd || continue
     # shellcheck disable=SC2086
-    v=$(probe $cmd) || { note_unreadable "$cmd"; continue; }
+    ask $cmd || { note_unreadable "$cmd"; continue; }
     v=${v%$'\r'}
     if is_sdk_compatible "$v"; then
         # shellcheck disable=SC2086
@@ -163,6 +207,22 @@ for cmd in "python3" "python" "py -3"; do
     case "$v" in
         [0-9]*.[0-9]*) [ -n "$sg_older" ] || sg_older="$cmd" ;;
     esac
+done
+
+# Pass 2b — minor versions newer than the pass 1 list, so a machine whose
+# only SDK-compatible Python is a recent release (system `python3` 3.9 next to
+# Homebrew's python3.14) is not left on pass 3. Tried only when nothing
+# above is compatible: an interpreter that already works is never traded for
+# a newer one, which may not have the SDK or wheels for its dependencies yet.
+# Oldest first for the same reason. Missing names cost no process (on_path).
+# See #4907, #5024.
+for cmd in "python3.14" "python3.15" "python3.16" "python3.17" "python3.18" "python3.19"; do
+    on_path "$cmd" || continue
+    v=$(probe "$cmd") || { note_unreadable "$cmd"; continue; }
+    v=${v%$'\r'}
+    if is_sdk_compatible "$v"; then
+        exec "$cmd" "$@"
+    fi
 done
 
 # Pass 3 — fallback to any Python 3, even <3.10. Pattern-based checks
@@ -212,7 +272,7 @@ sg_tried="|"
 for cmd in "${sg_candidates[@]}"; do
     case "$sg_tried" in *"|$cmd|"*) continue ;; esac
     sg_tried="$sg_tried$cmd|"
-    v=$(probe "$cmd") || { note_unreadable "$cmd"; continue; }
+    ask "$cmd" || { note_unreadable "$cmd"; continue; }
     v=${v%$'\r'}
     if is_sdk_compatible "$v"; then
         exec "$cmd" "$@"
@@ -237,7 +297,7 @@ if [ -n "$sg_unreadable" ]; then
     exit 1
 fi
 echo "security-guidance: no working Python 3 interpreter found." >&2
-echo "  tried: python3.13, python3.12, python3.11, python3.10, python3, python, py -3" >&2
+echo "  tried: python3.13 to python3.10, python3, python, py -3, python3.14 to python3.19" >&2
 echo "  on Windows, install Python from https://python.org (NOT the Microsoft Store)" >&2
 echo "  on macOS, install Python 3.10+ via Homebrew (\`brew install python\`)" >&2
 exit 1
