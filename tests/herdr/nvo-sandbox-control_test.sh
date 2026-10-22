@@ -146,6 +146,23 @@ if run_controller 'NVO-20130,,NVO-20224'; then
 fi
 [[ ! -s $LOG ]] || fail 'adjacent empty CSV fields split or ran a Herdr pane'
 
+# The removed operation argument is rejected before any Herdr pane mutation.
+: >"$LOG"
+if run_controller status NVO-20130; then
+	fail 'obsolete operation-and-target interface unexpectedly succeeded'
+fi
+[[ ! -s $LOG ]] || fail 'obsolete operation-and-target interface split or ran a Herdr pane'
+
+# Shell metacharacters remain one literal, invalid target and cannot run another command.
+: >"$LOG"
+injection_marker="$TEST_ROOT/injection-marker"
+injection_target="NVO-20130'; touch $injection_marker; #"
+if run_controller "$injection_target"; then
+	fail 'shell-metacharacter target unexpectedly succeeded'
+fi
+[[ ! -e $injection_marker ]] || fail 'shell-metacharacter target executed an injected command'
+[[ ! -s $LOG ]] || fail 'shell-metacharacter target split or ran a Herdr pane'
+
 # The invoking pane must be available and valid before a focused sibling can open.
 : >"$LOG"
 if TEST_PANE_ID='' run_controller NVO-20130; then
@@ -232,6 +249,6 @@ assert_equals 2 "$(rg -c '^labctl stop ' "$LOG")" 'restart did not stop every ta
 assert_equals 2 "$(rg -c '^labctl start ' "$LOG")" 'restart did not start every target'
 
 # The unified Herdr-plus action invokes the controller with only the target form value.
-assert_file_equals $'name = "Sandbox: Control"\ntype = "form"\ncommand = "bash ~/.config/herdr-spreader/nvo-sandbox-control.sh \'{{.Value}}\'"\n\n[form]\nprompt = "Sandbox target (ticket, comma-separated tickets, or all; choose lifecycle or snapshot actions next)"\nplaceholder = "NVO-20130,NVO-20224 or all"' "$QUICK_ACTION"
+assert_file_equals $'name = "Sandbox: Control"\ntype = "form"\ncommand = "bash ~/.config/herdr-spreader/nvo-sandbox-control.sh"\n\n[form]\nprompt = "Sandbox target (ticket, comma-separated tickets, or all; choose lifecycle or snapshot actions next)"\nplaceholder = "NVO-20130,NVO-20224 or all"' "$QUICK_ACTION"
 
 printf '%s\n' 'PASS: nvo-sandbox-control'

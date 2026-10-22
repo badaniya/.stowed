@@ -1,6 +1,6 @@
 name = "Sandbox: Control"
 type = "form"
-command = "bash ~/.config/herdr-spreader/nvo-sandbox-control.sh '{{.Value}}'"
+command = "bash ~/.config/herdr-spreader/nvo-sandbox-control.sh"
 
 [form]
 prompt = "Sandbox target (ticket, comma-separated tickets, or all; choose lifecycle or snapshot actions next)"
