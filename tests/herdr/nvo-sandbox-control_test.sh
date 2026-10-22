@@ -328,6 +328,19 @@ restore_line=$(rg -n '^incus --project test-project snapshot restore NVO-20130 a
 start_line=$(rg -n '^labctl start NVO-20130$' "$LOG" | cut -d: -f1)
 [[ -n $stop_line && -n $restore_line && -n $start_line && $stop_line -lt $restore_line && $restore_line -lt $start_line ]] || fail 'restore did not run stop, Incus restore, then start in order'
 
+# An overflowing restore selection cancels rather than wrapping to a listed snapshot.
+: >"$LOG"
+TEST_SNAPSHOT_JSON='[{"name":"before-upgrade","created_at":"2026-10-22T12:30:00Z"},{"name":"after-upgrade","created_at":"2026-10-23T12:30:00Z"}]'
+export TEST_SNAPSHOT_JSON
+write_plan explicit NVO-20130
+printf '6\n18446744073709551617\n\n' | run_dialog >"$DIALOG_OUTPUT"
+unset TEST_SNAPSHOT_JSON
+[[ ! -e $DIALOG_PLAN ]] || fail 'overflow-selection dialog did not delete its plan'
+rg -Fq 'Cancelled. Select a listed snapshot number.' "$DIALOG_OUTPUT" || fail 'overflowing snapshot selection was not cancelled'
+if rg -q '^labctl (start|stop) |^incus .*snapshot restore ' "$LOG"; then
+	fail 'overflowing snapshot selection changed a sandbox'
+fi
+
 # An empty snapshot list clearly declines restore without lifecycle changes.
 : >"$LOG"
 TEST_SNAPSHOT_JSON='[]'

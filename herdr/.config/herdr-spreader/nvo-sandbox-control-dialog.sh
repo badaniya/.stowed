@@ -165,7 +165,7 @@ create_snapshot() {
 }
 
 restore_snapshot() {
-	local ticket=${tickets[0]} project snapshot_json selected_snapshot selected_timestamp selection
+	local ticket=${tickets[0]} project snapshot_json selected_snapshot selected_timestamp selection snapshot_count
 	local -a snapshot_rows=()
 	if ! validate_target "$ticket"; then
 		printf 'snapshot-restore %s: FAILED (sandbox is no longer eligible)\n' "$ticket"
@@ -204,10 +204,15 @@ restore_snapshot() {
 		return
 	fi
 	selection=$response
-	if [[ ! $selection =~ ^[1-9][0-9]*$ ]] || ((selection > ${#snapshot_rows[@]})); then
+	snapshot_count=${#snapshot_rows[@]}
+	# Bound the decimal string before arithmetic so oversized input cannot wrap.
+	if [[ ! $selection =~ ^[1-9][0-9]*$ ]] ||
+		((${#selection} > ${#snapshot_count})) ||
+		{ ((${#selection} == ${#snapshot_count})) && [[ $selection > $snapshot_count ]]; }; then
 		printf 'Cancelled. Select a listed snapshot number.\n'
 		return
 	fi
+	selection=$((10#$selection))
 	IFS=$'\t' read -r selected_snapshot selected_timestamp <<<"${snapshot_rows[selection - 1]}"
 	if ! confirm_enter "WARNING: Restore snapshot '$selected_snapshot' from $selected_timestamp to $ticket? The sandbox will be stopped and restarted."; then
 		return
