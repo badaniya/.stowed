@@ -4,6 +4,7 @@ set -euo pipefail
 REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 SCRIPT="${REPO_ROOT}/herdr/.config/herdr-spreader/nvo-sandbox-control.sh"
 DIALOG_SCRIPT="${REPO_ROOT}/herdr/.config/herdr-spreader/nvo-sandbox-control-dialog.sh"
+QUICK_ACTION="${REPO_ROOT}/herdr/.config/herdr/plugins/config/cloudmanic.herdr-plus/quick-actions/sandbox-control.toml"
 
 fail() {
 	printf 'FAIL: %s\n' "$*" >&2
@@ -102,52 +103,52 @@ run_dialog() {
 	HOME="$TEST_ROOT/home" PATH="$TEST_ROOT/bin:$PATH" XDG_STATE_HOME="$TEST_ROOT/state" TEST_LOG="$LOG" "$DIALOG_SCRIPT" --plan "$DIALOG_PLAN"
 }
 
-# status NVO-20130,NVO-20224 creates one ordered plan and one focused sibling pane.
+# NVO-20130,NVO-20224 creates one ordered plan and one focused sibling pane.
 : >"$LOG"
-run_controller status NVO-20130,NVO-20224
+run_controller NVO-20130,NVO-20224
 PLAN_PATH=$(<"$PLAN_PATH_FILE")
 [[ -f $PLAN_PATH ]] || fail 'controller did not create the plan file'
 [[ $(stat -c '%a' "$PLAN_PATH") == 600 ]] || fail 'plan file is not owner-only'
-assert_file_equals $'operation=status\nscope=explicit\nNVO-20130\nNVO-20224' "$PLAN_PATH"
+assert_file_equals $'scope=explicit\nNVO-20130\nNVO-20224' "$PLAN_PATH"
 assert_equals 1 "$(rg -c '^herdr pane split ' "$LOG")" 'expected one focused pane split'
 assert_equals 1 "$(rg -c '^herdr pane run ' "$LOG")" 'expected one dialog command'
 
-# status all omits destroyed records while retaining registry ticket order.
+# all omits destroyed records while retaining registry ticket order.
 : >"$LOG"
-run_controller status all
+run_controller all
 PLAN_PATH=$(<"$PLAN_PATH_FILE")
-assert_file_equals $'operation=status\nscope=all\nNVO-20130\nNVO-20224' "$PLAN_PATH"
+assert_file_equals $'scope=all\nNVO-20130\nNVO-20224' "$PLAN_PATH"
 assert_equals 1 "$(rg -c '^herdr pane split ' "$LOG")" 'expected one focused pane split for all'
 
 # Invalid or duplicate targets fail before any Herdr pane mutation.
 : >"$LOG"
-if run_controller start NVO-20130,NVO-20130,not-a-ticket; then
+if run_controller NVO-20130,NVO-20130,not-a-ticket; then
 	fail 'invalid duplicate target list unexpectedly succeeded'
 fi
 [[ ! -s $LOG ]] || fail 'invalid target list mutated Herdr or invoked a command'
 
 # Empty CSV fields must fail before any Herdr pane split or dialog command.
 : >"$LOG"
-if run_controller status 'NVO-20130,'; then
+if run_controller 'NVO-20130,'; then
 	fail 'trailing empty CSV field unexpectedly succeeded'
 fi
 [[ ! -s $LOG ]] || fail 'trailing empty CSV field split or ran a Herdr pane'
 
 : >"$LOG"
-if run_controller status ',NVO-20130'; then
+if run_controller ',NVO-20130'; then
 	fail 'leading empty CSV field unexpectedly succeeded'
 fi
 [[ ! -s $LOG ]] || fail 'leading empty CSV field split or ran a Herdr pane'
 
 : >"$LOG"
-if run_controller status 'NVO-20130,,NVO-20224'; then
+if run_controller 'NVO-20130,,NVO-20224'; then
 	fail 'adjacent empty CSV fields unexpectedly succeeded'
 fi
 [[ ! -s $LOG ]] || fail 'adjacent empty CSV fields split or ran a Herdr pane'
 
 # The invoking pane must be available and valid before a focused sibling can open.
 : >"$LOG"
-if TEST_PANE_ID='' run_controller status NVO-20130; then
+if TEST_PANE_ID='' run_controller NVO-20130; then
 	fail 'missing HERDR_PLUS_PANE_ID unexpectedly succeeded'
 fi
 [[ ! -s $LOG ]] || fail 'missing pane ID mutated Herdr or invoked a command'
@@ -157,7 +158,7 @@ fi
 plans_before=$(rg --files -g 'nvo-sandbox-control.*' "$TEST_ROOT/state/herdr-spreader" | wc -l)
 unsafe_pane_id='--all'
 printf -v unsafe_split_response '{"result":{"pane":{"pane_id":"%s"}}}' "$unsafe_pane_id"
-if TEST_SPLIT_RESPONSE="$unsafe_split_response" TEST_EXPECT_CLOSED_PANE="$unsafe_pane_id" run_controller status NVO-20130; then
+if TEST_SPLIT_RESPONSE="$unsafe_split_response" TEST_EXPECT_CLOSED_PANE="$unsafe_pane_id" run_controller NVO-20130; then
 	fail 'controller unexpectedly accepted an unsafe sandbox control pane ID'
 fi
 assert_equals 1 "$(rg -c '^herdr pane split ' "$LOG")" 'expected one focused pane split before response validation failure'
@@ -166,7 +167,7 @@ assert_equals "$plans_before" "$(rg --files -g 'nvo-sandbox-control.*' "$TEST_RO
 
 # If queuing the dialog fails after a focused split, the controller closes only that new pane and removes its plan.
 : >"$LOG"
-if TEST_FAIL_PANE_RUN=true run_controller status NVO-20130; then
+if TEST_FAIL_PANE_RUN=true run_controller NVO-20130; then
 	fail 'controller unexpectedly succeeded when the dialog could not start'
 fi
 assert_equals 1 "$(rg -c '^herdr pane split ' "$LOG")" 'expected one focused pane split before pane-run failure'
@@ -229,5 +230,8 @@ printf '\n' | TEST_FAIL_STOP_FOR=NVO-20130 run_dialog
 [[ ! -e $DIALOG_PLAN ]] || fail 'restart dialog did not delete its plan'
 assert_equals 2 "$(rg -c '^labctl stop ' "$LOG")" 'restart did not stop every target'
 assert_equals 2 "$(rg -c '^labctl start ' "$LOG")" 'restart did not start every target'
+
+# The unified Herdr-plus action invokes the controller with only the target form value.
+assert_file_equals $'name = "Sandbox: Control"\ntype = "form"\ncommand = "bash ~/.config/herdr-spreader/nvo-sandbox-control.sh \'{{.Value}}\'"\n\n[form]\nprompt = "Sandbox target (ticket, comma-separated tickets, or all; choose lifecycle or snapshot actions next)"\nplaceholder = "NVO-20130,NVO-20224 or all"' "$QUICK_ACTION"
 
 printf '%s\n' 'PASS: nvo-sandbox-control'
