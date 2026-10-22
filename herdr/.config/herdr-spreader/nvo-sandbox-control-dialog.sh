@@ -131,8 +131,8 @@ run_snapshot_command() {
 }
 
 require_single_snapshot_target() {
-	if ((${#tickets[@]} != 1)); then
-		printf 'Snapshot operations require exactly one sandbox target. No sandbox was changed.\n'
+	if [[ $scope != explicit ]] || ((${#tickets[@]} != 1)); then
+		printf 'Snapshot operations require exactly one sandbox target selected explicitly; "all" is not supported. No sandbox was changed.\n'
 		return 1
 	fi
 	return 0

@@ -299,6 +299,20 @@ if rg -q '^incus |^labctl (start|stop) ' "$LOG"; then
 	fail 'multi-target snapshot request changed a sandbox'
 fi
 
+# Snapshot creation never treats an all-scope plan with one eligible target as a one-target request.
+: >"$LOG"
+write_plan all NVO-20130
+printf '5\ntrue\n\n' | run_dialog >"$DIALOG_OUTPUT"
+rg -q 'exactly one sandbox target' "$DIALOG_OUTPUT" || fail 'all-scope snapshot-create did not explain its restriction'
+[[ ! -s $LOG ]] || fail 'all-scope snapshot-create invoked a sandbox command'
+
+# Snapshot restore likewise rejects an all-scope plan before looking up its project or listing snapshots.
+: >"$LOG"
+write_plan all NVO-20130
+printf '6\n' | run_dialog >"$DIALOG_OUTPUT"
+rg -q 'exactly one sandbox target' "$DIALOG_OUTPUT" || fail 'all-scope snapshot-restore did not explain its restriction'
+[[ ! -s $LOG ]] || fail 'all-scope snapshot-restore invoked a sandbox command'
+
 # Restore renders Incus JSON names and timestamps, then stops, restores, and starts in order.
 : >"$LOG"
 TEST_SNAPSHOT_JSON='[{"name":"before-upgrade","created_at":"2026-10-22T12:30:00Z"},{"name":"after-upgrade","created_at":"2026-10-23T12:30:00Z"}]'
