@@ -3,7 +3,7 @@
 set -euo pipefail
 
 usage() {
-	printf 'Usage: nvo-sandbox-control.sh <status|start|stop|restart> <ticket[,ticket...]|all>\n' >&2
+	printf 'Usage: nvo-sandbox-control.sh <ticket[,ticket...]|all>\n' >&2
 }
 
 die() {
@@ -11,17 +11,12 @@ die() {
 	exit 1
 }
 
-[[ $# -eq 2 ]] || {
+[[ $# -eq 1 ]] || {
 	usage
 	exit 1
 }
 
-operation=$1
-target_input=$2
-case $operation in
-status | start | stop | restart) ;;
-*) die 'operation must be status, start, stop, or restart' ;;
-esac
+target_input=$1
 
 pane_id=${HERDR_PLUS_PANE_ID:-}
 [[ $pane_id =~ ^w[A-Za-z0-9]+:p[A-Za-z0-9]+$ ]] || die 'HERDR_PLUS_PANE_ID is missing or invalid'
@@ -65,7 +60,6 @@ cleanup() {
 trap cleanup EXIT
 
 {
-	printf 'operation=%s\n' "$operation"
 	printf 'scope=%s\n' "$scope"
 	printf '%s\n' "${tickets[@]}"
 } >"$plan_file"
