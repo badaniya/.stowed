@@ -21,7 +21,7 @@
   ],
   "tui.editor.cursorWordRight": [
     "alt+right",
-    "+alt+w"
+    "alt+w"
   ],
   "tui.editor.cursorLineStart": [
     "home",
@@ -41,13 +41,11 @@
   ],
   "tui.editor.pageUp": [
     "pageUp",
-    "alt+u",
-    "alt+h"
+    "alt+u"
   ],
   "tui.editor.pageDown": [
     "pageDown",
-    "alt+d",
-    "alt+l"
+    "alt+d"
   ],
   "tui.editor.deleteWordBackward": [
     "alt+backspace",
@@ -76,14 +74,34 @@
   ],
   "tui.select.pageUp": [
     "pageUp",
-    "alt+u",
-    "alt+h"
+    "alt+u"
   ],
   "tui.select.pageDown": [
     "pageDown",
-    "alt+d",
-    "alt+l"
+    "alt+d"
   ],
+  "tui.altScreen.pageUp": [
+    "pageUp",
+    "alt+u"
+  ],
+  "tui.altScreen.pageDown": [
+    "pageDown",
+    "ctrl+f",
+    "alt+d"
+  ],
+  "tui.altScreen.halfPageUp": "ctrl+u",
+  "tui.altScreen.halfPageDown": "ctrl+d",
+  "tui.altScreen.top": [
+    "ctrl+home",
+    "ctrl+g",
+    "alt+g"
+  ],
+  "tui.altScreen.bottom": [
+    "ctrl+end",
+    "ctrl+shift+g",
+    "alt+shift+g"
+  ],
+  "app.editor.external": "ctrl+e",
   "app.exit": [
     "ctrl+c"
   ],
