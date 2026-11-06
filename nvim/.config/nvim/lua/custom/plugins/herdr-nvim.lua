@@ -14,7 +14,7 @@ return {
 
   keys = {
     { '<leader>a', '', desc = '[A]I Herdr-nvim', mode = { 'n', 'x' } },
-    { '<leader>ac', '<CMD>Herdr comment<CR>', desc = 'Herdr comment' },
+    { '<leader>ac', '<CMD>Herdr comment<CR>', desc = 'Herdr comment', mode = 'n' },
     {
       '<leader>ac',
       function()
@@ -26,7 +26,7 @@ return {
     { '<leader>al', '<CMD>Herdr list<CR>', desc = 'Herdr list comments' },
     { '<leader>as', '<CMD>Herdr send<CR>', desc = 'Herdr paste comments to agent' },
     { '<leader>aS', '<CMD>Herdr submit<CR>', desc = 'Herdr submit comments to agent' },
-    { '<leader>ai', '<CMD>Herdr ref<CR>', desc = 'Herdr reference line' },
+    { '<leader>ai', '<CMD>Herdr ref<CR>', desc = 'Herdr reference line', mode = 'n' },
     {
       '<leader>ai',
       function()

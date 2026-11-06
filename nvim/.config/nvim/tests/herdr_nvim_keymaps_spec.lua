@@ -13,8 +13,8 @@ local function keymap(lhs, mode)
   end
 end
 
-assert_equal('<CMD>Herdr comment<CR>', keymap('<leader>ac', nil)[2])
-assert_equal('<CMD>Herdr ref<CR>', keymap('<leader>ai', nil)[2])
+assert_equal('<CMD>Herdr comment<CR>', keymap('<leader>ac', 'n')[2])
+assert_equal('<CMD>Herdr ref<CR>', keymap('<leader>ai', 'n')[2])
 
 local comment_selection = keymap('<leader>ac', 'x')
 local ref_selection = keymap('<leader>ai', 'x')
