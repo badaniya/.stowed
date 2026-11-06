@@ -12,7 +12,6 @@ return {
     }
   end,
 
-  -- stylua: ignore
   keys = {
     {
       '<leader>a',
