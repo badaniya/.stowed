@@ -12,9 +12,20 @@ return {
     }
   end,
 
+  -- stylua: ignore
   keys = {
-    { '<leader>a', '', desc = '[A]I Herdr-nvim', mode = { 'n', 'x' } },
-    { '<leader>ac', '<CMD>Herdr comment<CR>', desc = 'Herdr comment', mode = 'n' },
+    {
+      '<leader>a',
+      '',
+      desc = '[A]I Herdr-nvim',
+      mode = { 'n', 'x' },
+    },
+    {
+      '<leader>ac',
+      '<CMD>Herdr comment<CR>',
+      desc = 'Herdr comment',
+      mode = 'n',
+    },
     {
       '<leader>ac',
       function()
@@ -23,10 +34,30 @@ return {
       desc = 'Herdr comment selection',
       mode = 'x',
     },
-    { '<leader>al', '<CMD>Herdr list<CR>', desc = 'Herdr list comments' },
-    { '<leader>as', '<CMD>Herdr send<CR>', desc = 'Herdr paste comments to agent' },
-    { '<leader>aS', '<CMD>Herdr submit<CR>', desc = 'Herdr submit comments to agent' },
-    { '<leader>ai', '<CMD>Herdr ref<CR>', desc = 'Herdr reference line', mode = 'n' },
+    {
+      '<leader>al',
+      '<CMD>Herdr list<CR>',
+      desc = 'Herdr list comments',
+      mode = 'n',
+    },
+    {
+      '<leader>as',
+      '<CMD>Herdr send<CR>',
+      desc = 'Herdr paste comments to agent',
+      mode = 'n',
+    },
+    {
+      '<leader>aS',
+      '<CMD>Herdr submit<CR>',
+      desc = 'Herdr submit comments to agent',
+      mode = 'n',
+    },
+    {
+      '<leader>ai',
+      '<CMD>Herdr ref<CR>',
+      desc = 'Herdr reference line',
+      mode = 'n',
+    },
     {
       '<leader>ai',
       function()
