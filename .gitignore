@@ -34,3 +34,6 @@ pi-session-*.html
 agents/.agents/skills/dev-browser/tmp/
 .superpowers/
 .archify/
+
+# Herdr app: each mod's type file is generated on first load
+herdr-app/.config/herdr-app/mods/*/gpui-kit.d.ts

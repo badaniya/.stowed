@@ -4,15 +4,29 @@
 
 import { View, div } from "gpui-kit";
 import { v_flex, h_flex } from "gpui-base";
-import { run, theme, props, closeOverlay } from "herdr";
+import { run, theme, props, closeOverlay, openOverlay, focused, spaces, panes } from "herdr";
 
 /** @typedef {import("gpui-kit").KeyEvent} KeyEvent */
 /** @typedef {import("gpui-kit").Context} Context */
 
-/** One row: the keys that run it, the chip it shows, what it runs.
- * @typedef {{ chip: string, keys: string[], label: string, command: string,
- *   args?: Record<string, unknown>, index?: boolean }} Item */
+/** One row: the keys that run it, the chip it shows, what it runs. `act` runs
+ *   something that isn't a plain command (opening a dialog with props).
+ * @typedef {{ chip: string, keys: string[], label: string, command?: string,
+ *   args?: Record<string, unknown>, index?: boolean, act?: () => unknown }} Item */
 /** @typedef {{ title: string, items: Item[] }} Group */
+
+/** The shipped worktree mod, in its "open" mode, for the space in view. */
+function openWorktree() {
+  const f = focused();
+  const space = spaces().find((s) => s.id === f?.space);
+  openOverlay({
+    mod: "worktree",
+    kind: "dialog",
+    width: 560,
+    height: 480,
+    props: { space: space?.id, folder: panes().find((p) => p.focused)?.cwd, action: "open" },
+  });
+}
 
 // The old herdr prefix map, as the columns it is shown in. `keys` are the
 // spellings a key event can arrive as (GPUI names punctuation: "-" is "minus",
@@ -57,6 +71,8 @@ const GROUPS = [
     items: [
       { chip: "w", keys: ["w"], label: "go to…", command: "mod.open", args: { name: "picker" } },
       { chip: "g", keys: ["g"], label: "commands", command: "app.palette" },
+      { chip: "G", keys: ["shift-g"], label: "open worktree…", act: openWorktree },
+      { chip: "R", keys: ["shift-r"], label: "resurrect…", command: "mod.open", args: { name: "resurrect" } },
       { chip: "s", keys: ["s"], label: "settings", command: "app.settings" },
       { chip: "?", keys: ["?", "shift-slash"], label: "help", command: "app.help" },
       { chip: "q", keys: ["q"], label: "hide window", command: "app.hide" },
@@ -123,6 +139,7 @@ export default class Leader extends View {
     for (const k of keys) {
       const item = RUNS.get(k);
       if (!item) continue;
+      if (item.act) return item.act();
       return run(item.command, item.index ? { index: Number(k) } : item.args ?? {});
     }
   }
