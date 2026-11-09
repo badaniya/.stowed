@@ -8,6 +8,7 @@ image-cache/
 jobs/
 paste-cache/
 plugins/synced/
+plugins/.trash/
 projects/
 session-env/
 sessions/
