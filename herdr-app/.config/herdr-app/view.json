@@ -1,0 +1,31 @@
+{
+  "active": "spfc3f74608bb460818808cb64196cddaf",
+  "spaces": {
+    "spfc3f74608bb460818808cb64196cddaf": "tbe4f56819595fe2795fccb9de3dad9b6c"
+  },
+  "tabs": {
+    "tbe4f56819595fe2795fccb9de3dad9b6c": {
+      "focused": "p29cc162f3d1fedf5ef7070d8ed61e661",
+      "before": [
+        "p8a536c402acc3b348bdc4b2ce5d1eaef"
+      ],
+      "zoomed": "p29cc162f3d1fedf5ef7070d8ed61e661",
+      "settled": null
+    }
+  },
+  "recent": [],
+  "attention": {
+    "t1": {
+      "word": "error",
+      "seen": true
+    },
+    "t2": {
+      "word": null,
+      "seen": true
+    },
+    "t3": {
+      "word": null,
+      "seen": true
+    }
+  }
+}
