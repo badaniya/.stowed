@@ -22,7 +22,7 @@ labctl_nvo_env_quote() {
 }
 
 labctl_nvo_env_render() {
-	local ticket=$1 output=$2 source mode line in_section=false name value ip
+	local ticket=$1 output=$2 source mode line in_section=false section_header_separator_pending=false name value ip
 	local -A seen=() values=()
 	source=${LABCTL_NVO_ENV_SOURCE_PATH:-}
 	[[ $source == /* && -f $source && -r $source && -O $source ]] || {
@@ -36,15 +36,22 @@ labctl_nvo_env_render() {
 	}
 	while IFS= read -r line || [[ -n $line ]]; do
 		if [[ $line == '###############################################################################' ]]; then
-			[[ $in_section == true ]] && break
+			if [[ $in_section == true ]]; then
+				if [[ $section_header_separator_pending == true ]]; then
+					section_header_separator_pending=false
+					continue
+				fi
+				break
+			fi
 			continue
 		fi
 		[[ $line == '# NVO Development' ]] && {
 			in_section=true
+			section_header_separator_pending=true
 			continue
 		}
 		[[ $in_section == true ]] || continue
-		[[ -z $line || $line == \\#* ]] && continue
+		[[ -z $line || $line == \#* ]] && continue
 		[[ $line =~ ^export[[:space:]]+([A-Za-z_][A-Za-z0-9_]*)=(.*)$ ]] || {
 			labctl_die 'invalid NVO environment entry'
 			return 1

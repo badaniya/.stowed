@@ -47,9 +47,9 @@ STATE_LOG="$TEST_ROOT/state/herdr-spreader/NVO-20131.log"
 # Build panes must tail their named stage logs rather than opening an empty
 # directory shell while the coordinator performs a monolithic bootstrap.
 assert_contains 'stage_pane_command' "$SCRIPT"
-assert_contains 'tail --retry -F /var/log/network/network-server.log' "$SCRIPT"
-# shellcheck disable=SC2016 # Match the literal interactive monitor handoff.
-assert_contains 'guest_exec=$(guest_exec_command "$guest_command" true)' "$SCRIPT"
+assert_contains 'tail --retry -F /var/log/network/network-server.log /var/log/edge/edge-server.log /var/log/scheduler/scheduler-server.log /var/log/system/system-server.log /var/log/orchestration/orchestration-server.log /var/log/runonce/runonce-server.log /var/log/tagging/tagging-server.log' "$SCRIPT"
+# shellcheck disable=SC2016 # Match the concise monitor reconnection command.
+assert_contains 'pane_command=$(ready_guest_command monitor "$guest_command")' "$SCRIPT"
 # shellcheck disable=SC2016 # Match the literal pipeline emitted by the script.
 # shellcheck disable=SC2016 # Match the literal streaming pipeline in the script.
 assert_contains 'stdbuf -oL tr -cd' "$SCRIPT"
@@ -57,13 +57,13 @@ assert_contains 'stdbuf -oL tr -cd' "$SCRIPT"
 assert_contains 'tee "$raw"' "$SCRIPT"
 assert_contains 'for stage in shared pcm-db' "$SCRIPT"
 # shellcheck disable=SC2016 # Match the literal generated pane assignments.
-assert_contains 'platform=$(stage_pane_command platform-tagging-start' "$SCRIPT"
+assert_contains 'platform=$(stage_pane_command platform platform-tagging-start' "$SCRIPT"
 assert_contains 'platform-tagging-build platform-tagging-start)' "$SCRIPT"
 # shellcheck disable=SC2016 # Match the literal generated pane assignments.
-assert_contains 'godcapp=$(stage_pane_command godcapp-services' "$SCRIPT"
+assert_contains 'godcapp=$(stage_pane_command godcapp godcapp-services' "$SCRIPT"
 assert_contains 'godcapp-build godcapp-infra godcapp-services)' "$SCRIPT"
-# shellcheck disable=SC2016 # Match the literal interactive guest-shell handoff.
-assert_contains '&& exec bash -l" true' "$SCRIPT"
+# shellcheck disable=SC2016 # The history helper reopens the guest directory shell.
+assert_contains 'pane_command=$(ready_guest_command "$pane_name" "cd $(printf' "$SCRIPT"
 
 cat >"$TEST_ROOT/home/.config/herdr-spreader/nvo-harness-worktree-sandbox-base.sh" <<'EOF_BASE'
 #!/usr/bin/env bash
@@ -184,13 +184,17 @@ assert_contains 'incus' "$LOG"
 assert_contains 'nvo-20131' "$LOG"
 assert_contains 'true' "$LOG"
 assert_contains 'lazydocker' "$LOG"
-assert_contains '--force-interactive' "$LOG"
-assert_contains 'guest_setpriv_command' "$SCRIPT"
-assert_contains 'setpriv --reset-env --reuid' "$SCRIPT"
-# shellcheck disable=SC2016 # Match the literal interactive-home handoff.
-assert_contains 'cd "$HOME" && %s' "$SCRIPT"
-# shellcheck disable=SC2016 # Match the removed literal wrapper form.
-assert_not_contains 'cd "$HOME" && exec %s' "$SCRIPT"
+assert_not_contains '--force-interactive' "$LOG"
+assert_contains 'pane_history_command' "$SCRIPT"
+assert_contains 'pane_history_setup_command' "$SCRIPT"
+assert_contains 'fc -p' "$SCRIPT"
+assert_contains 'bootstrap_ready_command' "$SCRIPT"
+assert_contains 'bootstrap_ready=$(bootstrap_ready_command)' "$SCRIPT"
+assert_contains 'print -s --' "$SCRIPT"
+assert_contains 'exec_agent_sandbox nvo-20131 --command' "$LOG"
+assert_not_contains 'guest_setpriv_command' "$SCRIPT"
+assert_not_contains 'setpriv --reset-env --reuid' "$SCRIPT"
+assert_not_contains 'env_file="$HOME/.config/nvo/sandbox.env"' "$SCRIPT"
 assert_not_contains 'docker.sock' "$LOG"
 assert_not_contains 'docker info' "$LOG"
 

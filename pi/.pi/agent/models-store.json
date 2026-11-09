@@ -46,7 +46,7 @@
         }
       }
     ],
-    "checkedAt": 1792540802852
+    "checkedAt": 1794015044267
   },
   "github-copilot": {
     "models": [
@@ -75,14 +75,14 @@
           "Editor-Plugin-Version": "copilot-chat/0.35.0",
           "Copilot-Integration-Id": "vscode-chat"
         },
-        "compat": {
-          "supportsMidConvoSystemMessages": true,
-          "forceAdaptiveThinking": true
-        },
         "thinkingLevelMap": {
           "off": null,
           "xhigh": "xhigh",
           "max": "max"
+        },
+        "compat": {
+          "forceAdaptiveThinking": true,
+          "supportsMidConvoSystemMessages": true
         },
         "inputLimits": {
           "images": {
@@ -121,14 +121,14 @@
           "Editor-Plugin-Version": "copilot-chat/0.35.0",
           "Copilot-Integration-Id": "vscode-chat"
         },
-        "compat": {
-          "supportsMidConvoSystemMessages": true,
-          "forceAdaptiveThinking": true
-        },
         "thinkingLevelMap": {
           "off": null,
           "xhigh": "xhigh",
           "max": "max"
+        },
+        "compat": {
+          "forceAdaptiveThinking": true,
+          "supportsMidConvoSystemMessages": true
         },
         "inputLimits": {
           "images": {
@@ -216,60 +216,14 @@
           "Editor-Plugin-Version": "copilot-chat/0.35.0",
           "Copilot-Integration-Id": "vscode-chat"
         },
-        "compat": {
-          "supportsMidConvoSystemMessages": true,
-          "forceAdaptiveThinking": true,
-          "supportsTemperature": false
-        },
         "thinkingLevelMap": {
           "xhigh": "xhigh",
           "max": "max"
         },
-        "inputLimits": {
-          "images": {
-            "resize": {
-              "maxWidth": 2000,
-              "maxHeight": 2000,
-              "maxBytes": 4718592,
-              "jpegQuality": 80
-            }
-          }
-        },
-        "type": "chat"
-      },
-      {
-        "id": "claude-opus-4.7",
-        "name": "Claude Opus 4.7",
-        "api": "anthropic-messages",
-        "provider": "github-copilot",
-        "baseUrl": "https://api.individual.githubcopilot.com",
-        "reasoning": true,
-        "input": [
-          "text",
-          "image"
-        ],
-        "cost": {
-          "input": 5,
-          "output": 25,
-          "cacheRead": 0.5,
-          "cacheWrite": 6.25
-        },
-        "contextWindow": 1000000,
-        "maxTokens": 32000,
-        "headers": {
-          "User-Agent": "GitHubCopilotChat/0.35.0",
-          "Editor-Version": "vscode/1.107.0",
-          "Editor-Plugin-Version": "copilot-chat/0.35.0",
-          "Copilot-Integration-Id": "vscode-chat"
-        },
-        "thinkingLevelMap": {
-          "xhigh": "xhigh",
-          "max": "max",
-          "minimal": "low"
-        },
         "compat": {
           "forceAdaptiveThinking": true,
-          "supportsTemperature": false
+          "supportsTemperature": false,
+          "supportsMidConvoSystemMessages": true
         },
         "inputLimits": {
           "images": {
@@ -308,15 +262,15 @@
           "Editor-Plugin-Version": "copilot-chat/0.35.0",
           "Copilot-Integration-Id": "vscode-chat"
         },
-        "compat": {
-          "supportsMidConvoSystemMessages": true,
-          "forceAdaptiveThinking": true,
-          "supportsTemperature": false
-        },
         "thinkingLevelMap": {
           "xhigh": "xhigh",
           "max": "max",
           "minimal": "low"
+        },
+        "compat": {
+          "forceAdaptiveThinking": true,
+          "supportsTemperature": false,
+          "supportsMidConvoSystemMessages": true
         },
         "inputLimits": {
           "images": {
@@ -355,15 +309,15 @@
           "Editor-Plugin-Version": "copilot-chat/0.35.0",
           "Copilot-Integration-Id": "vscode-chat"
         },
-        "compat": {
-          "supportsMidConvoSystemMessages": true,
-          "forceAdaptiveThinking": true,
-          "supportsTemperature": false
-        },
         "thinkingLevelMap": {
           "xhigh": "xhigh",
           "max": "max",
           "minimal": "low"
+        },
+        "compat": {
+          "forceAdaptiveThinking": true,
+          "supportsTemperature": false,
+          "supportsMidConvoSystemMessages": true
         },
         "inputLimits": {
           "images": {
@@ -402,11 +356,6 @@
           "Editor-Plugin-Version": "copilot-chat/0.35.0",
           "Copilot-Integration-Id": "vscode-chat"
         },
-        "compat": {
-          "supportsMidConvoSystemMessages": true,
-          "forceAdaptiveThinking": true,
-          "supportsTemperature": false
-        },
         "thinkingLevelMap": {
           "off": null,
           "minimal": null,
@@ -415,6 +364,11 @@
           "high": "high",
           "xhigh": "xhigh",
           "max": "max"
+        },
+        "compat": {
+          "forceAdaptiveThinking": true,
+          "supportsTemperature": false,
+          "supportsMidConvoSystemMessages": true
         },
         "inputLimits": {
           "images": {
@@ -502,7 +456,8 @@
           "max": "max"
         },
         "compat": {
-          "forceAdaptiveThinking": true
+          "forceAdaptiveThinking": true,
+          "supportsTemperature": false
         },
         "inputLimits": {
           "images": {
@@ -541,143 +496,14 @@
           "Editor-Plugin-Version": "copilot-chat/0.35.0",
           "Copilot-Integration-Id": "vscode-chat"
         },
-        "compat": {
-          "supportsMidConvoSystemMessages": true,
-          "forceAdaptiveThinking": true,
-          "supportsTemperature": false
-        },
         "thinkingLevelMap": {
           "xhigh": "xhigh",
           "max": "max"
         },
-        "inputLimits": {
-          "images": {
-            "resize": {
-              "maxWidth": 2000,
-              "maxHeight": 2000,
-              "maxBytes": 4718592,
-              "jpegQuality": 80
-            }
-          }
-        },
-        "type": "chat"
-      },
-      {
-        "id": "gemini-3.5-flash",
-        "name": "Gemini 3.5 Flash",
-        "api": "openai-completions",
-        "provider": "github-copilot",
-        "baseUrl": "https://api.individual.githubcopilot.com",
-        "reasoning": true,
-        "input": [
-          "text",
-          "image"
-        ],
-        "cost": {
-          "input": 1.5,
-          "output": 9,
-          "cacheRead": 0.15,
-          "cacheWrite": 0
-        },
-        "contextWindow": 200000,
-        "maxTokens": 64000,
-        "headers": {
-          "User-Agent": "GitHubCopilotChat/0.35.0",
-          "Editor-Version": "vscode/1.107.0",
-          "Editor-Plugin-Version": "copilot-chat/0.35.0",
-          "Copilot-Integration-Id": "vscode-chat"
-        },
         "compat": {
-          "supportsStrictMode": true,
-          "supportsStore": false,
-          "supportsDeveloperRole": false,
-          "supportsReasoningEffort": false
-        },
-        "inputLimits": {
-          "images": {
-            "resize": {
-              "maxWidth": 2000,
-              "maxHeight": 2000,
-              "maxBytes": 4718592,
-              "jpegQuality": 80
-            }
-          }
-        },
-        "type": "chat"
-      },
-      {
-        "id": "gemini-3.6-flash",
-        "name": "Gemini 3.6 Flash",
-        "api": "openai-completions",
-        "provider": "github-copilot",
-        "baseUrl": "https://api.individual.githubcopilot.com",
-        "reasoning": true,
-        "input": [
-          "text",
-          "image"
-        ],
-        "cost": {
-          "input": 0.75,
-          "output": 3.75,
-          "cacheRead": 0.075,
-          "cacheWrite": 0
-        },
-        "contextWindow": 1000000,
-        "maxTokens": 64000,
-        "headers": {
-          "User-Agent": "GitHubCopilotChat/0.35.0",
-          "Editor-Version": "vscode/1.107.0",
-          "Editor-Plugin-Version": "copilot-chat/0.35.0",
-          "Copilot-Integration-Id": "vscode-chat"
-        },
-        "compat": {
-          "supportsStrictMode": true,
-          "supportsStore": false,
-          "supportsDeveloperRole": false,
-          "supportsReasoningEffort": false
-        },
-        "inputLimits": {
-          "images": {
-            "resize": {
-              "maxWidth": 2000,
-              "maxHeight": 2000,
-              "maxBytes": 4718592,
-              "jpegQuality": 80
-            }
-          }
-        },
-        "type": "chat"
-      },
-      {
-        "id": "gemini-3.7-flash",
-        "name": "Gemini 3.7 Flash",
-        "api": "openai-completions",
-        "provider": "github-copilot",
-        "baseUrl": "https://api.individual.githubcopilot.com",
-        "reasoning": true,
-        "input": [
-          "text",
-          "image"
-        ],
-        "cost": {
-          "input": 0.75,
-          "output": 3.75,
-          "cacheRead": 0.075,
-          "cacheWrite": 0
-        },
-        "contextWindow": 1000000,
-        "maxTokens": 64000,
-        "headers": {
-          "User-Agent": "GitHubCopilotChat/0.35.0",
-          "Editor-Version": "vscode/1.107.0",
-          "Editor-Plugin-Version": "copilot-chat/0.35.0",
-          "Copilot-Integration-Id": "vscode-chat"
-        },
-        "compat": {
-          "supportsStrictMode": true,
-          "supportsStore": false,
-          "supportsDeveloperRole": false,
-          "supportsReasoningEffort": false
+          "forceAdaptiveThinking": true,
+          "supportsTemperature": false,
+          "supportsMidConvoSystemMessages": true
         },
         "inputLimits": {
           "images": {
@@ -778,55 +604,6 @@
         "type": "chat"
       },
       {
-        "id": "gpt-5-mini",
-        "name": "GPT-5 Mini",
-        "api": "openai-responses",
-        "provider": "github-copilot",
-        "baseUrl": "https://api.individual.githubcopilot.com",
-        "reasoning": true,
-        "input": [
-          "text",
-          "image"
-        ],
-        "cost": {
-          "input": 0.25,
-          "output": 2,
-          "cacheRead": 0.025,
-          "cacheWrite": 0
-        },
-        "contextWindow": 264000,
-        "maxTokens": 64000,
-        "headers": {
-          "User-Agent": "GitHubCopilotChat/0.35.0",
-          "Editor-Version": "vscode/1.107.0",
-          "Editor-Plugin-Version": "copilot-chat/0.35.0",
-          "Copilot-Integration-Id": "vscode-chat"
-        },
-        "thinkingLevelMap": {
-          "off": null,
-          "minimal": "low",
-          "low": "low",
-          "medium": "medium",
-          "high": "high",
-          "xhigh": null,
-          "max": null
-        },
-        "compat": {
-          "supportsOpenAIGrammarTools": true
-        },
-        "inputLimits": {
-          "images": {
-            "resize": {
-              "maxWidth": 2000,
-              "maxHeight": 2000,
-              "maxBytes": 4718592,
-              "jpegQuality": 80
-            }
-          }
-        },
-        "type": "chat"
-      },
-      {
         "id": "gpt-5.3-codex",
         "name": "GPT-5.3 Codex",
         "api": "openai-responses",
@@ -876,117 +653,6 @@
         "type": "chat"
       },
       {
-        "id": "gpt-5.4",
-        "name": "GPT-5.4",
-        "api": "openai-responses",
-        "provider": "github-copilot",
-        "baseUrl": "https://api.individual.githubcopilot.com",
-        "reasoning": true,
-        "input": [
-          "text",
-          "image"
-        ],
-        "cost": {
-          "input": 2.5,
-          "output": 15,
-          "cacheRead": 0.25,
-          "cacheWrite": 0,
-          "tiers": [
-            {
-              "inputTokensAbove": 272000,
-              "input": 5,
-              "output": 22.5,
-              "cacheRead": 0.5,
-              "cacheWrite": 0
-            }
-          ]
-        },
-        "contextWindow": 1000000,
-        "maxTokens": 128000,
-        "headers": {
-          "User-Agent": "GitHubCopilotChat/0.35.0",
-          "Editor-Version": "vscode/1.107.0",
-          "Editor-Plugin-Version": "copilot-chat/0.35.0",
-          "Copilot-Integration-Id": "vscode-chat"
-        },
-        "thinkingLevelMap": {
-          "off": null,
-          "minimal": "low",
-          "low": "low",
-          "medium": "medium",
-          "high": "high",
-          "xhigh": "xhigh",
-          "max": null
-        },
-        "compat": {
-          "supportsOpenAIGrammarTools": true,
-          "supportsMidConvoSystemMessages": true,
-          "supportsAdditionalTools": true
-        },
-        "inputLimits": {
-          "images": {
-            "resize": {
-              "maxWidth": 2000,
-              "maxHeight": 2000,
-              "maxBytes": 4718592,
-              "jpegQuality": 80
-            }
-          }
-        },
-        "type": "chat"
-      },
-      {
-        "id": "gpt-5.4-mini",
-        "name": "GPT-5.4 mini",
-        "api": "openai-responses",
-        "provider": "github-copilot",
-        "baseUrl": "https://api.individual.githubcopilot.com",
-        "reasoning": true,
-        "input": [
-          "text",
-          "image"
-        ],
-        "cost": {
-          "input": 0.75,
-          "output": 4.5,
-          "cacheRead": 0.075,
-          "cacheWrite": 0
-        },
-        "contextWindow": 400000,
-        "maxTokens": 128000,
-        "headers": {
-          "User-Agent": "GitHubCopilotChat/0.35.0",
-          "Editor-Version": "vscode/1.107.0",
-          "Editor-Plugin-Version": "copilot-chat/0.35.0",
-          "Copilot-Integration-Id": "vscode-chat"
-        },
-        "thinkingLevelMap": {
-          "off": null,
-          "minimal": "low",
-          "low": "low",
-          "medium": "medium",
-          "high": "high",
-          "xhigh": "xhigh",
-          "max": null
-        },
-        "compat": {
-          "supportsOpenAIGrammarTools": true,
-          "supportsMidConvoSystemMessages": true,
-          "supportsAdditionalTools": true
-        },
-        "inputLimits": {
-          "images": {
-            "resize": {
-              "maxWidth": 2000,
-              "maxHeight": 2000,
-              "maxBytes": 4718592,
-              "jpegQuality": 80
-            }
-          }
-        },
-        "type": "chat"
-      },
-      {
         "id": "gpt-5.4-nano",
         "name": "GPT-5.4 nano",
         "api": "openai-responses",
@@ -1014,60 +680,6 @@
         "thinkingLevelMap": {
           "off": null,
           "minimal": "low",
-          "xhigh": "xhigh"
-        },
-        "compat": {
-          "supportsOpenAIGrammarTools": true
-        },
-        "inputLimits": {
-          "images": {
-            "resize": {
-              "maxWidth": 2000,
-              "maxHeight": 2000,
-              "maxBytes": 4718592,
-              "jpegQuality": 80
-            }
-          }
-        },
-        "type": "chat"
-      },
-      {
-        "id": "gpt-5.5",
-        "name": "GPT-5.5",
-        "api": "openai-responses",
-        "provider": "github-copilot",
-        "baseUrl": "https://api.individual.githubcopilot.com",
-        "reasoning": true,
-        "input": [
-          "text",
-          "image"
-        ],
-        "cost": {
-          "input": 5,
-          "output": 30,
-          "cacheRead": 0.5,
-          "cacheWrite": 0,
-          "tiers": [
-            {
-              "inputTokensAbove": 272000,
-              "input": 10,
-              "output": 45,
-              "cacheRead": 1,
-              "cacheWrite": 0
-            }
-          ]
-        },
-        "contextWindow": 1000000,
-        "maxTokens": 128000,
-        "headers": {
-          "User-Agent": "GitHubCopilotChat/0.35.0",
-          "Editor-Version": "vscode/1.107.0",
-          "Editor-Plugin-Version": "copilot-chat/0.35.0",
-          "Copilot-Integration-Id": "vscode-chat"
-        },
-        "thinkingLevelMap": {
-          "off": null,
-          "minimal": "low",
           "low": "low",
           "medium": "medium",
           "high": "high",
@@ -1075,9 +687,7 @@
           "max": null
         },
         "compat": {
-          "supportsOpenAIGrammarTools": true,
-          "supportsMidConvoSystemMessages": true,
-          "supportsAdditionalTools": true
+          "supportsOpenAIGrammarTools": true
         },
         "inputLimits": {
           "images": {
@@ -1135,9 +745,9 @@
           "max": "max"
         },
         "compat": {
-          "supportsOpenAIGrammarTools": true,
           "supportsMidConvoSystemMessages": true,
-          "supportsAdditionalTools": true
+          "supportsAdditionalTools": true,
+          "supportsOpenAIGrammarTools": true
         },
         "inputLimits": {
           "images": {
@@ -1195,9 +805,9 @@
           "max": "max"
         },
         "compat": {
-          "supportsOpenAIGrammarTools": true,
           "supportsMidConvoSystemMessages": true,
-          "supportsAdditionalTools": true
+          "supportsAdditionalTools": true,
+          "supportsOpenAIGrammarTools": true
         },
         "inputLimits": {
           "images": {
@@ -1255,9 +865,9 @@
           "max": "max"
         },
         "compat": {
-          "supportsOpenAIGrammarTools": true,
           "supportsMidConvoSystemMessages": true,
-          "supportsAdditionalTools": true
+          "supportsAdditionalTools": true,
+          "supportsOpenAIGrammarTools": true
         },
         "inputLimits": {
           "images": {
@@ -1315,9 +925,9 @@
           "max": "max"
         },
         "compat": {
-          "supportsOpenAIGrammarTools": true,
           "supportsMidConvoSystemMessages": true,
-          "supportsAdditionalTools": true
+          "supportsAdditionalTools": true,
+          "supportsOpenAIGrammarTools": true
         },
         "inputLimits": {
           "images": {
@@ -1375,9 +985,9 @@
           "max": "max"
         },
         "compat": {
-          "supportsOpenAIGrammarTools": true,
           "supportsMidConvoSystemMessages": true,
-          "supportsAdditionalTools": true
+          "supportsAdditionalTools": true,
+          "supportsOpenAIGrammarTools": true
         },
         "inputLimits": {
           "images": {
@@ -1435,9 +1045,9 @@
           "max": "max"
         },
         "compat": {
-          "supportsOpenAIGrammarTools": true,
           "supportsMidConvoSystemMessages": true,
-          "supportsAdditionalTools": true
+          "supportsAdditionalTools": true,
+          "supportsOpenAIGrammarTools": true
         },
         "inputLimits": {
           "images": {
@@ -1495,9 +1105,69 @@
           "max": "max"
         },
         "compat": {
-          "supportsOpenAIGrammarTools": true,
           "supportsMidConvoSystemMessages": true,
-          "supportsAdditionalTools": true
+          "supportsAdditionalTools": true,
+          "supportsOpenAIGrammarTools": true
+        },
+        "inputLimits": {
+          "images": {
+            "resize": {
+              "maxWidth": 2000,
+              "maxHeight": 2000,
+              "maxBytes": 4718592,
+              "jpegQuality": 80
+            }
+          }
+        },
+        "type": "chat"
+      },
+      {
+        "id": "gpt-6.1-terra",
+        "name": "GPT-6.1 Terra",
+        "api": "openai-responses",
+        "provider": "github-copilot",
+        "baseUrl": "https://api.individual.githubcopilot.com",
+        "reasoning": true,
+        "input": [
+          "text",
+          "image"
+        ],
+        "cost": {
+          "input": 1,
+          "output": 5,
+          "cacheRead": 0.05,
+          "cacheWrite": 1.25,
+          "tiers": [
+            {
+              "inputTokensAbove": 272000,
+              "input": 2,
+              "output": 7.5,
+              "cacheRead": 0.1,
+              "cacheWrite": 2.5
+            }
+          ]
+        },
+        "contextWindow": 1050000,
+        "maxTokens": 128000,
+        "headers": {
+          "User-Agent": "GitHubCopilotChat/0.35.0",
+          "Editor-Version": "vscode/1.107.0",
+          "Editor-Plugin-Version": "copilot-chat/0.35.0",
+          "Copilot-Integration-Id": "vscode-chat"
+        },
+        "thinkingLevelMap": {
+          "off": "none",
+          "minimal": null,
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
+          "xhigh": "xhigh",
+          "max": "max"
+        },
+        "compat": {
+          "supportsMidConvoSystemMessages": true,
+          "supportsAdditionalTools": true,
+          "supportsOpenAIGrammarTools": true
         },
         "inputLimits": {
           "images": {
@@ -1677,49 +1347,6 @@
         "type": "chat"
       },
       {
-        "id": "kimi-k2.7-code",
-        "name": "Kimi K2.7 Code",
-        "api": "openai-completions",
-        "provider": "github-copilot",
-        "baseUrl": "https://api.individual.githubcopilot.com",
-        "reasoning": true,
-        "input": [
-          "text",
-          "image"
-        ],
-        "cost": {
-          "input": 0.95,
-          "output": 4,
-          "cacheRead": 0.19,
-          "cacheWrite": 0
-        },
-        "contextWindow": 256000,
-        "maxTokens": 32000,
-        "headers": {
-          "User-Agent": "GitHubCopilotChat/0.35.0",
-          "Editor-Version": "vscode/1.107.0",
-          "Editor-Plugin-Version": "copilot-chat/0.35.0",
-          "Copilot-Integration-Id": "vscode-chat"
-        },
-        "compat": {
-          "supportsStrictMode": true,
-          "supportsStore": false,
-          "supportsDeveloperRole": false,
-          "supportsReasoningEffort": false
-        },
-        "inputLimits": {
-          "images": {
-            "resize": {
-              "maxWidth": 2000,
-              "maxHeight": 2000,
-              "maxBytes": 4718592,
-              "jpegQuality": 80
-            }
-          }
-        },
-        "type": "chat"
-      },
-      {
         "id": "kimi-k3",
         "name": "Kimi K3",
         "api": "openai-completions",
@@ -1760,41 +1387,6 @@
               "jpegQuality": 80
             }
           }
-        },
-        "type": "chat"
-      },
-      {
-        "id": "mai-code-1-flash-picker",
-        "name": "MAI-Code-1-Flash",
-        "api": "openai-responses",
-        "provider": "github-copilot",
-        "baseUrl": "https://api.individual.githubcopilot.com",
-        "reasoning": true,
-        "input": [
-          "text"
-        ],
-        "cost": {
-          "input": 0.75,
-          "output": 4.5,
-          "cacheRead": 0.075,
-          "cacheWrite": 0
-        },
-        "contextWindow": 256000,
-        "maxTokens": 128000,
-        "headers": {
-          "User-Agent": "GitHubCopilotChat/0.35.0",
-          "Editor-Version": "vscode/1.107.0",
-          "Editor-Plugin-Version": "copilot-chat/0.35.0",
-          "Copilot-Integration-Id": "vscode-chat"
-        },
-        "thinkingLevelMap": {
-          "off": null,
-          "minimal": null,
-          "low": "low",
-          "medium": "medium",
-          "high": "high",
-          "xhigh": null,
-          "max": null
         },
         "type": "chat"
       },
@@ -1843,17 +1435,81 @@
           }
         },
         "type": "chat"
+      },
+      {
+        "type": "classifier",
+        "id": "microsoft-decision-1",
+        "name": "Microsoft-Decision-1",
+        "api": "typesafe-system-one",
+        "provider": "github-copilot",
+        "baseUrl": "https://api.individual.githubcopilot.com",
+        "input": [
+          "text"
+        ],
+        "cost": {
+          "input": 0.042,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0
+        },
+        "contextWindow": 32768,
+        "headers": {
+          "User-Agent": "GitHubCopilotChat/0.35.0",
+          "Editor-Version": "vscode/1.107.0",
+          "Editor-Plugin-Version": "copilot-chat/0.35.0",
+          "Copilot-Integration-Id": "vscode-chat"
+        }
       }
     ],
-    "lastModified": 1792500068000,
-    "etag": "W/\"16d7abbfc796b4b1658fd871716d2b5a\"",
-    "checkedAt": 1792540803019
+    "lastModified": 1793798494000,
+    "etag": "W/\"c8f1203389a1beb3844e7ee323bc3a8c\"",
+    "checkedAt": 1794007973621
   },
   "cline": {
     "models": [
       {
-        "id": "minimax/minimax-m3.1-flash:free",
-        "name": "MiniMax M3.1 Flash (free) (Cline) [CI: 58.6]",
+        "id": "liquid/lfm-3-1.7b:free",
+        "name": "LFM3-1.7B (free) (Cline)",
+        "reasoning": true,
+        "input": [
+          "text"
+        ],
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0
+        },
+        "contextWindow": 262144,
+        "maxTokens": 8192,
+        "_pricingKnown": true,
+        "modelsDev": {
+          "id": "liquid/lfm-3-1.7b:free",
+          "name": "LFM3-1.7B (free)",
+          "family": "liquid"
+        },
+        "api": "openai-completions",
+        "provider": "cline",
+        "baseUrl": "https://api.cline.bot/api/v1",
+        "headers": {
+          "HTTP-Referer": "https://cline.bot",
+          "X-Title": "Cline",
+          "X-Task-ID": "01M6ST0MM32DGVFW3TCHRWF2RW",
+          "X-PLATFORM": "Visual Studio Code",
+          "X-PLATFORM-VERSION": "1.109.3",
+          "X-CLIENT-TYPE": "VSCode Extension",
+          "X-CLIENT-VERSION": "4.1.10",
+          "X-CORE-VERSION": "4.1.10",
+          "X-Is-Multiroot": "false",
+          "User-Agent": "Cline/4.1.10"
+        },
+        "compat": {
+          "supportsDeveloperRole": false
+        }
+      },
+      {
+        "id": "stealth/crouton-alpha",
+        "name": "Crouton Alpha (Cline)",
         "reasoning": true,
         "input": [
           "text",
@@ -1865,21 +1521,21 @@
           "cacheRead": 0,
           "cacheWrite": 0
         },
-        "contextWindow": 1000000,
-        "maxTokens": 524288,
+        "contextWindow": 1048576,
+        "maxTokens": 943718,
         "_pricingKnown": true,
         "thinkingLevelMap": {
           "off": null,
-          "minimal": null,
+          "minimal": "minimal",
           "low": "low",
           "medium": "medium",
           "high": "high",
           "xhigh": "xhigh"
         },
         "modelsDev": {
-          "id": "minimax/minimax-m3.1-flash",
-          "name": "MiniMax M3.1 Flash",
-          "family": "minimax"
+          "id": "stealth/crouton-alpha",
+          "name": "Crouton Alpha",
+          "family": "alpha"
         },
         "api": "openai-completions",
         "provider": "cline",
@@ -1887,7 +1543,47 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H6NWQWS6KVPFK4KZQ0Z087",
+          "X-Task-ID": "01M6ST0MM32DGVFW3TCHRWF2RW",
+          "X-PLATFORM": "Visual Studio Code",
+          "X-PLATFORM-VERSION": "1.109.3",
+          "X-CLIENT-TYPE": "VSCode Extension",
+          "X-CLIENT-VERSION": "4.1.10",
+          "X-CORE-VERSION": "4.1.10",
+          "X-Is-Multiroot": "false",
+          "User-Agent": "Cline/4.1.10"
+        },
+        "compat": {
+          "supportsDeveloperRole": false
+        }
+      },
+      {
+        "id": "recursive/flint-v1.0:free",
+        "name": "Flint (free) (Cline)",
+        "reasoning": true,
+        "input": [
+          "text"
+        ],
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0
+        },
+        "contextWindow": 262144,
+        "maxTokens": 235929,
+        "_pricingKnown": true,
+        "modelsDev": {
+          "id": "recursive/flint-v1.0:free",
+          "name": "Flint (free)",
+          "family": "flint"
+        },
+        "api": "openai-completions",
+        "provider": "cline",
+        "baseUrl": "https://api.cline.bot/api/v1",
+        "headers": {
+          "HTTP-Referer": "https://cline.bot",
+          "X-Title": "Cline",
+          "X-Task-ID": "01M6ST0MM32DGVFW3TCHRWF2RW",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -1916,17 +1612,9 @@
         "contextWindow": 262144,
         "maxTokens": 235929,
         "_pricingKnown": true,
-        "thinkingLevelMap": {
-          "off": "none",
-          "minimal": null,
-          "low": null,
-          "medium": null,
-          "high": "high",
-          "xhigh": null
-        },
         "modelsDev": {
           "id": "xingchen-agi/xing4.0-29b-a4b:free",
-          "name": "XingChen: Xing4.0 29B A4B (free)",
+          "name": "Xing4.0 29B A4B (free)",
           "family": "agi"
         },
         "api": "openai-completions",
@@ -1935,7 +1623,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H6NWQWS6KVPFK4KZQ0Z087",
+          "X-Task-ID": "01M6ST0MM32DGVFW3TCHRWF2RW",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -1965,17 +1653,9 @@
         "contextWindow": 1000000,
         "maxTokens": 131072,
         "_pricingKnown": true,
-        "thinkingLevelMap": {
-          "off": "none",
-          "minimal": null,
-          "low": null,
-          "medium": "medium",
-          "high": "high",
-          "xhigh": null
-        },
         "modelsDev": {
           "id": "nvidia/nemotron-3.5-super-vl",
-          "name": "Nvidia Nemotron 3.5 Super VL",
+          "name": "Nemotron 3.5 Super VL",
           "family": "nemotron"
         },
         "api": "openai-completions",
@@ -1984,7 +1664,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H6NWQWS6KVPFK4KZQ0Z087",
+          "X-Task-ID": "01M6ST0MM32DGVFW3TCHRWF2RW",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2014,17 +1694,9 @@
         "contextWindow": 512000,
         "maxTokens": 460800,
         "_pricingKnown": true,
-        "thinkingLevelMap": {
-          "off": "none",
-          "minimal": null,
-          "low": null,
-          "medium": null,
-          "high": "high",
-          "xhigh": null
-        },
         "modelsDev": {
           "id": "dots-studio/dots-3-note-preview:free",
-          "name": "Dots Studio: Dots3-Note Preview (free)"
+          "name": "Dots3-Note Preview (free)"
         },
         "api": "openai-completions",
         "provider": "cline",
@@ -2032,7 +1704,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H6NWQWS6KVPFK4KZQ0Z087",
+          "X-Task-ID": "01M6ST0MM32DGVFW3TCHRWF2RW",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2061,17 +1733,9 @@
         "contextWindow": 65536,
         "maxTokens": 8192,
         "_pricingKnown": true,
-        "thinkingLevelMap": {
-          "off": null,
-          "minimal": "minimal",
-          "low": "low",
-          "medium": "medium",
-          "high": "high",
-          "xhigh": "xhigh"
-        },
         "modelsDev": {
-          "id": "liquid/lfm-2.5-2.6b",
-          "name": "LFM2.5 2.6B",
+          "id": "liquid/lfm-2.5-2.6b:free",
+          "name": "LFM2.5-2.6B (free)",
           "family": "liquid"
         },
         "api": "openai-completions",
@@ -2080,7 +1744,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H6NWQWS6KVPFK4KZQ0Z087",
+          "X-Task-ID": "01M6ST0MM32DGVFW3TCHRWF2RW",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2109,17 +1773,9 @@
         "contextWindow": 1000000,
         "maxTokens": 65536,
         "_pricingKnown": true,
-        "thinkingLevelMap": {
-          "off": "none",
-          "minimal": null,
-          "low": null,
-          "medium": null,
-          "high": "high",
-          "xhigh": null
-        },
         "modelsDev": {
-          "id": "nvidia/nemotron-3.5-lightning",
-          "name": "Nvidia Nemotron 3.5 Lightning",
+          "id": "nvidia/nemotron-3.5-lightning:free",
+          "name": "Nemotron 3.5 Lightning (free)",
           "family": "nemotron"
         },
         "api": "openai-completions",
@@ -2128,169 +1784,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H6NWQWS6KVPFK4KZQ0Z087",
-          "X-PLATFORM": "Visual Studio Code",
-          "X-PLATFORM-VERSION": "1.109.3",
-          "X-CLIENT-TYPE": "VSCode Extension",
-          "X-CLIENT-VERSION": "4.1.10",
-          "X-CORE-VERSION": "4.1.10",
-          "X-Is-Multiroot": "false",
-          "User-Agent": "Cline/4.1.10"
-        },
-        "compat": {
-          "supportsDeveloperRole": false
-        }
-      },
-      {
-        "id": "thinkingmachines/inkling-small:free",
-        "name": "Inkling Small (free) (Cline) [CI: 52.9]",
-        "reasoning": true,
-        "input": [
-          "text",
-          "image"
-        ],
-        "cost": {
-          "input": 0,
-          "output": 0,
-          "cacheRead": 0,
-          "cacheWrite": 0
-        },
-        "contextWindow": 1048576,
-        "maxTokens": 262144,
-        "_pricingKnown": true,
-        "modelsDev": {
-          "id": "thinkingmachines/Inkling-Small",
-          "name": "Inkling Small",
-          "family": "ling"
-        },
-        "api": "openai-completions",
-        "provider": "cline",
-        "baseUrl": "https://api.cline.bot/api/v1",
-        "headers": {
-          "HTTP-Referer": "https://cline.bot",
-          "X-Title": "Cline",
-          "X-Task-ID": "01M4H6NWQWS6KVPFK4KZQ0Z087",
-          "X-PLATFORM": "Visual Studio Code",
-          "X-PLATFORM-VERSION": "1.109.3",
-          "X-CLIENT-TYPE": "VSCode Extension",
-          "X-CLIENT-VERSION": "4.1.10",
-          "X-CORE-VERSION": "4.1.10",
-          "X-Is-Multiroot": "false",
-          "User-Agent": "Cline/4.1.10"
-        },
-        "compat": {
-          "supportsDeveloperRole": false
-        }
-      },
-      {
-        "id": "poolside/laguna-s-2.1:free",
-        "name": "Laguna S 2.1 (free) (Cline)",
-        "reasoning": true,
-        "input": [
-          "text"
-        ],
-        "cost": {
-          "input": 0,
-          "output": 0,
-          "cacheRead": 0,
-          "cacheWrite": 0
-        },
-        "contextWindow": 262144,
-        "maxTokens": 32768,
-        "_pricingKnown": true,
-        "modelsDev": {
-          "id": "poolside/laguna-s-2.1",
-          "name": "Laguna S 2.1",
-          "family": "laguna"
-        },
-        "api": "openai-completions",
-        "provider": "cline",
-        "baseUrl": "https://api.cline.bot/api/v1",
-        "headers": {
-          "HTTP-Referer": "https://cline.bot",
-          "X-Title": "Cline",
-          "X-Task-ID": "01M4H6NWQWS6KVPFK4KZQ0Z087",
-          "X-PLATFORM": "Visual Studio Code",
-          "X-PLATFORM-VERSION": "1.109.3",
-          "X-CLIENT-TYPE": "VSCode Extension",
-          "X-CLIENT-VERSION": "4.1.10",
-          "X-CORE-VERSION": "4.1.10",
-          "X-Is-Multiroot": "false",
-          "User-Agent": "Cline/4.1.10"
-        },
-        "compat": {
-          "supportsDeveloperRole": false
-        }
-      },
-      {
-        "id": "thinkingmachines/inkling:free",
-        "name": "Inkling (free) (Cline) [CI: 52.1]",
-        "reasoning": true,
-        "input": [
-          "text",
-          "image"
-        ],
-        "cost": {
-          "input": 0,
-          "output": 0,
-          "cacheRead": 0,
-          "cacheWrite": 0
-        },
-        "contextWindow": 1048576,
-        "maxTokens": 262144,
-        "_pricingKnown": true,
-        "modelsDev": {
-          "id": "thinkingmachines/inkling",
-          "name": "Inkling",
-          "family": "ling"
-        },
-        "api": "openai-completions",
-        "provider": "cline",
-        "baseUrl": "https://api.cline.bot/api/v1",
-        "headers": {
-          "HTTP-Referer": "https://cline.bot",
-          "X-Title": "Cline",
-          "X-Task-ID": "01M4H6NWQWS6KVPFK4KZQ0Z087",
-          "X-PLATFORM": "Visual Studio Code",
-          "X-PLATFORM-VERSION": "1.109.3",
-          "X-CLIENT-TYPE": "VSCode Extension",
-          "X-CLIENT-VERSION": "4.1.10",
-          "X-CORE-VERSION": "4.1.10",
-          "X-Is-Multiroot": "false",
-          "User-Agent": "Cline/4.1.10"
-        },
-        "compat": {
-          "supportsDeveloperRole": false
-        }
-      },
-      {
-        "id": "poolside/laguna-xs-2.1:free",
-        "name": "Laguna XS 2.1 (free) (Cline)",
-        "reasoning": true,
-        "input": [
-          "text"
-        ],
-        "cost": {
-          "input": 0,
-          "output": 0,
-          "cacheRead": 0,
-          "cacheWrite": 0
-        },
-        "contextWindow": 262144,
-        "maxTokens": 32768,
-        "_pricingKnown": true,
-        "modelsDev": {
-          "id": "poolside/laguna-xs-2.1",
-          "name": "Laguna XS 2.1",
-          "family": "laguna"
-        },
-        "api": "openai-completions",
-        "provider": "cline",
-        "baseUrl": "https://api.cline.bot/api/v1",
-        "headers": {
-          "HTTP-Referer": "https://cline.bot",
-          "X-Title": "Cline",
-          "X-Task-ID": "01M4H6NWQWS6KVPFK4KZQ0Z087",
+          "X-Task-ID": "01M6ST0MM32DGVFW3TCHRWF2RW",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2319,17 +1813,9 @@
         "contextWindow": 256000,
         "maxTokens": 64000,
         "_pricingKnown": true,
-        "thinkingLevelMap": {
-          "off": "none",
-          "minimal": null,
-          "low": null,
-          "medium": null,
-          "high": "high",
-          "xhigh": null
-        },
         "modelsDev": {
           "id": "cohere/north-mini-code:free",
-          "name": "Cohere: North Mini Code (free)",
+          "name": "North Mini Code (free)",
           "family": "north"
         },
         "api": "openai-completions",
@@ -2338,48 +1824,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H6NWQWS6KVPFK4KZQ0Z087",
-          "X-PLATFORM": "Visual Studio Code",
-          "X-PLATFORM-VERSION": "1.109.3",
-          "X-CLIENT-TYPE": "VSCode Extension",
-          "X-CLIENT-VERSION": "4.1.10",
-          "X-CORE-VERSION": "4.1.10",
-          "X-Is-Multiroot": "false",
-          "User-Agent": "Cline/4.1.10"
-        },
-        "compat": {
-          "supportsDeveloperRole": false
-        }
-      },
-      {
-        "id": "nvidia/nemotron-3.5-content-safety:free",
-        "name": "Nemotron 3.5 Content Safety (free) (Cline)",
-        "reasoning": true,
-        "input": [
-          "text",
-          "image"
-        ],
-        "cost": {
-          "input": 0,
-          "output": 0,
-          "cacheRead": 0,
-          "cacheWrite": 0
-        },
-        "contextWindow": 131072,
-        "maxTokens": 8192,
-        "_pricingKnown": true,
-        "modelsDev": {
-          "id": "nvidia/nemotron-3.5-content-safety",
-          "name": "Nemotron 3.5 Content Safety",
-          "family": "nemotron"
-        },
-        "api": "openai-completions",
-        "provider": "cline",
-        "baseUrl": "https://api.cline.bot/api/v1",
-        "headers": {
-          "HTTP-Referer": "https://cline.bot",
-          "X-Title": "Cline",
-          "X-Task-ID": "01M4H6NWQWS6KVPFK4KZQ0Z087",
+          "X-Task-ID": "01M6ST0MM32DGVFW3TCHRWF2RW",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2408,9 +1853,17 @@
         "contextWindow": 1000000,
         "maxTokens": 65536,
         "_pricingKnown": true,
+        "thinkingLevelMap": {
+          "off": "none",
+          "minimal": null,
+          "low": null,
+          "medium": "medium",
+          "high": "high",
+          "xhigh": null
+        },
         "modelsDev": {
           "id": "nvidia/nemotron-3-ultra-550b-a55b",
-          "name": "Nvidia Nemotron 3 Ultra 550B",
+          "name": "Nemotron 3 Ultra 550B A55B",
           "family": "nemotron"
         },
         "api": "openai-completions",
@@ -2419,7 +1872,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H6NWQWS6KVPFK4KZQ0Z087",
+          "X-Task-ID": "01M6ST0MM32DGVFW3TCHRWF2RW",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2449,17 +1902,9 @@
         "contextWindow": 256000,
         "maxTokens": 65536,
         "_pricingKnown": true,
-        "thinkingLevelMap": {
-          "off": "none",
-          "minimal": null,
-          "low": null,
-          "medium": null,
-          "high": "high",
-          "xhigh": null
-        },
         "modelsDev": {
           "id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
-          "name": "NVIDIA: Nemotron 3 Nano Omni (free)",
+          "name": "Nemotron 3 Nano Omni (free)",
           "family": "nemotron"
         },
         "api": "openai-completions",
@@ -2468,7 +1913,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H6NWQWS6KVPFK4KZQ0Z087",
+          "X-Task-ID": "01M6ST0MM32DGVFW3TCHRWF2RW",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2499,8 +1944,8 @@
         "maxTokens": 32768,
         "_pricingKnown": true,
         "modelsDev": {
-          "id": "google/gemma-4-26b-a4b-it",
-          "name": "Gemma 4 26B A4B",
+          "id": "google/gemma-4-26b-a4b-it:free",
+          "name": "Gemma 4 26B A4B  (free)",
           "family": "gemma"
         },
         "api": "openai-completions",
@@ -2509,7 +1954,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H6NWQWS6KVPFK4KZQ0Z087",
+          "X-Task-ID": "01M6ST0MM32DGVFW3TCHRWF2RW",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2540,8 +1985,8 @@
         "maxTokens": 32768,
         "_pricingKnown": true,
         "modelsDev": {
-          "id": "google/gemma-4-31b-it",
-          "name": "Gemma 4 31B",
+          "id": "google/gemma-4-31b-it:free",
+          "name": "Gemma 4 31B (free)",
           "family": "gemma"
         },
         "api": "openai-completions",
@@ -2550,7 +1995,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H6NWQWS6KVPFK4KZQ0Z087",
+          "X-Task-ID": "01M6ST0MM32DGVFW3TCHRWF2RW",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2591,7 +2036,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H6NWQWS6KVPFK4KZQ0Z087",
+          "X-Task-ID": "01M6ST0MM32DGVFW3TCHRWF2RW",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2632,47 +2077,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H6NWQWS6KVPFK4KZQ0Z087",
-          "X-PLATFORM": "Visual Studio Code",
-          "X-PLATFORM-VERSION": "1.109.3",
-          "X-CLIENT-TYPE": "VSCode Extension",
-          "X-CLIENT-VERSION": "4.1.10",
-          "X-CORE-VERSION": "4.1.10",
-          "X-Is-Multiroot": "false",
-          "User-Agent": "Cline/4.1.10"
-        },
-        "compat": {
-          "supportsDeveloperRole": false
-        }
-      },
-      {
-        "id": "nvidia/nemotron-3-super-120b-a12b:free",
-        "name": "Nemotron 3 Super (free) (Cline) [CI: 37.7]",
-        "reasoning": true,
-        "input": [
-          "text"
-        ],
-        "cost": {
-          "input": 0,
-          "output": 0,
-          "cacheRead": 0,
-          "cacheWrite": 0
-        },
-        "contextWindow": 262144,
-        "maxTokens": 235929,
-        "_pricingKnown": true,
-        "modelsDev": {
-          "id": "nvidia/nemotron-3-super-120b-a12b",
-          "name": "Nvidia Nemotron 3 Super 120B",
-          "family": "nemotron"
-        },
-        "api": "openai-completions",
-        "provider": "cline",
-        "baseUrl": "https://api.cline.bot/api/v1",
-        "headers": {
-          "HTTP-Referer": "https://cline.bot",
-          "X-Title": "Cline",
-          "X-Task-ID": "01M4H6NWQWS6KVPFK4KZQ0Z087",
+          "X-Task-ID": "01M6ST0MM32DGVFW3TCHRWF2RW",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2704,7 +2109,7 @@
         "_pricingKnown": true,
         "modelsDev": {
           "id": "openrouter/free",
-          "name": "OpenRouter Free Models Router"
+          "name": "Free Models Router"
         },
         "api": "openai-completions",
         "provider": "cline",
@@ -2712,7 +2117,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H6NWQWS6KVPFK4KZQ0Z087",
+          "X-Task-ID": "01M6ST0MM32DGVFW3TCHRWF2RW",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2726,8 +2131,8 @@
         }
       },
       {
-        "id": "cline-free/minimax-m3.1-flash",
-        "name": "Minimax M3.1 Flash (Cline) [CI: 58.6]",
+        "id": "cline-free/nemotron-3.5-super-vl",
+        "name": "nemotron-3.5-super-vl (Cline)",
         "reasoning": true,
         "input": [
           "text",
@@ -2742,18 +2147,10 @@
         "contextWindow": 1000000,
         "maxTokens": 65536,
         "_pricingKnown": true,
-        "thinkingLevelMap": {
-          "off": null,
-          "minimal": null,
-          "low": "low",
-          "medium": "medium",
-          "high": "high",
-          "xhigh": "xhigh"
-        },
         "modelsDev": {
-          "id": "minimax/minimax-m3.1-flash",
-          "name": "MiniMax M3.1 Flash",
-          "family": "minimax"
+          "id": "nvidia/nemotron-3.5-super-vl",
+          "name": "Nemotron 3.5 Super VL",
+          "family": "nemotron"
         },
         "api": "openai-completions",
         "provider": "cline",
@@ -2761,7 +2158,55 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H6NWQWS6KVPFK4KZQ0Z087",
+          "X-Task-ID": "01M6ST0MM32DGVFW3TCHRWF2RW",
+          "X-PLATFORM": "Visual Studio Code",
+          "X-PLATFORM-VERSION": "1.109.3",
+          "X-CLIENT-TYPE": "VSCode Extension",
+          "X-CLIENT-VERSION": "4.1.10",
+          "X-CORE-VERSION": "4.1.10",
+          "X-Is-Multiroot": "false",
+          "User-Agent": "Cline/4.1.10"
+        },
+        "compat": {
+          "supportsDeveloperRole": false
+        }
+      },
+      {
+        "id": "cline-free/solar-mini4",
+        "name": "Solar Mini 4 (Cline)",
+        "reasoning": true,
+        "input": [
+          "text"
+        ],
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0
+        },
+        "contextWindow": 1000000,
+        "maxTokens": 65536,
+        "_pricingKnown": true,
+        "thinkingLevelMap": {
+          "off": "none",
+          "minimal": "minimal",
+          "low": "low",
+          "medium": "medium",
+          "high": "high",
+          "xhigh": "xhigh"
+        },
+        "modelsDev": {
+          "id": "upstage/solar-mini4",
+          "name": "Solar Mini 4",
+          "family": "solar-mini"
+        },
+        "api": "openai-completions",
+        "provider": "cline",
+        "baseUrl": "https://api.cline.bot/api/v1",
+        "headers": {
+          "HTTP-Referer": "https://cline.bot",
+          "X-Title": "Cline",
+          "X-Task-ID": "01M6ST0MM32DGVFW3TCHRWF2RW",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2800,7 +2245,7 @@
         },
         "modelsDev": {
           "id": "reflection/beam-free",
-          "name": "Reflection: Beam 1.0 (free)",
+          "name": "Beam 1.0 (Free)",
           "family": "beam"
         },
         "api": "openai-completions",
@@ -2809,56 +2254,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H6NWQWS6KVPFK4KZQ0Z087",
-          "X-PLATFORM": "Visual Studio Code",
-          "X-PLATFORM-VERSION": "1.109.3",
-          "X-CLIENT-TYPE": "VSCode Extension",
-          "X-CLIENT-VERSION": "4.1.10",
-          "X-CORE-VERSION": "4.1.10",
-          "X-Is-Multiroot": "false",
-          "User-Agent": "Cline/4.1.10"
-        },
-        "compat": {
-          "supportsDeveloperRole": false
-        }
-      },
-      {
-        "id": "cline-free/nemotron-3.5-super-vl",
-        "name": "nemotron-3.5-super-vl (Cline)",
-        "reasoning": true,
-        "input": [
-          "text",
-          "image"
-        ],
-        "cost": {
-          "input": 0,
-          "output": 0,
-          "cacheRead": 0,
-          "cacheWrite": 0
-        },
-        "contextWindow": 1000000,
-        "maxTokens": 65536,
-        "_pricingKnown": true,
-        "thinkingLevelMap": {
-          "off": "none",
-          "minimal": null,
-          "low": null,
-          "medium": "medium",
-          "high": "high",
-          "xhigh": null
-        },
-        "modelsDev": {
-          "id": "nvidia/nemotron-3.5-super-vl",
-          "name": "Nvidia Nemotron 3.5 Super VL",
-          "family": "nemotron"
-        },
-        "api": "openai-completions",
-        "provider": "cline",
-        "baseUrl": "https://api.cline.bot/api/v1",
-        "headers": {
-          "HTTP-Referer": "https://cline.bot",
-          "X-Title": "Cline",
-          "X-Task-ID": "01M4H6NWQWS6KVPFK4KZQ0Z087",
+          "X-Task-ID": "01M6ST0MM32DGVFW3TCHRWF2RW",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2887,17 +2283,9 @@
         "contextWindow": 1000000,
         "maxTokens": 65536,
         "_pricingKnown": true,
-        "thinkingLevelMap": {
-          "off": "none",
-          "minimal": null,
-          "low": null,
-          "medium": null,
-          "high": "high",
-          "xhigh": null
-        },
         "modelsDev": {
-          "id": "nvidia/nemotron-3.5-lightning",
-          "name": "Nvidia Nemotron 3.5 Lightning",
+          "id": "nvidia/nemotron-3.5-lightning:free",
+          "name": "Nemotron 3.5 Lightning (free)",
           "family": "nemotron"
         },
         "api": "openai-completions",
@@ -2906,95 +2294,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M4H6NWQWS6KVPFK4KZQ0Z087",
-          "X-PLATFORM": "Visual Studio Code",
-          "X-PLATFORM-VERSION": "1.109.3",
-          "X-CLIENT-TYPE": "VSCode Extension",
-          "X-CLIENT-VERSION": "4.1.10",
-          "X-CORE-VERSION": "4.1.10",
-          "X-Is-Multiroot": "false",
-          "User-Agent": "Cline/4.1.10"
-        },
-        "compat": {
-          "supportsDeveloperRole": false
-        }
-      },
-      {
-        "id": "poolside/laguna-s-2.1-free",
-        "name": "Laguna S 2.1 (Cline)",
-        "reasoning": true,
-        "input": [
-          "text"
-        ],
-        "cost": {
-          "input": 0,
-          "output": 0,
-          "cacheRead": 0,
-          "cacheWrite": 0
-        },
-        "contextWindow": 1000000,
-        "maxTokens": 65536,
-        "_pricingKnown": true,
-        "modelsDev": {
-          "id": "poolside/laguna-s-2.1",
-          "name": "Laguna S 2.1",
-          "family": "laguna"
-        },
-        "api": "openai-completions",
-        "provider": "cline",
-        "baseUrl": "https://api.cline.bot/api/v1",
-        "headers": {
-          "HTTP-Referer": "https://cline.bot",
-          "X-Title": "Cline",
-          "X-Task-ID": "01M4H6NWQWS6KVPFK4KZQ0Z087",
-          "X-PLATFORM": "Visual Studio Code",
-          "X-PLATFORM-VERSION": "1.109.3",
-          "X-CLIENT-TYPE": "VSCode Extension",
-          "X-CLIENT-VERSION": "4.1.10",
-          "X-CORE-VERSION": "4.1.10",
-          "X-Is-Multiroot": "false",
-          "User-Agent": "Cline/4.1.10"
-        },
-        "compat": {
-          "supportsDeveloperRole": false
-        }
-      },
-      {
-        "id": "cline-free/solar-mini4",
-        "name": "Solar Mini 4 (Cline)",
-        "reasoning": true,
-        "input": [
-          "text"
-        ],
-        "cost": {
-          "input": 0,
-          "output": 0,
-          "cacheRead": 0,
-          "cacheWrite": 0
-        },
-        "contextWindow": 1000000,
-        "maxTokens": 65536,
-        "_pricingKnown": true,
-        "thinkingLevelMap": {
-          "off": "none",
-          "minimal": "minimal",
-          "low": "low",
-          "medium": "medium",
-          "high": "high",
-          "xhigh": "xhigh"
-        },
-        "modelsDev": {
-          "id": "solar-mini4",
-          "name": "Solar Mini 4",
-          "family": "solar-mini"
-        },
-        "api": "openai-completions",
-        "provider": "cline",
-        "baseUrl": "https://api.cline.bot/api/v1",
-        "headers": {
-          "HTTP-Referer": "https://cline.bot",
-          "X-Title": "Cline",
-          "X-Task-ID": "01M4H6NWQWS6KVPFK4KZQ0Z087",
+          "X-Task-ID": "01M6ST0MM32DGVFW3TCHRWF2RW",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -3008,7 +2308,7 @@
         }
       }
     ],
-    "checkedAt": 1792540803013
+    "checkedAt": 1794015044483
   },
   "fastrouter": {
     "models": [
@@ -3279,7 +2579,7 @@
         }
       }
     ],
-    "checkedAt": 1792540803081
+    "checkedAt": 1794015044598
   },
   "anthropic": {
     "models": [
@@ -3302,10 +2602,15 @@
         },
         "contextWindow": 1000000,
         "maxTokens": 128000,
+        "thinkingLevelMap": {
+          "off": null,
+          "xhigh": "xhigh",
+          "max": "max"
+        },
         "compat": {
+          "forceAdaptiveThinking": true,
           "supportsMidConvoSystemMessages": true,
           "supportsMidConvoToolChanges": true,
-          "forceAdaptiveThinking": true,
           "supportsStrictTools": true,
           "allowedFallbackModels": [
             {
@@ -3329,11 +2634,6 @@
               }
             }
           ]
-        },
-        "thinkingLevelMap": {
-          "off": null,
-          "xhigh": "xhigh",
-          "max": "max"
         },
         "promptCache": {
           "short": 300,
@@ -3372,17 +2672,17 @@
         },
         "contextWindow": 1000000,
         "maxTokens": 128000,
-        "compat": {
-          "supportsMidConvoEffort": true,
-          "supportsMidConvoSystemMessages": true,
-          "supportsMidConvoToolChanges": true,
-          "forceAdaptiveThinking": true,
-          "supportsStrictTools": true
-        },
         "thinkingLevelMap": {
           "off": null,
           "xhigh": "xhigh",
           "max": "max"
+        },
+        "compat": {
+          "forceAdaptiveThinking": true,
+          "supportsMidConvoEffort": true,
+          "supportsMidConvoSystemMessages": true,
+          "supportsMidConvoToolChanges": true,
+          "supportsStrictTools": true
         },
         "promptCache": {
           "short": 300,
@@ -3519,11 +2819,11 @@
           "max": "max"
         },
         "compat": {
+          "forceAdaptiveThinking": true,
+          "supportsTemperature": false,
           "supportsMidConvoEffort": true,
           "supportsMidConvoSystemMessages": true,
           "supportsMidConvoToolChanges": true,
-          "forceAdaptiveThinking": true,
-          "supportsTemperature": false,
           "supportsStrictTools": true
         },
         "promptCache": {
@@ -3733,16 +3033,16 @@
         },
         "contextWindow": 1000000,
         "maxTokens": 128000,
-        "compat": {
-          "supportsMidConvoSystemMessages": true,
-          "supportsMidConvoToolChanges": true,
-          "forceAdaptiveThinking": true,
-          "supportsTemperature": false,
-          "supportsStrictTools": true
-        },
         "thinkingLevelMap": {
           "xhigh": "xhigh",
           "max": "max"
+        },
+        "compat": {
+          "forceAdaptiveThinking": true,
+          "supportsTemperature": false,
+          "supportsMidConvoSystemMessages": true,
+          "supportsMidConvoToolChanges": true,
+          "supportsStrictTools": true
         },
         "promptCache": {
           "short": 300,
@@ -3781,17 +3081,17 @@
         },
         "contextWindow": 1000000,
         "maxTokens": 128000,
-        "compat": {
-          "supportsMidConvoEffort": true,
-          "supportsMidConvoSystemMessages": true,
-          "supportsMidConvoToolChanges": true,
-          "forceAdaptiveThinking": true,
-          "supportsTemperature": false,
-          "supportsStrictTools": true
-        },
         "thinkingLevelMap": {
           "xhigh": "xhigh",
           "max": "max"
+        },
+        "compat": {
+          "forceAdaptiveThinking": true,
+          "supportsTemperature": false,
+          "supportsMidConvoEffort": true,
+          "supportsMidConvoSystemMessages": true,
+          "supportsMidConvoToolChanges": true,
+          "supportsStrictTools": true
         },
         "promptCache": {
           "short": 300,
@@ -3840,11 +3140,11 @@
           "max": "max"
         },
         "compat": {
+          "forceAdaptiveThinking": true,
+          "supportsTemperature": false,
           "supportsMidConvoEffort": true,
           "supportsMidConvoSystemMessages": true,
           "supportsMidConvoToolChanges": true,
-          "forceAdaptiveThinking": true,
-          "supportsTemperature": false,
           "supportsStrictTools": true
         },
         "promptCache": {
@@ -4014,6 +3314,7 @@
         },
         "compat": {
           "forceAdaptiveThinking": true,
+          "supportsTemperature": false,
           "supportsStrictTools": true
         },
         "promptCache": {
@@ -4063,11 +3364,11 @@
           "max": "max"
         },
         "compat": {
+          "forceAdaptiveThinking": true,
+          "supportsTemperature": false,
           "supportsMidConvoEffort": true,
           "supportsMidConvoSystemMessages": true,
           "supportsMidConvoToolChanges": true,
-          "forceAdaptiveThinking": true,
-          "supportsTemperature": false,
           "supportsStrictTools": true
         },
         "promptCache": {
@@ -4089,9 +3390,9 @@
         "type": "chat"
       }
     ],
-    "lastModified": 1792413741000,
-    "etag": "W/\"57f8d8de07c2366a6fec71012c710360\"",
-    "checkedAt": 1792540803082
+    "lastModified": 1793798473000,
+    "etag": "W/\"62d41b097ffe7a0959b6d9b0e0afbc70\"",
+    "checkedAt": 1794007973634
   },
   "opencode-go": {
     "models": [

@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 # nvo-harness-worktree-sandbox-remove — destroy a ticket's Incus sandbox, then
-# remove the associated NVO harness worktrees using their existing safeguards.
+# force-remove the associated NVO harness worktrees by default. Pass
+# --keep-worktrees to destroy only the sandbox and close its Herdr workspace.
+# Explicit --force remains supported for compatibility.
 #
 # Usage:
-#   nvo-harness-worktree-sandbox-remove.sh '<JIRA#> [--force]'
-#   nvo-harness-worktree-sandbox-remove.sh NVO-20131 --force
+#   nvo-harness-worktree-sandbox-remove.sh '<JIRA#> [--keep-worktrees]'
+#   nvo-harness-worktree-sandbox-remove.sh NVO-20131 --keep-worktrees
 set -euo pipefail
 
 if [[ $# -lt 1 ]]; then
-	echo "Usage: nvo-harness-worktree-sandbox-remove.sh <JIRA#> [--force]" >&2
+	echo "Usage: nvo-harness-worktree-sandbox-remove.sh <JIRA#> [--keep-worktrees]" >&2
 	exit 1
 fi
 
@@ -24,14 +26,22 @@ ticket=${args[0]:-}
 	exit 1
 }
 
-force=false
+force=true
+explicit_force=false
 for argument in "${args[@]:1}"; do
-	[[ $argument == --force ]] || {
-		echo "Usage: nvo-harness-worktree-sandbox-remove.sh <JIRA#> [--force]" >&2
+	case $argument in
+	--force) explicit_force=true ;;
+	--keep-worktrees) force=false ;;
+	*)
+		echo "Usage: nvo-harness-worktree-sandbox-remove.sh <JIRA#> [--keep-worktrees]" >&2
 		exit 1
-	}
-	force=true
+		;;
+	esac
 done
+if [[ $explicit_force == true && $force == false ]]; then
+	echo 'Error: --force and --keep-worktrees cannot be combined' >&2
+	exit 1
+fi
 
 spreader_dir="${HOME}/.config/herdr-spreader"
 project_root="${HOME}/workspace/badaniya/${ticket}"
@@ -46,10 +56,23 @@ printf -v destroy_command '%q %q %q %q' "$labctl" destroy "$ticket" --yes
 printf '→ Destroying Incus sandbox %s…\n' "$ticket"
 sg incus-admin -c "$destroy_command"
 
+if [[ $force == false ]]; then
+	printf '→ Keeping all worktrees, local branches and project context at %s.\n' "$project_root"
+	# Close matching Herdr views last, just as the normal worktree remover does;
+	# this action may itself be running inside one of those workspaces.
+	workspace_ids=$(herdr workspace list | jq -r --arg ticket "$ticket" \
+		'.result.workspaces[] | select(.label == $ticket or (.label | startswith($ticket + " "))) | .workspace_id')
+	while IFS= read -r workspace_id; do
+		[[ -n $workspace_id ]] || continue
+		herdr workspace close "$workspace_id" >/dev/null
+	done <<<"$workspace_ids"
+	exit 0
+fi
+
 if [[ $force == true ]]; then
 	if [[ -d $project_root ]]; then
 		# Docker build artifacts can be root-owned inside the idmapped workspace.
-		# Ownership repair is restricted to the explicitly force-removed ticket root.
+		# Ownership repair is restricted to the ticket root being force-removed.
 		printf '→ Repairing ownership of generated artifacts in %s…\n' "$project_root"
 		sudo chown -R "$(id -un):$(id -gn)" "$project_root"
 	fi
@@ -80,7 +103,7 @@ fi
 
 if [[ -d $project_root ]]; then
 	printf '→ Removing harness worktrees for %s…\n' "$ticket"
-	bash "${spreader_dir}/nvo-harness-worktree-remove.sh" "${args[@]}"
+	bash "${spreader_dir}/nvo-harness-worktree-remove.sh" "$ticket" --force
 else
 	printf '→ Ticket root %s is already removed; skipping worktree removal.\n' "$project_root"
 fi

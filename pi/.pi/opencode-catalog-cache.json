@@ -1,5 +1,5 @@
 {
-  "savedAt": "2026-10-20T18:12:28.624Z",
+  "savedAt": "2026-11-07T01:29:53.429Z",
   "providers": {
     "opencode-go": {
       "baseUrl": "https://opencode.ai/inference/go",
@@ -34,8 +34,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e00180YSzHbvgmcpu5",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05427001hJc6TuHu9bhGfS",
             "x-opencode-project": "global"
           }
         },
@@ -67,33 +67,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e002ZEuR4At6KlaeMq",
-            "x-opencode-project": "global"
-          }
-        },
-        {
-          "id": "glm-5.1",
-          "name": "glm-5.1",
-          "api": "openai-completions",
-          "baseUrl": "https://opencode.ai/zen/go/v1",
-          "reasoning": true,
-          "input": [
-            "text"
-          ],
-          "cost": {
-            "input": 1,
-            "output": 1,
-            "cacheRead": 0,
-            "cacheWrite": 0
-          },
-          "contextWindow": 200000,
-          "maxTokens": 32000,
-          "headers": {
-            "User-Agent": "opencode/1.19.0",
-            "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e003pBFyaTNWPaaJ6A",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542800183WuqkRtJt3JJo",
             "x-opencode-project": "global"
           }
         },
@@ -123,8 +98,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e004zwTHV6dXrQa0Gg",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05428002rUUQ4XOxG6Z5s3",
             "x-opencode-project": "global"
           }
         },
@@ -154,33 +129,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e005Id47zFuXmF4n88",
-            "x-opencode-project": "global"
-          }
-        },
-        {
-          "id": "grok-4.6",
-          "name": "grok-4.6",
-          "api": "openai-completions",
-          "baseUrl": "https://opencode.ai/zen/go/v1",
-          "reasoning": true,
-          "input": [
-            "text"
-          ],
-          "cost": {
-            "input": 1,
-            "output": 1,
-            "cacheRead": 0,
-            "cacheWrite": 0
-          },
-          "contextWindow": 200000,
-          "maxTokens": 32000,
-          "headers": {
-            "User-Agent": "opencode/1.19.0",
-            "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e0063tmAn54wrK6RkZ",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05428003jLdve284iRy0ai",
             "x-opencode-project": "global"
           }
         },
@@ -217,8 +167,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e0077ab5rVGFHKb744",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05428004gJLTDDUt8R9jEE",
             "x-opencode-project": "global"
           }
         },
@@ -246,8 +196,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e008iKXEvF0Rnfxq0x",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05428005nqS2kABdKf60Mb",
             "x-opencode-project": "global"
           }
         },
@@ -275,8 +225,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e009QkZREB6ShFtfBC",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05428006S2gHCkhWi8JouY",
             "x-opencode-project": "global"
           }
         },
@@ -307,33 +257,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e00adSX8QHNUDDxv2i",
-            "x-opencode-project": "global"
-          }
-        },
-        {
-          "id": "omen-alpha",
-          "name": "omen-alpha",
-          "api": "openai-completions",
-          "baseUrl": "https://opencode.ai/zen/go/v1",
-          "reasoning": true,
-          "input": [
-            "text"
-          ],
-          "cost": {
-            "input": 1,
-            "output": 1,
-            "cacheRead": 0,
-            "cacheWrite": 0
-          },
-          "contextWindow": 200000,
-          "maxTokens": 32000,
-          "headers": {
-            "User-Agent": "opencode/1.19.0",
-            "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e00bVjcn0fcV29K9c0",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05428007N2MPAgEggQ21PG",
             "x-opencode-project": "global"
           }
         },
@@ -372,8 +297,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e00cHKWfluZbclFCx6",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a054280083w1ND5ZRLReMyt",
             "x-opencode-project": "global"
           }
         },
@@ -412,8 +337,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e00dzavT5j7YN2kzHf",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05428009k9u5yxhgNr0ZYI",
             "x-opencode-project": "global"
           }
         },
@@ -451,8 +376,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e00eSb6jhawhxN89eA",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542800ahCaEGquoxKcvZy",
             "x-opencode-project": "global"
           }
         },
@@ -482,8 +407,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e00flP45E8WQOM5h3i",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542800bfuS0tlZGdptusR",
             "x-opencode-project": "global"
           }
         },
@@ -513,33 +438,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e010rOwA3qBHGMkT3v",
-            "x-opencode-project": "global"
-          }
-        },
-        {
-          "id": "kimi-k2.6",
-          "name": "kimi-k2.6",
-          "api": "openai-completions",
-          "baseUrl": "https://opencode.ai/zen/go/v1",
-          "reasoning": true,
-          "input": [
-            "text"
-          ],
-          "cost": {
-            "input": 1,
-            "output": 1,
-            "cacheRead": 0,
-            "cacheWrite": 0
-          },
-          "contextWindow": 200000,
-          "maxTokens": 32000,
-          "headers": {
-            "User-Agent": "opencode/1.19.0",
-            "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e011ehHQ2UQObjURkx",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542800cMj6adl8xxwkKJa",
             "x-opencode-project": "global"
           }
         },
@@ -570,8 +470,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e012hIyUt51nCMwXzh",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542800dpfDzfMwLkxipFh",
             "x-opencode-project": "global"
           }
         },
@@ -604,40 +504,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e013HurFhJxhRsIw52",
-            "x-opencode-project": "global"
-          }
-        },
-        {
-          "id": "mimo-v2.5",
-          "name": "MiMo V2.5",
-          "api": "openai-completions",
-          "baseUrl": "https://opencode.ai/inference/go/v1",
-          "reasoning": true,
-          "input": [
-            "text",
-            "image"
-          ],
-          "cost": {
-            "input": 0.14,
-            "output": 0.28,
-            "cacheRead": 0.0028,
-            "cacheWrite": 0
-          },
-          "contextWindow": 1000000,
-          "maxTokens": 128000,
-          "compat": {
-            "supportsStore": false,
-            "supportsDeveloperRole": false,
-            "supportsStrictMode": true,
-            "maxTokensField": "max_tokens"
-          },
-          "headers": {
-            "User-Agent": "opencode/1.19.0",
-            "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e0149LK4ASv3zOhqhs",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542800eTFQcG7FxzrAYw7",
             "x-opencode-project": "global"
           }
         },
@@ -668,39 +536,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e015bQB61tPQzjRU7S",
-            "x-opencode-project": "global"
-          }
-        },
-        {
-          "id": "mimo-v2.5-pro",
-          "name": "MiMo V2.5 Pro",
-          "api": "openai-completions",
-          "baseUrl": "https://opencode.ai/inference/go/v1",
-          "reasoning": true,
-          "input": [
-            "text"
-          ],
-          "cost": {
-            "input": 0.435,
-            "output": 0.87,
-            "cacheRead": 0.003625,
-            "cacheWrite": 0
-          },
-          "contextWindow": 1048576,
-          "maxTokens": 128000,
-          "compat": {
-            "supportsStore": false,
-            "supportsDeveloperRole": false,
-            "supportsStrictMode": true,
-            "maxTokensField": "max_tokens"
-          },
-          "headers": {
-            "User-Agent": "opencode/1.19.0",
-            "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e016SDAmslW0ek7iSB",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542800fRL1LZ0LLz2qogW",
             "x-opencode-project": "global"
           }
         },
@@ -731,84 +568,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e017zL0m80cdOxq3KQ",
-            "x-opencode-project": "global"
-          }
-        },
-        {
-          "id": "minimax-m2.5",
-          "name": "minimax-m2.5",
-          "api": "anthropic-messages",
-          "baseUrl": "https://opencode.ai/zen/go/v1",
-          "reasoning": true,
-          "input": [
-            "text"
-          ],
-          "cost": {
-            "input": 1,
-            "output": 1,
-            "cacheRead": 0,
-            "cacheWrite": 0
-          },
-          "contextWindow": 200000,
-          "maxTokens": 32000,
-          "headers": {
-            "User-Agent": "opencode/1.19.0",
-            "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e018LDf2VygyRNOZvy",
-            "x-opencode-project": "global"
-          }
-        },
-        {
-          "id": "minimax-m2.7",
-          "name": "minimax-m2.7",
-          "api": "anthropic-messages",
-          "baseUrl": "https://opencode.ai/zen/go/v1",
-          "reasoning": true,
-          "input": [
-            "text"
-          ],
-          "cost": {
-            "input": 1,
-            "output": 1,
-            "cacheRead": 0,
-            "cacheWrite": 0
-          },
-          "contextWindow": 200000,
-          "maxTokens": 32000,
-          "headers": {
-            "User-Agent": "opencode/1.19.0",
-            "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e019PLQU1DJtV0z8yX",
-            "x-opencode-project": "global"
-          }
-        },
-        {
-          "id": "gemini-4-argon-contributor",
-          "name": "Gemini 4 Argon Contributor",
-          "api": "google-generative-ai",
-          "baseUrl": "https://opencode.ai/inference/go/v1",
-          "reasoning": true,
-          "input": [
-            "text",
-            "image"
-          ],
-          "cost": {
-            "input": 4,
-            "output": 20,
-            "cacheRead": 0.2,
-            "cacheWrite": 0
-          },
-          "contextWindow": 1048576,
-          "maxTokens": 65536,
-          "headers": {
-            "User-Agent": "opencode/1.19.0",
-            "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e01aphBoE8p1NKiIEn",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05428010CUM4xEKMxihfOK",
             "x-opencode-project": "global"
           }
         },
@@ -842,14 +603,14 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e01bsrm7QayLhGc7kb",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a054280115TnnA5lEJ2ntzZ",
             "x-opencode-project": "global"
           }
         },
         {
-          "id": "minimax-m3.1-flash-free",
-          "name": "minimax-m3.1-flash-free",
+          "id": "minimax-m3.1-flash",
+          "name": "minimax-m3.1-flash",
           "api": "anthropic-messages",
           "baseUrl": "https://opencode.ai/zen/go/v1",
           "reasoning": true,
@@ -857,8 +618,8 @@
             "text"
           ],
           "cost": {
-            "input": 0,
-            "output": 0,
+            "input": 1,
+            "output": 1,
             "cacheRead": 0,
             "cacheWrite": 0
           },
@@ -867,8 +628,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e01c5YKaSI1YkgF9Nf",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a054280128Uw3gz8ve26bTh",
             "x-opencode-project": "global"
           }
         },
@@ -898,40 +659,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e01doZHnKurI0mBbR6",
-            "x-opencode-project": "global"
-          }
-        },
-        {
-          "id": "longcat-2.5-preview-free",
-          "name": "LongCat 2.5 Preview Free",
-          "api": "openai-completions",
-          "baseUrl": "https://opencode.ai/inference/go/v1",
-          "reasoning": true,
-          "input": [
-            "text",
-            "image"
-          ],
-          "cost": {
-            "input": 0,
-            "output": 0,
-            "cacheRead": 0,
-            "cacheWrite": 0
-          },
-          "contextWindow": 1000000,
-          "maxTokens": 131072,
-          "compat": {
-            "supportsStore": false,
-            "supportsDeveloperRole": false,
-            "supportsStrictMode": true,
-            "maxTokensField": "max_tokens"
-          },
-          "headers": {
-            "User-Agent": "opencode/1.19.0",
-            "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e01eLdoMXJ565FE37v",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05428013R9qz37FHycu1Ek",
             "x-opencode-project": "global"
           }
         },
@@ -955,8 +684,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e01fSxB9YWRJyeR3Z1",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a054280146ImfHFowgpjCqQ",
             "x-opencode-project": "global"
           }
         },
@@ -980,58 +709,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e0202zTGhuQbWl9aJj",
-            "x-opencode-project": "global"
-          }
-        },
-        {
-          "id": "qwen3.6-plus",
-          "name": "qwen3.6-plus",
-          "api": "anthropic-messages",
-          "baseUrl": "https://opencode.ai/zen/go/v1",
-          "reasoning": true,
-          "input": [
-            "text"
-          ],
-          "cost": {
-            "input": 1,
-            "output": 1,
-            "cacheRead": 0,
-            "cacheWrite": 0
-          },
-          "contextWindow": 200000,
-          "maxTokens": 32000,
-          "headers": {
-            "User-Agent": "opencode/1.19.0",
-            "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e021OhDbaiEQd0bqbf",
-            "x-opencode-project": "global"
-          }
-        },
-        {
-          "id": "qwen3.7-max",
-          "name": "qwen3.7-max",
-          "api": "anthropic-messages",
-          "baseUrl": "https://opencode.ai/zen/go/v1",
-          "reasoning": true,
-          "input": [
-            "text"
-          ],
-          "cost": {
-            "input": 1,
-            "output": 1,
-            "cacheRead": 0,
-            "cacheWrite": 0
-          },
-          "contextWindow": 200000,
-          "maxTokens": 32000,
-          "headers": {
-            "User-Agent": "opencode/1.19.0",
-            "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e022CeiZ0sTvAS2vUJ",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05428015Q93dTgWrjeDA60",
             "x-opencode-project": "global"
           }
         },
@@ -1056,8 +735,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e023uVx7Iafl4zvBOR",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05428016oVM5FkHUUyS34N",
             "x-opencode-project": "global"
           }
         },
@@ -1085,8 +764,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e024WNE5eXWzmpdNRu",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05428017UiOS8gtf6IsH0j",
             "x-opencode-project": "global"
           }
         },
@@ -1120,8 +799,133 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37e025XQynbUNmpUtnjp",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05428018RmoaqV60UTpZkQ",
+            "x-opencode-project": "global"
+          }
+        },
+        {
+          "id": "kimi-k3.1-pro",
+          "name": "kimi-k3.1-pro",
+          "api": "openai-completions",
+          "baseUrl": "https://opencode.ai/zen/go/v1",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "cost": {
+            "input": 1,
+            "output": 1,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "contextWindow": 200000,
+          "maxTokens": 32000,
+          "headers": {
+            "User-Agent": "opencode/1.19.0",
+            "x-opencode-client": "cli",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05428019ekKwS8W7BY9Ey2",
+            "x-opencode-project": "global"
+          }
+        },
+        {
+          "id": "iceman-contributor-free",
+          "name": "iceman-contributor-free",
+          "api": "openai-completions",
+          "baseUrl": "https://opencode.ai/zen/go/v1",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "contextWindow": 200000,
+          "maxTokens": 32000,
+          "headers": {
+            "User-Agent": "opencode/1.19.0",
+            "x-opencode-client": "cli",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542801a0wiVFWMcvmU1li",
+            "x-opencode-project": "global"
+          }
+        },
+        {
+          "id": "gemini-4-argon",
+          "name": "gemini-4-argon",
+          "api": "google-generative-ai",
+          "baseUrl": "https://opencode.ai/zen/go/v1",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "cost": {
+            "input": 1,
+            "output": 1,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "contextWindow": 200000,
+          "maxTokens": 32000,
+          "headers": {
+            "User-Agent": "opencode/1.19.0",
+            "x-opencode-client": "cli",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542801bB9oHuCqH4zYfNW",
+            "x-opencode-project": "global"
+          }
+        },
+        {
+          "id": "hy4",
+          "name": "hy4",
+          "api": "openai-completions",
+          "baseUrl": "https://opencode.ai/zen/go/v1",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "cost": {
+            "input": 1,
+            "output": 1,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "contextWindow": 200000,
+          "maxTokens": 32000,
+          "headers": {
+            "User-Agent": "opencode/1.19.0",
+            "x-opencode-client": "cli",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542801cTdvXso47zjPyOH",
+            "x-opencode-project": "global"
+          }
+        },
+        {
+          "id": "crouton-alpha-free",
+          "name": "crouton-alpha-free",
+          "api": "openai-completions",
+          "baseUrl": "https://opencode.ai/zen/go/v1",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "contextWindow": 200000,
+          "maxTokens": 32000,
+          "headers": {
+            "User-Agent": "opencode/1.19.0",
+            "x-opencode-client": "cli",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542801dy0aKXDPz3gw690",
             "x-opencode-project": "global"
           }
         }
@@ -1157,8 +961,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b002dquebndOWDhs6U",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424002ZQ610gXsEA4ibb",
             "x-opencode-project": "global"
           }
         },
@@ -1182,8 +986,33 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b003SFUCYBS1gwmUwI",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424003ncYi5A99gaTITK",
+            "x-opencode-project": "global"
+          }
+        },
+        {
+          "id": "flint-40b-free",
+          "name": "flint-40b-free",
+          "api": "openai-completions",
+          "baseUrl": "https://opencode.ai/inference/v1",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "contextWindow": 200000,
+          "maxTokens": 32000,
+          "headers": {
+            "User-Agent": "opencode/1.19.0",
+            "x-opencode-client": "cli",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542400407jYbzx5LXnR3q",
             "x-opencode-project": "global"
           }
         },
@@ -1214,8 +1043,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b0044Pknr8K1cnnWC1",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424005744Ew5yj1fNQn7",
             "x-opencode-project": "global"
           }
         },
@@ -1246,8 +1075,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b005x50OoE4MLavng9",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424006uDrF5GLYQnrb4x",
             "x-opencode-project": "global"
           }
         },
@@ -1277,65 +1106,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b006G73bR96E9F3y04",
-            "x-opencode-project": "global"
-          }
-        },
-        {
-          "id": "jev-1.13-free",
-          "name": "jev-1.13-free",
-          "api": "openai-completions",
-          "baseUrl": "https://opencode.ai/inference/v1",
-          "reasoning": true,
-          "input": [
-            "text"
-          ],
-          "cost": {
-            "input": 0,
-            "output": 0,
-            "cacheRead": 0,
-            "cacheWrite": 0
-          },
-          "contextWindow": 200000,
-          "maxTokens": 32000,
-          "headers": {
-            "User-Agent": "opencode/1.19.0",
-            "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b007MqqAERYHnEOhMi",
-            "x-opencode-project": "global"
-          }
-        },
-        {
-          "id": "longcat-2.5-preview-free",
-          "name": "LongCat 2.5 Preview Free",
-          "api": "openai-completions",
-          "baseUrl": "https://opencode.ai/inference/v1",
-          "reasoning": true,
-          "input": [
-            "text",
-            "image"
-          ],
-          "cost": {
-            "input": 0,
-            "output": 0,
-            "cacheRead": 0,
-            "cacheWrite": 0
-          },
-          "contextWindow": 1000000,
-          "maxTokens": 131072,
-          "compat": {
-            "supportsStore": false,
-            "supportsDeveloperRole": false,
-            "supportsStrictMode": true,
-            "maxTokensField": "max_tokens"
-          },
-          "headers": {
-            "User-Agent": "opencode/1.19.0",
-            "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b008qCoiOUcWa5PpVG",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424007ubLfhlx46MfiWI",
             "x-opencode-project": "global"
           }
         },
@@ -1367,8 +1139,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b009NIJvgjgGdYkKDv",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424008ruTCN5H50Xr8tI",
             "x-opencode-project": "global"
           }
         },
@@ -1392,58 +1164,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b00abbOJ6tLNKi7fne",
-            "x-opencode-project": "global"
-          }
-        },
-        {
-          "id": "minimax-m3.1-flash-free",
-          "name": "minimax-m3.1-flash-free",
-          "api": "openai-completions",
-          "baseUrl": "https://opencode.ai/inference/v1",
-          "reasoning": true,
-          "input": [
-            "text"
-          ],
-          "cost": {
-            "input": 0,
-            "output": 0,
-            "cacheRead": 0,
-            "cacheWrite": 0
-          },
-          "contextWindow": 200000,
-          "maxTokens": 32000,
-          "headers": {
-            "User-Agent": "opencode/1.19.0",
-            "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b00bn6Y64Cza1xftCC",
-            "x-opencode-project": "global"
-          }
-        },
-        {
-          "id": "test",
-          "name": "test",
-          "api": "openai-completions",
-          "baseUrl": "https://opencode.ai/inference/v1",
-          "reasoning": true,
-          "input": [
-            "text"
-          ],
-          "cost": {
-            "input": 1,
-            "output": 1,
-            "cacheRead": 0,
-            "cacheWrite": 0
-          },
-          "contextWindow": 200000,
-          "maxTokens": 32000,
-          "headers": {
-            "User-Agent": "opencode/1.19.0",
-            "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b00cyYDLi2d1VgHQM7",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424009HfdVD0oeGBfQ5z",
             "x-opencode-project": "global"
           }
         },
@@ -1472,33 +1194,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b00dnT50J3osEgBQYQ",
-            "x-opencode-project": "global"
-          }
-        },
-        {
-          "id": "jev-1.13",
-          "name": "jev-1.13",
-          "api": "openai-completions",
-          "baseUrl": "https://opencode.ai/inference/v1",
-          "reasoning": true,
-          "input": [
-            "text"
-          ],
-          "cost": {
-            "input": 1,
-            "output": 1,
-            "cacheRead": 0,
-            "cacheWrite": 0
-          },
-          "contextWindow": 200000,
-          "maxTokens": 32000,
-          "headers": {
-            "User-Agent": "opencode/1.19.0",
-            "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b00e4TANhPXe3uZsoy",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542400adJXYgawdLB9B35",
             "x-opencode-project": "global"
           }
         },
@@ -1527,8 +1224,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b00feJ27ui72KNy7GW",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542400bVqQfmMrMNlTXrf",
             "x-opencode-project": "global"
           }
         },
@@ -1553,8 +1250,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b010K9jFbYYgeDhMhq",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542400cDNZenr9GIWdVEb",
             "x-opencode-project": "global"
           }
         },
@@ -1593,8 +1290,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b011qukn9JoRtTOXGz",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542400dOCxfdcQeze3Rxh",
             "x-opencode-project": "global"
           }
         },
@@ -1619,8 +1316,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b012vhoDOqm8sWGgqK",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542400eEdWD6JMmse32Aa",
             "x-opencode-project": "global"
           }
         },
@@ -1648,8 +1345,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b013qEO5mGvJXucq6v",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542400fvZih4vLK62nTeM",
             "x-opencode-project": "global"
           }
         },
@@ -1678,8 +1375,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b014YHvRReGKeXMk0h",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424010ZeMU7gelPnwkMi",
             "x-opencode-project": "global"
           }
         },
@@ -1709,8 +1406,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b015yMpDxZzDCiGBIx",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424011GHTgbCQrp39KWB",
             "x-opencode-project": "global"
           }
         },
@@ -1740,8 +1437,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b016CletQDDkgUQDaa",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424012efIMYIDmwlVdt5",
             "x-opencode-project": "global"
           }
         },
@@ -1771,33 +1468,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b017dYZMMCYUFCAcRf",
-            "x-opencode-project": "global"
-          }
-        },
-        {
-          "id": "claude-opus-5-5-backup",
-          "name": "claude-opus-5-5-backup",
-          "api": "anthropic-messages",
-          "baseUrl": "https://opencode.ai/inference/v1",
-          "reasoning": true,
-          "input": [
-            "text"
-          ],
-          "cost": {
-            "input": 1,
-            "output": 1,
-            "cacheRead": 0,
-            "cacheWrite": 0
-          },
-          "contextWindow": 200000,
-          "maxTokens": 32000,
-          "headers": {
-            "User-Agent": "opencode/1.19.0",
-            "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b018mtsL9oWt3hmDGb",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a054240132Gmi3U9cvXa76V",
             "x-opencode-project": "global"
           }
         },
@@ -1831,8 +1503,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b0190vIsZNnsO7Z55N",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424014X574zh8sbDKmUR",
             "x-opencode-project": "global"
           }
         },
@@ -1860,8 +1532,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b01ad0wjWrHMUsjjKS",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424015kbrBE46k7q0x3C",
             "x-opencode-project": "global"
           }
         },
@@ -1889,8 +1561,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b01b2bPeGFcde8JNsC",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424016zqvCyq1Q53gSip",
             "x-opencode-project": "global"
           }
         },
@@ -1920,41 +1592,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b01cfUCG7Fuf2uBy3A",
-            "x-opencode-project": "global"
-          }
-        },
-        {
-          "id": "deepseek-v4-flash",
-          "name": "DeepSeek V4 Flash",
-          "api": "openai-completions",
-          "baseUrl": "https://opencode.ai/inference/v1",
-          "reasoning": true,
-          "input": [
-            "text"
-          ],
-          "cost": {
-            "input": 0.14,
-            "output": 0.28,
-            "cacheRead": 0.028,
-            "cacheWrite": 0
-          },
-          "contextWindow": 1000000,
-          "maxTokens": 384000,
-          "compat": {
-            "supportsStore": false,
-            "supportsDeveloperRole": false,
-            "supportsStrictMode": true,
-            "maxTokensField": "max_tokens",
-            "supportsLongCacheRetention": false,
-            "requiresReasoningContentOnAssistantMessages": true
-          },
-          "headers": {
-            "User-Agent": "opencode/1.19.0",
-            "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b01dRAALTfenXpnjyh",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a054240175A03jMDTuiL3fo",
             "x-opencode-project": "global"
           }
         },
@@ -1986,8 +1625,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b01etBgjZWs24vUkfb",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a054240182lT3ex3o6KfS8F",
             "x-opencode-project": "global"
           }
         },
@@ -2019,69 +1658,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b01fMAp4qlw6g8UXUG",
-            "x-opencode-project": "global"
-          }
-        },
-        {
-          "id": "gemini-3-flash",
-          "name": "Gemini 3 Flash",
-          "api": "google-generative-ai",
-          "baseUrl": "https://opencode.ai/inference/v1",
-          "reasoning": true,
-          "input": [
-            "text",
-            "image"
-          ],
-          "cost": {
-            "input": 0.5,
-            "output": 3,
-            "cacheRead": 0.05,
-            "cacheWrite": 0
-          },
-          "contextWindow": 1048576,
-          "maxTokens": 65536,
-          "headers": {
-            "User-Agent": "opencode/1.19.0",
-            "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b0205Hwl97dWaafFv4",
-            "x-opencode-project": "global"
-          }
-        },
-        {
-          "id": "gemini-3.1-pro",
-          "name": "Gemini 3.1 Pro Preview",
-          "api": "google-generative-ai",
-          "baseUrl": "https://opencode.ai/inference/v1",
-          "reasoning": true,
-          "input": [
-            "text",
-            "image"
-          ],
-          "cost": {
-            "input": 2,
-            "output": 12,
-            "cacheRead": 0.2,
-            "cacheWrite": 0,
-            "tiers": [
-              {
-                "inputTokensAbove": 200000,
-                "input": 4,
-                "output": 18,
-                "cacheRead": 0.4,
-                "cacheWrite": 0
-              }
-            ]
-          },
-          "contextWindow": 1048576,
-          "maxTokens": 65536,
-          "headers": {
-            "User-Agent": "opencode/1.19.0",
-            "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b021lGJ97aRrITB7KH",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a054240191voSUcxAH34mCu",
             "x-opencode-project": "global"
           }
         },
@@ -2106,8 +1684,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b022NKiVvdTZrVodSM",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542401aSYAox2B6NDVU02",
             "x-opencode-project": "global"
           }
         },
@@ -2132,8 +1710,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b023rwXwSV1e7XAMjq",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542401bBRa5ziTfhpeUOl",
             "x-opencode-project": "global"
           }
         },
@@ -2158,8 +1736,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b024JbrnSh4OIuFq7R",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542401ce0K0F0ouECmDT0",
             "x-opencode-project": "global"
           }
         },
@@ -2184,8 +1762,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b025rQ6GdMf1J1olxj",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542401dFXUaB6kI1OgtEA",
             "x-opencode-project": "global"
           }
         },
@@ -2210,8 +1788,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b02643cQF32DzsuhUe",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542401e9Gsr1oggqTyMn5",
             "x-opencode-project": "global"
           }
         },
@@ -2236,8 +1814,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b027ML2tFdyMKNcwJD",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542401fOK8iHtWeDJ2Wym",
             "x-opencode-project": "global"
           }
         },
@@ -2267,8 +1845,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b0284huUk6Bs4oJhS1",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424020VNoAfX26GpClle",
             "x-opencode-project": "global"
           }
         },
@@ -2298,8 +1876,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b029wcaf4nntS3yR9m",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424021lNDy0ISXgPmRTW",
             "x-opencode-project": "global"
           }
         },
@@ -2329,8 +1907,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b02aymA1M9Ff1qEcwM",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542402273IxWJ5xbgcSFq",
             "x-opencode-project": "global"
           }
         },
@@ -2360,8 +1938,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b02bo2hAKrHYV16tcd",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424023yPjhnpMLpKif06",
             "x-opencode-project": "global"
           }
         },
@@ -2392,8 +1970,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b02czeboRXwHTOZeF4",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424024VK5ITvj23HCJ95",
             "x-opencode-project": "global"
           }
         },
@@ -2422,8 +2000,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b02d4zpYXwXbvCZeKz",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a054240255NLUqr37AzMaV9",
             "x-opencode-project": "global"
           }
         },
@@ -2452,8 +2030,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b02eQ1CEAMp5HAm3hc",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424026Yl3HABOODJPw4y",
             "x-opencode-project": "global"
           }
         },
@@ -2482,8 +2060,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b02f6Ya1HgLjZg45sJ",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424027CRat3tqPVm6Yn4",
             "x-opencode-project": "global"
           }
         },
@@ -2512,8 +2090,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b030aCY6AF7Yz5fENK",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424028twmFfnxqE5DV2H",
             "x-opencode-project": "global"
           }
         },
@@ -2542,8 +2120,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b031E1YnrYqnO4YJ1Z",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424029nAM1RzLiP12J8Z",
             "x-opencode-project": "global"
           }
         },
@@ -2572,8 +2150,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b032HMpYPdxtK7kRhe",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542402aG4Ut3LeRMfxUvV",
             "x-opencode-project": "global"
           }
         },
@@ -2602,8 +2180,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b033VdZ5tmuSFC0SNv",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542402bp9daNOUk7tOx1u",
             "x-opencode-project": "global"
           }
         },
@@ -2632,8 +2210,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b034Iu0rxp7VNeC4Gq",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542402cU6zNTkN64p0flc",
             "x-opencode-project": "global"
           }
         },
@@ -2662,8 +2240,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b035sae0ATzOjOuykU",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542402dAqunEqDy5tK2vW",
             "x-opencode-project": "global"
           }
         },
@@ -2692,8 +2270,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b0363hPmiVeJo2EAiD",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542402eELYikokBMV48vi",
             "x-opencode-project": "global"
           }
         },
@@ -2717,8 +2295,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b037uGLo5F239Tgvz0",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542402fH3aLThIoPW3Kov",
             "x-opencode-project": "global"
           },
           "compat": {
@@ -2761,8 +2339,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b038oUGRuEHXXhb4ez",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424030Rwwzi2Da1dLcln",
             "x-opencode-project": "global"
           }
         },
@@ -2793,8 +2371,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b039IjYqJnpE5lws9X",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424031mgrbSt2RulAis0",
             "x-opencode-project": "global"
           }
         },
@@ -2823,8 +2401,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b03aa32KcHDc7csgSL",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424032vaIPERxPV8de9z",
             "x-opencode-project": "global"
           }
         },
@@ -2855,8 +2433,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b03bVjPPNw58bDGob2",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424033euq8MlRMi9JU9F",
             "x-opencode-project": "global"
           }
         },
@@ -2896,8 +2474,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b03cQjR3gwEa5rgxty",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424034djadb6zYhd3Ffb",
             "x-opencode-project": "global"
           }
         },
@@ -2926,8 +2504,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b03duDmoX8VaC1Rwqd",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424035pIFZhQKjooAf4G",
             "x-opencode-project": "global"
           }
         },
@@ -2967,8 +2545,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b03eHDpAOjdMfnLwCt",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424036BE8Kma0nkPygbd",
             "x-opencode-project": "global"
           }
         },
@@ -3008,8 +2586,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b03fSRrJNhmKgTROpf",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424037JZY5K3SbsuQ9xa",
             "x-opencode-project": "global"
           }
         },
@@ -3049,8 +2627,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b040t6UEbbolynJ0VT",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424038WzTH5XRlmVO9zM",
             "x-opencode-project": "global"
           }
         },
@@ -3090,8 +2668,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b041v4T0tgVu9OLVhp",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05424039EwBScRAtFegMUu",
             "x-opencode-project": "global"
           }
         },
@@ -3131,8 +2709,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b042L2UVLUWITS9F3A",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542403aSR7ncYLOZeyxkB",
             "x-opencode-project": "global"
           }
         },
@@ -3172,8 +2750,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b043lpLI8ToDy59QB3",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542403byhIowr6BdnHs1v",
             "x-opencode-project": "global"
           }
         },
@@ -3213,8 +2791,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b044g25VAS99phqqO6",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542403cvQjAfpeNrmRHJa",
             "x-opencode-project": "global"
           }
         },
@@ -3251,8 +2829,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b0453lZN0BKYajedrL",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542403dkWrxd1SR6OOxkK",
             "x-opencode-project": "global"
           }
         },
@@ -3289,8 +2867,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b046NvI6afCKnxEEEd",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05425001DV9RjZMZDqi6uD",
             "x-opencode-project": "global"
           }
         },
@@ -3327,8 +2905,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b047l3MYtVJTvtdzDH",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05425002C42k06f2wyHi0v",
             "x-opencode-project": "global"
           }
         },
@@ -3357,8 +2935,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b048zZem4EFRmOhtGY",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05425003I0hgnW7U0F8o76",
             "x-opencode-project": "global"
           }
         },
@@ -3390,8 +2968,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b049vJimpM5tHx7ScZ",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05425004Mxl125HRmZDKVR",
             "x-opencode-project": "global"
           }
         },
@@ -3425,8 +3003,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b04aaFyIaIcNor9CrZ",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05425005qkS6UldFI34y6E",
             "x-opencode-project": "global"
           }
         },
@@ -3457,8 +3035,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b04bEI3KvcVPzwaZAN",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05425006DzPla1WQBN0z4o",
             "x-opencode-project": "global"
           }
         },
@@ -3491,8 +3069,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b04c0xB7Yokm8ELVNE",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a054250078XdAolaB7LDXUZ",
             "x-opencode-project": "global"
           }
         },
@@ -3522,8 +3100,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b04d5eW3r7v4ledx7X",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05425008goDSVOwUPheysR",
             "x-opencode-project": "global"
           }
         },
@@ -3554,8 +3132,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b04e3OaKQeJOQf4BVo",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05425009PO6qMic02pFXgq",
             "x-opencode-project": "global"
           }
         },
@@ -3586,8 +3164,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b04fxZOQPGch3OmZ9k",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542500aCIDoOK5wMvDurH",
             "x-opencode-project": "global"
           }
         },
@@ -3615,8 +3193,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b050MVhmcE2ttANRxY",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542500b3aVYwin26XICPg",
             "x-opencode-project": "global"
           }
         },
@@ -3644,8 +3222,33 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b051Z7GmeNWQAWmGFn",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542500cIKNHMRHSKfJ37H",
+            "x-opencode-project": "global"
+          }
+        },
+        {
+          "id": "muse-wonder-1.0",
+          "name": "muse-wonder-1.0",
+          "api": "openai-completions",
+          "baseUrl": "https://opencode.ai/inference/v1",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "cost": {
+            "input": 1,
+            "output": 1,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "contextWindow": 200000,
+          "maxTokens": 32000,
+          "headers": {
+            "User-Agent": "opencode/1.19.0",
+            "x-opencode-client": "cli",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542500dzldKcY4Tja470p",
             "x-opencode-project": "global"
           }
         },
@@ -3676,8 +3279,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b052lgZDCNZ3UPHa9B",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542500eat1HalREbUvGM8",
             "x-opencode-project": "global"
           }
         },
@@ -3702,8 +3305,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b053yPsTaT3yTUeumh",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a0542500fjKWl3QQ55ILHLW",
             "x-opencode-project": "global"
           }
         },
@@ -3728,8 +3331,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b0544O9oCcGhLOUOLe",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05425010I0TAWu7Ua0CPPg",
             "x-opencode-project": "global"
           }
         },
@@ -3757,8 +3360,8 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b055pHFUK3bTbd55WG",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05425011VLC7usE8tDRFET",
             "x-opencode-project": "global"
           }
         },
@@ -3789,8 +3392,58 @@
           "headers": {
             "User-Agent": "opencode/1.19.0",
             "x-opencode-client": "cli",
-            "x-opencode-session": "ses_ea57c3c84ffeJyp79sraxmdRHI",
-            "x-opencode-request": "msg_15a83c37b056KbknRLj0bUhLj4",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05425012sXg3qz2vccRt8K",
+            "x-opencode-project": "global"
+          }
+        },
+        {
+          "id": "crouton-alpha-free",
+          "name": "crouton-alpha-free",
+          "api": "openai-completions",
+          "baseUrl": "https://opencode.ai/inference/v1",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "contextWindow": 200000,
+          "maxTokens": 32000,
+          "headers": {
+            "User-Agent": "opencode/1.19.0",
+            "x-opencode-client": "cli",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05425013QnSclZ0OPLnWLH",
+            "x-opencode-project": "global"
+          }
+        },
+        {
+          "id": "iceman-free",
+          "name": "iceman-free",
+          "api": "openai-completions",
+          "baseUrl": "https://opencode.ai/inference/v1",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "contextWindow": 200000,
+          "maxTokens": 32000,
+          "headers": {
+            "User-Agent": "opencode/1.19.0",
+            "x-opencode-client": "cli",
+            "x-opencode-session": "ses_e4c5fabdbffe9nnqhFxqPMipPv",
+            "x-opencode-request": "msg_1b3a05425014ov8pfMTTEpx18Y",
             "x-opencode-project": "global"
           }
         }

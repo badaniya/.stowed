@@ -4,21 +4,21 @@
     "frontend-design@claude-plugins-official": [
       {
         "scope": "user",
-        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/frontend-design/d1adba47161a",
-        "version": "d1adba47161a",
+        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/frontend-design/1.1.1",
+        "version": "1.1.1",
         "installedAt": "2026-05-14T16:18:03.768Z",
-        "lastUpdated": "2026-10-21T15:36:25.561Z",
-        "gitCommitSha": "d1adba47161a271799de7b548225d929310046bd"
+        "lastUpdated": "2026-10-29T17:21:25.552Z",
+        "gitCommitSha": "f8c5e7a1dcb71b10cb74586224b5401f3de5db28"
       }
     ],
     "code-review@claude-plugins-official": [
       {
         "scope": "user",
-        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/code-review/d1adba47161a",
-        "version": "d1adba47161a",
+        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/code-review/1.0.1",
+        "version": "1.0.1",
         "installedAt": "2026-05-14T16:18:03.768Z",
-        "lastUpdated": "2026-10-21T15:36:25.562Z",
-        "gitCommitSha": "d1adba47161a271799de7b548225d929310046bd"
+        "lastUpdated": "2026-10-29T17:21:25.554Z",
+        "gitCommitSha": "f8c5e7a1dcb71b10cb74586224b5401f3de5db28"
       }
     ],
     "code-simplifier@claude-plugins-official": [
@@ -43,11 +43,11 @@
     "github@claude-plugins-official": [
       {
         "scope": "user",
-        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/github/d1adba47161a",
-        "version": "d1adba47161a",
+        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/github/0412be76f50a",
+        "version": "0412be76f50a",
         "installedAt": "2026-06-04T15:46:05.709Z",
-        "lastUpdated": "2026-10-21T15:36:25.559Z",
-        "gitCommitSha": "d1adba47161a271799de7b548225d929310046bd"
+        "lastUpdated": "2026-11-09T15:33:28.737Z",
+        "gitCommitSha": "0412be76f50ab4f4f8abff3753efa9269fbbca5b"
       }
     ],
     "gopls-lsp@claude-plugins-official": [

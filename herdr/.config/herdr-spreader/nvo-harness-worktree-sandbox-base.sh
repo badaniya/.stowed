@@ -135,6 +135,9 @@ done
 
 JIRA="${POSITIONAL[0]:-}"
 UPSTREAM_VERSION="${POSITIONAL[1]:-}"
+# Accept either a version or its origin-qualified branch name. Keep the bare
+# version for snapshot lookup and qualify the Git ref only where it is used.
+UPSTREAM_VERSION=${UPSTREAM_VERSION#origin/}
 
 if [[ -z "${JIRA:-}" || -z "${UPSTREAM_VERSION:-}" ]]; then
 	echo "Usage: nvo-harness-worktree.sh <jira> <upstream-version> [--restore-harness]" >&2
@@ -157,31 +160,38 @@ TMP_CONFIG="/tmp/nvo-harness-worktree-${JIRA//\//-}.yaml"
 
 mkdir -p "${PROJECT_DIR}"
 
-for REPO in "${REPOS[@]}"; do
-	BARE_REPO="${WORKSPACE_ROOT}/master/${REPO}"
-	WORKTREE_DIR="${PROJECT_DIR}/${REPO}"
-	NEW_BRANCH="${WORKSPACE_OWNER}/${REPO}/${JIRA}"
+if [[ $JIRA == NVO-REVIEW-* && -n ${NVO_REVIEW_BRANCH:-} ]]; then
+	# Review worktrees select existing PR branches and preserve other selections.
+	# shellcheck source=/dev/null
+	source "${HOME}/.config/herdr-spreader/nvo-review.sh"
+	prepare_review_worktrees "$PROJECT_DIR" "$WORKSPACE_ROOT" "$UPSTREAM_VERSION" "${REPOS[@]}"
+else
+	for REPO in "${REPOS[@]}"; do
+		BARE_REPO="${WORKSPACE_ROOT}/master/${REPO}"
+		WORKTREE_DIR="${PROJECT_DIR}/${REPO}"
+		NEW_BRANCH="${WORKSPACE_OWNER}/${REPO}/${JIRA}"
 
-	if [[ ! -d "${BARE_REPO}" ]]; then
-		echo "Error: bare repo not found at ${BARE_REPO}" >&2
-		exit 1
-	fi
+		if [[ ! -d "${BARE_REPO}" ]]; then
+			echo "Error: bare repo not found at ${BARE_REPO}" >&2
+			exit 1
+		fi
 
-	if [[ -d "${WORKTREE_DIR}" ]]; then
-		echo "→ Worktree already exists at ${WORKTREE_DIR}, reusing it…"
-		continue
-	fi
+		if [[ -d "${WORKTREE_DIR}" ]]; then
+			echo "→ Worktree already exists at ${WORKTREE_DIR}, reusing it…"
+			continue
+		fi
 
-	echo "→ Fetching ${BARE_REPO}…"
-	git -C "${BARE_REPO}" fetch --all --quiet
+		echo "→ Fetching ${BARE_REPO}…"
+		git -C "${BARE_REPO}" fetch --all --quiet
 
-	echo "→ Creating worktree for '${NEW_BRANCH}' (from '${UPSTREAM_VERSION}') at ${WORKTREE_DIR}…"
-	git -C "${BARE_REPO}" worktree add "${WORKTREE_DIR}" -b "${NEW_BRANCH}" "${UPSTREAM_VERSION}"
+		echo "→ Creating worktree for '${NEW_BRANCH}' (from '${UPSTREAM_VERSION}') at ${WORKTREE_DIR}…"
+		git -C "${BARE_REPO}" worktree add "${WORKTREE_DIR}" -b "${NEW_BRANCH}" "refs/remotes/origin/${UPSTREAM_VERSION}"
 
-	# Track the upstream version branch for diff/log purposes (best-effort — not
-	# a push target, just so `git status`/`git log` compare against it).
-	git -C "${WORKTREE_DIR}" branch --set-upstream-to="origin/${UPSTREAM_VERSION}" "${NEW_BRANCH}" 2>/dev/null || true
-done
+		# Track the upstream version branch for diff/log purposes (best-effort — not
+		# a push target, just so `git status`/`git log` compare against it).
+		git -C "${WORKTREE_DIR}" branch --set-upstream-to="origin/${UPSTREAM_VERSION}" "${NEW_BRANCH}" 2>/dev/null || true
+	done
+fi
 
 # Platform Services' Go workspace requires this pinned submodule. Convert the
 # configured SSH remote to equivalent HTTPS so host credential-helper access
@@ -193,7 +203,11 @@ if [[ $casdoor_url =~ ^git@([^:]+):(.+)$ ]]; then
 	casdoor_url="https://${BASH_REMATCH[1]}/${BASH_REMATCH[2]}"
 fi
 git -C "$platform_services_repo" config "submodule.${casdoor_path}.url" "$casdoor_url"
-git -C "$platform_services_repo" submodule update --init --checkout -- "$casdoor_path"
+if [[ $JIRA == NVO-REVIEW-* && ${NVO_REVIEW_PRESERVE_CASDOOR:-false} == true ]]; then
+	echo "→ Preserving local changes in the PlatformServices Casdoor submodule."
+else
+	git -C "$platform_services_repo" submodule update --init --checkout -- "$casdoor_path"
+fi
 
 aggregate_context_trees "$PROJECT_DIR"
 echo "→ Created aggregate .agents and .claude context trees."

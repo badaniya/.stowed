@@ -140,6 +140,29 @@ capture_guest_command() {
   }
 }
 
+# Every reconciled sandbox user receives an owner-only sudoers entry that
+# permits guest-local sudo without a password prompt.
+capture_guest_command badaniya 1000 1000
+assert_contains 'sudoers_file="/etc/sudoers.d/labctl-$username"'
+assert_contains 'NOPASSWD: ALL'
+assert_contains 'visudo -cf "$sudoers_temporary"'
+assert_contains 'install -o root -g root -m 0440 "$sudoers_temporary" "$sudoers_file"'
+
+# NVO environment sync must install a root-owned login-profile hook so later
+# interactive guest logins automatically source their rendered environment.
+rg -F --quiet -- 'profile_file=/etc/profile.d/labctl-nvo-environment.sh' "$repo_root/incus/.local/lib/labctl/incus.sh" || {
+  printf 'expected NVO environment sync to install a login-profile hook\n' >&2
+  exit 1
+}
+rg -F --quiet -- 'service_log_directories=(network edge scheduler system orchestration runonce tagging)' "$repo_root/incus/.local/lib/labctl/incus.sh" || {
+  printf 'expected NVO environment sync to provision every sandbox service log directory\n' >&2
+  exit 1
+}
+rg -F --quiet -- 'chown -R "$username:$username" "/var/log/$service"' "$repo_root/incus/.local/lib/labctl/incus.sh" || {
+  printf 'expected NVO environment sync to reconcile service-log ownership\n' >&2
+  exit 1
+}
+
 assert_failure() {
   local expected_message=$1 error_file=$temp_dir/guest-error
   : >"$temp_dir/account-mutations"
@@ -253,7 +276,7 @@ verify_ticket_root=$temp_dir/verify-ticket-root
 verify_master_root=$temp_dir/verify-master-root
 mkdir -p "$verify_ticket_root" "$verify_master_root"
 LABCTL_MASTER_ROOT=$verify_master_root
-LABCTL_INSTANCE_USER=badaniya
+export LABCTL_INSTANCE_USER=badaniya
 
 labctl_normalize_ticket() { printf '%s\n' "$1"; }
 labctl_workspace_ticket_root() { printf '%s\n' "$verify_ticket_root"; }

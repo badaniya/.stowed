@@ -8,6 +8,8 @@ export type StatusTone = 'success' | 'info' | 'warning' | 'error' | 'muted';
 export interface CompactStatus {
   label: string;
   tone: StatusTone;
+  /** Failed LSP server IDs shown after the active-server label. */
+  failedServers?: string[];
 }
 
 /**
@@ -70,12 +72,25 @@ function extractMcpCount(value: string): number | undefined {
  * Count comma-separated names after "Active:" pattern.
  * Returns the count of items, or undefined if pattern not found or no names.
  */
-function countLspNames(value: string): number | undefined {
-  const lower = value.toLowerCase();
-  const match = lower.match(/active:\s*(.+)/);
-  if (!match) return undefined;
-  const names = match[1].split(',').map((s) => s.trim()).filter((s) => s.length > 0);
-  return names.length > 0 ? names.length : undefined;
+function splitLspNames(value: string): string[] {
+  return value.split(',').map((name) => name.trim()).filter((name) => name.length > 0);
+}
+
+/** Strip terminal styling so status parsing is unaffected by pi-lens theme colors. */
+function stripAnsi(value: string): string {
+  return value.replace(/\u001B\[[0-?]*[ -/]*[@-~]/g, '');
+}
+
+/** Extract pi-lens's separately reported active and failed LSP server lists. */
+function extractLspCounts(value: string): { active?: string[]; failed?: string[] } {
+  const plain = stripAnsi(value);
+  const active = plain.match(/LSP\s+Active:\s*(.*?)(?:\s*·\s*LSP\s+Failed:|$)/i);
+  const failed = plain.match(/LSP\s+Failed:\s*(.+)$/i);
+
+  return {
+    active: active ? splitLspNames(active[1]) : undefined,
+    failed: failed ? splitLspNames(failed[1]) : undefined,
+  };
 }
 
 /**
@@ -98,9 +113,18 @@ function compactSingle(normKey: string, value: string | undefined): CompactStatu
   }
 
   if (normKey === 'lsp') {
-    // countLspNames returns undefined if no names found (including whitespace-only)
-    const count = value ? countLspNames(value) : undefined;
-    const label = count !== undefined && count > 0 ? `LSP ${count}` : 'LSP';
+    const { active, failed } = value ? extractLspCounts(value) : {};
+    const activeCount = active?.length ?? 0;
+    const failedServers = failed?.length ? failed : undefined;
+    const label = activeCount > 0 ? `LSP ${activeCount}` : 'LSP';
+
+    // pi-lens states: inactive is gray; a live-server count is always green;
+    // failures are a separate yellow suffix, or yellow by themselves when none are live.
+    if (active !== undefined || failed !== undefined || /LSP\s+Inactive/i.test(stripAnsi(value || ''))) {
+      const lspTone: StatusTone = activeCount > 0 ? 'success' : failedServers ? 'warning' : 'muted';
+      return failedServers ? { label, tone: lspTone, failedServers } : { label, tone: lspTone };
+    }
+
     return { label, tone };
   }
 
@@ -124,13 +148,13 @@ function findKeyByNorm(statuses: ReadonlyMap<string, string>, normKey: string): 
  * Convert a map of statuses into a compact, stably-ordered array.
  * Always returns exactly 3 entries: LSP, MCP, Langfuse (in that order).
  * Keys are matched case-insensitively.
- * For LSP, tries 'lsp' first, then 'pi-lens' as fallback.
+ * For LSP, tries 'lsp' first, then the current and legacy pi-lens status keys.
  * Absent integrations produce entries with muted tone.
  */
 export function compactStatuses(statuses: ReadonlyMap<string, string>): CompactStatus[] {
   // Always emit exactly 3 entries in fixed order
-  const serviceSpecs: Array<{ normKey: string; fallback?: string }> = [
-    { normKey: 'lsp', fallback: 'pi-lens' },
+  const serviceSpecs: Array<{ normKey: string; fallbacks?: string[] }> = [
+    { normKey: 'lsp', fallbacks: ['pi-lens-lsp', 'pi-lens'] },
     { normKey: 'mcp' },
     { normKey: 'langfuse' },
   ];
@@ -139,8 +163,11 @@ export function compactStatuses(statuses: ReadonlyMap<string, string>): CompactS
 
   for (const spec of serviceSpecs) {
     let mapKey = findKeyByNorm(statuses, spec.normKey);
-    if (!mapKey && spec.fallback) {
-      mapKey = findKeyByNorm(statuses, spec.fallback);
+    for (const fallback of spec.fallbacks ?? []) {
+      if (mapKey) {
+        break;
+      }
+      mapKey = findKeyByNorm(statuses, fallback);
     }
 
     // Always emit an entry, using value if found or undefined if not
@@ -475,7 +502,11 @@ export function healthPlainWidth(statuses: readonly CompactStatus[]): number {
   if (statuses.length === 0) {
     return 0;
   }
-  const textWidth = statuses.reduce((sum, s) => sum + Array.from(s.label).length + 2, 0);
+  const textWidth = statuses.reduce(
+    (sum, s) =>
+      sum + Array.from(s.label).length + 2 + (s.failedServers === undefined ? 0 : Array.from(` !${s.failedServers.join(', ')}`).length),
+    0,
+  );
   return textWidth + (statuses.length - 1) * 3;
 }
 

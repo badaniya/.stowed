@@ -16,7 +16,13 @@ fi
 
 ticket=${args[0]:-}
 bootstrap_worker=${NVO_HARNESS_SANDBOX_BOOTSTRAP_WORKER:-false}
-[[ $ticket =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ]] || {
+review_mode=false
+jira_ticket=$ticket
+if [[ $ticket =~ ^NVO-REVIEW-([A-Z][A-Z0-9]+-[0-9]+)$ && -n ${NVO_REVIEW_BRANCH:-} && -n ${NVO_REVIEW_REPO:-} ]]; then
+	review_mode=true
+	jira_ticket=${BASH_REMATCH[1]}
+fi
+[[ $jira_ticket =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ]] || {
 	printf 'Error: ticket must use a Jira key such as NVO-123 or CFD-123\n' >&2
 	exit 1
 }
@@ -24,14 +30,18 @@ bootstrap_worker=${NVO_HARNESS_SANDBOX_BOOTSTRAP_WORKER:-false}
 # or instance. The detached worker only continues a creation already validated
 # by its launcher.
 if [[ $bootstrap_worker != true ]]; then
-	jira issue view "$ticket" --raw >/dev/null || {
-		printf 'Error: Jira ticket is unavailable: %s\n' "$ticket" >&2
+	jira issue view "$jira_ticket" --raw >/dev/null || {
+		printf 'Error: Jira ticket is unavailable: %s\n' "$jira_ticket" >&2
 		exit 1
 	}
 fi
 normalized_ticket=${ticket,,}
 
 spreader_dir="${HOME}/.config/herdr-spreader"
+if [[ $review_mode == true ]]; then
+	# shellcheck source=/dev/null
+	source "${spreader_dir}/nvo-review.sh"
+fi
 labctl="${HOME}/.local/bin/labctl"
 workspace_owner=${NVO_WORKSPACE_OWNER:-${USER:?}}
 workspace_root=${NVO_WORKSPACE_ROOT:-"${HOME}/workspace/${workspace_owner}"}
@@ -193,7 +203,7 @@ prepare_state() {
 	mkdir -p "$state_dir"
 	: >"$state_log"
 	rm -f -- "$bootstrap_ready_file" "$monitor_pane_file"
-	rm -rf -- "$stage_dir"
+	rm -rf -- "$stage_dir" "${state_dir}/${ticket}.pane-history"
 	mkdir -m 0700 "$stage_dir"
 	local stage
 	for stage in shared pcm-db platform-tagging-build platform-tagging-start godcapp-build godcapp-infra godcapp-services; do
@@ -222,62 +232,74 @@ instance_user_setup() {
 	printf '%s\n' "$setup"
 }
 
-guest_exec_command() {
-	local guest_command=$1 interactive=${2:-false} command
-	# shellcheck disable=SC2016 # Build pane obtains and validates this value at runtime.
-	if [[ $interactive == true ]]; then
-		local guest_setpriv_command guest_login_command
-		printf -v guest_login_command 'cd "$HOME" && %s' "$guest_command"
-		printf -v guest_setpriv_command 'exec setpriv --reset-env --reuid "$1" --regid "$(id -g "$1")" --init-groups bash -lc %q' "$guest_login_command"
-		printf -v command 'incus --project "$instance_project" exec --force-interactive %q -- bash -lc %q _ "$instance_user"' "$normalized_ticket" "$guest_setpriv_command"
-	else
-		printf -v command 'incus --project "$instance_project" exec %q -- su - "$instance_user" -c %q' "$normalized_ticket" "$guest_command"
-	fi
+pane_history_command() {
+	local guest_command=$1 quoted_guest_command command
+	quoted_guest_command=${guest_command//\'/\'\\\'\'}
+	printf -v command "exec_agent_sandbox %q --command '%s'" "$normalized_ticket" "$quoted_guest_command"
 	printf '%s\n' "$command"
 }
 
-monitor_command() {
-	local guest_command guest_exec setup command
-	guest_command='tail --retry -F /var/log/network/network-server.log /var/log/edge/edge-server.log /var/log/scheduler/scheduler-server.log /var/log/system/system-server.log | /usr/local/bin/loggo stream -t ~/.private-nvo-loggo.tpl'
-	guest_exec=$(guest_exec_command "$guest_command" true)
-	setup=$(instance_user_setup)
-	# shellcheck disable=SC2016 # The generated Build-pane command owns its tail process.
-	printf -v command 'tail -n +1 -F %q & log_pid=$!; trap %q EXIT; until rg -Fxq %q %q; do if rg -Fxq %q %q; then kill "$log_pid" 2>/dev/null || true; wait "$log_pid" 2>/dev/null || true; printf %q >&2; exec bash; fi; sleep 1; done; %s; export instance_user instance_project; sg incus-admin -c %q || { printf %q >&2; exec bash; }' \
-		"$state_log" 'kill "$log_pid" 2>/dev/null || true' 'NVO_SANDBOX_BOOTSTRAP_SUCCESS' "$state_log" 'NVO_SANDBOX_BOOTSTRAP_FAILED' "$state_log" 'Sandbox bootstrap failed; inspect the log above.\n' "$setup" "$guest_exec" 'Loggo monitor exited; inspect the command and bootstrap log above.\n'
+pane_history_setup_command() {
+	local pane_name=$1 history_dir history_file command
+	[[ $pane_name =~ ^[a-z][a-z0-9-]*$ ]] || return 1
+	history_dir="${state_dir}/${ticket}.pane-history"
+	history_file="${history_dir}/${pane_name}.zsh_history"
+	printf -v command 'mkdir -p %q; fc -p %q' "$history_dir" "$history_file"
+	printf '%s\n' "$command"
+}
+
+bootstrap_ready_command() {
+	local command
+	# A failed bootstrap intentionally opens a local debug shell without
+	# seeding a reconnect command into history.
+	printf -v command 'until rg -Fxq %q %q; do if rg -Fxq %q %q; then printf %q >&2; exec zsh; fi; sleep 1; done' \
+		'NVO_SANDBOX_BOOTSTRAP_SUCCESS' "$state_log" 'NVO_SANDBOX_BOOTSTRAP_FAILED' "$state_log" 'Sandbox bootstrap failed; inspect the log above.\n'
 	printf '%s\n' "$command"
 }
 
 ready_guest_command() {
-	local guest_command=$1 interactive=${2:-false} readiness guest_exec setup command
+	local pane_name=$1 guest_command=$2 readiness history_command history_setup bootstrap_ready setup command
 	# shellcheck disable=SC2016 # The generated pane expands its resolved project at runtime.
 	printf -v readiness 'incus --project "$instance_project" exec %q -- true' "$normalized_ticket"
-	guest_exec=$(guest_exec_command "$guest_command" "$interactive")
+	history_command=$(pane_history_command "$guest_command")
+	history_setup=$(pane_history_setup_command "$pane_name")
+	bootstrap_ready=$(bootstrap_ready_command)
 	setup=$(instance_user_setup)
-	# shellcheck disable=SC2016 # The generated pane shell expands after the guest is ready.
-	printf -v command '%s; export instance_user instance_project; until sg incus-admin -c %q; do sleep 0.2; done; sg incus-admin -c %q || { printf %q >&2; exec bash; }' \
-		"$setup" "$readiness" "$guest_exec" 'Sandbox attachment exited; inspect the command above.\n'
+	# Each Build pane gets an isolated zsh history context. `print -s` runs only
+	# after complete bootstrap success, so Up Arrow reconnects the same pane.
+	printf -v command '%s; export instance_user instance_project; until sg incus-admin -c %q; do sleep 0.2; done; %s; %s; print -s -- %q; %s || { printf %q >&2; exec zsh; }' \
+		"$setup" "$readiness" "$bootstrap_ready" "$history_setup" "$history_command" "$history_command" 'Sandbox attachment exited; inspect the command above.\n'
+	printf '%s\n' "$command"
+}
+
+monitor_command() {
+	local guest_command pane_command command
+	guest_command='tail --retry -F /var/log/network/network-server.log /var/log/edge/edge-server.log /var/log/scheduler/scheduler-server.log /var/log/system/system-server.log /var/log/orchestration/orchestration-server.log /var/log/runonce/runonce-server.log /var/log/tagging/tagging-server.log | /usr/local/bin/loggo stream -t ~/.private-nvo-loggo.tpl'
+	pane_command=$(ready_guest_command monitor "$guest_command")
+	# shellcheck disable=SC2016 # The generated Build-pane command owns its tail process.
+	printf -v command 'tail -n +1 -F %q & log_pid=$!; trap %q EXIT; until rg -Fxq %q %q; do if rg -Fxq %q %q; then kill "$log_pid" 2>/dev/null || true; wait "$log_pid" 2>/dev/null || true; printf %q >&2; exec zsh; fi; sleep 1; done; %s' \
+		"$state_log" 'kill "$log_pid" 2>/dev/null || true' 'NVO_SANDBOX_BOOTSTRAP_SUCCESS' "$state_log" 'NVO_SANDBOX_BOOTSTRAP_FAILED' "$state_log" 'Sandbox bootstrap failed; inspect the log above.\n' "$pane_command"
 	printf '%s\n' "$command"
 }
 
 stage_pane_command() {
-	local final_stage=$1 directory=$2 stage guest_exec setup command logs='' ready failed
-	shift 2
+	local pane_name=$1 final_stage=$2 directory=$3 stage pane_command command logs='' ready failed
+	shift 3
 	for stage in "$@"; do
 		printf -v logs '%s %q' "$logs" "$(stage_log_path "$stage")"
 	done
 	ready=$(stage_marker_path "$final_stage" ready)
 	failed=$(stage_marker_path "$final_stage" failed)
-	guest_exec=$(guest_exec_command "cd $(printf '%q' "$directory") && exec bash -l" true)
-	setup=$(instance_user_setup)
+	pane_command=$(ready_guest_command "$pane_name" "cd $(printf '%q' "$directory") && exec bash -l")
 	# shellcheck disable=SC2016 # Pane tails all owned stage logs, then opens the guest directory after the final stage succeeds.
-	printf -v command 'tail -q -n +1 -F%s & stage_log_pid=$!; trap %q EXIT; until [[ -f %q || -f %q ]]; do sleep 0.2; done; if [[ -f %q ]]; then printf %q >&2; exec bash; fi; kill "$stage_log_pid" 2>/dev/null || true; wait "$stage_log_pid" 2>/dev/null || true; %s; export instance_user instance_project; sg incus-admin -c %q || { printf %q >&2; exec bash; }' \
-		"$logs" 'kill "$stage_log_pid" 2>/dev/null || true' "$ready" "$failed" "$failed" "Stage ${final_stage} failed; inspect the stage logs above.\n" "$setup" "$guest_exec" 'Sandbox attachment exited; inspect the command above.\n'
+	printf -v command 'tail -q -n +1 -F%s & stage_log_pid=$!; trap %q EXIT; until [[ -f %q || -f %q ]]; do sleep 0.2; done; if [[ -f %q ]]; then printf %q >&2; exec zsh; fi; kill "$stage_log_pid" 2>/dev/null || true; wait "$stage_log_pid" 2>/dev/null || true; %s' \
+		"$logs" 'kill "$stage_log_pid" 2>/dev/null || true' "$ready" "$failed" "$failed" "Stage ${final_stage} failed; inspect the stage logs above.\n" "$pane_command"
 	printf '%s\n' "$command"
 }
 
 workspace_label() {
 	local title
-	title=$(jira issue view "$ticket" --raw 2>/dev/null | jq -r '.fields.summary // empty' 2>/dev/null || true)
+	title=$(jira issue view "$jira_ticket" --raw 2>/dev/null | jq -r '.fields.summary // empty' 2>/dev/null || true)
 	title=${title//$'\n'/ }
 	[[ -n $title ]] || title='NVO Workspace'
 	printf '%s - %s\n' "$ticket" "$title"
@@ -321,18 +343,24 @@ create_workspace() {
 	workspace_id=$(jq -er '.result.workspace.workspace_id' <<<"$workspace_json")
 	agent_tab_id=$(jq -er '.result.tab.tab_id' <<<"$workspace_json")
 	agent_pane_id=$(jq -er '.result.root_pane.pane_id' <<<"$workspace_json")
-	herdr tab rename "$agent_tab_id" '1 - Agent'
-	herdr pane run "$agent_pane_id" 'claude'
+	local build_label='2 - Build'
+	if [[ $review_mode == true ]]; then
+		review_create_tabs "$workspace_id" "$agent_tab_id" "$agent_pane_id" "$project_dir" "$state_dir" "$ticket" "$jira_ticket"
+		build_label='4 - Build'
+	else
+		herdr tab rename "$agent_tab_id" '1 - Agent'
+		herdr pane run "$agent_pane_id" 'claude'
+	fi
 
-	build_json=$(herdr tab create --workspace "$workspace_id" --cwd "$project_dir" --label '2 - Build' --no-focus)
+	build_json=$(herdr tab create --workspace "$workspace_id" --cwd "$project_dir" --label "$build_label" --no-focus)
 	build_pane_id=$(jq -er '.result.root_pane.pane_id' <<<"$build_json")
 
 	local monitor lazydocker pcm platform godcapp
 	monitor=$(monitor_command)
-	lazydocker=$(ready_guest_command 'lazydocker' true)
-	pcm=$(stage_pane_command pcm-db "${project_dir}/PlatformCommonModels/scripts/development" pcm-db)
-	platform=$(stage_pane_command platform-tagging-start "${project_dir}/PlatformServices/scripts/development" platform-tagging-build platform-tagging-start)
-	godcapp=$(stage_pane_command godcapp-services "${project_dir}/GoDCApp/NVO/scripts/development" godcapp-build godcapp-infra godcapp-services)
+	lazydocker=$(ready_guest_command lazydocker 'lazydocker')
+	pcm=$(stage_pane_command pcm pcm-db "${project_dir}/PlatformCommonModels/scripts/development" pcm-db)
+	platform=$(stage_pane_command platform platform-tagging-start "${project_dir}/PlatformServices/scripts/development" platform-tagging-build platform-tagging-start)
+	godcapp=$(stage_pane_command godcapp godcapp-services "${project_dir}/GoDCApp/NVO/scripts/development" godcapp-build godcapp-infra godcapp-services)
 
 	herdr pane rename "$build_pane_id" Monitor
 	printf '%s\n' "$build_pane_id" >"$monitor_pane_file"
