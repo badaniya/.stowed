@@ -112,6 +112,21 @@ rg -Fq 'labctl destroy NVO-REVIEW-CFD-123 --yes' "$TEST_LOG" || fail 'wrong sand
 [[ $(tail -n 1 "$TEST_LOG") == 'herdr workspace close w1' ]] || fail 'workspace not closed last'
 run NVO-REVIEW-CFD-123 # Repeated cleanup is safe.
 git -C "$NVO_WORKSPACE_ROOT/master/GoDCApp" branch -D alice/CFD-123 >/dev/null
+
+# Repo-qualified PR identities are valid review cleanup targets too.
+key=NVO-REVIEW-PCM-PR-32942
+project="$NVO_WORKSPACE_ROOT/$key"
+state="$XDG_STATE_HOME/herdr-spreader"
+: >"$TEST_LOG"
+fixture
+run "$key"
+[[ ! -e $project ]] || fail 'PR-scoped review project remains after cleanup'
+rg -Fq "labctl destroy $key --yes" "$TEST_LOG" || fail 'wrong PR-scoped sandbox identity'
+
+git -C "$NVO_WORKSPACE_ROOT/master/GoDCApp" branch -D alice/CFD-123 >/dev/null
+key=NVO-REVIEW-CFD-123
+project="$NVO_WORKSPACE_ROOT/$key"
+state="$XDG_STATE_HOME/herdr-spreader"
 fixture
 run 'CFD-123 --keep-worktrees'
 [[ -f $project/GoDCApp/.git && -f $project/.nvo-review/base && -f $state/$key.log ]] || fail '--keep-worktrees removed project/state'
@@ -130,7 +145,7 @@ ln -s "$SCRIPT" "$HOME/.config/herdr-spreader/nvo-review-remove.sh" 2>/dev/null 
 if bash "$ROOT/herdr/.config/herdr-spreader/nvo-review-remove-notify.sh" '../unsafe' >"$tmp/notify-output" 2>&1; then
   fail 'notification wrapper hid cleanup failure'
 fi
-rg -Fq 'ticket must use a Jira key' "$tmp/notify-output" || fail 'wrapper did not surface failure'
+rg -Fq 'invalid review identity' "$tmp/notify-output" || fail 'wrapper did not surface failure'
 python3 - "$ROOT" <<'PY'
 import pathlib, sys, tomllib
 path = pathlib.Path(sys.argv[1]) / 'herdr/.config/herdr/plugins/config/cloudmanic.herdr-plus/quick-actions/ws-nvo-review-remove.toml'
@@ -138,5 +153,6 @@ action = tomllib.loads(path.read_text())
 assert action['type'] == 'form'
 assert 'nvo-review-remove-notify.sh' in action['command']
 assert '{{.Value}}' in action['command']
+assert 'NVO-REVIEW-GODCAPP-PR-' in action['form']['placeholder']
 PY
 printf 'PASS: review teardown, submodules, branch preservation, guards, retry, keep-worktrees and action wiring\n'

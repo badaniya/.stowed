@@ -1,11 +1,21 @@
 #!/usr/bin/env bash
-# Open an incremental, Jira-scoped multi-repository PR review and agent sandbox.
+# Open an incremental, multi-repository PR review and agent sandbox; Jira details are optional.
 # Usage: nvo-review.sh '<branch> [repo]' (repo defaults to GoDCApp).
 # Also sourced by the worktree creator and sandbox coordinator for review hooks.
 
 review_error() {
   printf 'Error: %s\n' "$*" >&2
   return 1
+}
+
+review_repo_code() {
+  case $1 in
+  GoDCApp) printf 'GODCAPP\n' ;;
+  PlatformCommonModels) printf 'PCM\n' ;;
+  PlatformServices) printf 'PS\n' ;;
+  PlatformServicesCommon) printf 'PSC\n' ;;
+  *) review_error "unknown review repository: $1" ;;
+  esac
 }
 
 review_write_state() {
@@ -157,10 +167,15 @@ review_create_tabs() {
   dash_config="$state/${key}.${NVO_REVIEW_REPO}.gh-dash.yml"
   # JSON is a YAML subset and safely quotes branch names in gh-dash config.
   jq -n --arg branch "$NVO_REVIEW_BRANCH" '{prSections: [{title: $branch, filters: ("is:pr head:" + $branch)}]}' >"$dash_config"
-  tab_json=$(herdr tab create --workspace "$workspace" --cwd "$repo_dir" --label '2 - JIRA/PR' --no-focus)
-  pane=$(jq -er '.result.root_pane.pane_id' <<<"$tab_json")
-  printf -v command 'jira issue view %q' "$jira"
-  herdr pane run "$pane" "$command"
+  if [[ ${NVO_REVIEW_JIRA_AVAILABLE:-false} == true ]]; then
+    tab_json=$(herdr tab create --workspace "$workspace" --cwd "$repo_dir" --label '2 - JIRA/PR' --no-focus)
+    pane=$(jq -er '.result.root_pane.pane_id' <<<"$tab_json")
+    printf -v command 'jira issue view %q' "$jira"
+    herdr pane run "$pane" "$command"
+  else
+    tab_json=$(herdr tab create --workspace "$workspace" --cwd "$repo_dir" --label '2 - PR' --no-focus)
+    pane=$(jq -er '.result.root_pane.pane_id' <<<"$tab_json")
+  fi
   split_json=$(herdr pane split "$pane" --direction right --ratio 0.5 --cwd "$repo_dir" --no-focus)
   split_pane=$(jq -er '.result.pane.pane_id' <<<"$split_json")
   printf -v command 'GH_HOST=%q gh dash --config %q' "$NVO_REVIEW_GH_HOST" "$dash_config"
@@ -198,12 +213,14 @@ review_main() {
     review_error 'invalid review branch'
     return 1
   }
-  [[ $NVO_REVIEW_BRANCH =~ ([A-Z][A-Z0-9]+-[0-9]+) ]] || {
-    review_error 'review branch must contain a Jira key such as CFD-18711'
-    return 1
-  }
-  local jira=${BASH_REMATCH[1]} key root bare remote host pr_json base state
-  key="NVO-REVIEW-$jira"
+  local jira='' jira_json='' jira_title='' repo_code
+  if [[ $NVO_REVIEW_BRANCH =~ ([A-Z][A-Z0-9]+-[0-9]+) ]]; then
+    jira=${BASH_REMATCH[1]}
+  fi
+  local key root bare remote host pr_json base state
+  if [[ -n $jira ]]; then
+    key="NVO-REVIEW-$jira"
+  fi
   root=${NVO_WORKSPACE_ROOT:-"$HOME/workspace/${NVO_WORKSPACE_OWNER:-${USER:?}}"}
   # Canonical absolute paths are required by both linked Git metadata and labctl.
   root=$(cd "$root" && pwd -P) || return 1
@@ -235,23 +252,32 @@ review_main() {
     return 1
   }
   export NVO_REVIEW_GH_HOST=$host
-  jira issue view "$jira" --raw >/dev/null || {
-    review_error "Jira ticket is unavailable: $jira"
-    return 1
-  }
   pr_json=$(cd "$bare" && GH_HOST="$host" gh pr list --head "$NVO_REVIEW_BRANCH" --state open --json number,baseRefName) || return 1
   jq -e 'type == "array" and length == 1 and (.[0].number | type == "number" and . > 0 and floor == .) and (.[0].baseRefName | type == "string" and length > 0)' >/dev/null <<<"$pr_json" || {
     review_error 'expected exactly one open PR with a base branch for this review branch'
     return 1
   }
-  export NVO_REVIEW_PR_NUMBER
   NVO_REVIEW_PR_NUMBER=$(jq -r '.[0].number' <<<"$pr_json")
   base=$(jq -r '.[0].baseRefName' <<<"$pr_json")
+  NVO_REVIEW_JIRA_AVAILABLE=false
+  NVO_REVIEW_JIRA_TITLE=''
+  if [[ -n $jira ]]; then
+    if jira_json=$(jira issue view "$jira" --raw 2>/dev/null) && jq -e 'type == "object" and (.fields | type == "object")' >/dev/null 2>&1 <<<"$jira_json"; then
+      NVO_REVIEW_JIRA_AVAILABLE=true
+      jira_title=$(jq -r '.fields.summary // empty' <<<"$jira_json" 2>/dev/null || true)
+      NVO_REVIEW_JIRA_TITLE=${jira_title//$'\n'/ }
+    fi
+  else
+    repo_code=$(review_repo_code "$NVO_REVIEW_REPO") || return 1
+    key="NVO-REVIEW-${repo_code}-PR-${NVO_REVIEW_PR_NUMBER}"
+  fi
   git check-ref-format "refs/heads/$base" >/dev/null || {
     review_error 'invalid PR base branch'
     return 1
   }
 
+  export NVO_REVIEW_MODE=true NVO_REVIEW_KEY="$key" NVO_REVIEW_JIRA_TICKET="$jira"
+  export NVO_REVIEW_JIRA_AVAILABLE NVO_REVIEW_JIRA_TITLE NVO_REVIEW_PR_NUMBER NVO_REVIEW_PR_BASE="$base"
   state="${XDG_STATE_HOME:-$HOME/.local/state}/herdr-spreader"
   mkdir -p "$state"
   # The detached bootstrap inherits fd 9, so another invocation cannot change

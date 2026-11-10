@@ -16,20 +16,34 @@ fi
 
 ticket=${args[0]:-}
 bootstrap_worker=${NVO_HARNESS_SANDBOX_BOOTSTRAP_WORKER:-false}
-review_mode=false
-jira_ticket=$ticket
-if [[ $ticket =~ ^NVO-REVIEW-([A-Z][A-Z0-9]+-[0-9]+)$ && -n ${NVO_REVIEW_BRANCH:-} && -n ${NVO_REVIEW_REPO:-} ]]; then
-	review_mode=true
-	jira_ticket=${BASH_REMATCH[1]}
+review_mode=${NVO_REVIEW_MODE:-false}
+jira_ticket=${NVO_REVIEW_JIRA_TICKET:-}
+if [[ $review_mode == true ]]; then
+	[[ ${NVO_REVIEW_KEY:-} == "$ticket" && -n ${NVO_REVIEW_BRANCH:-} && -n ${NVO_REVIEW_REPO:-} ]] || {
+		printf 'Error: review sandbox metadata is incomplete or inconsistent\n' >&2
+		exit 1
+	}
+	if [[ -n $jira_ticket ]]; then
+		[[ $jira_ticket =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ]] || {
+			printf 'Error: review Jira key is invalid\n' >&2
+			exit 1
+		}
+	else
+		[[ $ticket =~ ^NVO-REVIEW-(GODCAPP|PCM|PS|PSC)-PR-[1-9][0-9]*$ ]] || {
+			printf 'Error: review sandbox identity is invalid\n' >&2
+			exit 1
+		}
+	fi
+else
+	jira_ticket=$ticket
+	[[ $jira_ticket =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ]] || {
+		printf 'Error: ticket must use a Jira key such as NVO-123 or CFD-123\n' >&2
+		exit 1
+	}
 fi
-[[ $jira_ticket =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ]] || {
-	printf 'Error: ticket must use a Jira key such as NVO-123 or CFD-123\n' >&2
-	exit 1
-}
-# Creation must prove Jira availability before creating any worktree, workspace,
-# or instance. The detached worker only continues a creation already validated
-# by its launcher.
-if [[ $bootstrap_worker != true ]]; then
+# Ordinary workspaces still prove Jira availability before creating any state;
+# review launches already treated Jira as optional enrichment in nvo-review.sh.
+if [[ $bootstrap_worker != true && $review_mode != true ]]; then
 	jira issue view "$jira_ticket" --raw >/dev/null || {
 		printf 'Error: Jira ticket is unavailable: %s\n' "$jira_ticket" >&2
 		exit 1
@@ -299,9 +313,14 @@ stage_pane_command() {
 
 workspace_label() {
 	local title
-	title=$(jira issue view "$jira_ticket" --raw 2>/dev/null | jq -r '.fields.summary // empty' 2>/dev/null || true)
+	if [[ $review_mode == true ]]; then
+		title=${NVO_REVIEW_JIRA_TITLE:-}
+		[[ -n $title ]] || title=${NVO_REVIEW_BRANCH}
+	else
+		title=$(jira issue view "$jira_ticket" --raw 2>/dev/null | jq -r '.fields.summary // empty' 2>/dev/null || true)
+		[[ -n $title ]] || title='NVO Workspace'
+	fi
 	title=${title//$'\n'/ }
-	[[ -n $title ]] || title='NVO Workspace'
 	printf '%s - %s\n' "$ticket" "$title"
 }
 

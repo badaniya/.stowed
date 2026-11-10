@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
-# Destroy a Jira-scoped review sandbox and force-remove its linked worktrees.
+# Destroy a review sandbox and force-remove its linked worktrees.
 # Local PR branches (including unpushed commits) and remote branches are retained.
-# Usage: nvo-review-remove.sh '<JIRA#|NVO-REVIEW-JIRA#> [--keep-worktrees]'
+# Usage: nvo-review-remove.sh '<JIRA#|NVO-REVIEW-JIRA#|NVO-REVIEW-<REPO>-PR-#> [--keep-worktrees]'
 set -euo pipefail
 
 error() { printf 'Error: %s\n' "$*" >&2; exit 1; }
 if (($# == 1)); then read -r -a args <<<"$1"; else args=("$@"); fi
-((${#args[@]} >= 1 && ${#args[@]} <= 2)) || error 'Usage: nvo-review-remove.sh <JIRA#> [--keep-worktrees]'
+((${#args[@]} >= 1 && ${#args[@]} <= 2)) || error 'Usage: nvo-review-remove.sh <JIRA#|NVO-REVIEW-<REPO>-PR-#> [--keep-worktrees]'
 ticket=${args[0]#NVO-REVIEW-}
-[[ $ticket =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ]] || error 'ticket must use a Jira key such as NVO-123 or CFD-123'
+[[ $ticket =~ ^[A-Z][A-Z0-9]+-[0-9]+$ || $ticket =~ ^(GODCAPP|PCM|PS|PSC)-PR-[1-9][0-9]*$ ]] || error 'invalid review identity; use a Jira key or NVO-REVIEW-<REPO>-PR-<number>'
 keep=false
 case ${args[1]:-} in
   '') ;;
   --keep-worktrees) keep=true ;;
-  *) error 'Usage: nvo-review-remove.sh <JIRA#> [--keep-worktrees]' ;;
+  *) error 'Usage: nvo-review-remove.sh <JIRA#|NVO-REVIEW-<REPO>-PR-#> [--keep-worktrees]' ;;
 esac
 key="NVO-REVIEW-$ticket"
 root=${NVO_WORKSPACE_ROOT:-"$HOME/workspace/${NVO_WORKSPACE_OWNER:-${USER:?}}"}

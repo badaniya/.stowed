@@ -1,7 +1,7 @@
 name = "Open workspace: NVO-REVIEW branch + agent-sandbox"
 type = "form"
-command = "bash ~/.config/herdr-spreader/nvo-review.sh '{{.Value}}'"
+command = "bash ~/.config/herdr-spreader/nvo-review-notify.sh '{{.Value}}'"
 
 [form]
-prompt = "Review branch and optional repo (creates/reuses NVO-REVIEW-<JIRA#>; repeat with a related repo branch to add its PR)"
+prompt = "Review branch and optional repo (Jira optional; repeat Jira-linked reviews to add related repo PRs)"
 placeholder = "branch [GoDCApp|PlatformServices|PlatformServicesCommon|PlatformCommonModels]"

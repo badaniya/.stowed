@@ -29,7 +29,7 @@ git config --global user.name 'Review Test'
 git config --global user.email review@example.invalid
 git config --global init.defaultBranch 25.16.0
 git config --global "url.file://$TEST_ROOT/remotes/.insteadOf" https://github.extremenetworks.com/Engineering/
-for name in nvo-review.sh nvo-harness-worktree-sandbox-base.sh nvo-harness-worktree-sandbox.sh; do
+for name in nvo-review.sh nvo-review-notify.sh nvo-harness-worktree-sandbox-base.sh nvo-harness-worktree-sandbox.sh; do
   ln -s "$REPO_ROOT/herdr/.config/herdr-spreader/$name" "$HOME/.config/herdr-spreader/$name"
 done
 
@@ -54,7 +54,7 @@ for repo in GoDCApp PlatformCommonModels PlatformServices PlatformServicesCommon
   printf 'newer version\n' >"$seed/README"
   git -C "$seed" commit -qam 'newer base'
   git -C "$seed" switch -q 25.16.0
-  for branch in alice/CFD-18711-feature bob/CFD-18711-related bob/CFD-18711-conflict alice/NVO-123-feature alice/no-ticket; do
+  for branch in alice/CFD-18711-feature bob/CFD-18711-related bob/CFD-18711-conflict alice/NVO-123-feature alice/NVO-124-fallback alice/no-ticket; do
     git -C "$seed" switch -qc "$branch" 25.16.0
     printf '%s\n' "$branch" >"$seed/README"
     git -C "$seed" commit -qam 'private PR change'
@@ -83,6 +83,7 @@ GH
 cat >"$TEST_ROOT/bin/jira" <<'JIRA'
 #!/usr/bin/env bash
 printf 'jira %s\n' "$*" >>"$TEST_LOG"
+[[ ${TEST_JIRA_FAIL:-false} != true ]] || exit 1
 [[ $1 == issue && $2 == view && $3 =~ ^(CFD|NVO)-[0-9]+$ && $4 == --raw ]] || exit 2
 printf '%s\n' '{"fields":{"summary":"Review fixture"}}'
 JIRA
@@ -120,6 +121,13 @@ esac
 HERDR
 chmod +x "$TEST_ROOT/bin/"* "$HOME/.local/bin/labctl"
 
+for entry in 'GoDCApp:GODCAPP' 'PlatformCommonModels:PCM' 'PlatformServices:PS' 'PlatformServicesCommon:PSC'; do
+  repo=${entry%%:*}
+  expected=${entry#*:}
+  actual=$(bash -c 'source "$1"; review_repo_code "$2"' _ "$SCRIPT" "$repo") || fail "unable to map review repo $repo"
+  [[ $actual == "$expected" ]] || fail "$repo mapped to $actual instead of $expected"
+done
+
 run_review() { bash "$SCRIPT" "$@" >"$TEST_ROOT/output" 2>&1 || {
   read_output
   fail 'review launch failed'
@@ -141,6 +149,21 @@ wait_bootstrap() {
   # Marker precedes worker exit; wait for its inherited project lock as well.
   flock -w 5 "$XDG_STATE_HOME/herdr-spreader/$key.lock" true || fail 'worker kept project lock'
 }
+
+# Herdr Plus must invoke the notifier so a failed review action reaches its pane.
+python3 - "$REPO_ROOT" <<'PY'
+import pathlib, sys, tomllib
+root = pathlib.Path(sys.argv[1])
+action = tomllib.loads((root / 'herdr/.config/herdr/plugins/config/cloudmanic.herdr-plus/quick-actions/ws-nvo-review.toml').read_text())
+assert 'nvo-review-notify.sh' in action['command']
+PY
+: >"$TEST_LOG"
+if HERDR_PLUS_PANE_ID='w9:p9' NVO_REVIEW_ERROR_FILE="$TEST_ROOT/review-error" \
+  bash "$HOME/.config/herdr-spreader/nvo-review-notify.sh" 'bad^branch'; then
+  fail 'review notifier hid launcher failure'
+fi
+contains 'Error: invalid review branch' "$TEST_ROOT/review-error"
+contains "herdr pane run w9:p9 cat $TEST_ROOT/review-error" "$TEST_LOG"
 
 # Break caught: launching the legacy fixed-root action instead of four linked worktrees.
 [[ -f $SCRIPT ]] || fail 'tracked Jira-scoped review launcher is missing'
@@ -179,6 +202,38 @@ contains "$project/GoDCApp/NVO/scripts/development" "$TEST_LOG"
 not_contains '2 - Build' "$TEST_LOG"
 not_contains 'reviewer/GoDCApp/CFD-18711' "$TEST_LOG"
 [[ ! -e $NVO_WORKSPACE_ROOT/NVO-REVIEW ]] || fail 'legacy shared root was created'
+
+# A Jira outage is non-fatal on first launch; a Jira-key branch keeps its identity and gets a branch title.
+: >"$TEST_LOG"
+printf '0\n' >"$TEST_COUNTER"
+TEST_PR_JSON='[{"number":33005,"baseRefName":"25.16.0","headRefName":"alice/NVO-124-fallback"}]' TEST_JIRA_FAIL=true run_review alice/NVO-124-fallback
+wait_bootstrap NVO-REVIEW-NVO-124
+jira_fallback_project="$NVO_WORKSPACE_ROOT/NVO-REVIEW-NVO-124"
+branch_is "$jira_fallback_project/GoDCApp" alice/NVO-124-fallback
+contains 'labctl create NVO-REVIEW-NVO-124' "$TEST_LOG"
+contains "--label NVO-REVIEW-NVO-124 - alice/NVO-124-fallback" "$TEST_LOG"
+contains "--label 2 - PR" "$TEST_LOG"
+not_contains 'herdr pane run w1:p2 jira issue view NVO-124' "$TEST_LOG"
+
+# A branch without a Jira key uses the repo-qualified PR identity and needs no Jira calls.
+: >"$TEST_LOG"
+printf '0\n' >"$TEST_COUNTER"
+TEST_PR_JSON='[{"number":33001,"baseRefName":"25.16.0","headRefName":"alice/no-ticket"}]' TEST_JIRA_FAIL=true run_review alice/no-ticket
+wait_bootstrap NVO-REVIEW-GODCAPP-PR-33001
+fallback_project="$NVO_WORKSPACE_ROOT/NVO-REVIEW-GODCAPP-PR-33001"
+branch_is "$fallback_project/GoDCApp" alice/no-ticket
+contains 'labctl create NVO-REVIEW-GODCAPP-PR-33001' "$TEST_LOG"
+contains '--label NVO-REVIEW-GODCAPP-PR-33001 - alice/no-ticket' "$TEST_LOG"
+contains '--label 2 - PR' "$TEST_LOG"
+not_contains 'jira issue view' "$TEST_LOG"
+
+# A non-default repository gets its own short-code-qualified PR identity.
+: >"$TEST_LOG"
+printf '0\n' >"$TEST_COUNTER"
+TEST_PR_JSON='[{"number":33002,"baseRefName":"25.16.0","headRefName":"alice/no-ticket"}]' TEST_JIRA_FAIL=true run_review 'alice/no-ticket PlatformCommonModels'
+wait_bootstrap NVO-REVIEW-PCM-PR-33002
+branch_is "$NVO_WORKSPACE_ROOT/NVO-REVIEW-PCM-PR-33002/PlatformCommonModels" alice/no-ticket
+contains 'labctl create NVO-REVIEW-PCM-PR-33002' "$TEST_LOG"
 
 # Break caught: adding a related repo resets a selected branch or moves fallback repos.
 printf 'local review notes\n' >"$project/GoDCApp/untracked-notes"
@@ -219,7 +274,10 @@ branch_is "$project/PlatformCommonModels" detached
 # Unavailable PR, malformed input, absent ticket and missing base cannot create worktrees.
 TEST_PR_JSON='[]' expect_failure alice/NVO-123-feature
 [[ ! -e $NVO_WORKSPACE_ROOT/NVO-REVIEW-NVO-123 ]] || fail 'missing PR created project'
-expect_failure alice/no-ticket
+TEST_PR_JSON='[]' expect_failure alice/no-ticket
+[[ ! -e $NVO_WORKSPACE_ROOT/NVO-REVIEW-GODCAPP-PR-33003 ]] || fail 'branch without a PR created a fallback project'
+TEST_PR_JSON='[{"number":33003,"baseRefName":"25.16.0"},{"number":33004,"baseRefName":"25.16.0"}]' expect_failure alice/no-ticket
+[[ ! -e $NVO_WORKSPACE_ROOT/NVO-REVIEW-GODCAPP-PR-33003 && ! -e $NVO_WORKSPACE_ROOT/NVO-REVIEW-GODCAPP-PR-33004 ]] || fail 'ambiguous PR branch created a fallback project'
 expect_failure alice/NVO-123-feature UnknownRepo
 expect_failure 'alice/NVO-123-feature GoDCApp unexpected'
 TEST_PR_JSON='[{"number":1,"baseRefName":"missing-version","headRefName":"alice/NVO-123-feature"}]' expect_failure alice/NVO-123-feature

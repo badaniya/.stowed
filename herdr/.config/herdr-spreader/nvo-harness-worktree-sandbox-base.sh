@@ -387,10 +387,15 @@ BANNEREOF
 fi
 
 # ── Jira title lookup (best-effort) ─────────────────────────────────────────
-TICKET=$(printf '%s\n' "$JIRA" | rg -o '([A-Z]+-[0-9]+)' | head -1 || true)
-JIRA_TITLE=""
-if [[ -n "${TICKET}" ]]; then
-	JIRA_TITLE=$(jira issue view "${TICKET}" --raw 2>/dev/null | jq -r '.fields.summary // empty' 2>/dev/null || true)
+if [[ ${NVO_REVIEW_MODE:-false} == true ]]; then
+	TICKET=${NVO_REVIEW_JIRA_TICKET:-}
+	JIRA_TITLE=${NVO_REVIEW_JIRA_TITLE:-${NVO_REVIEW_BRANCH:-}}
+else
+	TICKET=$(printf '%s\n' "$JIRA" | rg -o '([A-Z]+-[0-9]+)' | head -1 || true)
+	JIRA_TITLE=""
+	if [[ -n "${TICKET}" ]]; then
+		JIRA_TITLE=$(jira issue view "${TICKET}" --raw 2>/dev/null | jq -r '.fields.summary // empty' 2>/dev/null || true)
+	fi
 fi
 
 export WORKSPACE_NAME

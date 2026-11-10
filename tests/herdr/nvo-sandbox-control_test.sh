@@ -34,6 +34,8 @@ cat >"$TEST_ROOT/state/labctl/sandboxes.json" <<'EOF_REGISTRY'
   "sandboxes": {
     "nvo-20130": {"status": "running"},
     "nvo-20224": {"status": "stopped"},
+    "nvo-review-cfd-18711": {"status": "running"},
+    "nvo-review-godcapp-pr-32941": {"status": "running"},
     "nvo-20999": {"status": "destroyed"},
     "not-a-ticket": {"status": "running"}
   }
@@ -137,8 +139,22 @@ assert_equals 1 "$(rg -c '^herdr pane run ' "$LOG")" 'expected one dialog comman
 : >"$LOG"
 run_controller all
 PLAN_PATH=$(<"$PLAN_PATH_FILE")
-assert_file_equals $'scope=all\nNVO-20130\nNVO-20224' "$PLAN_PATH"
+assert_file_equals $'scope=all\nNVO-20130\nNVO-20224\nNVO-REVIEW-CFD-18711\nNVO-REVIEW-GODCAPP-PR-32941' "$PLAN_PATH"
 assert_equals 1 "$(rg -c '^herdr pane split ' "$LOG")" 'expected one focused pane split for all'
+
+# Jira-scoped review and repo-qualified PR sandbox IDs are eligible explicitly.
+: >"$LOG"
+run_controller NVO-REVIEW-CFD-18711
+PLAN_PATH=$(<"$PLAN_PATH_FILE")
+assert_file_equals $'scope=explicit\nNVO-REVIEW-CFD-18711' "$PLAN_PATH"
+: >"$LOG"
+run_controller NVO-REVIEW-GODCAPP-PR-32941
+PLAN_PATH=$(<"$PLAN_PATH_FILE")
+assert_file_equals $'scope=explicit\nNVO-REVIEW-GODCAPP-PR-32941' "$PLAN_PATH"
+: >"$LOG"
+write_plan explicit NVO-REVIEW-GODCAPP-PR-32941
+printf '2\n\n' | run_dialog
+assert_equals 1 "$(rg -c '^labctl start NVO-REVIEW-GODCAPP-PR-32941$' "$LOG")"
 
 # Invalid or duplicate targets fail before any Herdr pane mutation.
 : >"$LOG"

@@ -11,6 +11,12 @@ die() {
 	exit 1
 }
 
+valid_sandbox_id() {
+	[[ $1 =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ||
+		$1 =~ ^NVO-REVIEW-[A-Z][A-Z0-9]+-[0-9]+$ ||
+		$1 =~ ^NVO-REVIEW-(GODCAPP|PCM|PS|PSC)-PR-[1-9][0-9]*$ ]]
+}
+
 [[ $# -eq 2 && $1 == --plan ]] || {
 	usage
 	exit 1
@@ -45,7 +51,7 @@ esac
 declare -A seen=()
 declare -a tickets=()
 for ticket in "${plan_lines[@]:1}"; do
-	[[ $ticket =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ]] || die "plan ticket is invalid: $ticket"
+	valid_sandbox_id "$ticket" || die "plan ticket is invalid: $ticket"
 	[[ ! ${seen[$ticket]+x} ]] || die "plan ticket is duplicated: $ticket"
 	seen[$ticket]=1
 	tickets+=("$ticket")

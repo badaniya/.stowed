@@ -11,6 +11,12 @@ die() {
 	exit 1
 }
 
+valid_sandbox_id() {
+	[[ $1 =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ||
+		$1 =~ ^NVO-REVIEW-[A-Z][A-Z0-9]+-[0-9]+$ ||
+		$1 =~ ^NVO-REVIEW-(GODCAPP|PCM|PS|PSC)-PR-[1-9][0-9]*$ ]]
+}
+
 [[ $# -eq 1 ]] || {
 	usage
 	exit 1
@@ -29,14 +35,14 @@ declare -a tickets=()
 declare -A seen=()
 if [[ $target_input == all ]]; then
 	scope=all
-	mapfile -t tickets < <(jq -er '.sandboxes | to_entries[] | select((.key | test("^[a-z][a-z0-9]+-[0-9]+$")) and .value.status != "destroyed") | .key | ascii_upcase' "$state_file") || die 'unable to resolve sandbox targets'
+	mapfile -t tickets < <(jq -er '.sandboxes | to_entries[] | select((.key | test("^(nvo-review-)?[a-z][a-z0-9]+-[0-9]+$|^nvo-review-(godcapp|pcm|ps|psc)-pr-[1-9][0-9]*$")) and .value.status != "destroyed") | .key | ascii_upcase' "$state_file") || die 'unable to resolve sandbox targets'
 else
 	scope=explicit
 	[[ $target_input != ,* && $target_input != *, && $target_input != *,,* ]] || die 'sandbox target list contains an empty value'
 	IFS=',' read -r -a tickets <<<"$target_input"
 	((${#tickets[@]} > 0)) || die 'at least one sandbox target is required'
 	for ticket in "${tickets[@]}"; do
-		[[ $ticket =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ]] || die "invalid sandbox ticket: $ticket"
+		valid_sandbox_id "$ticket" || die "invalid sandbox ticket: $ticket"
 		[[ ! ${seen[$ticket]+x} ]] || die "duplicate sandbox ticket: $ticket"
 		seen[$ticket]=1
 		normalized_ticket=${ticket,,}
