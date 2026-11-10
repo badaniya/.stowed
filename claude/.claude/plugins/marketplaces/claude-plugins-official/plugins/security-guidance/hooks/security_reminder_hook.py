@@ -259,7 +259,7 @@ _TAIL_METRICS: Dict[str, Any] = {}
 # Of those, the ones that go after the others whenever they were set: a row
 # over CC's key cap loses them before any older review key. Only the launcher
 # keys below come later; those are also on every smaller row of the session.
-_LAST_METRIC_KEYS = ("diff_seen",)
+_LAST_METRIC_KEYS = ("diff_seen", *diffstate.CUSTOM_RULE_KEYS)
 
 # CC keeps this many keys of a row.
 _METRIC_KEY_CAP = 20
@@ -288,11 +288,20 @@ _EFFORT_TURNS_UNIT = 10_000_000
 _REVIEWER_EFFORT_METRICS: Dict[str, Any] = {}
 
 
+# Verdicts the reviewer's CLI refused, and how many of them were wrapped in
+# their own key, sent as one number: refused * 100 + wrapped (both capped).
+_REVIEWER_VERDICT_KEYS = ("rv_so_err", "rv_so_wrapped")
+
+
 def _note_reviewer_context(agentic_metrics):
     """Queue the agentic reviewer's context and effort diagnostics for this row."""
     for key in _REVIEWER_CONTEXT_KEYS:
         if agentic_metrics.get(key):
             _TAIL_METRICS[key] = agentic_metrics[key]
+    refused, wrapped = (min(agentic_metrics.get(k) or 0, 99) for k in _REVIEWER_VERDICT_KEYS)
+    if refused:
+        # On a row at the key cap this costs that row its rv_effort.
+        _TAIL_METRICS["rv_so"] = refused * 100 + wrapped
     turns = agentic_metrics.get("rv_turns") or 0
     api_ms = agentic_metrics.get("rv_api_ms") or 0
     if turns or api_ms:
@@ -526,7 +535,10 @@ def _no_credentials_notice(file_path, session_id):
     except OSError:
         return None
     withheld_by = _credential_withholding_env_vars()
-    if withheld_by:
+    if llm.AUTH_TOKEN_HELD_BACK:
+        why = ("ANTHROPIC_AUTH_TOKEN is not a claude.ai token and "
+               "ANTHROPIC_BASE_URL is not set, so it was not sent anywhere")
+    elif withheld_by:
         why = ("Claude Code does not pass your sign-in to plugins while "
                + " or ".join(withheld_by) + " is set")
     else:
@@ -759,11 +771,15 @@ def check_patterns(file_path, content):
                     break
 
         if not matched and "regex" in pattern and content:
+            started = time.perf_counter()
             try:
                 if re.search(pattern["regex"], content):
                     matched = True
             except Exception:
                 pass
+            if "_source" in pattern:  # a custom rule
+                extensibility.slowest_regex = max(
+                    extensibility.slowest_regex, time.perf_counter() - started)
 
         if matched:
             matches.append((pattern["ruleName"], pattern["reminder"]))
@@ -1546,7 +1562,8 @@ def _agentic_review_with_race(
     # What the agentic run saw of its directory, and how much work it did,
     # is kept when the fallback's result replaces it below.
     reviewer_context = (
-        {k: m[k] for k in _REVIEWER_CONTEXT_KEYS + _REVIEWER_EFFORT_KEYS if k in m}
+        {k: m[k] for k in (_REVIEWER_CONTEXT_KEYS + _REVIEWER_VERDICT_KEYS
+                           + _REVIEWER_EFFORT_KEYS) if k in m}
         if winner == "agentic" else {}
     )
     if winner == "agentic" and m.get("agentic_fallback") and fallback_started.is_set():
@@ -2684,6 +2701,10 @@ def handle_stop_hook(input_data):
             if isinstance(snap.get(_k), int) and snap[_k] > 0:
                 _TAIL_METRICS[_k] = snap[_k]
 
+        for _k in diffstate.CUSTOM_RULE_KEYS:
+            if snap.get("custom_rules", {}).get(_k):
+                _TAIL_METRICS[_k] = snap["custom_rules"][_k]
+
     # Sweep pattern-warning outcomes (pure local work; stop_hook_active is
     # already guaranteed False here so no double-count guard needed).
     sweep = {}
@@ -3292,7 +3313,15 @@ def main():
         if file_path.startswith(plans_dir):
             sys.exit(0)
 
-        record_touched_path(session_id, file_path)
+        # Telemetry only: how this edit's custom rules are written.
+        rule_stats = None
+        if ENABLE_PATTERN_RULES:
+            try:
+                rule_stats = extensibility.edit_stats(
+                    file_path, input_data.get("cwd"), os.environ.get("CLAUDE_PROJECT_DIR"))
+            except Exception as e:
+                debug_log(f"custom rule stats failed: {e}")
+        record_touched_path(session_id, file_path, rule_stats)
 
         content = extract_content_from_input(
             tool_name, tool_input, input_data.get("tool_response"))
@@ -3317,6 +3346,10 @@ def main():
                         debug_log(f"New patterns (not in baseline): {[r for r, _ in pattern_matches]}")
                     else:
                         debug_log("All patterns existed in baseline, skipping")
+
+            if extensibility.slowest_regex >= extensibility.SLOW_REGEX_S:
+                diffstate.record_custom_rule_stats(
+                    session_id, {"cr_slow_ms": int(extensibility.slowest_regex * 1000)})
 
             for rule_name, reminder in pattern_matches:
                 warning_key = f"{file_path}-{rule_name}"

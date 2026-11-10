@@ -46,7 +46,7 @@
         }
       }
     ],
-    "checkedAt": 1794275643136
+    "checkedAt": 1794327092884
   },
   "github-copilot": {
     "models": [
@@ -1463,7 +1463,7 @@
     ],
     "lastModified": 1793798494000,
     "etag": "W/\"c8f1203389a1beb3844e7ee323bc3a8c\"",
-    "checkedAt": 1794273104006
+    "checkedAt": 1794325602709
   },
   "cline": {
     "models": [
@@ -1503,7 +1503,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M71GCHFKQHH5YVXHKYX5DF71",
+          "X-Task-ID": "01M733KMC0KY8PE7WKN2HHHCTV",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -1551,7 +1551,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M71GCHFKQHH5YVXHKYX5DF71",
+          "X-Task-ID": "01M733KMC0KY8PE7WKN2HHHCTV",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -1591,7 +1591,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M71GCHFKQHH5YVXHKYX5DF71",
+          "X-Task-ID": "01M733KMC0KY8PE7WKN2HHHCTV",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -1639,7 +1639,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M71GCHFKQHH5YVXHKYX5DF71",
+          "X-Task-ID": "01M733KMC0KY8PE7WKN2HHHCTV",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -1688,7 +1688,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M71GCHFKQHH5YVXHKYX5DF71",
+          "X-Task-ID": "01M733KMC0KY8PE7WKN2HHHCTV",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -1736,7 +1736,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M71GCHFKQHH5YVXHKYX5DF71",
+          "X-Task-ID": "01M733KMC0KY8PE7WKN2HHHCTV",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -1784,7 +1784,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M71GCHFKQHH5YVXHKYX5DF71",
+          "X-Task-ID": "01M733KMC0KY8PE7WKN2HHHCTV",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -1822,8 +1822,8 @@
           "xhigh": null
         },
         "modelsDev": {
-          "id": "nvidia/nemotron-3.5-lightning",
-          "name": "Nemotron 3.5 Lightning 30B A3B",
+          "id": "nvidia/nemotron-3.5-lightning:free",
+          "name": "NVIDIA: Nemotron 3.5 Lightning (free)",
           "family": "nemotron"
         },
         "api": "openai-completions",
@@ -1832,7 +1832,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M71GCHFKQHH5YVXHKYX5DF71",
+          "X-Task-ID": "01M733KMC0KY8PE7WKN2HHHCTV",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -1880,7 +1880,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M71GCHFKQHH5YVXHKYX5DF71",
+          "X-Task-ID": "01M733KMC0KY8PE7WKN2HHHCTV",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -1909,9 +1909,17 @@
         "contextWindow": 1000000,
         "maxTokens": 65536,
         "_pricingKnown": true,
+        "thinkingLevelMap": {
+          "off": "none",
+          "minimal": null,
+          "low": null,
+          "medium": "medium",
+          "high": "high",
+          "xhigh": null
+        },
         "modelsDev": {
-          "id": "nvidia/nemotron-3-ultra-550b-a55b",
-          "name": "Nemotron 3 Ultra 550B A55B",
+          "id": "nvidia/nemotron-3-ultra-550b-a55b:free",
+          "name": "NVIDIA: Nemotron 3 Ultra (free)",
           "family": "nemotron"
         },
         "api": "openai-completions",
@@ -1920,7 +1928,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M71GCHFKQHH5YVXHKYX5DF71",
+          "X-Task-ID": "01M733KMC0KY8PE7WKN2HHHCTV",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -1969,7 +1977,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M71GCHFKQHH5YVXHKYX5DF71",
+          "X-Task-ID": "01M733KMC0KY8PE7WKN2HHHCTV",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2010,7 +2018,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M71GCHFKQHH5YVXHKYX5DF71",
+          "X-Task-ID": "01M733KMC0KY8PE7WKN2HHHCTV",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2051,7 +2059,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M71GCHFKQHH5YVXHKYX5DF71",
+          "X-Task-ID": "01M733KMC0KY8PE7WKN2HHHCTV",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2082,7 +2090,7 @@
         "maxTokens": 65536,
         "_pricingKnown": true,
         "modelsDev": {
-          "id": "google/lyria-3-pro-preview",
+          "id": "lyria-3-pro-preview",
           "name": "Lyria 3 Pro Preview",
           "family": "lyria"
         },
@@ -2092,7 +2100,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M71GCHFKQHH5YVXHKYX5DF71",
+          "X-Task-ID": "01M733KMC0KY8PE7WKN2HHHCTV",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2123,7 +2131,7 @@
         "maxTokens": 65536,
         "_pricingKnown": true,
         "modelsDev": {
-          "id": "google/lyria-3-clip-preview",
+          "id": "lyria-3-clip-preview",
           "name": "Lyria 3 Clip Preview",
           "family": "lyria"
         },
@@ -2133,7 +2141,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M71GCHFKQHH5YVXHKYX5DF71",
+          "X-Task-ID": "01M733KMC0KY8PE7WKN2HHHCTV",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2173,7 +2181,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M71GCHFKQHH5YVXHKYX5DF71",
+          "X-Task-ID": "01M733KMC0KY8PE7WKN2HHHCTV",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2222,7 +2230,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M71GCHFKQHH5YVXHKYX5DF71",
+          "X-Task-ID": "01M733KMC0KY8PE7WKN2HHHCTV",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2270,7 +2278,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M71GCHFKQHH5YVXHKYX5DF71",
+          "X-Task-ID": "01M733KMC0KY8PE7WKN2HHHCTV",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2308,8 +2316,8 @@
           "xhigh": null
         },
         "modelsDev": {
-          "id": "nvidia/nemotron-3.5-lightning",
-          "name": "Nemotron 3.5 Lightning 30B A3B",
+          "id": "nvidia/nemotron-3.5-lightning:free",
+          "name": "NVIDIA: Nemotron 3.5 Lightning (free)",
           "family": "nemotron"
         },
         "api": "openai-completions",
@@ -2318,7 +2326,7 @@
         "headers": {
           "HTTP-Referer": "https://cline.bot",
           "X-Title": "Cline",
-          "X-Task-ID": "01M71GCHFKQHH5YVXHKYX5DF71",
+          "X-Task-ID": "01M733KMC0KY8PE7WKN2HHHCTV",
           "X-PLATFORM": "Visual Studio Code",
           "X-PLATFORM-VERSION": "1.109.3",
           "X-CLIENT-TYPE": "VSCode Extension",
@@ -2332,7 +2340,7 @@
         }
       }
     ],
-    "checkedAt": 1794275643315
+    "checkedAt": 1794327093035
   },
   "fastrouter": {
     "models": [
@@ -2603,7 +2611,7 @@
         }
       }
     ],
-    "checkedAt": 1794275643451
+    "checkedAt": 1794327093136
   },
   "anthropic": {
     "models": [
@@ -2707,6 +2715,67 @@
           "supportsMidConvoSystemMessages": true,
           "supportsMidConvoToolChanges": true,
           "supportsStrictTools": true
+        },
+        "promptCache": {
+          "short": 300,
+          "long": 3600
+        },
+        "inputLimits": {
+          "maxRequestBytes": 33554432,
+          "images": {
+            "maxPerRequest": 600,
+            "resize": {
+              "maxWidth": 2000,
+              "maxHeight": 2000,
+              "maxBytes": 4718592,
+              "jpegQuality": 80
+            }
+          }
+        },
+        "type": "chat"
+      },
+      {
+        "id": "claude-fable-5-2",
+        "name": "Claude Fable 5.2",
+        "api": "anthropic-messages",
+        "provider": "anthropic",
+        "baseUrl": "https://api.anthropic.com",
+        "reasoning": true,
+        "input": [
+          "text",
+          "image"
+        ],
+        "cost": {
+          "input": 8,
+          "output": 40,
+          "cacheRead": 0.2,
+          "cacheWrite": 10
+        },
+        "contextWindow": 1000000,
+        "maxTokens": 128000,
+        "thinkingLevelMap": {
+          "off": null,
+          "xhigh": "xhigh",
+          "max": "max"
+        },
+        "compat": {
+          "forceAdaptiveThinking": true,
+          "supportsMidConvoEffort": true,
+          "supportsMidConvoSystemMessages": true,
+          "supportsMidConvoToolChanges": true,
+          "supportsStrictTools": true,
+          "allowedFallbackModels": [
+            {
+              "provider": "anthropic",
+              "model": "claude-opus-5",
+              "cost": {
+                "input": 5,
+                "output": 25,
+                "cacheRead": 0.5,
+                "cacheWrite": 6.25
+              }
+            }
+          ]
         },
         "promptCache": {
           "short": 300,
@@ -3414,9 +3483,9 @@
         "type": "chat"
       }
     ],
-    "lastModified": 1793798473000,
-    "etag": "W/\"62d41b097ffe7a0959b6d9b0e0afbc70\"",
-    "checkedAt": 1794273103996
+    "lastModified": 1794318915000,
+    "etag": "W/\"df29ce52198fbf32d274b2cdcaf27bb8\"",
+    "checkedAt": 1794327080740
   },
   "opencode-go": {
     "models": [

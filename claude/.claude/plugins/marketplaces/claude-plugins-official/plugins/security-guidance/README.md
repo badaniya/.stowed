@@ -59,6 +59,8 @@ The pattern warnings need no credentials. The LLM reviews (the diff review on St
 
 Claude Code does not pass your sign-in to plugins in a session started with `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC`, `DISABLE_TELEMETRY`, or `DO_NOT_TRACK` set. If no credentials reach the plugin, for that or any other reason, and the plugin cannot review through a Claude apps gateway sign-in, the LLM reviews are skipped and only the pattern warnings run. The plugin tells you so when Claude edits a file in a git repo, at most once a week. Set `ENABLE_CODE_SECURITY_REVIEW=0` if that is what you want; it also hides the notice.
 
+On the default API host, a claude.ai token (`sk-ant-oat`) that arrives as `ANTHROPIC_API_KEY`, for example from an `apiKeyHelper`, is sent as a bearer token. On hosts other than Claude Code, any other `ANTHROPIC_AUTH_TOKEN` is not used without a base URL, because it is meant for a gateway: set `ANTHROPIC_BASE_URL` to that gateway.
+
 ### Enabling/disabling layers
 
 | Variable | Default | What it does |
@@ -94,9 +96,11 @@ Drop a `claude-security-guidance.md` in any of:
 - `<project>/.claude/claude-security-guidance.md` — project rules, intended to be committed
 - `<project>/.claude/claude-security-guidance.local.md` — local overrides, intended to be `.gitignore`'d
 
+The project files keep loading after the session moves to another folder of the project (`cd src`). A `.claude` in the folder it moved to is read too, after the project's. In a linked worktree, that worktree's own files are the project files.
+
 Project files must be regular files: a link there, or a `.claude` folder that is a link, is skipped.
 
-All three are loaded and concatenated into the LLM diff review's prompt in the order user → project → project-local. If the combined size exceeds the 8 KB prompt budget, the tail is truncated, so user-wide rules are kept and project-local rules are dropped first. The agentic commit reviewer (layer 3) does not currently read this file. Example:
+These are loaded and concatenated into the LLM diff review's prompt in the order user → project → project-local. If the combined size exceeds the 8 KB prompt budget, the tail is truncated, so user-wide rules are kept and project-local rules are dropped first. The agentic commit reviewer (layer 3) does not currently read this file. Example:
 
 ```markdown
 # Acme security rules
