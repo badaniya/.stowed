@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # Claude Code status line — 2 lines:
 #   Line 1: Ctx bar  used%
 #   Line 2: model  in/out  $cost  used%  |  dir  branch
@@ -7,10 +7,12 @@ input=$(cat)
 
 # Forward the raw statusline JSON to usagebar so it can track Claude rate-limit
 # windows ($limit sidebar token). Non-blocking; safe if the plugin is absent.
-usagebar_bin=$(ls -d "$HOME"/.config/herdr/plugins/github/usagebar-*/bin/run-statusline.sh 2>/dev/null | head -1)
-if [ -n "$usagebar_bin" ]; then
-    printf '%s' "$input" | bash "$usagebar_bin" >/dev/null 2>&1 &
-fi
+for usagebar_bin in "$HOME"/.config/herdr/plugins/github/usagebar-*/bin/run-statusline.sh; do
+    if [ -f "$usagebar_bin" ]; then
+        printf '%s' "$input" | bash "$usagebar_bin" >/dev/null 2>&1 &
+        break
+    fi
+done
 
 # --- Extract JSON fields ---
 cwd=$(echo "$input"           | jq -r '.workspace.current_dir // .cwd // empty')
@@ -62,6 +64,7 @@ if [ -n "$used_pct" ] && [ -n "$remaining_pct" ]; then
     _used=$(printf '%.0f' "$used_pct")
     _w=32
     _rc="$green"
+    [ "$_used" -eq 0 ] && _rc="$overlay0"
     [ "$_used" -ge 50 ] && _rc="$yellow"
     [ "$_used" -ge 80 ] && _rc="$red"
 
@@ -106,7 +109,7 @@ if [ -n "$effort" ]; then
     line2="${line2}$(printf "  ${mauve}%s${reset}" "$effort")"
 fi
 
-sep="$(printf "  ${overlay0}│${reset}  ")"
+sep="$(printf '  %b│%b  ' "$overlay0" "$reset")"
 line2="${line2}${sep}$(printf "${bold}${lavender}%s${reset}" "$display_dir")"
 
 if [ -n "$git_branch" ]; then
