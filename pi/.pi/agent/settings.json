@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "1.5.0",
+  "lastChangelogVersion": "1.5.1",
   "defaultProvider": "github-copilot",
   "defaultModel": "gpt-5.6-terra",
   "theme": "pi-catppuccin-mocha",
@@ -44,9 +44,9 @@
   "extensionChangelogVersions": {
     "{\"source\":\"npm:pi-mcp-adapter\",\"scope\":\"user\"}": "7.0.1",
     "{\"source\":\"npm:@eiei114/pi-sub-bar\",\"scope\":\"user\"}": "2.9.1",
-    "{\"source\":\"npm:pi-lens\",\"scope\":\"user\"}": "4.4.9",
+    "{\"source\":\"npm:pi-lens\",\"scope\":\"user\"}": "4.4.11",
     "{\"source\":\"npm:pi-free\",\"scope\":\"user\"}": "2.8.6",
     "{\"source\":\"npm:@narumitw/pi-btw\",\"scope\":\"user\"}": "0.63.5",
-    "{\"source\":\"npm:@narumitw/pi-goal\",\"scope\":\"user\"}": "0.54.16"
+    "{\"source\":\"npm:@narumitw/pi-goal\",\"scope\":\"user\"}": "0.55.0"
   }
 }

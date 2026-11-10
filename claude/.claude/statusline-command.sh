@@ -62,6 +62,7 @@ if [ -n "$used_pct" ] && [ -n "$remaining_pct" ]; then
     _used=$(printf '%.0f' "$used_pct")
     _w=32
     _rc="$green"
+    [ "$_used" -ge 50 ] && _rc="$yellow"
     [ "$_used" -ge 80 ] && _rc="$red"
 
     _subunits=$(awk "BEGIN { printf \"%d\", int($_used / 100.0 * $_w * 8 + 0.5) }")

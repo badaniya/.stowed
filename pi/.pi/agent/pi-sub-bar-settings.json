@@ -9,10 +9,10 @@
     "containBar": true,
     "brailleFillEmpty": true,
     "brailleFullBlocks": false,
-    "colorScheme": "base-warning-error",
+    "colorScheme": "success-base-warning-error",
     "usageColorTargets": {
-      "title": true,
-      "timer": true,
+      "title": false,
+      "timer": false,
       "bar": true,
       "usageLabel": true,
       "status": true
@@ -45,10 +45,10 @@
     "paddingRight": 1,
     "widgetPlacement": "belowEditor",
     "showContextBar": true,
-    "errorThreshold": 25,
-    "warningThreshold": 50,
+    "errorThreshold": 21,
+    "warningThreshold": 51,
     "overflow": "truncate",
-    "successThreshold": 75
+    "successThreshold": 51
   },
   "providers": {
     "anthropic": {
