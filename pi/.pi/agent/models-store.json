@@ -46,7 +46,7 @@
         }
       }
     ],
-    "checkedAt": 1794334952267
+    "checkedAt": 1794355459305
   },
   "github-copilot": {
     "models": [
@@ -1494,7 +1494,7 @@
         },
         "modelsDev": {
           "id": "thinkingmachines/inkling-2-small:free",
-          "name": "Thinking Machines: Inkling 2 Small (free)",
+          "name": "Inkling 2 Small (free)",
           "family": "ling"
         },
         "api": "openai-completions",
@@ -1532,17 +1532,9 @@
         "contextWindow": 262144,
         "maxTokens": 8192,
         "_pricingKnown": true,
-        "thinkingLevelMap": {
-          "off": null,
-          "minimal": null,
-          "low": null,
-          "medium": null,
-          "high": "high",
-          "xhigh": null
-        },
         "modelsDev": {
           "id": "liquid/lfm-3-1.7b",
-          "name": "LiquidAI: LFM3-1.7B",
+          "name": "LFM3 1.7B",
           "family": "liquid"
         },
         "api": "openai-completions",
@@ -1605,54 +1597,6 @@
         }
       },
       {
-        "id": "xingchen-agi/xing4.0-29b-a4b:free",
-        "name": "Xing4.0 29B A4B (free) (Cline)",
-        "reasoning": true,
-        "input": [
-          "text"
-        ],
-        "cost": {
-          "input": 0,
-          "output": 0,
-          "cacheRead": 0,
-          "cacheWrite": 0
-        },
-        "contextWindow": 262144,
-        "maxTokens": 235929,
-        "_pricingKnown": true,
-        "thinkingLevelMap": {
-          "off": "none",
-          "minimal": "minimal",
-          "low": "low",
-          "medium": "medium",
-          "high": "high",
-          "xhigh": "xhigh"
-        },
-        "modelsDev": {
-          "id": "xingchen-agi/xing4.0-29b-a4b",
-          "name": "Xing 4.0 29B A4B",
-          "family": "agi"
-        },
-        "api": "openai-completions",
-        "provider": "cline",
-        "baseUrl": "https://api.cline.bot/api/v1",
-        "headers": {
-          "HTTP-Referer": "https://cline.bot",
-          "X-Title": "Cline",
-          "X-Task-ID": "01M73B2VDC65N26W346FCN7ZJD",
-          "X-PLATFORM": "Visual Studio Code",
-          "X-PLATFORM-VERSION": "1.109.3",
-          "X-CLIENT-TYPE": "VSCode Extension",
-          "X-CLIENT-VERSION": "4.1.10",
-          "X-CORE-VERSION": "4.1.10",
-          "X-Is-Multiroot": "false",
-          "User-Agent": "Cline/4.1.10"
-        },
-        "compat": {
-          "supportsDeveloperRole": false
-        }
-      },
-      {
         "id": "nvidia/nemotron-3.5-super-vl:free",
         "name": "Nemotron 3.5 Super VL (free) (Cline)",
         "reasoning": true,
@@ -1673,13 +1617,13 @@
           "off": "none",
           "minimal": null,
           "low": null,
-          "medium": null,
+          "medium": "medium",
           "high": "high",
           "xhigh": null
         },
         "modelsDev": {
           "id": "nvidia/nemotron-3.5-super-vl",
-          "name": "NVIDIA: Nemotron 3.5 Super VL",
+          "name": "Nvidia Nemotron 3.5 Super VL",
           "family": "nemotron"
         },
         "api": "openai-completions",
@@ -1718,17 +1662,9 @@
         "contextWindow": 512000,
         "maxTokens": 460800,
         "_pricingKnown": true,
-        "thinkingLevelMap": {
-          "off": "none",
-          "minimal": null,
-          "low": null,
-          "medium": null,
-          "high": "high",
-          "xhigh": null
-        },
         "modelsDev": {
           "id": "dots-studio/dots-3-note-preview:free",
-          "name": "Dots Studio: Dots3-Note Preview (free)"
+          "name": "Dots3-Note Preview (free)"
         },
         "api": "openai-completions",
         "provider": "cline",
@@ -1767,15 +1703,15 @@
         "_pricingKnown": true,
         "thinkingLevelMap": {
           "off": null,
-          "minimal": null,
-          "low": null,
-          "medium": null,
+          "minimal": "minimal",
+          "low": "low",
+          "medium": "medium",
           "high": "high",
-          "xhigh": null
+          "xhigh": "xhigh"
         },
         "modelsDev": {
           "id": "liquid/lfm-2.5-2.6b",
-          "name": "LiquidAI: LFM2.5-2.6B (retires Nov 13)",
+          "name": "LFM2.5 2.6B",
           "family": "liquid"
         },
         "api": "openai-completions",
@@ -1823,7 +1759,7 @@
         },
         "modelsDev": {
           "id": "nvidia/nemotron-3.5-lightning",
-          "name": "Nemotron 3.5 Lightning 30B A3B",
+          "name": "Nvidia Nemotron 3.5 Lightning",
           "family": "nemotron"
         },
         "api": "openai-completions",
@@ -1861,17 +1797,9 @@
         "contextWindow": 256000,
         "maxTokens": 64000,
         "_pricingKnown": true,
-        "thinkingLevelMap": {
-          "off": "none",
-          "minimal": null,
-          "low": null,
-          "medium": null,
-          "high": "high",
-          "xhigh": null
-        },
         "modelsDev": {
           "id": "cohere/north-mini-code:free",
-          "name": "Cohere: North Mini Code (free)",
+          "name": "North Mini Code (free)",
           "family": "north"
         },
         "api": "openai-completions",
@@ -1909,17 +1837,9 @@
         "contextWindow": 1000000,
         "maxTokens": 65536,
         "_pricingKnown": true,
-        "thinkingLevelMap": {
-          "off": "none",
-          "minimal": null,
-          "low": null,
-          "medium": "medium",
-          "high": "high",
-          "xhigh": null
-        },
         "modelsDev": {
-          "id": "nvidia/nemotron-3-ultra-550b-a55b:free",
-          "name": "NVIDIA: Nemotron 3 Ultra (free)",
+          "id": "nvidia/nemotron-3-ultra-550b-a55b",
+          "name": "Nvidia Nemotron 3 Ultra 550B",
           "family": "nemotron"
         },
         "api": "openai-completions",
@@ -1958,17 +1878,9 @@
         "contextWindow": 256000,
         "maxTokens": 65536,
         "_pricingKnown": true,
-        "thinkingLevelMap": {
-          "off": "none",
-          "minimal": null,
-          "low": null,
-          "medium": null,
-          "high": "high",
-          "xhigh": null
-        },
         "modelsDev": {
-          "id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
-          "name": "NVIDIA: Nemotron 3 Nano Omni (free)",
+          "id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+          "name": "Nemotron 3 Nano Omni",
           "family": "nemotron"
         },
         "api": "openai-completions",
@@ -2048,6 +1960,14 @@
         "contextWindow": 262144,
         "maxTokens": 32768,
         "_pricingKnown": true,
+        "thinkingLevelMap": {
+          "off": "none",
+          "minimal": null,
+          "low": null,
+          "medium": null,
+          "high": "high",
+          "xhigh": null
+        },
         "modelsDev": {
           "id": "google/gemma-4-31b-it",
           "name": "Gemma 4 31B IT",
@@ -2173,7 +2093,7 @@
         "_pricingKnown": true,
         "modelsDev": {
           "id": "openrouter/free",
-          "name": "OpenRouter Free Models Router"
+          "name": "Free Models Router"
         },
         "api": "openai-completions",
         "provider": "cline",
@@ -2211,17 +2131,9 @@
         "contextWindow": 1000000,
         "maxTokens": 65536,
         "_pricingKnown": true,
-        "thinkingLevelMap": {
-          "off": "none",
-          "minimal": null,
-          "low": null,
-          "medium": null,
-          "high": "high",
-          "xhigh": null
-        },
         "modelsDev": {
-          "id": "nvidia/nemotron-3.5-super-vl",
-          "name": "NVIDIA: Nemotron 3.5 Super VL",
+          "id": "nemotron-3.5-super-vl",
+          "name": "NVIDIA Nemotron 3.5 Super VL",
           "family": "nemotron"
         },
         "api": "openai-completions",
@@ -2246,7 +2158,7 @@
       {
         "id": "cline-free/solar-mini4",
         "name": "Solar Mini 4 (Cline)",
-        "reasoning": true,
+        "reasoning": false,
         "input": [
           "text"
         ],
@@ -2259,17 +2171,9 @@
         "contextWindow": 1000000,
         "maxTokens": 65536,
         "_pricingKnown": true,
-        "thinkingLevelMap": {
-          "off": "none",
-          "minimal": "minimal",
-          "low": "low",
-          "medium": "medium",
-          "high": "high",
-          "xhigh": "xhigh"
-        },
         "modelsDev": {
           "id": "upstage/solar-mini4",
-          "name": "Upstage: Solar Mini 4",
+          "name": "Solar Mini 4",
           "family": "solar-mini"
         },
         "api": "openai-completions",
@@ -2317,7 +2221,7 @@
         },
         "modelsDev": {
           "id": "nvidia/nemotron-3.5-lightning",
-          "name": "Nemotron 3.5 Lightning 30B A3B",
+          "name": "Nvidia Nemotron 3.5 Lightning",
           "family": "nemotron"
         },
         "api": "openai-completions",
@@ -2340,7 +2244,7 @@
         }
       }
     ],
-    "checkedAt": 1794334952516
+    "checkedAt": 1794355459763
   },
   "fastrouter": {
     "models": [
@@ -2611,7 +2515,7 @@
         }
       }
     ],
-    "checkedAt": 1794334952651
+    "checkedAt": 1794355460225
   },
   "anthropic": {
     "models": [

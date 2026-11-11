@@ -3,10 +3,14 @@
 set -euo pipefail
 REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 SCRIPT="$REPO_ROOT/herdr/.config/herdr-spreader/nvo-harness-worktree-sandbox-base.sh"
-fail() { printf 'FAIL: %s\n' "$*" >&2; exit 1; }
+fail() {
+  printf 'FAIL: %s\n' "$*" >&2
+  exit 1
+}
 TEST_ROOT=$(mktemp -d)
 trap 'rm -rf "$TEST_ROOT"' EXIT
 export HOME="$TEST_ROOT/home" XDG_CONFIG_HOME="$TEST_ROOT/home/.config" TMPDIR="$TEST_ROOT/tmp"
+export GIT_CONFIG_GLOBAL="$HOME/.gitconfig"
 export NVO_WORKSPACE_OWNER=fixture NVO_WORKSPACE_ROOT="$TEST_ROOT/workspace"
 export GIT_CONFIG_NOSYSTEM=1 GIT_ALLOW_PROTOCOL=file NVO_HARNESS_DEFER_WORKSPACE=true
 unset NVO_REVIEW_BRANCH NVO_REVIEW_REPO NVO_REVIEW_PRESERVE_CASDOOR HARNESS_SNAPSHOT
@@ -24,6 +28,10 @@ for repo in "${REPOS[@]}"; do
   seed="$TEST_ROOT/seed/$repo"
   git init -q "$seed"
   printf 'old\n' >"$seed/README"
+  if [[ $repo == GoDCApp ]]; then
+    mkdir -p "$seed/.claude"
+    printf 'NVO first\n' >"$seed/.claude/shared.md"
+  fi
   if [[ $repo == PlatformServices ]]; then
     git -C "$seed" submodule add -q "file://$TEST_ROOT/remotes/casdoor" IAM/authn/casdoor
   fi
@@ -72,4 +80,32 @@ tar -czf "$HOME/harness-snapshots/25.17.0/fixture.tar.gz" -C "$TEST_ROOT/snapsho
 bash "$SCRIPT" 'NVO-103 origin/25.17.0 --restore-harness' >"$TEST_ROOT/output" 2>&1 || fail "prefixed snapshot lookup failed"
 rg -Fq 'Harness snapshot for 25.17.0: fixture.tar.gz' "$TEST_ROOT/output" || fail 'snapshot lookup retained origin prefix'
 if rg -Fq 'origin/origin/' "$TEST_ROOT/output"; then fail 'origin prefix doubled'; fi
-printf 'PASS: remote-only, origin-prefixed, stale-local and snapshot cases\n'
+# EMULATOR workspaces retain the NVO release and add cloudemu from master.
+git init -q -b master "$TEST_ROOT/seed/cloudemu"
+mkdir -p "$TEST_ROOT/seed/cloudemu/.claude" "$TEST_ROOT/seed/cloudemu/.agents/skills/cloudemu"
+printf 'cloudemu\n' >"$TEST_ROOT/seed/cloudemu/.claude/cloudemu.md"
+printf 'cloudemu\n' >"$TEST_ROOT/seed/cloudemu/.claude/shared.md"
+printf 'skill\n' >"$TEST_ROOT/seed/cloudemu/.agents/skills/cloudemu/SKILL.md"
+git -C "$TEST_ROOT/seed/cloudemu" add .
+git -C "$TEST_ROOT/seed/cloudemu" commit -qm initial
+git clone -q --bare "$TEST_ROOT/seed/cloudemu" "$TEST_ROOT/remotes/cloudemu"
+git config --global url."file://$TEST_ROOT/remotes/cloudemu".insteadOf https://github.extremenetworks.com/thomma/cloudemu.git
+# GoDCApp's existing context leaf must retain precedence.
+EMULATOR_WORKSPACE=true run_case EMULATOR-10 25.17.0
+project="$NVO_WORKSPACE_ROOT/EMULATOR-10"
+[[ -f $project/cloudemu/.git ]] || fail 'cloudemu worktree missing'
+[[ $(git -C "$project/cloudemu" branch --show-current) == fixture/cloudemu/EMULATOR-10 ]] || fail 'wrong cloudemu branch'
+[[ $(git -C "$project/cloudemu" rev-parse --symbolic-full-name '@{upstream}') == refs/remotes/origin/master ]] || fail 'cloudemu used NVO release'
+[[ -L $project/.claude/cloudemu.md && -L $project/.agents/skills/cloudemu/SKILL.md ]] || fail 'cloudemu context not aggregated'
+[[ $(<"$project/.claude/shared.md") == 'NVO first' ]] || fail 'cloudemu overrode existing NVO context'
+[[ ! -e $NVO_WORKSPACE_ROOT/NVO-100/cloudemu ]] || fail 'ordinary NVO workspace acquired cloudemu'
+# The unchanged sandbox validator accepts all five linked Git directories.
+# shellcheck source=/dev/null
+source "$REPO_ROOT/incus/.local/lib/labctl/common.sh"
+# shellcheck source=/dev/null
+source "$REPO_ROOT/incus/.local/lib/labctl/workspace.sh"
+export LABCTL_WORKSPACE_ROOT="$NVO_WORKSPACE_ROOT" LABCTL_MASTER_ROOT="$NVO_WORKSPACE_ROOT/master"
+export LABCTL_HARNESS_REPO_NAMES=GoDCApp,PlatformCommonModels,PlatformServices,PlatformServicesCommon
+[[ $(labctl_workspace_validate EMULATOR-10) == harness ]] || fail 'sandbox rejected fifth worktree'
+[[ $(labctl_workspace_linked_worktrees "$project" | wc -l) -eq 5 ]] || fail 'sandbox Git discovery missed cloudemu'
+printf 'PASS: remote refs, snapshots, EMULATOR context and five-repo sandbox validation\n'

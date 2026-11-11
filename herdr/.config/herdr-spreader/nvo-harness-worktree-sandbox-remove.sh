@@ -52,6 +52,22 @@ labctl="${HOME}/.local/bin/labctl"
 	exit 1
 }
 
+# The legacy four-repository remover uses this fixed root/owner convention.
+# Refuse custom EMULATOR roots rather than accidentally cleaning another ticket.
+if [[ $ticket == EMULATOR-* && $force == true ]]; then
+	if [[ ${NVO_WORKSPACE_OWNER:-badaniya} != badaniya || ${NVO_WORKSPACE_ROOT:-$HOME/workspace/badaniya} != "$HOME/workspace/badaniya" ]]; then
+		printf 'Error: legacy sandbox removal supports only ~/workspace/badaniya; use --keep-worktrees and remove custom worktrees explicitly\n' >&2
+		exit 1
+	fi
+	# Validate before sandbox destruction or ownership repair of ticket contents.
+	# shellcheck source=/dev/null
+	source "$(dirname "${BASH_SOURCE[0]}")/emulator-worktree.sh"
+	emulator_worktree_paths_validate "$HOME/workspace/badaniya" badaniya "$ticket"
+	if [[ -e $project_root/cloudemu ]]; then
+		emulator_worktree_validate "$HOME/workspace/badaniya" badaniya "$ticket"
+	fi
+fi
+
 printf -v destroy_command '%q %q %q %q' "$labctl" destroy "$ticket" --yes
 printf '→ Destroying Incus sandbox %s…\n' "$ticket"
 sg incus-admin -c "$destroy_command"
@@ -75,6 +91,12 @@ if [[ $force == true ]]; then
 		# Ownership repair is restricted to the ticket root being force-removed.
 		printf '→ Repairing ownership of generated artifacts in %s…\n' "$project_root"
 		sudo chown -R "$(id -un):$(id -gn)" "$project_root"
+	fi
+
+	# Remove cloudemu through Git, never through the generic orphan-directory
+	# sweep. Unknown/unregistered directories fail validation and are retained.
+	if [[ $ticket == EMULATOR-* ]]; then
+		emulator_worktree_remove "$HOME/workspace/badaniya" badaniya "$ticket"
 	fi
 
 	# A failed `git worktree remove` can deregister a worktree before failing to

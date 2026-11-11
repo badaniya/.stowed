@@ -43,11 +43,11 @@
     "github@claude-plugins-official": [
       {
         "scope": "user",
-        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/github/dceb15d50832",
-        "version": "dceb15d50832",
+        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/github/43fd1f9db094",
+        "version": "43fd1f9db094",
         "installedAt": "2026-06-04T15:46:05.709Z",
-        "lastUpdated": "2026-11-10T15:37:36.495Z",
-        "gitCommitSha": "dceb15d50832e6adf380bedc26dde03d251324b9"
+        "lastUpdated": "2026-11-10T22:54:24.720Z",
+        "gitCommitSha": "43fd1f9db0941b2b83cb62268e35970d4a67c202"
       }
     ],
     "gopls-lsp@claude-plugins-official": [

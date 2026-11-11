@@ -1,0 +1,7 @@
+name = "Open workspace & bootstrap sandbox: EMULATOR-WORKTREE-SANDBOX"
+type = "form"
+command = "bash ~/.config/herdr-spreader/emulator-worktree-sandbox-notify.sh '{{.Value}}'"
+
+[form]
+prompt = "EMULATOR ticket and NVO upstream version; adds thomma/cloudemu from master alongside the four NVO repos"
+placeholder = "EMULATOR-10 NVO-upstream-version [--restore-harness]"

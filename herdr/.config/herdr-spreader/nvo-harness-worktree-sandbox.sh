@@ -358,6 +358,11 @@ publish_monitor_label() {
 create_workspace() {
 	local workspace_json workspace_id agent_tab_id agent_pane_id build_json build_pane_id label
 	label=$(workspace_label)
+	if [[ $review_mode != true ]]; then
+		# Trust only this canonical launch directory, not every workspace or
+		# tool operation. Preserve the existing Claude permission policy.
+		python3 "$(dirname "${BASH_SOURCE[0]}")/claude-workspace-trust.py" "$project_dir"
+	fi
 	workspace_json=$(herdr workspace create --cwd "$project_dir" --label "$label" --focus)
 	workspace_id=$(jq -er '.result.workspace.workspace_id' <<<"$workspace_json")
 	agent_tab_id=$(jq -er '.result.tab.tab_id' <<<"$workspace_json")

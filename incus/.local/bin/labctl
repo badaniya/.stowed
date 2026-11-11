@@ -99,7 +99,11 @@ labctl_create() {
 	if [[ -f $state ]] && labctl_state_lookup "$ticket" >/dev/null 2>&1; then
 		ip=$(labctl_state_ip_for "$ticket")
 		if [[ -z $ip ]] || ! labctl_config_is_ipv4 "$ip"; then
-			ip=$(labctl_state_reserve_ip "$ticket")
+			if [[ ${LABCTL_DRY_RUN:-false} == true ]]; then
+				ip=$(labctl_state_preview_ip)
+			else
+				ip=$(labctl_state_reserve_ip "$ticket")
+			fi
 		fi
 	elif [[ ${LABCTL_DRY_RUN:-false} == true ]]; then
 		ip=$(labctl_state_preview_ip)

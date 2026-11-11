@@ -153,11 +153,16 @@ workspace mounts, then use `start`, `stop`, or `destroy` deliberately. Do not
 reconstruct state by deleting shared Git metadata or by running broad cleanup.
 Escalate conflicting state or missing worktrees for operator review.
 
-`stop` preserves the sandbox and its private runtime for later `start`.
-`destroy --yes` removes the sandbox and its private runtime while preserving
-source worktrees and shared Git metadata. `cleanup-worktree --yes` is a
-separate action because removing a source worktree is not an incidental effect
-of sandbox destruction.
+`stop` preserves the sandbox, its IP reservation, and its private runtime for
+later `start`. `destroy --yes` removes the sandbox and its private runtime,
+then atomically marks its registry record destroyed and clears its IP so the
+address can be reused. Failed deletion and dry runs preserve the reservation.
+Legacy destroyed records with an IP are also excluded from allocation checks;
+no manual registry cleanup is needed to recover that capacity. Recreating a
+destroyed ticket obtains a fresh reservation rather than reusing its historical
+address. Source worktrees and shared Git metadata are preserved.
+`cleanup-worktree --yes` is a separate action because removing a source
+worktree is not an incidental effect of sandbox destruction.
 
 ## Capacity and rollout gate
 

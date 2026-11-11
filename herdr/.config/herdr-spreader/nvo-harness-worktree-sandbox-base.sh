@@ -158,6 +158,13 @@ PROJECT_DIR="${WORKSPACE_ROOT}/${JIRA}"
 TEMPLATE="${HOME}/.stowed/herdr/.config/herdr/plugins/config/herdr-spreader/nvo-harness-worktree.yaml.tpl"
 TMP_CONFIG="/tmp/nvo-harness-worktree-${JIRA//\//-}.yaml"
 
+# Only the dedicated EMULATOR launcher opts into the fifth repository.
+if [[ ${EMULATOR_WORKSPACE:-false} == true ]]; then
+	# shellcheck source=/dev/null
+	source "$(dirname "${BASH_SOURCE[0]}")/emulator-worktree.sh"
+	emulator_worktree_prepare "$WORKSPACE_ROOT" "$WORKSPACE_OWNER" "$JIRA"
+fi
+
 mkdir -p "${PROJECT_DIR}"
 
 if [[ $JIRA == NVO-REVIEW-* && -n ${NVO_REVIEW_BRANCH:-} ]]; then
@@ -209,6 +216,11 @@ else
 	git -C "$platform_services_repo" submodule update --init --checkout -- "$casdoor_path"
 fi
 
+# Append only after the NVO release checkout loop: cloudemu tracks master,
+# never the NVO version. Existing repository context retains precedence.
+if [[ ${EMULATOR_WORKSPACE:-false} == true ]]; then
+	REPOS+=(cloudemu)
+fi
 aggregate_context_trees "$PROJECT_DIR"
 echo "→ Created aggregate .agents and .claude context trees."
 

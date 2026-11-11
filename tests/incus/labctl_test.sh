@@ -286,6 +286,9 @@ info\ --format*)
 	exit 2
 	;;
 info\ *) fake_instance_exists "$2" ;;
+delete\ *)
+	[[ ${LABCTL_FAKE_DELETE_FAILURE:-false} != true ]] || exit 42
+	;;
 init\ *)
 	if [[ -n ${LABCTL_FAKE_INSTANCE_DIRECTORY:-} ]]; then
 		mkdir -p "$LABCTL_FAKE_INSTANCE_DIRECTORY"
@@ -736,6 +739,67 @@ assert_command_log_contains "/bin/true jira-#"
 # Existing instances must match the registry reservation before reuse.
 PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=true LABCTL_FAKE_INSTANCE_IP=10.42.0.10 assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" create 'JIRA-#' --dry-run
 PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=true LABCTL_FAKE_INSTANCE_IP=10.42.0.11 assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" create 'JIRA-#' --dry-run
+
+# Destroy must release capacity only after deletion succeeds. Use an isolated
+# registry so these lifecycle checks cannot change the other test fixtures.
+test_destroy_ip_release() (
+	failures=0
+	labctl_state_record 'jira-#' 'jira-#' '10.42.0.10' harness
+	labctl_state_record 'keep-live' 'keep-live' '10.42.0.11' harness
+	labctl_state_set_status keep-live stopped
+	registry_before=$(<"$(labctl_state_path)")
+
+	PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=true assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" destroy 'JIRA-#' --yes --dry-run
+	assert_equals "$registry_before" "$(<"$(labctl_state_path)")"
+	PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=true LABCTL_FAKE_DELETE_FAILURE=true assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" destroy 'JIRA-#' --yes
+	assert_equals "$registry_before" "$(<"$(labctl_state_path)")"
+	PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=true assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" destroy 'JIRA-#' --yes
+	assert_equals destroyed "$(labctl_state_lookup 'jira-#' | jq -r '.status')"
+	assert_equals null "$(labctl_state_lookup 'jira-#' | jq -r '.ip')"
+	assert_equals '10.42.0.11' "$(labctl_state_ip_for keep-live)"
+	assert_equals '10.42.0.10' "$(labctl_state_reserve_ip replacement)"
+	assert_fails labctl_state_reserve_ip pool-full
+	# Retrying destroy for an already missing instance remains safe/idempotent.
+	PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=false assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" destroy 'JIRA-#' --yes
+	assert_equals '10.42.0.10' "$(labctl_state_ip_for replacement)"
+	((failures == 0)) || exit 1
+	printf 'PASS: destroy IP-release regression checks\n'
+)
+XDG_STATE_HOME="${TEST_ROOT}/destroy-state" test_destroy_ip_release || fail 'destroy IP-release regression checks failed'
+
+# Old registries retain an IP on destroyed records. They must not exhaust the
+# pool, block recording/claiming a new owner, or let a recreated ticket reuse
+# an address now held by another sandbox.
+test_legacy_destroyed_ip_allocation() (
+	failures=0
+	labctl_state_init
+	labctl_state_write '.sandboxes = {"jira-#": {ticket: "jira-#", instance: "jira-#", ip: "10.42.0.10", status: "destroyed"}, "keep-live": {ip: "10.42.0.11", status: "stopped"}}'
+	registry_before=$(<"$(labctl_state_path)")
+	assert_equals '10.42.0.10' "$(labctl_state_preview_ip)"
+	assert_equals "$registry_before" "$(<"$(labctl_state_path)")"
+	assert_equals '' "$(labctl_state_ip_for 'jira-#')"
+	assert_succeeds labctl_state_claim_ip replacement '10.42.0.10'
+	assert_succeeds labctl_state_record replacement replacement '10.42.0.10' harness
+	assert_fails labctl_state_claim_ip another '10.42.0.10'
+	assert_fails labctl_state_record another another '10.42.0.10' harness
+	assert_fails labctl_state_reserve_ip 'jira-#'
+	labctl_state_remove keep-live
+	# Dry-run recreation must preview the new address without reserving it.
+	registry_before=$(<"$(labctl_state_path)")
+	PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=true LABCTL_FAKE_INSTANCE_IP=10.42.0.11 assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" create 'JIRA-#' --dry-run
+	assert_equals "$registry_before" "$(<"$(labctl_state_path)")"
+	# Recreating the old ticket must select .11 rather than steal .10 back.
+	PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=true LABCTL_FAKE_INSTANCE_IP=10.42.0.11 assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" create 'JIRA-#'
+	assert_equals '10.42.0.11' "$(labctl_state_ip_for 'jira-#')"
+	assert_equals '10.42.0.10' "$(labctl_state_ip_for replacement)"
+	# Exercise automatic reservation from a legacy full-pool registry as well.
+	labctl_state_write '.sandboxes = {"old": {ip: "10.42.0.10", status: "destroyed"}, "live": {ip: "10.42.0.11", status: "running"}}'
+	assert_equals '10.42.0.10' "$(labctl_state_reserve_ip replacement)"
+	assert_fails labctl_state_reserve_ip pool-full
+	((failures == 0)) || exit 1
+	printf 'PASS: legacy destroyed IP-allocation regression checks\n'
+)
+XDG_STATE_HOME="${TEST_ROOT}/legacy-destroy-state" test_legacy_destroyed_ip_allocation || fail 'legacy destroyed IP-allocation regression checks failed'
 
 # A malformed harness root must fail linked-worktree validation.
 printf 'gitdir: /outside/master/two\n' >"${TEST_ROOT}/workspace/jira-#/two/.git"

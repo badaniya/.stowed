@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# Keep the trust fixture isolated even when the caller uses a Claude profile.
+unset CLAUDE_CONFIG_DIR
 
 REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 SCRIPT="${REPO_ROOT}/herdr/.config/herdr-spreader/nvo-harness-worktree-sandbox.sh"
@@ -47,6 +49,7 @@ STATE_LOG="$TEST_ROOT/state/herdr-spreader/NVO-20131.log"
 # Build panes must tail their named stage logs rather than opening an empty
 # directory shell while the coordinator performs a monolithic bootstrap.
 assert_contains 'stage_pane_command' "$SCRIPT"
+assert_contains 'claude-workspace-trust.py' "$SCRIPT"
 assert_contains 'tail --retry -F /var/log/network/network-server.log /var/log/edge/edge-server.log /var/log/scheduler/scheduler-server.log /var/log/system/system-server.log /var/log/orchestration/orchestration-server.log /var/log/runonce/runonce-server.log /var/log/tagging/tagging-server.log' "$SCRIPT"
 # shellcheck disable=SC2016 # Match the concise monitor reconnection command.
 assert_contains 'pane_command=$(ready_guest_command monitor "$guest_command")' "$SCRIPT"
@@ -68,6 +71,8 @@ assert_contains 'pane_command=$(ready_guest_command "$pane_name" "cd $(printf' "
 cat >"$TEST_ROOT/home/.config/herdr-spreader/nvo-harness-worktree-sandbox-base.sh" <<'EOF_BASE'
 #!/usr/bin/env bash
 printf 'worktree deferred=%s args=%s\n' "${NVO_HARNESS_DEFER_WORKSPACE:-}" "$*" >>"${TEST_LOG:?}"
+read -r ticket _ <<<"$*"
+mkdir -p "${NVO_WORKSPACE_ROOT:-$HOME/workspace/${NVO_WORKSPACE_OWNER:-$USER}}/$ticket"
 EOF_BASE
 cat >"$TEST_ROOT/home/.local/bin/labctl" <<'EOF_LABCTL'
 #!/usr/bin/env bash
@@ -113,7 +118,13 @@ case "${1:-} ${2:-}" in
 	printf '%s\n' "$counter" >"$counter_file"
 	printf '{"result":{"pane":{"pane_id":"w1:p%s"}}}\n' "$counter"
 	;;
-'pane run' | 'pane rename' | 'tab rename') : ;;
+'pane run')
+	if [[ ${4:-} == claude ]]; then
+		project="${NVO_WORKSPACE_ROOT:-$HOME/workspace/${NVO_WORKSPACE_OWNER:-$USER}}/NVO-20131"
+		jq -e --arg project "$project" '.projects[$project].hasTrustDialogAccepted == true' "$HOME/.claude.json" >/dev/null || exit 1
+	fi
+	;;
+'pane rename' | 'tab rename') : ;;
 'tab create') printf '%s\n' '{"result":{"tab":{"tab_id":"w1:t2"},"root_pane":{"pane_id":"w1:p2"}}}' ;;
 *) exit 2 ;;
 esac
@@ -189,11 +200,13 @@ assert_contains 'pane_history_command' "$SCRIPT"
 assert_contains 'pane_history_setup_command' "$SCRIPT"
 assert_contains 'fc -p' "$SCRIPT"
 assert_contains 'bootstrap_ready_command' "$SCRIPT"
+# shellcheck disable=SC2016 # Match literal source, not an executed substitution.
 assert_contains 'bootstrap_ready=$(bootstrap_ready_command)' "$SCRIPT"
 assert_contains 'print -s --' "$SCRIPT"
 assert_contains 'exec_agent_sandbox nvo-20131 --command' "$LOG"
 assert_not_contains 'guest_setpriv_command' "$SCRIPT"
 assert_not_contains 'setpriv --reset-env --reuid' "$SCRIPT"
+# shellcheck disable=SC2016 # Reject the literal legacy source pattern.
 assert_not_contains 'env_file="$HOME/.config/nvo/sandbox.env"' "$SCRIPT"
 assert_not_contains 'docker.sock' "$LOG"
 assert_not_contains 'docker info' "$LOG"
