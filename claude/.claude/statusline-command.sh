@@ -78,15 +78,20 @@ if [ -n "$used_pct" ] && [ -n "$remaining_pct" ]; then
     while [ "$_i" -lt "$_full" ]; do _bar_on="${_bar_on}⣿"; _i=$((_i+1)); done
 
     _pchar=""
+    # Fill the left braille column bottom-up before adding right-column dots.
     case "$_partial" in
         1) _pchar="⡀";; 2) _pchar="⡄";; 3) _pchar="⡆";;
         4) _pchar="⡇";; 5) _pchar="⣇";; 6) _pchar="⣧";; 7) _pchar="⣷";;
     esac
 
     _bar_off=""; _i=0
+    if [ "$_empty" -gt 0 ] && { [ "$_partial" -gt 4 ] || { [ "$_partial" -eq 0 ] && [ "$_full" -gt 0 ]; }; }; then
+        # Keep the meter width fixed: the unused cell's left dot column is the gap.
+        _bar_off="⢸"; _i=1
+    fi
     while [ "$_i" -lt "$_empty" ]; do _bar_off="${_bar_off}⣿"; _i=$((_i+1)); done
 
-    line1="$(printf "${dim}Ctx${reset} ${dim}│${reset}${_rc}%s%s${reset}${surface1}%s${reset}${dim}│${reset} ${_rc}%d%%${reset}" \
+    line1="$(printf "${dim}Ctx${reset} ${dim}│${reset}${_rc}%s%s${surface1}%s${reset}${dim}│${reset} ${_rc}%d%%${reset}" \
         "$_bar_on" "$_pchar" "$_bar_off" "$_used")"
 
     line1="${line1}$(printf "  ${overlay0}│${reset}  ${dim}session${reset}  ${yellow}%s/%s${reset}" "$in_tok" "$out_tok")"
