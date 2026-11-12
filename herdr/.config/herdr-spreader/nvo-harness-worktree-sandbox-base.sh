@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# nvo-harness-worktree — like nvo-worktree.sh, but sets up a multi-repo
+# nvo-harness-worktree-sandbox-base — sets up a multi-repo
 # "harness" style workspace: one top-level <JIRA#> project directory with a
 # git worktree for each of GoDCApp, PlatformCommonModels, PlatformServices,
 # and PlatformServicesCommon, all on the same upstream version, mirroring the
 # layout of ~/workspace/<owner>/Extreme-AI-Harness.
 #
 # Usage:
-#   nvo-harness-worktree.sh '<jira> <upstream-version> [--restore-harness]'
-#   nvo-harness-worktree.sh NVO-15650 25.16.0 --restore-harness
+#   nvo-harness-worktree-sandbox-base.sh '<jira> <upstream-version> [--restore-harness]'
+#   nvo-harness-worktree-sandbox-base.sh NVO-15650 25.16.0 --restore-harness
 #
 # What it does, for each of the four repos:
 #   1. git worktree add off the shared bare repo at
@@ -111,7 +111,7 @@ HARNESS_SNAPSHOT="${HARNESS_SNAPSHOT:-}"
 HARNESS_SNAPSHOT_DIR="${HOME}/harness-snapshots"
 
 if [[ $# -lt 1 ]]; then
-	echo "Usage: nvo-harness-worktree.sh <jira> <upstream-version> [--restore-harness]" >&2
+	echo "Usage: nvo-harness-worktree-sandbox-base.sh <jira> <upstream-version> [--restore-harness]" >&2
 	exit 1
 fi
 
@@ -140,8 +140,8 @@ UPSTREAM_VERSION="${POSITIONAL[1]:-}"
 UPSTREAM_VERSION=${UPSTREAM_VERSION#origin/}
 
 if [[ -z "${JIRA:-}" || -z "${UPSTREAM_VERSION:-}" ]]; then
-	echo "Usage: nvo-harness-worktree.sh <jira> <upstream-version> [--restore-harness]" >&2
-	echo "  e.g. nvo-harness-worktree.sh NVO-15650 25.16.0 --restore-harness" >&2
+	echo "Usage: nvo-harness-worktree-sandbox-base.sh <jira> <upstream-version> [--restore-harness]" >&2
+	echo "  e.g. nvo-harness-worktree-sandbox-base.sh NVO-15650 25.16.0 --restore-harness" >&2
 	exit 1
 fi
 

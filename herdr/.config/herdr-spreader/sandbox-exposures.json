@@ -13,7 +13,7 @@
       "proxy": {
         "enabled": true,
         "listen_port": 3128,
-        "client_cidrs": ["10.64.195.0/24"],
+        "client_cidrs": ["10.64.195.0/24", "10.59.216.0/24"],
         "target_ports": [443],
         "allow_host_probe": true
       }
