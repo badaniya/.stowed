@@ -40,9 +40,13 @@ Trust model:
 """
 
 import fnmatch
+import functools
 import json
 import os
 import re
+import subprocess
+import sys
+import time
 from typing import Any, Dict, List, Optional, Tuple
 
 from _base import debug_log
@@ -64,6 +68,9 @@ _user_patterns: List[Dict[str, Any]] = []
 _refused_regexes = 0
 # Seconds the slowest custom regex took in this hook. Telemetry only.
 slowest_regex = 0.0
+# The folder a custom rule's globs are relative to: the project's own.
+_match_roots: Tuple[Optional[str], ...] = ()
+_rels_cache: Dict[str, Tuple[str, ...]] = {}
 
 
 # ── public API ───────────────────────────────────────────────────────────────
@@ -75,8 +82,11 @@ def load_for_session(cwd: Optional[str]) -> None:
     Called from the hook's main() before dispatching. Failures are non-fatal —
     a malformed config file produces a debug_log entry, never a crash.
     """
-    global _guidance_block, _user_patterns, _refused_regexes
+    global _guidance_block, _user_patterns, _refused_regexes, _match_roots
     _refused_regexes = 0
+    env_project = os.environ.get("CLAUDE_PROJECT_DIR") or None
+    _match_roots = tuple(_project_dirs(cwd)[:1]) or ((env_project,) if env_project else ())
+    _rels_cache.clear()
     try:
         _guidance_block = _wrap_guidance(_load_guidance(cwd))
     except Exception as e:
@@ -87,6 +97,7 @@ def load_for_session(cwd: Optional[str]) -> None:
     except Exception as e:
         debug_log(f"extensibility: failed to load security-patterns: {e}")
         _user_patterns = []
+    _reset_regex_limit()
 
 
 def guidance_block() -> str:
@@ -412,13 +423,28 @@ def _validate_pattern(entry: Any, source: str) -> Optional[Dict[str, Any]]:
         rule["_globs"] = (tuple(paths), tuple(exclude))  # read by edit_stats
         # Capture as defaults so the lambda doesn't share state across rules.
         rule["path_filter"] = (
-            lambda p, _inc=tuple(paths), _exc=tuple(exclude): _glob_match(p, _inc, _exc)
+            lambda p, _inc=tuple(paths), _exc=tuple(exclude): _rule_covers(p, _inc, _exc)
         )
     return rule
 
 
+def _rule_covers(path: str, include: Tuple[str, ...], exclude: Tuple[str, ...]) -> bool:
+    """Whether a rule's globs let it apply to `path`, as check_patterns hands it
+    over (POSIX absolute paths without their leading `/`). Globs are read against
+    the full path and the path inside the project, and `**/` can match no folder."""
+    full = path if os.path.isabs(path) else "/" + path
+    rels = _rels_cache.get(full)
+    if rels is None:
+        # As written, and resolved: a linked folder is matched by either name.
+        rels = _rels_cache[full] = tuple(dict.fromkeys(
+            r for d in _match_roots
+            for r in (_inside(d, full, resolve=False), _inside(d, full)) if r is not None))
+    return _wider_glob_match(full, rels, include, exclude)
+
+
 def _glob_match(path: str, include: Tuple[str, ...], exclude: Tuple[str, ...]) -> bool:
-    """Match a path against include/exclude globs. ``**`` matches any depth."""
+    """The reading of globs before _rule_covers, kept for edit_stats: full path
+    or file name only, and `**/` needs a folder."""
     norm = path.replace(os.sep, "/")
     base = os.path.basename(norm)
     def _hit(globs: Tuple[str, ...]) -> bool:
@@ -495,7 +521,8 @@ def _shape_bits(globs: Tuple[str, ...], plain: int) -> int:
     return bits
 
 
-def _zero_depth_forms(glob: str) -> List[str]:
+@functools.lru_cache(maxsize=512)
+def _zero_depth_forms(glob: str) -> Tuple[str, ...]:
     """`glob`, and the globs left when each `**/` matches no folder."""
     forms = [glob]
     for form in forms:
@@ -503,21 +530,23 @@ def _zero_depth_forms(glob: str) -> List[str]:
             shorter = form[:m.start()] + form[m.end():]
             if shorter and shorter not in forms and len(forms) < 16:
                 forms.append(shorter)
-    return forms
+    return tuple(forms)
 
 
 def _wider_glob_match(path: str, rels: Tuple[str, ...],
                       include: Tuple[str, ...], exclude: Tuple[str, ...]) -> bool:
-    """What _glob_match would say if globs were also read against the path
-    inside the project (`rels`), and `**/` could match no folder."""
+    """_glob_match, with globs also read against the path inside the project
+    (`rels`), and `**/` able to match no folder."""
     norm = path.replace(os.sep, "/")
     names = [norm, norm.lstrip("/"), os.path.basename(norm)]
-    for rel in rels:
-        names += [rel, "/" + rel, "./" + rel]
+    inside = [n for rel in rels for n in (rel, "/" + rel, "./" + rel)]
 
     def _hit(globs: Tuple[str, ...]) -> bool:
+        # A glob with no folder in it is about the file name: `*` crosses `/`,
+        # so against the path inside the project `test*` would take in a tree.
         return any(fnmatch.fnmatch(n, f) for g in globs
-                   for f in _zero_depth_forms(g) for n in names)
+                   for f in _zero_depth_forms(g)
+                   for n in (names + inside if "/" in g.replace("\\", "/") else names))
     if include and not _hit(include):
         return False
     if exclude and _hit(exclude):
@@ -525,11 +554,12 @@ def _wider_glob_match(path: str, rels: Tuple[str, ...],
     return True
 
 
-def _inside(root: Optional[str], path: str) -> Optional[str]:
+def _inside(root: Optional[str], path: str, resolve: bool = True) -> Optional[str]:
     if not root:
         return None
+    normal = os.path.realpath if resolve else os.path.normpath
     try:
-        rel = os.path.relpath(os.path.realpath(path), os.path.realpath(root))
+        rel = os.path.relpath(normal(path), normal(root))
     except (OSError, ValueError):
         return None
     if rel == os.pardir or rel.startswith(os.pardir + os.sep):
@@ -537,16 +567,13 @@ def _inside(root: Optional[str], path: str) -> Optional[str]:
     return rel.replace(os.sep, "/")
 
 
-def edit_stats(file_path: str, cwd: Optional[str], project_dir: Optional[str]) -> Dict[str, int]:
-    """Counts for one edit; empty for a user with no custom rules.
-    Telemetry only."""
+def edit_stats(file_path: str) -> Dict[str, int]:
+    """Counts for one edit; empty for a user with no custom rules. cr_gain and
+    cr_loss are rule and edit pairs that _rule_covers decides differently from
+    the older reading. Telemetry only."""
     stats: Dict[str, int] = {}
     shapes = _SHAPE_REGEX_REFUSED if _refused_regexes else 0
     gain = loss = 0
-    # From both folders: in a worktree the session's own is the one that fits.
-    rels = tuple(dict.fromkeys(
-        r for r in (_inside(d, file_path) for d in (cwd, project_dir)) if r is not None
-    )) if _user_patterns else ()
     for rule in _user_patterns:
         include, exclude = rule.get("_globs", ((), ()))
         if include or exclude:
@@ -554,7 +581,7 @@ def edit_stats(file_path: str, cwd: Optional[str], project_dir: Optional[str]) -
             shapes |= _shape_bits(exclude, _SHAPE_PLAIN_EXCLUDE)
             try:
                 now = _glob_match(file_path.lstrip("/"), include, exclude)
-                wider = _wider_glob_match(file_path, rels, include, exclude)
+                wider = _rule_covers(file_path.lstrip("/"), include, exclude)
             except Exception:
                 continue
             gain += wider and not now
@@ -574,3 +601,90 @@ def edit_stats(file_path: str, cwd: Optional[str], project_dir: Optional[str]) -
 
 # A custom regex that takes at least this long is reported, in seconds.
 SLOW_REGEX_S = 0.1
+
+# A project's own files can make a custom regex arbitrarily slow, and the shape
+# check at load cannot catch every slow pattern. So they run in a child process
+# that can be stopped, on every platform: re holds the GIL, so a thread cannot
+# interrupt a search, and Windows has no setitimer.
+# Seconds of child process time per hook run.
+REGEX_TIME_LIMIT_S = 3.0
+_regex_seconds_left = REGEX_TIME_LIMIT_S
+# Regexes stopped in this hook run. They are not tried again.
+_stopped_regexes: set = set()
+
+_REGEX_WORKER = """
+import faulthandler, json, re, sys, time
+job = json.load(sys.stdin)
+# Ends this process if the hook that started it is killed first.
+faulthandler.dump_traceback_later(job["limit"] + 1, exit=True)
+for regex in job["regexes"]:
+    started = time.perf_counter()
+    try:
+        hit = bool(re.search(regex, job["content"]))
+    except Exception:
+        hit = False
+    print(int(hit), time.perf_counter() - started, flush=True)
+"""
+
+
+def _reset_regex_limit() -> None:
+    global _regex_seconds_left
+    _regex_seconds_left = REGEX_TIME_LIMIT_S
+    _stopped_regexes.clear()
+
+
+def search_custom_regexes(regexes: List[str], content: str) -> List[bool]:
+    """Whether each regex is found in content. A regex that does not finish in
+    time counts as not found and is left out for the rest of this hook run;
+    the ones after it are still searched while time remains."""
+    global slowest_regex, _regex_seconds_left
+    found = [False] * len(regexes)
+    waiting = [i for i, r in enumerate(regexes) if r not in _stopped_regexes]
+    while waiting and _regex_seconds_left > 0.05:
+        limit = _regex_seconds_left / 2  # one stuck regex leaves time for the rest
+        started = time.monotonic()
+        timed_out = False
+        try:
+            done = subprocess.run(
+                [sys.executable, "-I", "-S", "-c", _REGEX_WORKER],
+                input=json.dumps({
+                    "regexes": [regexes[i] for i in waiting],
+                    "content": content,
+                    "limit": limit,
+                }).encode("ascii"),
+                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=limit)
+            lines = done.stdout
+            if done.returncode:
+                raise OSError(f"exit {done.returncode}")
+        except subprocess.TimeoutExpired as e:
+            timed_out = True
+            lines = e.stdout or b""
+        except (OSError, TypeError, ValueError, subprocess.SubprocessError) as e:
+            # As it was before the limit: no worse than a machine with no child.
+            debug_log(f"extensibility: regex worker failed: {e}")
+            return _search_here(regexes, content)
+        _regex_seconds_left -= time.monotonic() - started
+        results = lines.split(b"\n")[:-1][:len(waiting)]  # whole lines only
+        for i, line in zip(waiting, results):
+            hit, seconds = line.split()
+            found[i] = hit == b"1"
+            slowest_regex = max(slowest_regex, float(seconds))
+        waiting = waiting[len(results):]
+        if timed_out and waiting:
+            stuck = regexes[waiting.pop(0)]
+            _stopped_regexes.add(stuck)
+            slowest_regex = max(slowest_regex, limit)
+            debug_log(f"extensibility: stopped a custom regex after {limit:.1f} s: {stuck!r:.60}")
+    if waiting:
+        debug_log(f"extensibility: no time left for {len(waiting)} custom regexes")
+    return found
+
+
+def _search_here(regexes: List[str], content: str) -> List[bool]:
+    found = []
+    for regex in regexes:
+        try:
+            found.append(bool(re.search(regex, content)))
+        except Exception:
+            found.append(False)
+    return found
