@@ -1,4 +1,4 @@
-name = "Open workspace: NVO-REVIEW branch + agent-sandbox"
+name = "Open workspace & bootstrap sandbox: NVO-REVIEW"
 type = "form"
 command = "bash ~/.config/herdr-spreader/nvo-review-notify.sh '{{.Value}}'"
 

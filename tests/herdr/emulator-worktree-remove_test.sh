@@ -2,7 +2,7 @@
 # Real cloudemu Git cleanup; all sandbox and Herdr calls are mocked.
 set -euo pipefail
 REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-SCRIPT="$REPO_ROOT/herdr/.config/herdr-spreader/nvo-harness-worktree-sandbox-remove.sh"
+SCRIPT="$REPO_ROOT/herdr/.config/herdr-spreader/emulator-worktree-sandbox-remove.sh"
 fail() {
   printf 'FAIL: %s\n' "$*" >&2
   exit 1
@@ -56,14 +56,18 @@ chmod +x "$HOME/.local/bin/labctl" "$TEST_ROOT/bin/sg" "$TEST_ROOT/bin/sudo" "$T
 : >"$TEST_LOG"
 bash "$SCRIPT" 'EMULATOR-10 --keep-worktrees' >"$TEST_ROOT/output" 2>&1
 [[ -f $project/cloudemu/local-changes ]] || fail 'keep-worktrees removed cloudemu edits'
+git -C "$NVO_WORKSPACE_ROOT/master/cloudemu" worktree list --porcelain | rg -Fxq -- "worktree $project/cloudemu" || fail 'keep-worktrees deregistered cloudemu'
 if rg -q '^(sudo |legacy-remove )' "$TEST_LOG"; then fail 'keep-worktrees attempted cleanup'; fi
 : >"$TEST_LOG"
 if TEST_FAIL_DESTROY=true bash "$SCRIPT" EMULATOR-10 >"$TEST_ROOT/output" 2>&1; then fail 'failed destroy was ignored'; fi
 [[ -f $project/cloudemu/local-changes ]] || fail 'failed destroy removed cloudemu'
+git -C "$NVO_WORKSPACE_ROOT/master/cloudemu" worktree list --porcelain | rg -Fxq -- "worktree $project/cloudemu" || fail 'failed destroy deregistered cloudemu'
 if rg -q '^(sudo |legacy-remove )' "$TEST_LOG"; then fail 'failed destroy continued cleanup'; fi
 : >"$TEST_LOG"
 if ! bash "$SCRIPT" EMULATOR-10 >"$TEST_ROOT/output" 2>&1; then fail "cleanup failed: $(<"$TEST_ROOT/output")"; fi
 [[ ! -e $project/cloudemu ]] || fail 'sandbox removal orphaned cloudemu worktree'
+if git -C "$NVO_WORKSPACE_ROOT/master/cloudemu" worktree list --porcelain | rg -Fxq -- "worktree $project/cloudemu"; then fail 'sandbox removal left cloudemu registered'; fi
+[[ $(git -C "$NVO_WORKSPACE_ROOT/master/cloudemu" rev-parse --is-bare-repository) == true ]] || fail 'shared cloudemu repository was removed'
 if git -C "$NVO_WORKSPACE_ROOT/master/cloudemu" show-ref --verify --quiet refs/heads/badaniya/cloudemu/EMULATOR-10; then fail 'sandbox removal orphaned branch'; fi
 rg -q '^labctl destroy EMULATOR-10 --yes$' "$TEST_LOG" || fail 'sandbox was not destroyed'
 # Refuse to delete or repair ownership of an unrelated cloudemu directory.
