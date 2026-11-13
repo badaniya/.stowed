@@ -86,6 +86,13 @@ if [[ ${TEST_FAIL_STOP_FOR:-} == "$2" && $1 == stop ]]; then
 	printf 'Error: fixture lifecycle failure %s\n' "$2" >&2
 	exit 1
 fi
+if [[ $1 == destroy ]]; then
+	[[ $# -eq 3 && $3 == --yes ]] || exit 2
+	if [[ ${TEST_FAIL_DESTROY:-} == true ]]; then
+		printf 'Error: fixture destroy failure %s\n' "$2" >&2
+		exit 1
+	fi
+fi
 EOF_LABCTL
 
 cat >"$TEST_ROOT/bin/incus" <<'EOF_INCUS'
@@ -414,7 +421,69 @@ write_plan explicit NVO-20130
 printf '7\n' | run_dialog >"$TEST_ROOT/cancel-output" 2>&1
 logs_after=$(find "$TEST_ROOT/state/herdr/action-errors" -name '*.json' | wc -l)
 assert_equals "$logs_before" "$logs_after" 'normal cancellation generated an error notification'
+# Delete delegates exactly one confirmed target to labctl, not workspace cleanup.
+: >"$LOG"
+write_plan explicit NVO-20130
+printf '8\nNVO-20130\n' | run_dialog >"$DIALOG_OUTPUT" || fail 'Delete sandbox operation is unavailable or failed'
+[[ ! -e $DIALOG_PLAN ]] || fail 'delete dialog did not remove its plan'
+rg -q '8\).*Delete sandbox' "$DIALOG_OUTPUT" || fail 'menu did not expose Delete sandbox'
+rg -q 'container-local data and snapshots' "$DIALOG_OUTPUT" || fail 'delete did not warn about data loss'
+rg -q 'host workspace.*retained' "$DIALOG_OUTPUT" || fail 'delete did not explain workspace preservation'
+assert_equals 1 "$(rg -c '^labctl destroy NVO-20130 --yes$' "$LOG")" 'delete did not pass the explicit confirmation flag once'
+assert_equals 1 "$(rg -c '^labctl ' "$LOG")" 'delete invoked another labctl action such as workspace cleanup'
+rg -q 'destroy NVO-20130: succeeded' "$DIALOG_OUTPUT" || fail 'delete success was not reported'
+rg -q 'Summary: all selected lifecycle actions completed successfully' "$DIALOG_OUTPUT" || fail 'delete success summary was absent'
+
+# Blank, different-ticket, lowercase, Escape, injected, and EOF confirmations cancel.
+for confirmation in '' NVO-20224 nvo-20130 $'\e' 'NVO-20130; touch /tmp/should-not-exist'; do
+	: >"$LOG"
+	write_plan explicit NVO-20130
+	printf '8\n%s\n' "$confirmation" | run_dialog >"$DIALOG_OUTPUT"
+	[[ ! -s $LOG ]] || fail 'nonmatching delete confirmation invoked a command'
+	[[ ! -e $DIALOG_PLAN ]] || fail 'cancelled delete left its plan'
+	rg -q 'Cancelled' "$DIALOG_OUTPUT" || fail 'delete cancellation was not reported'
+done
+: >"$LOG"
+write_plan explicit NVO-20130
+printf '8\n' | run_dialog >"$DIALOG_OUTPUT"
+[[ ! -s $LOG ]] || fail 'EOF delete confirmation invoked a command'
+[[ ! -e $DIALOG_PLAN ]] || fail 'EOF delete confirmation left its plan'
+
+# Bulk deletion is prohibited, even with only one target in an all-scope plan.
+for scope in explicit all; do
+	: >"$LOG"
+	if [[ $scope == explicit ]]; then
+		write_plan explicit NVO-20130 NVO-20224
+	else
+		write_plan all NVO-20130
+	fi
+	printf '8\n' | run_dialog >"$DIALOG_OUTPUT"
+	[[ ! -s $LOG ]] || fail 'bulk delete invoked a command'
+	rg -q 'exactly one.*explicitly' "$DIALOG_OUTPUT" || fail 'bulk delete restriction was not explained'
+	if rg -q 'Type .* to confirm deletion' "$DIALOG_OUTPUT"; then
+		fail 'bulk delete prompted for confirmation instead of rejecting the scope'
+	fi
+done
+
+# Eligibility must still hold when deletion reaches the backend.
+: >"$LOG"
+write_plan explicit NVO-20999
+printf '8\nNVO-20999\n' | run_dialog >"$DIALOG_OUTPUT"
+[[ ! -s $LOG ]] || fail 'delete invoked a command for a destroyed target'
+rg -q 'no longer eligible' "$DIALOG_OUTPUT" || fail 'stale delete target was not reported'
+
+# Failed deletion is surfaced in the dialog and shared action-error capture.
+: >"$LOG"
+write_plan explicit NVO-20130
+printf '8\nNVO-20130\n' | TEST_FAIL_DESTROY=true run_dialog >"$DIALOG_OUTPUT" 2>&1
+assert_equals 1 "$(rg -c '^labctl destroy NVO-20130 --yes$' "$LOG")" 'failed delete was not attempted exactly once'
+assert_equals 1 "$(rg -c '^labctl ' "$LOG")" 'failed delete continued with another action'
+rg -q 'destroy NVO-20130: FAILED' "$DIALOG_OUTPUT" || fail 'delete failure was not reported'
+rg -q 'Summary: 1 lifecycle action.*failed' "$DIALOG_OUTPUT" || fail 'delete failure summary was absent'
+rg -q 'Sandbox Control: destroy NVO-20130' "$TEST_ROOT/state/herdr/action-errors/"*.json || fail 'delete failure was not captured'
+rg -q 'fixture destroy failure' "$TEST_ROOT/state/herdr/action-errors/"*.log || fail 'delete failure output was not retained'
+
 # The unified Herdr-plus action invokes the controller with only the target form value.
-assert_file_equals $'name = "Sandbox: Control"\ntype = "form"\ncommand = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name \'Sandbox: Control\' -- bash ~/.config/herdr-spreader/nvo-sandbox-control.sh"\n\n[form]\nprompt = "Sandbox target (ticket, comma-separated tickets, or all; choose lifecycle or snapshot actions next)"\nplaceholder = "NVO-20130,NVO-20224 or all"' "$QUICK_ACTION"
+assert_file_equals $'name = "Sandbox: Control"\ntype = "form"\ncommand = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name \'Sandbox: Control\' -- bash ~/.config/herdr-spreader/nvo-sandbox-control.sh"\n\n[form]\nprompt = "Sandbox target (ticket, comma-separated tickets, or all; choose lifecycle, snapshot, or single-target deletion next)"\nplaceholder = "NVO-20130,NVO-20224 or all"' "$QUICK_ACTION"
 
 printf '%s\n' 'PASS: nvo-sandbox-control'

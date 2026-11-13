@@ -112,6 +112,9 @@ run_action() {
 		return 1
 	fi
 	printf -v lifecycle_command '%q %q %q' "$HOME/.local/bin/labctl" "$action" "$ticket"
+	if [[ $action == destroy ]]; then
+		lifecycle_command+=' --yes'
+	fi
 	if run_reported "$action $ticket" sg incus-admin -c "$lifecycle_command"; then
 		printf '%s %s: succeeded\n' "$action" "$ticket"
 		return 0
@@ -247,6 +250,27 @@ restore_snapshot() {
 	fi
 }
 
+delete_sandbox() {
+	if [[ $scope != explicit ]] || ((${#tickets[@]} != 1)); then
+		printf 'Deletion requires exactly one sandbox target selected explicitly; "all" is not supported. No sandbox was changed.\n'
+		return
+	fi
+	local ticket=${tickets[0]}
+	printf 'WARNING: Deleting %s stops it and permanently removes its container-local data and snapshots. The host workspace and worktrees are retained.\n' "$ticket"
+	if ! read_response "Type $ticket to confirm deletion (anything else cancels): "; then
+		printf 'Cancelled. Confirmation input was unavailable. No sandbox was deleted.\n'
+		return
+	fi
+	if [[ $response != "$ticket" ]]; then
+		printf 'Cancelled. The ticket did not match. No sandbox was deleted.\n'
+		return
+	fi
+	# run_action revalidates the target after confirmation, before invoking labctl.
+	if run_action destroy "$ticket"; then
+		printf 'Summary: all selected lifecycle actions completed successfully.\n'
+	fi
+}
+
 printf 'Sandbox targets:\n'
 printf '  %s\n' "${tickets[@]}"
 printf '%s\n' 'Choose an operation:'
@@ -257,6 +281,7 @@ printf '%s\n' '  4) Restart — stop then start the selected sandbox target(s)'
 printf '%s\n' '  5) Create snapshot — save one sandbox with a typed name'
 printf '%s\n' '  6) Restore snapshot — restore one saved snapshot and restart it'
 printf '%s\n' '  7) Cancel — make no changes'
+printf '%s\n' '  8) Delete sandbox — permanently delete one sandbox; keep host workspace'
 
 if ! read_response 'Selection: '; then
 	printf 'Cancelled. Menu input was unavailable. No sandbox lifecycle commands were run.\n'
@@ -270,6 +295,7 @@ case $response in
 4) operation=restart ;;
 5) operation='snapshot-create' ;;
 6) operation='snapshot-restore' ;;
+8) operation=destroy ;;
 7 | $'\e')
 	printf 'Cancelled. No sandbox lifecycle commands were run.\n'
 	open_result_shell
@@ -312,6 +338,9 @@ snapshot-restore)
 		restore_snapshot
 	fi
 	;;
+destroy)
+	delete_sandbox
+	;;
 esac
 
 if [[ $operation == status || $operation == start || $operation == stop || $operation == restart ]]; then
@@ -320,6 +349,8 @@ if [[ $operation == status || $operation == start || $operation == stop || $oper
 	else
 		printf 'Summary: %s lifecycle action(s) failed; remaining lifecycle targets were still attempted.\n' "$failures"
 	fi
+elif [[ $operation == destroy ]] && ((failures > 0)); then
+	printf 'Summary: %s lifecycle action(s) failed.\n' "$failures"
 fi
 
 open_result_shell
