@@ -21,6 +21,7 @@ export NVO_WORKSPACE_OWNER=reviewer NVO_WORKSPACE_ROOT="$TEST_ROOT/workspace"
 export TEST_LOG="$TEST_ROOT/commands.log" TEST_COUNTER="$TEST_ROOT/counter"
 export GIT_CONFIG_NOSYSTEM=1 GIT_ALLOW_PROTOCOL=file
 unset NVO_HARNESS_SANDBOX_BOOTSTRAP_WORKER NVO_REVIEW_BRANCH NVO_REVIEW_REPO NVO_REVIEW_PR_NUMBER NVO_REVIEW_GH_HOST
+unset HERDR_ENV HERDR_SOCKET_PATH HERDR_ACTION_ERROR_ACTIVE
 mkdir -p "$HOME/.config/herdr-spreader" "$HOME/.local/bin" "$TEST_ROOT/bin" "$NVO_WORKSPACE_ROOT/master" "$TEST_ROOT/remotes"
 export PATH="$TEST_ROOT/bin:$PATH"
 : >"$TEST_LOG"
@@ -29,7 +30,7 @@ git config --global user.name 'Review Test'
 git config --global user.email review@example.invalid
 git config --global init.defaultBranch 25.16.0
 git config --global "url.file://$TEST_ROOT/remotes/.insteadOf" https://github.extremenetworks.com/Engineering/
-for name in nvo-review.sh nvo-review-notify.sh nvo-harness-worktree-sandbox-base.sh nvo-harness-worktree-sandbox.sh; do
+for name in nvo-review.sh nvo-review-notify.sh herdr-action-errors.py nvo-harness-worktree-sandbox-base.sh nvo-harness-worktree-sandbox.sh; do
   ln -s "$REPO_ROOT/herdr/.config/herdr-spreader/$name" "$HOME/.config/herdr-spreader/$name"
 done
 
@@ -150,7 +151,7 @@ wait_bootstrap() {
   flock -w 5 "$XDG_STATE_HOME/herdr-spreader/$key.lock" true || fail 'worker kept project lock'
 }
 
-# Herdr Plus must invoke the notifier so a failed review action reaches its pane.
+# Herdr Plus uses the shared error runner; no command is sent to its agent pane.
 python3 - "$REPO_ROOT" <<'PY'
 import pathlib, sys, tomllib
 root = pathlib.Path(sys.argv[1])
@@ -158,12 +159,13 @@ action = tomllib.loads((root / 'herdr/.config/herdr/plugins/config/cloudmanic.he
 assert 'nvo-review-notify.sh' in action['command']
 PY
 : >"$TEST_LOG"
-if HERDR_PLUS_PANE_ID='w9:p9' NVO_REVIEW_ERROR_FILE="$TEST_ROOT/review-error" \
-  bash "$HOME/.config/herdr-spreader/nvo-review-notify.sh" 'bad^branch'; then
+if HERDR_PLUS_PANE_ID='w9:p9' \
+  bash "$HOME/.config/herdr-spreader/nvo-review-notify.sh" 'bad^branch' >"$TEST_ROOT/notify-output" 2>&1; then
   fail 'review notifier hid launcher failure'
 fi
-contains 'Error: invalid review branch' "$TEST_ROOT/review-error"
-contains "herdr pane run w9:p9 cat $TEST_ROOT/review-error" "$TEST_LOG"
+contains 'Error: invalid review branch' "$TEST_ROOT/notify-output"
+rg -q 'Error: invalid review branch' "$XDG_STATE_HOME/herdr/action-errors/"*.log || fail 'missing retained review failure log'
+not_contains 'herdr pane run w9:p9' "$TEST_LOG"
 
 # Break caught: launching the legacy fixed-root action instead of four linked worktrees.
 [[ -f $SCRIPT ]] || fail 'tracked Jira-scoped review launcher is missing'

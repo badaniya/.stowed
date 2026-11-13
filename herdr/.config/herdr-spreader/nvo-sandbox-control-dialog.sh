@@ -93,6 +93,16 @@ confirm_enter() {
 	return 0
 }
 
+# Dialogs outlive their quick-action launcher. Each backend operation owns its
+# own capture, independent of any inherited launcher nesting/picker context.
+run_reported() {
+	local label=$1
+	shift
+	HERDR_ACTION_ERROR_ACTIVE=0 HERDR_PLUGIN_ENTRYPOINT_ID=dialog \
+		python3 "$(dirname "${BASH_SOURCE[0]}")/herdr-action-errors.py" run \
+		--name "Sandbox Control: $label" -- "$@"
+}
+
 failures=0
 run_action() {
 	local action=$1 ticket=$2 lifecycle_command
@@ -102,7 +112,7 @@ run_action() {
 		return 1
 	fi
 	printf -v lifecycle_command '%q %q %q' "$HOME/.local/bin/labctl" "$action" "$ticket"
-	if sg incus-admin -c "$lifecycle_command"; then
+	if run_reported "$action $ticket" sg incus-admin -c "$lifecycle_command"; then
 		printf '%s %s: succeeded\n' "$action" "$ticket"
 		return 0
 	fi
@@ -133,7 +143,7 @@ run_snapshot_command() {
 		;;
 	*) return 1 ;;
 	esac
-	sg incus-admin -c "$snapshot_command"
+	run_reported "snapshot $action $ticket" sg incus-admin -c "$snapshot_command"
 }
 
 require_single_snapshot_target() {
@@ -258,8 +268,8 @@ case $response in
 2) operation=start ;;
 3) operation=stop ;;
 4) operation=restart ;;
-5) operation=snapshot-create ;;
-6) operation=snapshot-restore ;;
+5) operation='snapshot-create' ;;
+6) operation='snapshot-restore' ;;
 7 | $'\e')
 	printf 'Cancelled. No sandbox lifecycle commands were run.\n'
 	open_result_shell

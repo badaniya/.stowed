@@ -1,2 +1,2 @@
 name = "Open workspace: Cloud-Testbed-dl2-kafka-lag"
-command = "bash ~/.config/herdr-spreader/cloud-testbed-dl2-kafka-lag.sh"
+command = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name 'Open workspace: Cloud-Testbed-dl2-kafka-lag' -- bash ~/.config/herdr-spreader/cloud-testbed-dl2-kafka-lag.sh"

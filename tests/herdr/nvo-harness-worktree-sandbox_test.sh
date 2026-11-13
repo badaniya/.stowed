@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 # Keep the trust fixture isolated even when the caller uses a Claude profile.
-unset CLAUDE_CONFIG_DIR
+unset CLAUDE_CONFIG_DIR HERDR_ENV HERDR_SOCKET_PATH HERDR_ACTION_ERROR_ACTIVE
 
 REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 SCRIPT="${REPO_ROOT}/herdr/.config/herdr-spreader/nvo-harness-worktree-sandbox.sh"
@@ -85,7 +85,7 @@ elif [[ ${1:-} == instance-project ]]; then
 	printf '%s\n' "${TEST_INSTANCE_PROJECT:-agent-sandbox}"
 elif [[ ${1:-} == stage ]]; then
 	printf 'stage %s\n' "${3:-}" >>"${TEST_LOG:?}"
-	[[ ${TEST_FAIL_STAGE:-} != "${3:-}" ]] || exit 1
+	[[ ${TEST_FAIL_STAGE:-} != "${3:-}" ]] || { printf 'Error: fixture stage failure %s\n' "${3:-}" >&2; exit 1; }
 elif [[ ${1:-} == template && ${TEST_FAIL_TEMPLATE:-false} == true ]]; then
 	exit 1
 fi
@@ -233,3 +233,14 @@ assert_not_contains 'stage platform-tagging-start' "$LOG"
 assert_not_contains 'stage godcapp-services' "$LOG"
 assert_contains 'herdr workspace create' "$LOG"
 assert_not_contains 'NVO_SANDBOX_BOOTSTRAP_SUCCESS' "$STATE_LOG"
+# The launcher already returned success; the worker must still retain/report its failure.
+notification_found=false
+for _ in {1..100}; do
+  if rg -l 'Sandbox bootstrap: NVO-20131' "$TEST_ROOT/state/herdr/action-errors/"*.json >/dev/null 2>&1; then
+    notification_found=true
+    break
+  fi
+  sleep 0.05
+done
+[[ $notification_found == true ]] || fail 'detached bootstrap failure did not reach shared error reporting'
+rg -q 'Error: fixture stage failure pcm-db' "$TEST_ROOT/state/herdr/action-errors/"*.log || fail 'failed stage output was not retained in notification log'

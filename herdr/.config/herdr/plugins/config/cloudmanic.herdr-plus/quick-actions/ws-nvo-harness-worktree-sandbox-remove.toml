@@ -1,6 +1,6 @@
 name = "Destroy sandbox & remove workspace: NVO-WORKTREE-SANDBOX"
 type = "form"
-command = "bash ~/.config/herdr-spreader/nvo-harness-worktree-sandbox-remove-notify.sh '{{.Value}}'"
+command = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name 'Destroy sandbox & remove workspace: NVO-WORKTREE-SANDBOX' -- bash ~/.config/herdr-spreader/nvo-harness-worktree-sandbox-remove-notify.sh '{{.Value}}'"
 
 [form]
 prompt = "DESTRUCTIVE: destroys the sandbox and force-removes worktrees by default; add --keep-worktrees to retain all worktrees"

@@ -9,7 +9,7 @@
       "project": "default",
       "target": "10.77.10.14",
       "ports": "all",
-      "expected_address": "134.141.48.97",
+      "expected_address": "134.141.48.93",
       "proxy": {
         "enabled": true,
         "listen_port": 3128,

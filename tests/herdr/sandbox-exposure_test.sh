@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+unset HERDR_ENV HERDR_SOCKET_PATH HERDR_ACTION_ERROR_ACTIVE
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 LAUNCHER="$ROOT/herdr/.config/herdr-spreader/sandbox-exposure.sh"
 DIALOG="$ROOT/herdr/.config/herdr-spreader/sandbox-exposure-dialog.sh"
@@ -22,9 +23,10 @@ cat >"$TMP/bin/sudo" <<'EOF'
 #!/usr/bin/env bash
 printf '%q ' "$@" >>"$TEST_LOG"
 printf '\n' >>"$TEST_LOG"
+[[ ${TEST_SUDO_FAIL:-false} != true ]] || { printf 'Error: fixture exposure failure\n' >&2; exit 17; }
 EOF
 chmod +x "$TMP/bin/"*
-export PATH="$TMP/bin:$PATH" HOME="$TMP/home" HERDR_PLUS_PANE_ID=w1:p1
+export PATH="$TMP/bin:$PATH" HOME="$TMP/home" HERDR_PLUS_PANE_ID=w1:p1 XDG_STATE_HOME="$TMP/state"
 fail() {
   printf 'FAIL: %s\n' "$*" >&2
   exit 1
@@ -92,6 +94,9 @@ printf 'q\n' | bash "$DIALOG" xiqfwd1
 : >"$TEST_LOG"
 if bash "$DIALOG" 'xiqfwd1;id'; then fail 'dialog accepted invalid name'; fi
 [[ ! -s $TEST_LOG ]] || fail 'invalid dialog input invoked backend'
+if TEST_SUDO_FAIL=true bash "$DIALOG" xiqfwd0 status </dev/null >"$TMP/failure-output" 2>&1; then fail 'dialog swallowed backend failure'; fi
+rg -q 'fixture exposure failure' "$TMP/state/herdr/action-errors/"*.log || fail 'dialog backend failure log missing'
+rg -q 'Sandbox Exposure: status xiqfwd0' "$TMP/state/herdr/action-errors/"*.json || fail 'dialog failure metadata missing'
 python3 - "$ACTION" <<'EOF'
 import sys
 import tomllib
@@ -99,7 +104,8 @@ with open(sys.argv[1], 'rb') as handle:
     action = tomllib.load(handle)
 assert action['name'] == 'Sandbox: Exposure'
 assert action['type'] == 'form'
-assert action['command'] == 'bash ~/.config/herdr-spreader/sandbox-exposure.sh'
+assert 'herdr-action-errors.py run --name' in action['command']
+assert action['command'].endswith('-- bash ~/.config/herdr-spreader/sandbox-exposure.sh')
 assert 'xiqfwd' in action['form']['placeholder']
 EOF
 printf 'PASS: sandbox exposure launcher/dialog\n'

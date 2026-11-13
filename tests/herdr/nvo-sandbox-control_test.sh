@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+unset HERDR_ENV HERDR_SOCKET_PATH HERDR_ACTION_ERROR_ACTIVE
 
 REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 SCRIPT="${REPO_ROOT}/herdr/.config/herdr-spreader/nvo-sandbox-control.sh"
@@ -82,6 +83,7 @@ if [[ $1 == instance-project ]]; then
 	exit 0
 fi
 if [[ ${TEST_FAIL_STOP_FOR:-} == "$2" && $1 == stop ]]; then
+	printf 'Error: fixture lifecycle failure %s\n' "$2" >&2
 	exit 1
 fi
 EOF_LABCTL
@@ -403,7 +405,16 @@ assert_equals 1 "$(rg -c '^incus --project test-project snapshot restore NVO-201
 if rg -q '^labctl start ' "$LOG"; then
 	fail 'restore failure restarted the sandbox'
 fi
+# Lifecycle and snapshot failures in the separate dialog must reach shared logs.
+rg -q 'Sandbox Control: stop NVO-20130' "$TEST_ROOT/state/herdr/action-errors/"*.json || fail 'lifecycle failure was not reported'
+rg -q 'Sandbox Control: snapshot restore NVO-20130' "$TEST_ROOT/state/herdr/action-errors/"*.json || fail 'snapshot failure was not reported'
+rg -q 'Error: fixture lifecycle failure NVO-20130' "$TEST_ROOT/state/herdr/action-errors/"*.log || fail 'lifecycle failure output was not retained'
+logs_before=$(find "$TEST_ROOT/state/herdr/action-errors" -name '*.json' | wc -l)
+write_plan explicit NVO-20130
+printf '7\n' | run_dialog >"$TEST_ROOT/cancel-output" 2>&1
+logs_after=$(find "$TEST_ROOT/state/herdr/action-errors" -name '*.json' | wc -l)
+assert_equals "$logs_before" "$logs_after" 'normal cancellation generated an error notification'
 # The unified Herdr-plus action invokes the controller with only the target form value.
-assert_file_equals $'name = "Sandbox: Control"\ntype = "form"\ncommand = "bash ~/.config/herdr-spreader/nvo-sandbox-control.sh"\n\n[form]\nprompt = "Sandbox target (ticket, comma-separated tickets, or all; choose lifecycle or snapshot actions next)"\nplaceholder = "NVO-20130,NVO-20224 or all"' "$QUICK_ACTION"
+assert_file_equals $'name = "Sandbox: Control"\ntype = "form"\ncommand = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name \'Sandbox: Control\' -- bash ~/.config/herdr-spreader/nvo-sandbox-control.sh"\n\n[form]\nprompt = "Sandbox target (ticket, comma-separated tickets, or all; choose lifecycle or snapshot actions next)"\nplaceholder = "NVO-20130,NVO-20224 or all"' "$QUICK_ACTION"
 
 printf '%s\n' 'PASS: nvo-sandbox-control'

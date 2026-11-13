@@ -71,7 +71,12 @@ case $choice in
 esac
 # No eval, shell command strings, confirmation bypass, or sudoers changes.
 result=0
-sudo -- python3 "$backend" "${args[@]}" || result=$?
+# This operation runs after the launcher has returned. Own its failure report
+# here, before replacing the dialog with its inspection shell.
+HERDR_ACTION_ERROR_ACTIVE=0 HERDR_PLUGIN_ENTRYPOINT_ID=dialog \
+  python3 "$script_dir/herdr-action-errors.py" run \
+  --name "Sandbox Exposure: ${args[0]} $name" -- \
+  sudo -- python3 "$backend" "${args[@]}" || result=$?
 printf '\nExposure command exited with status %d.\n' "$result"
 if [[ -t 0 ]]; then
   printf 'Leaving this pane open for inspection.\n'

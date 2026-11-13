@@ -1,6 +1,6 @@
 name = "Open workspace & bootstrap sandbox: NVO-WORKTREE-SANDBOX"
 type = "form"
-command = "bash ~/.config/herdr-spreader/nvo-harness-worktree-sandbox-notify.sh '{{.Value}}'"
+command = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name 'Open workspace & bootstrap sandbox: NVO-WORKTREE-SANDBOX' -- bash ~/.config/herdr-spreader/nvo-harness-worktree-sandbox-notify.sh '{{.Value}}'"
 
 [form]
 prompt = "NVO ticket, upstream version, optional --restore-harness (creates the harness worktree, then boots its Incus sandbox)"

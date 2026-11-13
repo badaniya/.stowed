@@ -1,2 +1,2 @@
 name = "Open workspace: NG-AIO-hliang-vm"
-command = "bash ~/.config/herdr-spreader/ng-aio-hliang-vm.sh"
+command = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name 'Open workspace: NG-AIO-hliang-vm' -- bash ~/.config/herdr-spreader/ng-aio-hliang-vm.sh"

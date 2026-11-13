@@ -1,2 +1,2 @@
 name = "Open workspace: Cloud-Testbed-lab1"
-command = "bash ~/.config/herdr-spreader/cloud-testbed-lab1.sh"
+command = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name 'Open workspace: Cloud-Testbed-lab1' -- bash ~/.config/herdr-spreader/cloud-testbed-lab1.sh"

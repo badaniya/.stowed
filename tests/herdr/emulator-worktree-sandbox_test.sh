@@ -9,9 +9,10 @@ fail() {
 [[ -f $SCRIPTS/emulator-worktree-sandbox.sh ]] || fail 'EMULATOR launcher is missing'
 TEST_ROOT=$(mktemp -d)
 trap 'rm -rf "$TEST_ROOT"' EXIT
-export HOME="$TEST_ROOT/home" TEST_LOG="$TEST_ROOT/commands.log"
+export HOME="$TEST_ROOT/home" TEST_LOG="$TEST_ROOT/commands.log" XDG_STATE_HOME="$TEST_ROOT/state"
+unset HERDR_ENV HERDR_SOCKET_PATH HERDR_ACTION_ERROR_ACTIVE
 mkdir -p "$HOME/.config/herdr-spreader" "$TEST_ROOT/bin"
-for name in emulator-worktree-sandbox.sh emulator-worktree-sandbox-notify.sh; do
+for name in emulator-worktree-sandbox.sh emulator-worktree-sandbox-notify.sh herdr-action-errors.py; do
   cp "$SCRIPTS/$name" "$HOME/.config/herdr-spreader/$name"
 done
 export PATH="$TEST_ROOT/bin:$PATH"
@@ -51,8 +52,10 @@ HERDR_PLUS_PANE_ID=w9:p1 bash "$notify" 'EMULATOR-10 25.17.0'
 if rg -q '^herdr ' "$TEST_LOG"; then fail 'success notified a failure'; fi
 # Sandbox failures are surfaced, without accidentally controlling the real Herdr.
 : >"$TEST_LOG"
-if TEST_FAIL=true HERDR_PLUS_PANE_ID=w9:p1 bash "$notify" 'EMULATOR-10 25.17.0'; then fail 'notification wrapper swallowed failure'; fi
-rg -Fq 'herdr pane run w9:p1 cat /tmp/emulator-worktree-sandbox-last-error' "$TEST_LOG" || fail 'missing invoking-pane failure message'
+if TEST_FAIL=true HERDR_PLUS_PANE_ID=w9:p1 bash "$notify" 'EMULATOR-10 25.17.0' >"$TEST_ROOT/output" 2>&1; then fail 'notification wrapper swallowed failure'; fi
+rg -Fq 'fixture sandbox failure' "$TEST_ROOT/output" || fail 'missing failure output'
+rg -q 'fixture sandbox failure' "$XDG_STATE_HOME/herdr/action-errors/"*.log || fail 'missing retained failure log'
+if rg -q '^herdr ' "$TEST_LOG"; then fail 'failure injected input into an existing pane'; fi
 if TEST_FAIL=true HERDR_PLUS_PANE_ID='' bash "$notify" 'EMULATOR-10 25.17.0' >"$TEST_ROOT/output" 2>&1; then fail 'no-pane wrapper swallowed failure'; fi
 rg -Fq 'fixture sandbox failure' "$TEST_ROOT/output" || fail 'no-pane error was not surfaced'
 python3 - "$REPO_ROOT" <<'PY'
@@ -63,7 +66,8 @@ with action.open('rb') as f:
     data = tomllib.load(f)
 assert data['type'] == 'form'
 assert 'EMULATOR-WORKTREE-SANDBOX' in data['name']
-assert data['command'] == "bash ~/.config/herdr-spreader/emulator-worktree-sandbox-notify.sh '{{.Value}}'"
+assert 'herdr-action-errors.py run --name' in data['command']
+assert data['command'].endswith("-- bash ~/.config/herdr-spreader/emulator-worktree-sandbox-notify.sh '{{.Value}}'")
 assert 'master' in data['form']['prompt']
 assert 'EMULATOR-10' in data['form']['placeholder']
 PY

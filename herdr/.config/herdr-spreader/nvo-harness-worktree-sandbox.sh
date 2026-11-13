@@ -411,6 +411,18 @@ if [[ $bootstrap_worker == true ]]; then
 	: >"$bootstrap_ready_file"
 	if ! bootstrap_sandbox; then
 		printf '%s\n' 'NVO_SANDBOX_BOOTSTRAP_FAILED'
+		# The action launcher already returned. Snapshot this worker's logs and
+		# failed stages explicitly; do not inherit its duplicate-report guard.
+		failure_logs=(--source-log "$state_log")
+		for stage in shared pcm-db platform-tagging-build platform-tagging-start godcapp-build godcapp-infra godcapp-services; do
+			if stage_is_failed "$stage"; then
+				failure_logs+=(--source-log "$(stage_log_path "$stage")")
+			fi
+		done
+		python3 "$(dirname "${BASH_SOURCE[0]}")/herdr-action-errors.py" notify \
+			--name "Sandbox bootstrap: $ticket" --status 1 \
+			--message "Error: sandbox bootstrap failed for $ticket; see the attached worker and stage logs." \
+			"${failure_logs[@]}" || printf 'Warning: unable to report bootstrap failure; log: %s\n' "$state_log" >&2
 		exit 1
 	fi
 	exit 0

@@ -10,9 +10,10 @@ fail() {
 [[ -f $SCRIPTS/emulator-worktree-sandbox-remove.sh ]] || fail 'EMULATOR destroy launcher is missing'
 TEST_ROOT=$(mktemp -d)
 trap 'rm -rf "$TEST_ROOT"' EXIT
-export HOME="$TEST_ROOT/home" TEST_LOG="$TEST_ROOT/commands.log"
+export HOME="$TEST_ROOT/home" TEST_LOG="$TEST_ROOT/commands.log" XDG_STATE_HOME="$TEST_ROOT/state"
+unset HERDR_ENV HERDR_SOCKET_PATH HERDR_ACTION_ERROR_ACTIVE
 mkdir -p "$HOME/.config/herdr-spreader" "$TEST_ROOT/bin"
-for name in emulator-worktree-sandbox-remove.sh emulator-worktree-sandbox-remove-notify.sh; do
+for name in emulator-worktree-sandbox-remove.sh emulator-worktree-sandbox-remove-notify.sh herdr-action-errors.py; do
   cp "$SCRIPTS/$name" "$HOME/.config/herdr-spreader/$name"
 done
 export PATH="$TEST_ROOT/bin:$PATH"
@@ -54,8 +55,10 @@ if TEST_FAIL=true bash "$launcher" EMULATOR-10 >"$TEST_ROOT/output" 2>&1; then f
 HERDR_PLUS_PANE_ID=w9:p1 bash "$notify" EMULATOR-10
 if rg -q '^herdr ' "$TEST_LOG"; then fail 'success notified a failure'; fi
 : >"$TEST_LOG"
-if TEST_FAIL=true HERDR_PLUS_PANE_ID=w9:p1 bash "$notify" EMULATOR-10; then fail 'notification wrapper swallowed failure'; fi
-rg -Fxq 'herdr pane run w9:p1 cat /tmp/emulator-worktree-sandbox-remove-last-error' "$TEST_LOG" || fail 'missing invoking-pane failure message'
+if TEST_FAIL=true HERDR_PLUS_PANE_ID=w9:p1 bash "$notify" EMULATOR-10 >"$TEST_ROOT/output" 2>&1; then fail 'notification wrapper swallowed failure'; fi
+rg -Fq 'fixture destroy failure' "$TEST_ROOT/output" || fail 'missing failure output'
+rg -q 'fixture destroy failure' "$XDG_STATE_HOME/herdr/action-errors/"*.log || fail 'missing retained failure log'
+if rg -q '^herdr ' "$TEST_LOG"; then fail 'failure injected input into an existing pane'; fi
 if TEST_FAIL=true HERDR_PLUS_PANE_ID='' bash "$notify" EMULATOR-10 >"$TEST_ROOT/output" 2>&1; then fail 'no-pane wrapper swallowed failure'; fi
 rg -Fq 'fixture destroy failure' "$TEST_ROOT/output" || fail 'no-pane failure was not surfaced'
 python3 - "$REPO_ROOT" <<'PY'
@@ -66,7 +69,8 @@ with action.open('rb') as f:
     data = tomllib.load(f)
 assert data['type'] == 'form'
 assert data['name'] == 'Destroy sandbox & remove workspace: EMULATOR-WORKTREE-SANDBOX'
-assert data['command'] == "bash ~/.config/herdr-spreader/emulator-worktree-sandbox-remove-notify.sh '{{.Value}}'"
+assert 'herdr-action-errors.py run --name' in data['command']
+assert data['command'].endswith("-- bash ~/.config/herdr-spreader/emulator-worktree-sandbox-remove-notify.sh '{{.Value}}'")
 assert 'DESTRUCTIVE' in data['form']['prompt']
 assert 'cloudemu' in data['form']['prompt']
 assert '--keep-worktrees' in data['form']['prompt']

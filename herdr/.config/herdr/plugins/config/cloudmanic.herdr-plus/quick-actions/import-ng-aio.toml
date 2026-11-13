@@ -1,6 +1,6 @@
 name = "Import new NG-AIO workspace"
 type = "form"
-command = "bash ~/.config/herdr-spreader/import-ng-aio.sh '{{.Value}}'"
+command = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name 'Import new NG-AIO workspace' -- bash ~/.config/herdr-spreader/import-ng-aio.sh '{{.Value}}'"
 
 [form]
 prompt = "NG-AIO name (e.g. vaughan-vm)"
