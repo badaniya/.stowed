@@ -65,7 +65,7 @@ labctl_incus_ensure_profile() {
 
 	labctl_run incus profile set "$LABCTL_INCUS_PROFILE" security.privileged=false
 	labctl_run incus profile set "$LABCTL_INCUS_PROFILE" security.nesting=true
-	labctl_run incus profile set "$LABCTL_INCUS_PROFILE" limits.cpu=2
+	labctl_run incus profile set "$LABCTL_INCUS_PROFILE" limits.cpu=4
 	labctl_run incus profile set "$LABCTL_INCUS_PROFILE" limits.memory=6GiB
 	labctl_run incus profile set "$LABCTL_INCUS_PROFILE" limits.memory.enforce=hard
 	labctl_run incus profile set "$LABCTL_INCUS_PROFILE" limits.memory.swap=false
