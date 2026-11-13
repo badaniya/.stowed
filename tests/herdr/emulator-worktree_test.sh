@@ -111,6 +111,28 @@ git -C "$bare" branch --unset-upstream fixture/cloudemu/EMULATOR-22
 if emulator_worktree_remove "$root" fixture EMULATOR-22 >"$TEST_ROOT/output" 2>&1; then fail 'removed branch with unknown upstream'; fi
 [[ -f $root/EMULATOR-22/cloudemu/.git ]] || fail 'upstream validation happened after worktree deletion'
 git -C "$bare" branch -u origin/master fixture/cloudemu/EMULATOR-22 >/dev/null
+# Publishing a ticket changes its upstream from master to its own origin branch.
+# Destructive removal must still discard tracked, untracked and ignored residue.
+run_prepare EMULATOR-24
+published_branch=fixture/cloudemu/EMULATOR-24
+published_worktree="$root/EMULATOR-24/cloudemu"
+git -C "$bare" config --add remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'
+git -C "$published_worktree" push -qu origin "$published_branch"
+[[ $(git -C "$published_worktree" rev-parse --symbolic-full-name '@{upstream}') == "refs/remotes/origin/$published_branch" ]] || fail 'fixture does not track published ticket'
+printf 'modified\n' >>"$published_worktree/README"
+mkdir -p "$published_worktree/untracked/nested" "$published_worktree/build"
+printf 'untracked\n' >"$published_worktree/untracked/nested/artifact"
+printf 'build/\n' >"$published_worktree/.gitignore"
+printf 'ignored\n' >"$published_worktree/build/artifact"
+emulator_worktree_remove "$root" fixture EMULATOR-24 >"$TEST_ROOT/output" 2>&1 || fail "published dirty ticket removal: $(<"$TEST_ROOT/output")"
+[[ ! -e $published_worktree ]] || fail 'published worktree residue not removed'
+if git -C "$bare" show-ref --verify --quiet "refs/heads/$published_branch"; then fail 'published local ticket branch not removed'; fi
+git -C "$TEST_ROOT/remote" show-ref --verify --quiet "refs/heads/$published_branch" || fail 'cleanup deleted published remote branch'
+# Tracking another ticket must still fail before removing files.
+git -C "$bare" branch -u "origin/$published_branch" fixture/cloudemu/EMULATOR-22 >/dev/null
+if emulator_worktree_remove "$root" fixture EMULATOR-22 >"$TEST_ROOT/output" 2>&1; then fail 'removed branch tracking another ticket'; fi
+[[ -f $root/EMULATOR-22/cloudemu/.git ]] || fail 'removed worktree tracking another ticket'
+git -C "$bare" branch -u origin/master fixture/cloudemu/EMULATOR-22 >/dev/null
 # Removal uses the same identity guards; force is owned by the sandbox action.
 declare -F emulator_worktree_remove >/dev/null || fail 'cloudemu removal helper is missing'
 emulator_worktree_remove "$root" fixture EMULATOR-10

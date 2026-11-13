@@ -112,7 +112,9 @@ emulator_worktree_remove() {
   fi
   if git -C "$bare" show-ref --verify --quiet "refs/heads/$branch"; then
     upstream=$(git -C "$bare" for-each-ref --format='%(upstream)' "refs/heads/$branch") || return 1
-    [[ $upstream == refs/remotes/origin/master ]] || {
+    # Publishing with push -u switches tracking from master to this ticket.
+    # Neither state prevents destructive cleanup, including untracked files.
+    [[ $upstream == refs/remotes/origin/master || $upstream == "refs/remotes/origin/$branch" ]] || {
       printf 'Error: refusing to delete cloudemu branch with unexpected upstream: %s\n' "$branch" >&2
       return 1
     }
