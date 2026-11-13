@@ -280,8 +280,8 @@ printf '%s\n' '  3) Stop — stop the selected sandbox target(s)'
 printf '%s\n' '  4) Restart — stop then start the selected sandbox target(s)'
 printf '%s\n' '  5) Create snapshot — save one sandbox with a typed name'
 printf '%s\n' '  6) Restore snapshot — restore one saved snapshot and restart it'
-printf '%s\n' '  7) Cancel — make no changes'
-printf '%s\n' '  8) Delete sandbox — permanently delete one sandbox; keep host workspace'
+printf '%s\n' '  7) Delete sandbox — permanently delete one sandbox; keep host workspace'
+printf '%s\n' '  8) Cancel — make no changes'
 
 if ! read_response 'Selection: '; then
 	printf 'Cancelled. Menu input was unavailable. No sandbox lifecycle commands were run.\n'
@@ -295,8 +295,8 @@ case $response in
 4) operation=restart ;;
 5) operation='snapshot-create' ;;
 6) operation='snapshot-restore' ;;
-8) operation=destroy ;;
-7 | $'\e')
+7) operation=destroy ;;
+8 | $'\e')
 	printf 'Cancelled. No sandbox lifecycle commands were run.\n'
 	open_result_shell
 	;;

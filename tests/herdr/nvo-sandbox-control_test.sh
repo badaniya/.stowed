@@ -273,7 +273,7 @@ assert_equals 1 "$(rg -c '^labctl start ' "$LOG")" 'all-scope start did not run 
 # Menu cancellation performs no lifecycle or snapshot mutation and removes the trusted plan.
 : >"$LOG"
 write_plan explicit NVO-20130
-printf '7\n' | run_dialog
+printf '8\n' | run_dialog
 [[ ! -e $DIALOG_PLAN ]] || fail 'cancelled dialog did not delete its plan'
 if rg -q '^labctl (start|stop) |^incus .*snapshot (create|restore) ' "$LOG"; then
 	fail 'menu cancel invoked a mutating command'
@@ -418,15 +418,16 @@ rg -q 'Sandbox Control: snapshot restore NVO-20130' "$TEST_ROOT/state/herdr/acti
 rg -q 'Error: fixture lifecycle failure NVO-20130' "$TEST_ROOT/state/herdr/action-errors/"*.log || fail 'lifecycle failure output was not retained'
 logs_before=$(find "$TEST_ROOT/state/herdr/action-errors" -name '*.json' | wc -l)
 write_plan explicit NVO-20130
-printf '7\n' | run_dialog >"$TEST_ROOT/cancel-output" 2>&1
+printf '8\n' | run_dialog >"$TEST_ROOT/cancel-output" 2>&1
 logs_after=$(find "$TEST_ROOT/state/herdr/action-errors" -name '*.json' | wc -l)
 assert_equals "$logs_before" "$logs_after" 'normal cancellation generated an error notification'
 # Delete delegates exactly one confirmed target to labctl, not workspace cleanup.
 : >"$LOG"
 write_plan explicit NVO-20130
-printf '8\nNVO-20130\n' | run_dialog >"$DIALOG_OUTPUT" || fail 'Delete sandbox operation is unavailable or failed'
+printf '7\nNVO-20130\n' | run_dialog >"$DIALOG_OUTPUT" || fail 'Delete sandbox operation is unavailable or failed'
 [[ ! -e $DIALOG_PLAN ]] || fail 'delete dialog did not remove its plan'
-rg -q '8\).*Delete sandbox' "$DIALOG_OUTPUT" || fail 'menu did not expose Delete sandbox'
+rg -q '7\).*Delete sandbox' "$DIALOG_OUTPUT" || fail 'menu did not expose Delete sandbox'
+assert_equals '  8) Cancel — make no changes' "$(rg '^  [0-9]+\)' "$DIALOG_OUTPUT" | tail -n 1)" 'Cancel was not the last menu option'
 rg -q 'container-local data and snapshots' "$DIALOG_OUTPUT" || fail 'delete did not warn about data loss'
 rg -q 'host workspace.*retained' "$DIALOG_OUTPUT" || fail 'delete did not explain workspace preservation'
 assert_equals 1 "$(rg -c '^labctl destroy NVO-20130 --yes$' "$LOG")" 'delete did not pass the explicit confirmation flag once'
@@ -438,14 +439,14 @@ rg -q 'Summary: all selected lifecycle actions completed successfully' "$DIALOG_
 for confirmation in '' NVO-20224 nvo-20130 $'\e' 'NVO-20130; touch /tmp/should-not-exist'; do
 	: >"$LOG"
 	write_plan explicit NVO-20130
-	printf '8\n%s\n' "$confirmation" | run_dialog >"$DIALOG_OUTPUT"
+	printf '7\n%s\n' "$confirmation" | run_dialog >"$DIALOG_OUTPUT"
 	[[ ! -s $LOG ]] || fail 'nonmatching delete confirmation invoked a command'
 	[[ ! -e $DIALOG_PLAN ]] || fail 'cancelled delete left its plan'
 	rg -q 'Cancelled' "$DIALOG_OUTPUT" || fail 'delete cancellation was not reported'
 done
 : >"$LOG"
 write_plan explicit NVO-20130
-printf '8\n' | run_dialog >"$DIALOG_OUTPUT"
+printf '7\n' | run_dialog >"$DIALOG_OUTPUT"
 [[ ! -s $LOG ]] || fail 'EOF delete confirmation invoked a command'
 [[ ! -e $DIALOG_PLAN ]] || fail 'EOF delete confirmation left its plan'
 
@@ -457,7 +458,7 @@ for scope in explicit all; do
 	else
 		write_plan all NVO-20130
 	fi
-	printf '8\n' | run_dialog >"$DIALOG_OUTPUT"
+	printf '7\n' | run_dialog >"$DIALOG_OUTPUT"
 	[[ ! -s $LOG ]] || fail 'bulk delete invoked a command'
 	rg -q 'exactly one.*explicitly' "$DIALOG_OUTPUT" || fail 'bulk delete restriction was not explained'
 	if rg -q 'Type .* to confirm deletion' "$DIALOG_OUTPUT"; then
@@ -468,14 +469,14 @@ done
 # Eligibility must still hold when deletion reaches the backend.
 : >"$LOG"
 write_plan explicit NVO-20999
-printf '8\nNVO-20999\n' | run_dialog >"$DIALOG_OUTPUT"
+printf '7\nNVO-20999\n' | run_dialog >"$DIALOG_OUTPUT"
 [[ ! -s $LOG ]] || fail 'delete invoked a command for a destroyed target'
 rg -q 'no longer eligible' "$DIALOG_OUTPUT" || fail 'stale delete target was not reported'
 
 # Failed deletion is surfaced in the dialog and shared action-error capture.
 : >"$LOG"
 write_plan explicit NVO-20130
-printf '8\nNVO-20130\n' | TEST_FAIL_DESTROY=true run_dialog >"$DIALOG_OUTPUT" 2>&1
+printf '7\nNVO-20130\n' | TEST_FAIL_DESTROY=true run_dialog >"$DIALOG_OUTPUT" 2>&1
 assert_equals 1 "$(rg -c '^labctl destroy NVO-20130 --yes$' "$LOG")" 'failed delete was not attempted exactly once'
 assert_equals 1 "$(rg -c '^labctl ' "$LOG")" 'failed delete continued with another action'
 rg -q 'destroy NVO-20130: FAILED' "$DIALOG_OUTPUT" || fail 'delete failure was not reported'
