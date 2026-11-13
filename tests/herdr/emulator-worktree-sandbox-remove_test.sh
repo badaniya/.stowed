@@ -40,16 +40,28 @@ for form in single positional; do
       bash "$launcher" EMULATOR-10
     fi
     printf 'arg=EMULATOR-10\n' >"$TEST_ROOT/expected"
-    [[ -z $flag ]] || printf 'arg=%s\n' "$flag" >>"$TEST_ROOT/expected"
+    printf 'arg=%s\n' "${flag:---force}" >>"$TEST_ROOT/expected"
     cmp -s "$TEST_ROOT/expected" "$TEST_LOG" || fail "incorrect delegation: $form $flag"
   done
 done
-for input in '' 'NVO-10' '../EMULATOR-10' 'EMULATOR-' 'EMULATOR-10x' 'emulator-10' 'EMULATOR-10 --unknown' 'EMULATOR-10 extra' 'EMULATOR-10 --force --keep-worktrees' 'EMULATOR-10 --keep-worktrees --force' 'EMULATOR-10; touch nope'; do
+for ticket in 'EMULATOR - 11' 'EMULATOR- 11' 'EMULATOR -11'; do
+  : >"$TEST_LOG"
+  if bash "$launcher" "$ticket" >"$TEST_ROOT/output" 2>&1; then fail "accepted spaced ticket: $ticket"; fi
+  [[ ! -s $TEST_LOG ]] || fail 'spaced ticket delegated sandbox destruction'
+  rg -Fq 'Error: invalid ticket input' "$TEST_ROOT/output" || fail 'missing invalid-ticket error'
+  rg -Fq 'EMULATOR-11 (no spaces around the hyphen)' "$TEST_ROOT/output" || fail 'missing ticket format hint'
+  printf -v received '%q' "$ticket"
+  rg -Fq "$received" "$TEST_ROOT/output" || fail 'missing rejected input'
+done
+for input in 'EMULATOR - 1 1' 'EMULATOR - 11x' 'EMULATOR - 11 --unknown' 'EMULATOR - 11; touch nope' '' 'NVO-10' '../EMULATOR-10' 'EMULATOR-' 'EMULATOR-10x' 'emulator-10' 'EMULATOR-10 --unknown' 'EMULATOR-10 extra' 'EMULATOR-10 --force --keep-worktrees' 'EMULATOR-10 --keep-worktrees --force' 'EMULATOR-10; touch nope'; do
   : >"$TEST_LOG"
   if bash "$launcher" "$input" >"$TEST_ROOT/output" 2>&1; then fail "accepted invalid input: $input"; fi
   [[ ! -s $TEST_LOG ]] || fail 'invalid input delegated sandbox destruction'
+  rg -Fq 'Error:' "$TEST_ROOT/output" || fail "missing validation error: $input"
 done
 if bash "$launcher" >"$TEST_ROOT/output" 2>&1; then fail 'accepted missing arguments'; fi
+rg -Fq 'force-removes worktrees by default' "$TEST_ROOT/output" || fail 'usage does not explain force default'
+rg -Fq 'Error: missing ticket' "$TEST_ROOT/output" || fail 'missing missing-ticket error'
 if TEST_FAIL=true bash "$launcher" EMULATOR-10 >"$TEST_ROOT/output" 2>&1; then fail 'delegate failure ignored'; fi
 : >"$TEST_LOG"
 HERDR_PLUS_PANE_ID=w9:p1 bash "$notify" EMULATOR-10
