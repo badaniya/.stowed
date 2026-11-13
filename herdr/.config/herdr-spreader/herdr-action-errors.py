@@ -67,10 +67,14 @@ def report_failure(log):
             fcntl.flock(lock, fcntl.LOCK_EX)
             workspaces = api('workspace.list', {}).get('workspaces', [])
             workspace = next((item for item in workspaces if item.get('label') == 'HERDR-ACTION-ERRORS'), None)
+            placement = {'placement': 'tab'}
             if workspace is None:
-                workspace = api('workspace.create', {'label': 'HERDR-ACTION-ERRORS', 'cwd': str(log.parent), 'focus': False})['workspace']
+                created = api('workspace.create', {'label': 'HERDR-ACTION-ERRORS', 'cwd': str(log.parent), 'focus': False})
+                workspace = created['workspace']
+                # Cover only the fresh root pane; later reports get new tabs.
+                placement = {'placement': 'zoomed', 'target_pane_id': created['root_pane']['pane_id']}
             api('plugin.pane.open', {
-                'plugin_id': PLUGIN_ID, 'entrypoint': 'log', 'placement': 'tab',
+                'plugin_id': PLUGIN_ID, 'entrypoint': 'log', **placement,
                 'workspace_id': workspace['workspace_id'], 'focus': False,
                 'cwd': str(log.parent), 'env': env,
             })

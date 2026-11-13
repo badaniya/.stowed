@@ -175,12 +175,44 @@ class ReporterTests(unittest.TestCase):
         self.assertNotIn('pane.run', methods)
         self.assertNotIn('pane.send_input', methods)
 
+    def test_first_report_uses_new_workspaces_initial_tab(self):
+        self.workspaces = []
+        self.report()
+        log_views = [params for method, params in self.calls
+                     if method == 'plugin.pane.open' and params['entrypoint'] == 'log']
+        self.assertEqual(len(log_views), 1)
+        self.assertEqual(log_views[0]['placement'], 'zoomed')
+        self.assertEqual(log_views[0]['target_pane_id'], 'wNew:p1')
+        self.assertEqual(log_views[0]['workspace_id'], 'wNew')
+        self.assertEqual(log_views[0]['env']['HERDR_ACTION_ERROR_LOG'], str(self.log))
+        self.assertFalse(log_views[0]['focus'])
+        methods = [method for method, _ in self.calls]
+        self.assertNotIn('pane.run', methods)
+        self.assertNotIn('pane.send_input', methods)
+        self.report()
+        later_log = [params for method, params in self.calls
+                     if method == 'plugin.pane.open' and params['entrypoint'] == 'log'][-1]
+        self.assertEqual(later_log['placement'], 'tab')
+        self.assertNotIn('target_pane_id', later_log)
+
     def test_creates_workspace_only_once_for_successive_reports(self):
         self.workspaces = []
         self.report()
         self.report()
         self.assertEqual(sum(method == 'workspace.create' for method, _ in self.calls), 1)
         self.assertEqual(sum(method == 'plugin.pane.open' and params['placement'] == 'popup' for method, params in self.calls), 2)
+
+    def test_first_log_failure_does_not_prevent_popup(self):
+        self.workspaces = []
+        original = self.api
+        def fail(method, params):
+            if method == 'plugin.pane.open' and params['placement'] == 'zoomed':
+                raise RuntimeError('fixture initial log failure')
+            return original(method, params)
+        with patch.object(self.module, 'api', side_effect=fail):
+            self.module.report_failure(self.log)
+        self.assertTrue(any(method == 'plugin.pane.open' and params['placement'] == 'popup'
+                            for method, params in self.calls))
 
     def test_log_tab_failure_does_not_prevent_popup(self):
         original = self.api
@@ -207,6 +239,10 @@ class ReporterTests(unittest.TestCase):
                 thread.join(timeout=3)
                 self.assertFalse(thread.is_alive())
         self.assertEqual(sum(method == 'workspace.create' for method, _ in self.calls), 1)
+        placements = [params['placement'] for method, params in self.calls
+                      if method == 'plugin.pane.open' and params['entrypoint'] == 'log']
+        self.assertEqual(placements.count('zoomed'), 1)
+        self.assertEqual(placements.count('tab'), 2)
 
     def test_deferred_report_waits_for_picker_to_disappear(self):
         with patch.object(self.module, 'api', side_effect=[{}, {}, RuntimeError('pane not found')]) as fake_api, \

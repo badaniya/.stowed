@@ -7,7 +7,7 @@ All configured quick actions in `../herdr/plugins/config/cloudmanic.herdr-plus/q
 - Run the original command with its existing arguments, working directory, environment, and stdin. Stream combined stdout/stderr while retaining a temporary capture.
 - Success: return zero and discard the capture; no notification.
 - Failure: preserve the command's exit status and keep a unique private log and metadata file.
-- Reuse the workspace named `HERDR-ACTION-ERRORS`, or create it without taking focus. Open a new tab displaying the complete log and leave a shell there. Tabs are labeled with time and action name.
+- Reuse the workspace named `HERDR-ACTION-ERRORS`, or create it without taking focus. Display the first log over the newly created workspace's initial pane, so its first tab is used rather than left empty. Later errors open new log tabs without touching existing panes. Each log view displays the complete log and leaves a shell there; tabs are labeled with time and action name.
 - Show a centered, scrollable terminal popup using the terminal-default background, with action name, status, error summary, log path, and recent output. Enter, Escape, or `q` dismisses it; arrows/Page Up/Page Down scroll.
 - When called inside the quick-action picker, a detached reporter waits for the picker to exit before opening the popup.
 - Never type commands into existing panes. Do not change `[ui.toast]`; agent system notifications remain unchanged.
