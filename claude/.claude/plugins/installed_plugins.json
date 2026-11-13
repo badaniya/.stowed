@@ -33,21 +33,21 @@
     "superpowers@claude-plugins-official": [
       {
         "scope": "user",
-        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/superpowers/7.0.0",
-        "version": "7.0.0",
+        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/superpowers/7.0.2",
+        "version": "7.0.2",
         "installedAt": "2026-05-29T18:37:36.382Z",
-        "lastUpdated": "2026-10-16T15:47:48.698Z",
-        "gitCommitSha": "bb92a77741419a4ab5f06e711a283343f1ada0c3"
+        "lastUpdated": "2026-11-12T19:48:42.793Z",
+        "gitCommitSha": "22f0b463e7a5e579904dd6211a520321035526f7"
       }
     ],
     "github@claude-plugins-official": [
       {
         "scope": "user",
-        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/github/e37d307bd9f8",
-        "version": "e37d307bd9f8",
+        "installPath": "/home/badaniya/.claude/plugins/cache/claude-plugins-official/github/23c304a6387e",
+        "version": "23c304a6387e",
         "installedAt": "2026-06-04T15:46:05.709Z",
-        "lastUpdated": "2026-11-11T20:29:12.525Z",
-        "gitCommitSha": "e37d307bd9f85dab6fea5dfb5e3dc146753b2d2d"
+        "lastUpdated": "2026-11-12T23:18:23.394Z",
+        "gitCommitSha": "23c304a6387ed2fa207ceff27646d8514ee75235"
       }
     ],
     "gopls-lsp@claude-plugins-official": [
