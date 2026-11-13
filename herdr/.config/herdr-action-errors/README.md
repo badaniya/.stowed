@@ -7,8 +7,8 @@ All configured quick actions in `../herdr/plugins/config/cloudmanic.herdr-plus/q
 - Run the original command with its existing arguments, working directory, environment, and stdin. Stream combined stdout/stderr while retaining a temporary capture.
 - Success: return zero and discard the capture; no notification.
 - Failure: preserve the command's exit status and keep a unique private log and metadata file.
-- Reuse the workspace named `HERDR-ACTION-ERRORS`, or create it without taking focus. Display the first log over the newly created workspace's initial pane, so its first tab is used rather than left empty. Later errors open new log tabs without touching existing panes. Each log view displays the complete log and leaves a shell there; tabs are labeled with time and action name.
-- Show a centered, scrollable terminal popup using the terminal-default background, with action name, status, error summary, log path, and recent output. Enter, Escape, or `q` dismisses it; arrows/Page Up/Page Down scroll.
+- Reuse the workspace named `HERDR-ACTION-ERRORS`, or create it without taking focus. Put the first log in its first tab via a non-focusing split, then close only the empty shell pane just created by this reporter. Do not use `zoomed` placement: Herdr activates that workspace even with `focus=false`. Later errors open background log tabs without touching existing panes. Each log view displays the complete log and leaves a shell there; tabs are labeled with time and action name.
+- Show a centered, scrollable terminal popup over the user's currently active workspace, without switching to `HERDR-ACTION-ERRORS` or tying it to the action's original workspace. Use the terminal-default background, with action name, status, error summary, log path, and recent output. Enter, Escape, or `q` dismisses it; arrows/Page Up/Page Down scroll.
 - When called inside the quick-action picker, a detached reporter waits for the picker to exit before opening the popup.
 - Never type commands into existing panes. Do not change `[ui.toast]`; agent system notifications remain unchanged.
 - If Herdr is unavailable or UI reporting fails, retain the log and print its location. Reporting failures do not replace the original exit status.
@@ -79,3 +79,11 @@ for test in tests/herdr/*_test.sh; do
   env -u HERDR_ENV -u HERDR_SOCKET_PATH -u HERDR_ACTION_ERROR_ACTIVE bash "$test"
 done
 ```
+
+Opt-in live regression test, from inside Herdr with no popup currently open:
+
+```sh
+HERDR_ACTION_ERRORS_LIVE_TEST=1 python3 tests/herdr/action_errors_test.py LiveReporterTests
+```
+
+This creates an isolated temporary log workspace and briefly opens/closes test popups. It checks that both the first and later log reports preserve the current workspace and that popups open there. It inspects the actual layout of every error tab: exactly one pane, no split nodes, and zoom disabled—not just a single visible pane. It removes only the workspace and popups it creates; it does not rerun any real action.

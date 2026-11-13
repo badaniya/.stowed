@@ -67,19 +67,24 @@ def report_failure(log):
             fcntl.flock(lock, fcntl.LOCK_EX)
             workspaces = api('workspace.list', {}).get('workspaces', [])
             workspace = next((item for item in workspaces if item.get('label') == 'HERDR-ACTION-ERRORS'), None)
-            placement = {'placement': 'tab'}
+            initial_pane = None
             if workspace is None:
                 created = api('workspace.create', {'label': 'HERDR-ACTION-ERRORS', 'cwd': str(log.parent), 'focus': False})
-                workspace = created['workspace']
-                # Cover only the fresh root pane; later reports get new tabs.
-                placement = {'placement': 'zoomed', 'target_pane_id': created['root_pane']['pane_id']}
+                initial_pane = created['root_pane']['pane_id']
+                # Zoomed placement steals workspace focus even with focus=False.
+                # Split in the first tab, then remove only our new empty shell.
+                placement = {'placement': 'split', 'target_pane_id': initial_pane, 'direction': 'down'}
+            else:
+                placement = {'placement': 'tab', 'workspace_id': workspace['workspace_id']}
             api('plugin.pane.open', {
                 'plugin_id': PLUGIN_ID, 'entrypoint': 'log', **placement,
-                'workspace_id': workspace['workspace_id'], 'focus': False,
-                'cwd': str(log.parent), 'env': env,
+                'focus': False, 'cwd': str(log.parent), 'env': env,
             })
+            if initial_pane is not None:
+                api('pane.close', {'pane_id': initial_pane})
     except (OSError, KeyError, ValueError, RuntimeError) as error:
         warn(f'could not open log tab: {error}; log: {log}')
+    # Popup has no workspace/pane selector: show over the current workspace.
     # Do not let a log-tab error prevent the summary popup.
     try:
         api('plugin.pane.open', {

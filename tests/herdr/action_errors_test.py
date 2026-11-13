@@ -145,9 +145,20 @@ class ReporterTests(unittest.TestCase):
         self.log.with_suffix('.json').write_text(json.dumps(self.meta))
         self.calls = []
         self.workspaces = [{'label': 'HERDR-ACTION-ERRORS', 'workspace_id': 'wError'}]
+        self.focused_workspace = 'wCurrent'
+        self.popup_workspaces = []
 
     def api(self, method, params):
+        if (method == 'plugin.pane.open' and params['placement'] in ('split', 'zoomed')
+                and (not params.get('target_pane_id') or params.get('workspace_id'))):
+            raise RuntimeError('split and zoomed plugin panes target an existing pane; use target_pane_id')
         self.calls.append((method, params))
+        if method == 'plugin.pane.open':
+            # Herdr zoomed placement activates its target even with focus=False.
+            if params['placement'] == 'zoomed':
+                self.focused_workspace = params['target_pane_id'].split(':')[0]
+            elif params['placement'] == 'popup':
+                self.popup_workspaces.append(self.focused_workspace)
         if method == 'workspace.list':
             return {'workspaces': list(self.workspaces)}
         if method == 'workspace.create':
@@ -181,19 +192,37 @@ class ReporterTests(unittest.TestCase):
         log_views = [params for method, params in self.calls
                      if method == 'plugin.pane.open' and params['entrypoint'] == 'log']
         self.assertEqual(len(log_views), 1)
-        self.assertEqual(log_views[0]['placement'], 'zoomed')
+        self.assertEqual(log_views[0]['placement'], 'split')
+        self.assertEqual(log_views[0]['direction'], 'down')
         self.assertEqual(log_views[0]['target_pane_id'], 'wNew:p1')
-        self.assertEqual(log_views[0]['workspace_id'], 'wNew')
+        self.assertNotIn('workspace_id', log_views[0])
         self.assertEqual(log_views[0]['env']['HERDR_ACTION_ERROR_LOG'], str(self.log))
         self.assertFalse(log_views[0]['focus'])
         methods = [method for method, _ in self.calls]
         self.assertNotIn('pane.run', methods)
         self.assertNotIn('pane.send_input', methods)
+        closes = [params for method, params in self.calls if method == 'pane.close']
+        self.assertEqual(closes, [{'pane_id': 'wNew:p1'}])
+        self.assertLess(methods.index('plugin.pane.open'), methods.index('pane.close'))
         self.report()
+        self.assertEqual(sum(method == 'pane.close' for method, _ in self.calls), 1)
         later_log = [params for method, params in self.calls
                      if method == 'plugin.pane.open' and params['entrypoint'] == 'log'][-1]
         self.assertEqual(later_log['placement'], 'tab')
         self.assertNotIn('target_pane_id', later_log)
+
+    def test_popup_uses_current_workspace_without_log_focus_stealing(self):
+        self.workspaces = []
+        self.report()
+        self.assertEqual(self.focused_workspace, 'wCurrent')
+        self.focused_workspace = 'wElsewhere'
+        self.report()
+        self.assertEqual(self.focused_workspace, 'wElsewhere')
+        self.assertEqual(self.popup_workspaces, ['wCurrent', 'wElsewhere'])
+        for method, params in self.calls:
+            if method == 'plugin.pane.open' and params['placement'] == 'popup':
+                self.assertNotIn('workspace_id', params)
+                self.assertNotIn('target_pane_id', params)
 
     def test_creates_workspace_only_once_for_successive_reports(self):
         self.workspaces = []
@@ -206,13 +235,14 @@ class ReporterTests(unittest.TestCase):
         self.workspaces = []
         original = self.api
         def fail(method, params):
-            if method == 'plugin.pane.open' and params['placement'] == 'zoomed':
+            if method == 'plugin.pane.open' and params['placement'] == 'split':
                 raise RuntimeError('fixture initial log failure')
             return original(method, params)
         with patch.object(self.module, 'api', side_effect=fail):
             self.module.report_failure(self.log)
         self.assertTrue(any(method == 'plugin.pane.open' and params['placement'] == 'popup'
                             for method, params in self.calls))
+        self.assertNotIn('pane.close', [method for method, _ in self.calls])
 
     def test_log_tab_failure_does_not_prevent_popup(self):
         original = self.api
@@ -241,7 +271,7 @@ class ReporterTests(unittest.TestCase):
         self.assertEqual(sum(method == 'workspace.create' for method, _ in self.calls), 1)
         placements = [params['placement'] for method, params in self.calls
                       if method == 'plugin.pane.open' and params['entrypoint'] == 'log']
-        self.assertEqual(placements.count('zoomed'), 1)
+        self.assertEqual(placements.count('split'), 1)
         self.assertEqual(placements.count('tab'), 2)
 
     def test_deferred_report_waits_for_picker_to_disappear(self):
@@ -284,6 +314,73 @@ class ReporterTests(unittest.TestCase):
 
     def test_display_strips_terminal_control_sequences(self):
         self.assertEqual(self.module.display_text('hello\x1b[31m red\x1b[0m\x1b]52;c;evil\x07\x00'), 'hello red')
+
+
+@unittest.skipUnless(os.environ.get('HERDR_ACTION_ERRORS_LIVE_TEST') == '1'
+                     and os.environ.get('HERDR_ENV') == '1', 'opt-in live Herdr test')
+class LiveReporterTests(unittest.TestCase):
+    def test_log_stays_background_and_popup_uses_current_workspace(self):
+        module = load_runner()
+        real_api = module.api
+        workspaces = real_api('workspace.list', {})['workspaces']
+        current = next(item['workspace_id'] for item in workspaces if item['focused'])
+        created = []
+        popups = []
+
+        def live_api(method, params):
+            if method == 'workspace.list':
+                # Force a fresh, isolated log workspace without touching real logs.
+                return {'workspaces': [{'label': 'HERDR-ACTION-ERRORS', 'workspace_id': workspace}
+                                       for workspace in created]}
+            if method == 'workspace.create':
+                params = dict(params, label=f'TEST-action-errors-popup-{os.getpid()}')
+            result = real_api(method, params)
+            if method == 'workspace.create':
+                created.append(result['workspace']['workspace_id'])
+            if method == 'plugin.pane.open' and params['placement'] == 'popup':
+                # Popup placement returns only OK and binds to the active workspace.
+                try:
+                    popups.append(next(item['workspace_id'] for item in
+                                       real_api('workspace.list', {})['workspaces'] if item['focused']))
+                finally:
+                    # Close only the popup this test just opened.
+                    real_api('popup.close', {})
+            return result
+
+        try:
+            with tempfile.TemporaryDirectory() as directory:
+                log = Path(directory) / 'failure.log'
+                log.write_text('Error: live popup placement fixture\n')
+                log.with_suffix('.json').write_text(json.dumps({
+                    'name': 'TEST: popup placement', 'status': 1,
+                    'cwd': directory, 'time': '2026-11-13T00:00:00',
+                }))
+                with patch.object(module, 'api', side_effect=live_api):
+                    for report_number in (1, 2):
+                        module.report_failure(log)
+                        self.assertEqual(len(created), 1)
+                        self.assertEqual(popups, [current] * report_number)
+                        focused = next(item['workspace_id'] for item in
+                                       real_api('workspace.list', {})['workspaces'] if item['focused'])
+                        self.assertEqual(focused, current)
+                        tabs = real_api('tab.list', {'workspace_id': created[0]})['tabs']
+                        self.assertEqual(len(tabs), report_number)
+                        self.assertEqual(tabs[0]['number'], 1)
+                        self.assertTrue(all(tab['pane_count'] == 1 for tab in tabs))
+                        panes = real_api('pane.list', {'workspace_id': created[0]})['panes']
+                        self.assertEqual(len(panes), report_number)
+                        for pane in panes:
+                            layout = real_api('pane.layout', {'pane_id': pane['pane_id']})['layout']
+                            self.assertFalse(layout['zoomed'])
+                            self.assertEqual(layout['splits'], [])
+                            self.assertEqual(len(layout['panes']), 1)
+        finally:
+            # Restore focus only if a regression moved it into our test workspace.
+            if any(item['workspace_id'] in created and item['focused']
+                   for item in real_api('workspace.list', {})['workspaces']):
+                real_api('workspace.focus', {'workspace_id': current})
+            for workspace in created:
+                real_api('workspace.close', {'workspace_id': workspace})
 
 
 @unittest.skipUnless(RUNNER.exists(), 'runner not implemented yet')
