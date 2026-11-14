@@ -361,7 +361,6 @@ herdr plugin install furuhashin/herdr-synchronize-panes --yes                 # 
 herdr plugin install senna-lang/herdr-agent-usage --yes                       # AI token usage for any AI coding agent
 herdr plugin install Davidcreador/herdr-token-dashboard --yes                 # AI dashboard for token usage for any AI coding agent
 herdr plugin install ezcorp-org/herdr-pc-ram-and-cpu-usage-overlay --yes      # CPU and memory stats for a herdr workspace
-herdr plugin install ogulcancelik/herdr-browser --yes                         # Web browser in the terminal (experimental)
 ```
 
 ### 3) Rex - Terminal Multiplexer for AI Agents (Superlogical)
