@@ -349,6 +349,10 @@ exec\ *\ --\ bash\ -s\ --\ *)
 		cat >/dev/null
 	fi
 	;;
+pause\ * | resume\ *)
+	[[ ${INCUS_PROJECT:-} == agent-sandbox && $# -eq 2 ]] || exit 2
+	[[ ${LABCTL_FAKE_FAIL_EXECUTION_ACTION:-} != "$1" ]] || exit 42
+	;;
 start\ *)
 	status=${LABCTL_FAKE_INSTANCE_STATUS:-Running}
 	if [[ -n ${LABCTL_FAKE_INSTANCE_STATE_FILE:-} && -f ${LABCTL_FAKE_INSTANCE_STATE_FILE} ]]; then
@@ -800,6 +804,56 @@ test_legacy_destroyed_ip_allocation() (
 	printf 'PASS: legacy destroyed IP-allocation regression checks\n'
 )
 XDG_STATE_HOME="${TEST_ROOT}/legacy-destroy-state" test_legacy_destroyed_ip_allocation || fail 'legacy destroyed IP-allocation regression checks failed'
+
+# Pause/resume preserve registry reservations and process state: no stack hooks,
+# no stop/start, and failed or dry-run operations must not update the registry.
+test_pause_resume() (
+	failures=0
+	labctl_state_init
+	labctl_state_write '.sandboxes = {"jira-#": {ticket: "jira-#", instance: "jira-#", ip: "10.42.0.10", status: "running"}}'
+	for action_spec in 'pause paused' 'resume running'; do
+		read -r action expected_status <<<"$action_spec"
+		registry_before=$(<"$(labctl_state_path)")
+
+		: >"$COMMAND_LOG"
+		PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=true assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" --dry-run "$action" 'JIRA-#'
+		assert_equals "$registry_before" "$(<"$(labctl_state_path)")"
+		assert_command_log_not_contains "$action jira-#"
+
+		: >"$COMMAND_LOG"
+		PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=true LABCTL_FAKE_FAIL_EXECUTION_ACTION="$action" assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" "$action" 'JIRA-#'
+		assert_command_log_contains "$action jira-#"
+		assert_equals "$registry_before" "$(<"$(labctl_state_path)")"
+
+		: >"$COMMAND_LOG"
+		PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=false assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" "$action" 'JIRA-#'
+		assert_command_log_not_contains "$action jira-#"
+		assert_equals "$registry_before" "$(<"$(labctl_state_path)")"
+
+		: >"$COMMAND_LOG"
+		PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=true assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" "$action" 'JIRA-#'
+		assert_command_log_contains "$action jira-#"
+		assert_command_log_not_contains 'exec '
+		assert_command_log_not_contains 'start '
+		assert_command_log_not_contains 'stop '
+		assert_equals "$expected_status" "$(labctl_state_lookup 'jira-#' | jq -r '.status')"
+		assert_equals '10.42.0.10' "$(labctl_state_ip_for 'jira-#')"
+
+		: >"$COMMAND_LOG"
+		PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=true assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" "$action" '../bad-ticket'
+		PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=true assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" "$action" unregistered
+		assert_equals '' "$(<"$COMMAND_LOG")"
+	done
+	labctl_state_set_status 'jira-#' destroyed
+	for action in pause resume; do
+		: >"$COMMAND_LOG"
+		PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_INSTANCE_EXISTS=true assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" "$action" 'JIRA-#'
+		assert_equals '' "$(<"$COMMAND_LOG")"
+	done
+	((failures == 0)) || exit 1
+	printf 'PASS: pause/resume lifecycle checks\n'
+)
+XDG_STATE_HOME="${TEST_ROOT}/pause-resume-state" test_pause_resume || fail 'pause/resume lifecycle checks failed'
 
 # A malformed harness root must fail linked-worktree validation.
 printf 'gitdir: /outside/master/two\n' >"${TEST_ROOT}/workspace/jira-#/two/.git"

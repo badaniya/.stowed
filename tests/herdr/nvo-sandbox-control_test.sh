@@ -82,6 +82,10 @@ if [[ $1 == instance-project ]]; then
 	printf '%s\n' "${TEST_PROJECT:-test-project}"
 	exit 0
 fi
+if [[ ${TEST_FAIL_ACTION_FOR:-} == "$2" && $1 == "${TEST_FAIL_ACTION:-}" ]]; then
+	printf 'Error: fixture lifecycle failure %s\n' "$2" >&2
+	exit 1
+fi
 if [[ ${TEST_FAIL_STOP_FOR:-} == "$2" && $1 == stop ]]; then
 	printf 'Error: fixture lifecycle failure %s\n' "$2" >&2
 	exit 1
@@ -245,8 +249,10 @@ write_plan explicit NVO-20130 NVO-20224
 printf '1\n' | run_dialog >"$DIALOG_OUTPUT"
 [[ ! -e $DIALOG_PLAN ]] || fail 'status dialog did not delete its plan'
 rg -q '1\).*Status.*inspect' "$DIALOG_OUTPUT" || fail 'menu did not render the status hint'
-rg -q '5\).*snapshot' "$DIALOG_OUTPUT" || fail 'menu did not render the snapshot-create hint'
-rg -q '6\).*snapshot' "$DIALOG_OUTPUT" || fail 'menu did not render the snapshot-restore hint'
+rg -q '5\).*Pause.*memory' "$DIALOG_OUTPUT" || fail 'menu did not explain pause memory retention'
+rg -q '6\).*Resume' "$DIALOG_OUTPUT" || fail 'menu did not render resume'
+rg -q '7\).*snapshot' "$DIALOG_OUTPUT" || fail 'menu did not render the snapshot-create hint'
+rg -q '8\).*snapshot' "$DIALOG_OUTPUT" || fail 'menu did not render the snapshot-restore hint'
 assert_equals 2 "$(rg -c '^labctl status ' "$LOG")" 'status did not run once per target'
 assert_equals 2 "$(rg -F -c "sg incus-admin -c $TEST_ROOT/home/.local/bin/labctl status" "$LOG")" 'status did not explicitly invoke the active labctl executable'
 if rg -q '^labctl (start|stop) |^incus .*snapshot (create|restore) ' "$LOG"; then
@@ -273,7 +279,7 @@ assert_equals 1 "$(rg -c '^labctl start ' "$LOG")" 'all-scope start did not run 
 # Menu cancellation performs no lifecycle or snapshot mutation and removes the trusted plan.
 : >"$LOG"
 write_plan explicit NVO-20130
-printf '8\n' | run_dialog
+printf '10\n' | run_dialog
 [[ ! -e $DIALOG_PLAN ]] || fail 'cancelled dialog did not delete its plan'
 if rg -q '^labctl (start|stop) |^incus .*snapshot (create|restore) ' "$LOG"; then
 	fail 'menu cancel invoked a mutating command'
@@ -296,10 +302,58 @@ printf '4\n\n' | TEST_FAIL_STOP_FOR=NVO-20130 run_dialog
 assert_equals 2 "$(rg -c '^labctl stop ' "$LOG")" 'restart did not stop every target'
 assert_equals 2 "$(rg -c '^labctl start ' "$LOG")" 'restart did not start every target'
 
+# Pause/resume delegate once per target, without stop/start or snapshot side effects.
+for operation_spec in '5 pause' '6 resume'; do
+	read -r selection action <<<"$operation_spec"
+	: >"$LOG"
+	write_plan explicit NVO-20130 NVO-20224
+	printf '%s\n\n' "$selection" | run_dialog >"$DIALOG_OUTPUT"
+	[[ ! -e $DIALOG_PLAN ]] || fail "$action left its plan"
+	assert_equals 1 "$(rg -c "^labctl $action NVO-20130$" "$LOG")"
+	assert_equals 1 "$(rg -c "^labctl $action NVO-20224$" "$LOG")"
+	assert_equals 2 "$(rg -c '^labctl ' "$LOG")" "$action invoked an unrelated lifecycle hook"
+	rg -q 'Summary: all selected lifecycle actions completed successfully' "$DIALOG_OUTPUT" || fail "$action success summary was absent"
+
+	# EOF, Escape and nonempty confirmation must not authorize either action.
+	for confirmation in eof escape nonempty; do
+		: >"$LOG"
+		write_plan explicit NVO-20130
+		case $confirmation in
+		eof) printf '%s\n' "$selection" ;;
+		escape) printf '%s\n\e\n' "$selection" ;;
+		nonempty) printf '%s\nno\n' "$selection" ;;
+		esac | run_dialog >"$DIALOG_OUTPUT"
+		[[ ! -s $LOG ]] || fail "$action ran without Enter confirmation"
+	done
+
+	# all keeps the fleet warning before confirmation.
+	: >"$LOG"
+	write_plan all NVO-20130 NVO-20224
+	printf '%s\n\n' "$selection" | run_dialog >"$DIALOG_OUTPUT"
+	warning_line=$(rg -n 'WARNING:.*all registered sandboxes' "$DIALOG_OUTPUT" | cut -d: -f1)
+	prompt_line=$(rg -n 'Press Enter to continue' "$DIALOG_OUTPUT" | cut -d: -f1)
+	[[ -n $warning_line && -n $prompt_line && $warning_line -lt $prompt_line ]] || fail "$action omitted the fleet warning"
+	assert_equals 2 "$(rg -c "^labctl $action " "$LOG")"
+
+	# One target's failure must not skip the next, and must reach shared logs.
+	: >"$LOG"
+	write_plan explicit NVO-20130 NVO-20224
+	printf '%s\n\n' "$selection" | TEST_FAIL_ACTION="$action" TEST_FAIL_ACTION_FOR=NVO-20130 run_dialog >"$DIALOG_OUTPUT" 2>&1
+	assert_equals 2 "$(rg -c "^labctl $action " "$LOG")"
+	rg -Fq 'Summary: 1 lifecycle action(s) failed' "$DIALOG_OUTPUT" || fail "$action failure was not summarized"
+	rg -q "Sandbox Control: $action NVO-20130" "$TEST_ROOT/state/herdr/action-errors/"*.json || fail "$action failure was not captured"
+
+	# Eligibility is checked again immediately before invoking the backend.
+	: >"$LOG"
+	write_plan explicit NVO-20999
+	printf '%s\n\n' "$selection" | run_dialog >"$DIALOG_OUTPUT"
+	[[ ! -s $LOG ]] || fail "$action invoked the backend for a destroyed target"
+done
+
 # Snapshot creation accepts a conservative Incus-safe name after explicit confirmation.
 : >"$LOG"
 write_plan explicit NVO-20130
-printf '5\nrelease_2026.10-rc1\n\n' | run_dialog
+printf '7\nrelease_2026.10-rc1\n\n' | run_dialog
 [[ ! -e $DIALOG_PLAN ]] || fail 'snapshot-create dialog did not delete its plan'
 assert_equals 1 "$(rg -c '^incus --project test-project snapshot create NVO-20130 release_2026.10-rc1$' "$LOG")" 'snapshot create did not use the selected safe name'
 if rg -q '^labctl (start|stop) ' "$LOG"; then
@@ -309,7 +363,7 @@ fi
 # Snapshot creation rejects unsafe names before constructing an Incus command.
 : >"$LOG"
 write_plan explicit NVO-20130
-printf '5\nbad name; rm -rf /\n' | run_dialog
+printf '7\nbad name; rm -rf /\n' | run_dialog
 [[ ! -e $DIALOG_PLAN ]] || fail 'invalid snapshot-name dialog did not delete its plan'
 if rg -q '^incus |^labctl (start|stop) ' "$LOG"; then
 	fail 'invalid snapshot name ran a state-changing command'
@@ -318,7 +372,7 @@ fi
 # Snapshot operations reject multi-target plans before prompting or changing a sandbox.
 : >"$LOG"
 write_plan explicit NVO-20130 NVO-20224
-printf '5\n' | run_dialog >"$DIALOG_OUTPUT"
+printf '7\n' | run_dialog >"$DIALOG_OUTPUT"
 rg -q 'exactly one sandbox target' "$DIALOG_OUTPUT" || fail 'multi-target snapshot request did not explain its restriction'
 if rg -q '^incus |^labctl (start|stop) ' "$LOG"; then
 	fail 'multi-target snapshot request changed a sandbox'
@@ -327,14 +381,14 @@ fi
 # Snapshot creation never treats an all-scope plan with one eligible target as a one-target request.
 : >"$LOG"
 write_plan all NVO-20130
-printf '5\ntrue\n\n' | run_dialog >"$DIALOG_OUTPUT"
+printf '7\ntrue\n\n' | run_dialog >"$DIALOG_OUTPUT"
 rg -q 'exactly one sandbox target' "$DIALOG_OUTPUT" || fail 'all-scope snapshot-create did not explain its restriction'
 [[ ! -s $LOG ]] || fail 'all-scope snapshot-create invoked a sandbox command'
 
 # Snapshot restore likewise rejects an all-scope plan before looking up its project or listing snapshots.
 : >"$LOG"
 write_plan all NVO-20130
-printf '6\n' | run_dialog >"$DIALOG_OUTPUT"
+printf '8\n' | run_dialog >"$DIALOG_OUTPUT"
 rg -q 'exactly one sandbox target' "$DIALOG_OUTPUT" || fail 'all-scope snapshot-restore did not explain its restriction'
 [[ ! -s $LOG ]] || fail 'all-scope snapshot-restore invoked a sandbox command'
 
@@ -343,7 +397,7 @@ rg -q 'exactly one sandbox target' "$DIALOG_OUTPUT" || fail 'all-scope snapshot-
 TEST_SNAPSHOT_JSON='[{"name":"before-upgrade","created_at":"2026-10-22T12:30:00Z"},{"name":"after-upgrade","created_at":"2026-10-23T12:30:00Z"}]'
 export TEST_SNAPSHOT_JSON
 write_plan explicit NVO-20130
-printf '6\n2\n\n' | run_dialog >"$DIALOG_OUTPUT"
+printf '8\n2\n\n' | run_dialog >"$DIALOG_OUTPUT"
 unset TEST_SNAPSHOT_JSON
 [[ ! -e $DIALOG_PLAN ]] || fail 'snapshot-restore dialog did not delete its plan'
 rg -q 'before-upgrade.*2026-10-22T12:30:00Z' "$DIALOG_OUTPUT" || fail 'restore menu did not show the first snapshot timestamp'
@@ -358,7 +412,7 @@ start_line=$(rg -n '^labctl start NVO-20130$' "$LOG" | cut -d: -f1)
 TEST_SNAPSHOT_JSON='[{"name":"before-upgrade","created_at":"2026-10-22T12:30:00Z"},{"name":"after-upgrade","created_at":"2026-10-23T12:30:00Z"}]'
 export TEST_SNAPSHOT_JSON
 write_plan explicit NVO-20130
-printf '6\n18446744073709551617\n\n' | run_dialog >"$DIALOG_OUTPUT"
+printf '8\n18446744073709551617\n\n' | run_dialog >"$DIALOG_OUTPUT"
 unset TEST_SNAPSHOT_JSON
 [[ ! -e $DIALOG_PLAN ]] || fail 'overflow-selection dialog did not delete its plan'
 rg -Fq 'Cancelled. Select a listed snapshot number.' "$DIALOG_OUTPUT" || fail 'overflowing snapshot selection was not cancelled'
@@ -371,7 +425,7 @@ fi
 TEST_SNAPSHOT_JSON='[]'
 export TEST_SNAPSHOT_JSON
 write_plan explicit NVO-20130
-printf '6\n' | run_dialog >"$DIALOG_OUTPUT"
+printf '8\n' | run_dialog >"$DIALOG_OUTPUT"
 unset TEST_SNAPSHOT_JSON
 rg -q 'No snapshots are available' "$DIALOG_OUTPUT" || fail 'empty snapshot list was not reported'
 if rg -q '^incus .*snapshot restore |^labctl (start|stop) ' "$LOG"; then
@@ -383,7 +437,7 @@ fi
 TEST_SNAPSHOT_JSON='not-json'
 export TEST_SNAPSHOT_JSON
 write_plan explicit NVO-20130
-printf '6\n' | run_dialog >"$DIALOG_OUTPUT"
+printf '8\n' | run_dialog >"$DIALOG_OUTPUT"
 unset TEST_SNAPSHOT_JSON
 if rg -q '^incus .*snapshot restore |^labctl (start|stop) ' "$LOG"; then
 	fail 'malformed snapshot list changed a sandbox'
@@ -394,7 +448,7 @@ fi
 TEST_SNAPSHOT_JSON='[{"name":"before-upgrade","created_at":"2026-10-22T12:30:00Z"}]'
 export TEST_SNAPSHOT_JSON
 write_plan explicit NVO-20130
-printf '6\n1\n\n' | TEST_FAIL_STOP_FOR=NVO-20130 run_dialog
+printf '8\n1\n\n' | TEST_FAIL_STOP_FOR=NVO-20130 run_dialog
 unset TEST_SNAPSHOT_JSON
 if rg -q '^incus .*snapshot restore |^labctl start ' "$LOG"; then
 	fail 'restore continued after labctl stop failed'
@@ -405,7 +459,7 @@ fi
 TEST_SNAPSHOT_JSON='[{"name":"before-upgrade","created_at":"2026-10-22T12:30:00Z"}]'
 export TEST_SNAPSHOT_JSON
 write_plan explicit NVO-20130
-printf '6\n1\n\n' | TEST_FAIL_INCUS_ACTION=restore run_dialog
+printf '8\n1\n\n' | TEST_FAIL_INCUS_ACTION=restore run_dialog
 unset TEST_SNAPSHOT_JSON
 assert_equals 1 "$(rg -c '^labctl stop NVO-20130$' "$LOG")" 'restore failure did not first stop the sandbox'
 assert_equals 1 "$(rg -c '^incus --project test-project snapshot restore NVO-20130 before-upgrade$' "$LOG")" 'restore failure did not invoke Incus restore'
@@ -418,16 +472,16 @@ rg -q 'Sandbox Control: snapshot restore NVO-20130' "$TEST_ROOT/state/herdr/acti
 rg -q 'Error: fixture lifecycle failure NVO-20130' "$TEST_ROOT/state/herdr/action-errors/"*.log || fail 'lifecycle failure output was not retained'
 logs_before=$(find "$TEST_ROOT/state/herdr/action-errors" -name '*.json' | wc -l)
 write_plan explicit NVO-20130
-printf '8\n' | run_dialog >"$TEST_ROOT/cancel-output" 2>&1
+printf '10\n' | run_dialog >"$TEST_ROOT/cancel-output" 2>&1
 logs_after=$(find "$TEST_ROOT/state/herdr/action-errors" -name '*.json' | wc -l)
 assert_equals "$logs_before" "$logs_after" 'normal cancellation generated an error notification'
 # Delete delegates exactly one confirmed target to labctl, not workspace cleanup.
 : >"$LOG"
 write_plan explicit NVO-20130
-printf '7\nNVO-20130\n' | run_dialog >"$DIALOG_OUTPUT" || fail 'Delete sandbox operation is unavailable or failed'
+printf '9\nNVO-20130\n' | run_dialog >"$DIALOG_OUTPUT" || fail 'Delete sandbox operation is unavailable or failed'
 [[ ! -e $DIALOG_PLAN ]] || fail 'delete dialog did not remove its plan'
-rg -q '7\).*Delete sandbox' "$DIALOG_OUTPUT" || fail 'menu did not expose Delete sandbox'
-assert_equals '  8) Cancel — make no changes' "$(rg '^  [0-9]+\)' "$DIALOG_OUTPUT" | tail -n 1)" 'Cancel was not the last menu option'
+rg -q '9\).*Delete sandbox' "$DIALOG_OUTPUT" || fail 'menu did not expose Delete sandbox'
+assert_equals '  10) Cancel — make no changes' "$(rg '^  [0-9]+\)' "$DIALOG_OUTPUT" | tail -n 1)" 'Cancel was not the last menu option'
 rg -q 'container-local data and snapshots' "$DIALOG_OUTPUT" || fail 'delete did not warn about data loss'
 rg -q 'host workspace.*retained' "$DIALOG_OUTPUT" || fail 'delete did not explain workspace preservation'
 assert_equals 1 "$(rg -c '^labctl destroy NVO-20130 --yes$' "$LOG")" 'delete did not pass the explicit confirmation flag once'
@@ -439,14 +493,14 @@ rg -q 'Summary: all selected lifecycle actions completed successfully' "$DIALOG_
 for confirmation in '' NVO-20224 nvo-20130 $'\e' 'NVO-20130; touch /tmp/should-not-exist'; do
 	: >"$LOG"
 	write_plan explicit NVO-20130
-	printf '7\n%s\n' "$confirmation" | run_dialog >"$DIALOG_OUTPUT"
+	printf '9\n%s\n' "$confirmation" | run_dialog >"$DIALOG_OUTPUT"
 	[[ ! -s $LOG ]] || fail 'nonmatching delete confirmation invoked a command'
 	[[ ! -e $DIALOG_PLAN ]] || fail 'cancelled delete left its plan'
 	rg -q 'Cancelled' "$DIALOG_OUTPUT" || fail 'delete cancellation was not reported'
 done
 : >"$LOG"
 write_plan explicit NVO-20130
-printf '7\n' | run_dialog >"$DIALOG_OUTPUT"
+printf '9\n' | run_dialog >"$DIALOG_OUTPUT"
 [[ ! -s $LOG ]] || fail 'EOF delete confirmation invoked a command'
 [[ ! -e $DIALOG_PLAN ]] || fail 'EOF delete confirmation left its plan'
 
@@ -458,7 +512,7 @@ for scope in explicit all; do
 	else
 		write_plan all NVO-20130
 	fi
-	printf '7\n' | run_dialog >"$DIALOG_OUTPUT"
+	printf '9\n' | run_dialog >"$DIALOG_OUTPUT"
 	[[ ! -s $LOG ]] || fail 'bulk delete invoked a command'
 	rg -q 'exactly one.*explicitly' "$DIALOG_OUTPUT" || fail 'bulk delete restriction was not explained'
 	if rg -q 'Type .* to confirm deletion' "$DIALOG_OUTPUT"; then
@@ -469,14 +523,14 @@ done
 # Eligibility must still hold when deletion reaches the backend.
 : >"$LOG"
 write_plan explicit NVO-20999
-printf '7\nNVO-20999\n' | run_dialog >"$DIALOG_OUTPUT"
+printf '9\nNVO-20999\n' | run_dialog >"$DIALOG_OUTPUT"
 [[ ! -s $LOG ]] || fail 'delete invoked a command for a destroyed target'
 rg -q 'no longer eligible' "$DIALOG_OUTPUT" || fail 'stale delete target was not reported'
 
 # Failed deletion is surfaced in the dialog and shared action-error capture.
 : >"$LOG"
 write_plan explicit NVO-20130
-printf '7\nNVO-20130\n' | TEST_FAIL_DESTROY=true run_dialog >"$DIALOG_OUTPUT" 2>&1
+printf '9\nNVO-20130\n' | TEST_FAIL_DESTROY=true run_dialog >"$DIALOG_OUTPUT" 2>&1
 assert_equals 1 "$(rg -c '^labctl destroy NVO-20130 --yes$' "$LOG")" 'failed delete was not attempted exactly once'
 assert_equals 1 "$(rg -c '^labctl ' "$LOG")" 'failed delete continued with another action'
 rg -q 'destroy NVO-20130: FAILED' "$DIALOG_OUTPUT" || fail 'delete failure was not reported'

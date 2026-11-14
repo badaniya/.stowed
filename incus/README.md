@@ -111,6 +111,8 @@ placeholders below; never put private identifiers in committed documentation.
 | `labctl bootstrap <ticket> [--repo <repo>] [--ensure-worktree]` | Idempotent startup entry point: validates or creates/reuses the sandbox, starts it when needed, waits for readiness, then runs the private stack-up hook once. |
 | `labctl start <ticket>` | Starts only the named sandbox and its private runtime. |
 | `labctl stop <ticket>` | Stops only the named sandbox; source worktrees remain intact. |
+| `labctl pause <ticket>` | Freezes the named sandbox's processes, retaining memory and runtime state; no stack hooks run. |
+| `labctl resume <ticket>` | Unfreezes the named sandbox without rerunning stack hooks. |
 | `labctl status <ticket>` | Reports controller state, workspace validity, and instance state. |
 | `labctl verify <ticket>` | Checks isolation, private Docker, stack health, and configured TCP reachability. |
 | `labctl destroy <ticket> --yes` | Removes the named sandbox and private runtime state, not source worktrees. |
@@ -152,6 +154,18 @@ named sandbox: retain or restore its recorded address reservation, verify the
 workspace mounts, then use `start`, `stop`, or `destroy` deliberately. Do not
 reconstruct state by deleting shared Git metadata or by running broad cleanup.
 Escalate conflicting state or missing worktrees for operator review.
+
+`pause` freezes sandbox processes, including nested Docker workloads, and records
+`paused` in the registry. It retains allocated memory; it is not a shutdown or a
+snapshot. Host-side processes can still modify mounted worktrees, and external
+connections or leases can time out. `resume` unfreezes the sandbox and records
+`running` without rerunning stack-up hooks. Resume a paused sandbox before using
+stack-oriented operations such as stop, restart, or snapshot restore, whose
+hooks need executing guest processes.
+
+Herdr's **Sandbox: Control** menu places Pause and Resume after Restart and before
+snapshot operations. Both support single, multiple, or all registered targets,
+with the existing Enter confirmation and an additional warning for `all`.
 
 `stop` preserves the sandbox, its IP reservation, and its private runtime for
 later `start`. `destroy --yes` removes the sandbox and its private runtime,

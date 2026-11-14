@@ -278,10 +278,12 @@ printf '%s\n' '  1) Status — inspect current sandbox state'
 printf '%s\n' '  2) Start — start the selected sandbox target(s)'
 printf '%s\n' '  3) Stop — stop the selected sandbox target(s)'
 printf '%s\n' '  4) Restart — stop then start the selected sandbox target(s)'
-printf '%s\n' '  5) Create snapshot — save one sandbox with a typed name'
-printf '%s\n' '  6) Restore snapshot — restore one saved snapshot and restart it'
-printf '%s\n' '  7) Delete sandbox — permanently delete one sandbox; keep host workspace'
-printf '%s\n' '  8) Cancel — make no changes'
+printf '%s\n' '  5) Pause — freeze processes; retain memory'
+printf '%s\n' '  6) Resume — unfreeze processes without restarting the stack'
+printf '%s\n' '  7) Create snapshot — save one sandbox with a typed name'
+printf '%s\n' '  8) Restore snapshot — restore one saved snapshot and restart it'
+printf '%s\n' '  9) Delete sandbox — permanently delete one sandbox; keep host workspace'
+printf '%s\n' '  10) Cancel — make no changes'
 
 if ! read_response 'Selection: '; then
 	printf 'Cancelled. Menu input was unavailable. No sandbox lifecycle commands were run.\n'
@@ -293,10 +295,12 @@ case $response in
 2) operation=start ;;
 3) operation=stop ;;
 4) operation=restart ;;
-5) operation='snapshot-create' ;;
-6) operation='snapshot-restore' ;;
-7) operation=destroy ;;
-8 | $'\e')
+5) operation=pause ;;
+6) operation=resume ;;
+7) operation='snapshot-create' ;;
+8) operation='snapshot-restore' ;;
+9) operation=destroy ;;
+10 | $'\e')
 	printf 'Cancelled. No sandbox lifecycle commands were run.\n'
 	open_result_shell
 	;;
@@ -312,14 +316,14 @@ status)
 		run_action status "$ticket"
 	done
 	;;
-start | stop | restart)
+start | stop | restart | pause | resume)
 	if [[ $scope == all ]]; then
 		printf 'WARNING: This action applies to all registered sandboxes shown above.\n'
 	fi
 	if confirm_enter "Sandbox operation: $operation"; then
 		for ticket in "${tickets[@]}"; do
 			case $operation in
-			start | stop) run_action "$operation" "$ticket" ;;
+			start | stop | pause | resume) run_action "$operation" "$ticket" ;;
 			restart)
 				run_action stop "$ticket"
 				run_action start "$ticket"
@@ -343,7 +347,7 @@ destroy)
 	;;
 esac
 
-if [[ $operation == status || $operation == start || $operation == stop || $operation == restart ]]; then
+if [[ $operation == status || $operation == start || $operation == stop || $operation == restart || $operation == pause || $operation == resume ]]; then
 	if ((failures == 0)); then
 		printf 'Summary: all selected lifecycle actions completed successfully.\n'
 	else
