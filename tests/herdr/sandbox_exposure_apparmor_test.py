@@ -10,7 +10,7 @@ from pathlib import Path
 
 sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE = ROOT / 'herdr/.config/herdr-spreader/sandbox-exposure.py'
+SOURCE = ROOT / 'herdr-spreader/.config/herdr-spreader/sandbox-exposure.py'
 sys.path.insert(0, str(SOURCE.parent))
 POLICY = SOURCE.with_name('sandbox-exposure-apparmor.conf')
 PARENT = '/{,usr/}sbin/dhclient'

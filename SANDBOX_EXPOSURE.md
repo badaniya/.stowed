@@ -38,11 +38,11 @@ for inspection. If the picker was already open, close and reopen it to reload ac
 Files:
 
 - `herdr/.config/herdr/plugins/config/cloudmanic.herdr-plus/quick-actions/sandbox-exposure.toml`
-- `herdr/.config/herdr-spreader/sandbox-exposure.sh` — validated pane launcher
-- `herdr/.config/herdr-spreader/sandbox-exposure-dialog.sh` — interactive menu
-- `herdr/.config/herdr-spreader/sandbox-exposure.py` — controller/CLI
-- `herdr/.config/herdr-spreader/sandbox-exposure-dhcp.py` — isolated DHCP hook
-- `herdr/.config/herdr-spreader/sandbox-exposure-apparmor.conf` — scoped AppArmor extension
+- `herdr-spreader/.config/herdr-spreader/sandbox-exposure.sh` — validated pane launcher
+- `herdr-spreader/.config/herdr-spreader/sandbox-exposure-dialog.sh` — interactive menu
+- `herdr-spreader/.config/herdr-spreader/sandbox-exposure.py` — controller/CLI
+- `herdr-spreader/.config/herdr-spreader/sandbox-exposure-dhcp.py` — isolated DHCP hook
+- `herdr-spreader/.config/herdr-spreader/sandbox-exposure-apparmor.conf` — scoped AppArmor extension
 
 Requires Linux, Python 3.10+, `ip`, `sysctl`, ISC `dhclient`, a local Incus daemon
 supporting network forwards, and `sudo`. The Herdr launcher also needs `herdr`
@@ -68,7 +68,7 @@ possible host-security or network failure.
 ```bash
 # Review the existing destination first; do not overwrite unrelated local policy.
 sudo install -o root -g root -m 0644 \
-  "$HOME/.stowed/herdr/.config/herdr-spreader/sandbox-exposure-apparmor.conf" \
+  "$HOME/.stowed/herdr-spreader/.config/herdr-spreader/sandbox-exposure-apparmor.conf" \
   /etc/apparmor.d/local/herdr-sandbox-exposure
 
 # Preserve existing local rules and add this include exactly once using sudoedit:
@@ -97,7 +97,7 @@ Then resume the same adopt command and require a genuine DHCP ACK.
 ## Direct CLI
 
 Before Stowing, substitute the checkout path
-`$HOME/.stowed/herdr/.config/herdr-spreader/sandbox-exposure.py` below.
+`$HOME/.stowed/herdr-spreader/.config/herdr-spreader/sandbox-exposure.py` below.
 
 ```bash
 controller="$HOME/.config/herdr-spreader/sandbox-exposure.py"
@@ -239,7 +239,7 @@ DHCP, and host/bridge forwarding must already be approved and functional.
 ## Sandbox-keyed desired config and HOST-side CONNECT proxy
 
 The guest proxy workaround is superseded; no proxy is installed in the guest.
-The tracked desired config is `herdr/.config/herdr-spreader/sandbox-exposures.json`,
+The tracked desired config is `herdr-spreader/.config/herdr-spreader/sandbox-exposures.json`,
 linked at `~/.config/herdr-spreader/sandbox-exposures.json`.
 
 ```json
@@ -376,6 +376,6 @@ PYTHONDONTWRITEBYTECODE=1 python3 tests/herdr/sandbox_exposure_config_test.py
 # Root is only for a NEW isolated netns; never edits host nft/network state:
 sudo python3 -B tests/herdr/sandbox_proxy_nat_test.py
 bash tests/herdr/sandbox-exposure_test.sh
-shellcheck herdr/.config/herdr-spreader/sandbox-exposure{,-dialog}.sh \
+shellcheck herdr-spreader/.config/herdr-spreader/sandbox-exposure{,-dialog}.sh \
   tests/herdr/sandbox-exposure_test.sh
 ```

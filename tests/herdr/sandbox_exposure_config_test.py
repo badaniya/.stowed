@@ -10,7 +10,7 @@ from unittest import mock
 
 sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[2]
-HELPERS = ROOT / 'herdr/.config/herdr-spreader'
+HELPERS = ROOT / 'herdr-spreader/.config/herdr-spreader'
 sys.path.insert(0, str(HELPERS))
 
 

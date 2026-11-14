@@ -2,7 +2,7 @@
 # Exercise the dedicated action boundary; sandbox removal is mocked here.
 set -euo pipefail
 REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-SCRIPTS="$REPO_ROOT/herdr/.config/herdr-spreader"
+SCRIPTS="$REPO_ROOT/herdr-spreader/.config/herdr-spreader"
 fail() {
   printf 'FAIL: %s\n' "$*" >&2
   exit 1

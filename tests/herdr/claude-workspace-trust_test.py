@@ -11,7 +11,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 SCRIPT = (
     Path(__file__).resolve().parents[2]
-    / "herdr/.config/herdr-spreader/claude-workspace-trust.py"
+    / "herdr-spreader/.config/herdr-spreader/claude-workspace-trust.py"
 )
 
 

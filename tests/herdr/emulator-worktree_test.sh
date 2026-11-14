@@ -2,7 +2,7 @@
 # Real Git fixtures only; the fixed GitHub URL is redirected to a local remote.
 set -euo pipefail
 REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-HELPER="$REPO_ROOT/herdr/.config/herdr-spreader/emulator-worktree.sh"
+HELPER="$REPO_ROOT/herdr-spreader/.config/herdr-spreader/emulator-worktree.sh"
 fail() {
   printf 'FAIL: %s\n' "$*" >&2
   exit 1

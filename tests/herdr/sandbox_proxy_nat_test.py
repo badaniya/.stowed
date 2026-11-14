@@ -13,7 +13,7 @@ from pathlib import Path
 
 sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE = ROOT / 'herdr/.config/herdr-spreader/sandbox_exposure_proxy.py'
+SOURCE = ROOT / 'herdr-spreader/.config/herdr-spreader/sandbox_exposure_proxy.py'
 
 
 def child(parent_netns):

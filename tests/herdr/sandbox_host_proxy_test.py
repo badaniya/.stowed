@@ -13,7 +13,7 @@ from unittest import mock
 
 sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE = ROOT / 'herdr/.config/herdr-spreader/sandbox_exposure_proxy.py'
+SOURCE = ROOT / 'herdr-spreader/.config/herdr-spreader/sandbox_exposure_proxy.py'
 SERVER = SOURCE.with_name('sandbox_exposure_proxy_server.py')
 
 

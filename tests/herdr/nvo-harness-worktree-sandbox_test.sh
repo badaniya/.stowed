@@ -4,7 +4,7 @@ set -euo pipefail
 unset CLAUDE_CONFIG_DIR HERDR_ENV HERDR_SOCKET_PATH HERDR_ACTION_ERROR_ACTIVE
 
 REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-SCRIPT="${REPO_ROOT}/herdr/.config/herdr-spreader/nvo-harness-worktree-sandbox.sh"
+SCRIPT="${REPO_ROOT}/herdr-spreader/.config/herdr-spreader/nvo-harness-worktree-sandbox.sh"
 
 fail() {
 	printf 'FAIL: %s\n' "$*" >&2

@@ -2,8 +2,8 @@
 set -euo pipefail
 unset HERDR_ENV HERDR_SOCKET_PATH HERDR_ACTION_ERROR_ACTIVE
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-LAUNCHER="$ROOT/herdr/.config/herdr-spreader/sandbox-exposure.sh"
-DIALOG="$ROOT/herdr/.config/herdr-spreader/sandbox-exposure-dialog.sh"
+LAUNCHER="$ROOT/herdr-spreader/.config/herdr-spreader/sandbox-exposure.sh"
+DIALOG="$ROOT/herdr-spreader/.config/herdr-spreader/sandbox-exposure-dialog.sh"
 ACTION="$ROOT/herdr/.config/herdr/plugins/config/cloudmanic.herdr-plus/quick-actions/sandbox-exposure.toml"
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT

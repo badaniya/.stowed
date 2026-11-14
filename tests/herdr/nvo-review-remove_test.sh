@@ -2,7 +2,7 @@
 # Real Git fixtures; destructive external services are test doubles.
 set -euo pipefail
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-SCRIPT="$ROOT/herdr/.config/herdr-spreader/nvo-review-remove.sh"
+SCRIPT="$ROOT/herdr-spreader/.config/herdr-spreader/nvo-review-remove.sh"
 fail() { printf 'FAIL: %s\n' "$*" >&2; exit 1; }
 [[ -f $SCRIPT ]] || fail 'review cleanup action is missing'
 tmp=$(mktemp -d)
@@ -142,7 +142,7 @@ ln -s "$SCRIPT" "$HOME/.config/herdr-spreader/nvo-review-remove.sh" 2>/dev/null 
   mkdir -p "$HOME/.config/herdr-spreader"
   ln -s "$SCRIPT" "$HOME/.config/herdr-spreader/nvo-review-remove.sh"
 }
-if bash "$ROOT/herdr/.config/herdr-spreader/nvo-review-remove-notify.sh" '../unsafe' >"$tmp/notify-output" 2>&1; then
+if bash "$ROOT/herdr-spreader/.config/herdr-spreader/nvo-review-remove-notify.sh" '../unsafe' >"$tmp/notify-output" 2>&1; then
   fail 'notification wrapper hid cleanup failure'
 fi
 rg -Fq 'invalid review identity' "$tmp/notify-output" || fail 'wrapper did not surface failure'

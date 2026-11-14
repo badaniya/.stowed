@@ -91,7 +91,7 @@ rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/mise; rm -rf $HOME/.config
 
 ```bash
 # Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
-rm -rf $HOME/.npmrc; rm -rf $HOME/.config/herdr;  rm -rf $HOME/.config/herdr-app; rm -rf $HOME/.config/rex; rm -rf $HOME/.claude.json; rm -rf $HOME/.claude; rm -rf $HOME/.copilot; rm -rf $HOME/.config/.copilot; rm -rf $HOME/.config/opencode; rm -rf $HOME/.pi; rm -rf $HOME/.agents; stow -d $HOME/.stowed npm herdr herdr-app rex claude copilot opencode pi agents
+rm -rf $HOME/.npmrc; rm -rf $HOME/.config/herdr;  rm -rf $HOME/.config/herdr-app; rm -rf $HOME/.config/herdr-spreader; rm -rf $HOME/.config/rex; rm -rf $HOME/.claude.json; rm -rf $HOME/.claude; rm -rf $HOME/.copilot; rm -rf $HOME/.config/.copilot; rm -rf $HOME/.config/opencode; rm -rf $HOME/.pi; rm -rf $HOME/.agents; stow -d $HOME/.stowed npm herdr herdr-app herdr-spreader rex claude copilot opencode pi agents
 ```
 
 ## Installing Stowed Terminal Tools

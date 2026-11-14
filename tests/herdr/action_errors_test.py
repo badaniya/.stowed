@@ -19,7 +19,7 @@ from unittest.mock import Mock, patch
 import tomllib
 
 ROOT = Path(__file__).resolve().parents[2]
-SCRIPTS = ROOT / 'herdr/.config/herdr-spreader'
+SCRIPTS = ROOT / 'herdr-spreader/.config/herdr-spreader'
 RUNNER = SCRIPTS / 'herdr-action-errors.py'
 ACTIONS = ROOT / 'herdr/.config/herdr/plugins/config/cloudmanic.herdr-plus/quick-actions'
 

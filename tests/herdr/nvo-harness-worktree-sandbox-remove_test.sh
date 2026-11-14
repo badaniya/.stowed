@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-SCRIPT="${REPO_ROOT}/herdr/.config/herdr-spreader/nvo-harness-worktree-sandbox-remove.sh"
+SCRIPT="${REPO_ROOT}/herdr-spreader/.config/herdr-spreader/nvo-harness-worktree-sandbox-remove.sh"
 
 fail() {
 	printf 'FAIL: %s\n' "$*" >&2

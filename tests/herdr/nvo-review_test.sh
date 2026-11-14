@@ -2,7 +2,7 @@
 # Real Git integration tests; only GitHub, Jira, Herdr and Incus are external doubles.
 set -euo pipefail
 REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-SCRIPT="$REPO_ROOT/herdr/.config/herdr-spreader/nvo-review.sh"
+SCRIPT="$REPO_ROOT/herdr-spreader/.config/herdr-spreader/nvo-review.sh"
 fail() {
   printf 'FAIL: %s\n' "$*" >&2
   exit 1
@@ -31,7 +31,7 @@ git config --global user.email review@example.invalid
 git config --global init.defaultBranch 25.16.0
 git config --global "url.file://$TEST_ROOT/remotes/.insteadOf" https://github.extremenetworks.com/Engineering/
 for name in nvo-review.sh nvo-review-notify.sh herdr-action-errors.py nvo-harness-worktree-sandbox-base.sh nvo-harness-worktree-sandbox.sh; do
-  ln -s "$REPO_ROOT/herdr/.config/herdr-spreader/$name" "$HOME/.config/herdr-spreader/$name"
+  ln -s "$REPO_ROOT/herdr-spreader/.config/herdr-spreader/$name" "$HOME/.config/herdr-spreader/$name"
 done
 
 # A real pinned submodule ensures the review setup does not skip PS prerequisites.

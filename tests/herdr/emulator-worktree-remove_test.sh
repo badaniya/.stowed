@@ -2,7 +2,7 @@
 # Real cloudemu Git cleanup; all sandbox and Herdr calls are mocked.
 set -euo pipefail
 REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-SCRIPT="$REPO_ROOT/herdr/.config/herdr-spreader/emulator-worktree-sandbox-remove.sh"
+SCRIPT="$REPO_ROOT/herdr-spreader/.config/herdr-spreader/emulator-worktree-sandbox-remove.sh"
 fail() {
   printf 'FAIL: %s\n' "$*" >&2
   exit 1
@@ -24,7 +24,7 @@ git -C "$TEST_ROOT/seed" commit -qm initial --allow-empty
 git clone -q --bare "$TEST_ROOT/seed" "$TEST_ROOT/remote"
 git config --global url."file://$TEST_ROOT/remote".insteadOf https://github.extremenetworks.com/thomma/cloudemu.git
 # shellcheck source=/dev/null
-source "$REPO_ROOT/herdr/.config/herdr-spreader/emulator-worktree.sh"
+source "$REPO_ROOT/herdr-spreader/.config/herdr-spreader/emulator-worktree.sh"
 emulator_worktree_prepare "$NVO_WORKSPACE_ROOT" badaniya EMULATOR-10 >"$TEST_ROOT/output" 2>&1
 project="$NVO_WORKSPACE_ROOT/EMULATOR-10"
 printf 'local work\n' >"$project/cloudemu/local-changes"

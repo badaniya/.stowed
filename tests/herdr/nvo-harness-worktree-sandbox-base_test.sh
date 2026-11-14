@@ -2,7 +2,7 @@
 # Real local Git regression: no GitHub/Jira/Herdr/Incus or sandbox startup.
 set -euo pipefail
 REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-SCRIPT="$REPO_ROOT/herdr/.config/herdr-spreader/nvo-harness-worktree-sandbox-base.sh"
+SCRIPT="$REPO_ROOT/herdr-spreader/.config/herdr-spreader/nvo-harness-worktree-sandbox-base.sh"
 fail() {
   printf 'FAIL: %s\n' "$*" >&2
   exit 1

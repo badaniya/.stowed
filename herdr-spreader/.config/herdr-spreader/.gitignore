@@ -1,0 +1,3 @@
+__pycache__/
+*.keepalive.log
+*.keepalive.pid

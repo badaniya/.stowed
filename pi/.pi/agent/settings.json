@@ -47,6 +47,6 @@
     "{\"source\":\"npm:pi-lens\",\"scope\":\"user\"}": "4.4.12",
     "{\"source\":\"npm:pi-free\",\"scope\":\"user\"}": "2.8.6",
     "{\"source\":\"npm:@narumitw/pi-btw\",\"scope\":\"user\"}": "0.63.8",
-    "{\"source\":\"npm:@narumitw/pi-goal\",\"scope\":\"user\"}": "0.55.1"
+    "{\"source\":\"npm:@narumitw/pi-goal\",\"scope\":\"user\"}": "0.55.3"
   }
 }

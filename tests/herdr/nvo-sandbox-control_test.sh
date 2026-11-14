@@ -3,8 +3,8 @@ set -euo pipefail
 unset HERDR_ENV HERDR_SOCKET_PATH HERDR_ACTION_ERROR_ACTIVE
 
 REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-SCRIPT="${REPO_ROOT}/herdr/.config/herdr-spreader/nvo-sandbox-control.sh"
-DIALOG_SCRIPT="${REPO_ROOT}/herdr/.config/herdr-spreader/nvo-sandbox-control-dialog.sh"
+SCRIPT="${REPO_ROOT}/herdr-spreader/.config/herdr-spreader/nvo-sandbox-control.sh"
+DIALOG_SCRIPT="${REPO_ROOT}/herdr-spreader/.config/herdr-spreader/nvo-sandbox-control-dialog.sh"
 QUICK_ACTION="${REPO_ROOT}/herdr/.config/herdr/plugins/config/cloudmanic.herdr-plus/quick-actions/sandbox-control.toml"
 
 fail() {
