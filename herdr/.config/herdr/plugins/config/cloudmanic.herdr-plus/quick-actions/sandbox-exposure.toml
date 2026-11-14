@@ -1,0 +1,7 @@
+name = "Sandbox: Exposure"
+type = "form"
+command = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name 'Sandbox: Exposure' -- bash ~/.config/herdr-spreader/sandbox-exposure.sh"
+
+[form]
+prompt = "Enter list, xiqfwdN for the menu, or xiqfwdN followed by create/update/delete/status/list/adopt"
+placeholder = "list or xiqfwd0 update"

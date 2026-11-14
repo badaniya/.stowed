@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# Keep the trust fixture isolated even when the caller uses a Claude profile.
+unset CLAUDE_CONFIG_DIR HERDR_ENV HERDR_SOCKET_PATH HERDR_ACTION_ERROR_ACTIVE
 
 REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-SCRIPT="${REPO_ROOT}/herdr/.config/herdr-spreader/nvo-harness-worktree-sandbox.sh"
+SCRIPT="${REPO_ROOT}/herdr-spreader/.config/herdr-spreader/nvo-harness-worktree-sandbox.sh"
 
 fail() {
 	printf 'FAIL: %s\n' "$*" >&2
@@ -47,9 +49,10 @@ STATE_LOG="$TEST_ROOT/state/herdr-spreader/NVO-20131.log"
 # Build panes must tail their named stage logs rather than opening an empty
 # directory shell while the coordinator performs a monolithic bootstrap.
 assert_contains 'stage_pane_command' "$SCRIPT"
-assert_contains 'tail --retry -F /var/log/network/network-server.log' "$SCRIPT"
-# shellcheck disable=SC2016 # Match the literal interactive monitor handoff.
-assert_contains 'guest_exec=$(guest_exec_command "$guest_command" true)' "$SCRIPT"
+assert_contains 'claude-workspace-trust.py' "$SCRIPT"
+assert_contains 'tail --retry -F /var/log/network/network-server.log /var/log/edge/edge-server.log /var/log/scheduler/scheduler-server.log /var/log/system/system-server.log /var/log/orchestration/orchestration-server.log /var/log/runonce/runonce-server.log /var/log/tagging/tagging-server.log' "$SCRIPT"
+# shellcheck disable=SC2016 # Match the concise monitor reconnection command.
+assert_contains 'pane_command=$(ready_guest_command monitor "$guest_command")' "$SCRIPT"
 # shellcheck disable=SC2016 # Match the literal pipeline emitted by the script.
 # shellcheck disable=SC2016 # Match the literal streaming pipeline in the script.
 assert_contains 'stdbuf -oL tr -cd' "$SCRIPT"
@@ -57,17 +60,19 @@ assert_contains 'stdbuf -oL tr -cd' "$SCRIPT"
 assert_contains 'tee "$raw"' "$SCRIPT"
 assert_contains 'for stage in shared pcm-db' "$SCRIPT"
 # shellcheck disable=SC2016 # Match the literal generated pane assignments.
-assert_contains 'platform=$(stage_pane_command platform-tagging-start' "$SCRIPT"
+assert_contains 'platform=$(stage_pane_command platform platform-tagging-start' "$SCRIPT"
 assert_contains 'platform-tagging-build platform-tagging-start)' "$SCRIPT"
 # shellcheck disable=SC2016 # Match the literal generated pane assignments.
-assert_contains 'godcapp=$(stage_pane_command godcapp-services' "$SCRIPT"
+assert_contains 'godcapp=$(stage_pane_command godcapp godcapp-services' "$SCRIPT"
 assert_contains 'godcapp-build godcapp-infra godcapp-services)' "$SCRIPT"
-# shellcheck disable=SC2016 # Match the literal interactive guest-shell handoff.
-assert_contains '&& exec bash -l" true' "$SCRIPT"
+# shellcheck disable=SC2016 # The history helper reopens the guest directory shell.
+assert_contains 'pane_command=$(ready_guest_command "$pane_name" "cd $(printf' "$SCRIPT"
 
 cat >"$TEST_ROOT/home/.config/herdr-spreader/nvo-harness-worktree-sandbox-base.sh" <<'EOF_BASE'
 #!/usr/bin/env bash
 printf 'worktree deferred=%s args=%s\n' "${NVO_HARNESS_DEFER_WORKSPACE:-}" "$*" >>"${TEST_LOG:?}"
+read -r ticket _ <<<"$*"
+mkdir -p "${NVO_WORKSPACE_ROOT:-$HOME/workspace/${NVO_WORKSPACE_OWNER:-$USER}}/$ticket"
 EOF_BASE
 cat >"$TEST_ROOT/home/.local/bin/labctl" <<'EOF_LABCTL'
 #!/usr/bin/env bash
@@ -80,7 +85,7 @@ elif [[ ${1:-} == instance-project ]]; then
 	printf '%s\n' "${TEST_INSTANCE_PROJECT:-agent-sandbox}"
 elif [[ ${1:-} == stage ]]; then
 	printf 'stage %s\n' "${3:-}" >>"${TEST_LOG:?}"
-	[[ ${TEST_FAIL_STAGE:-} != "${3:-}" ]] || exit 1
+	[[ ${TEST_FAIL_STAGE:-} != "${3:-}" ]] || { printf 'Error: fixture stage failure %s\n' "${3:-}" >&2; exit 1; }
 elif [[ ${1:-} == template && ${TEST_FAIL_TEMPLATE:-false} == true ]]; then
 	exit 1
 fi
@@ -113,7 +118,13 @@ case "${1:-} ${2:-}" in
 	printf '%s\n' "$counter" >"$counter_file"
 	printf '{"result":{"pane":{"pane_id":"w1:p%s"}}}\n' "$counter"
 	;;
-'pane run' | 'pane rename' | 'tab rename') : ;;
+'pane run')
+	if [[ ${4:-} == claude ]]; then
+		project="${NVO_WORKSPACE_ROOT:-$HOME/workspace/${NVO_WORKSPACE_OWNER:-$USER}}/NVO-20131"
+		jq -e --arg project "$project" '.projects[$project].hasTrustDialogAccepted == true' "$HOME/.claude.json" >/dev/null || exit 1
+	fi
+	;;
+'pane rename' | 'tab rename') : ;;
 'tab create') printf '%s\n' '{"result":{"tab":{"tab_id":"w1:t2"},"root_pane":{"pane_id":"w1:p2"}}}' ;;
 *) exit 2 ;;
 esac
@@ -184,13 +195,19 @@ assert_contains 'incus' "$LOG"
 assert_contains 'nvo-20131' "$LOG"
 assert_contains 'true' "$LOG"
 assert_contains 'lazydocker' "$LOG"
-assert_contains '--force-interactive' "$LOG"
-assert_contains 'guest_setpriv_command' "$SCRIPT"
-assert_contains 'setpriv --reset-env --reuid' "$SCRIPT"
-# shellcheck disable=SC2016 # Match the literal interactive-home handoff.
-assert_contains 'cd "$HOME" && %s' "$SCRIPT"
-# shellcheck disable=SC2016 # Match the removed literal wrapper form.
-assert_not_contains 'cd "$HOME" && exec %s' "$SCRIPT"
+assert_not_contains '--force-interactive' "$LOG"
+assert_contains 'pane_history_command' "$SCRIPT"
+assert_contains 'pane_history_setup_command' "$SCRIPT"
+assert_contains 'fc -p' "$SCRIPT"
+assert_contains 'bootstrap_ready_command' "$SCRIPT"
+# shellcheck disable=SC2016 # Match literal source, not an executed substitution.
+assert_contains 'bootstrap_ready=$(bootstrap_ready_command)' "$SCRIPT"
+assert_contains 'print -s --' "$SCRIPT"
+assert_contains 'exec_agent_sandbox nvo-20131 --command' "$LOG"
+assert_not_contains 'guest_setpriv_command' "$SCRIPT"
+assert_not_contains 'setpriv --reset-env --reuid' "$SCRIPT"
+# shellcheck disable=SC2016 # Reject the literal legacy source pattern.
+assert_not_contains 'env_file="$HOME/.config/nvo/sandbox.env"' "$SCRIPT"
 assert_not_contains 'docker.sock' "$LOG"
 assert_not_contains 'docker info' "$LOG"
 
@@ -216,3 +233,14 @@ assert_not_contains 'stage platform-tagging-start' "$LOG"
 assert_not_contains 'stage godcapp-services' "$LOG"
 assert_contains 'herdr workspace create' "$LOG"
 assert_not_contains 'NVO_SANDBOX_BOOTSTRAP_SUCCESS' "$STATE_LOG"
+# The launcher already returned success; the worker must still retain/report its failure.
+notification_found=false
+for _ in {1..100}; do
+  if rg -l 'Sandbox bootstrap: NVO-20131' "$TEST_ROOT/state/herdr/action-errors/"*.json >/dev/null 2>&1; then
+    notification_found=true
+    break
+  fi
+  sleep 0.05
+done
+[[ $notification_found == true ]] || fail 'detached bootstrap failure did not reach shared error reporting'
+rg -q 'Error: fixture stage failure pcm-db' "$TEST_ROOT/state/herdr/action-errors/"*.log || fail 'failed stage output was not retained in notification log'

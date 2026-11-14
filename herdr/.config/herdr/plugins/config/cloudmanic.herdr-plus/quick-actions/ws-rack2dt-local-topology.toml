@@ -1,2 +1,2 @@
 name = "Open workspace: Rack2DT-Local-Topology"
-command = "bash ~/.config/herdr-spreader/rack2dt-local-topology.sh"
+command = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name 'Open workspace: Rack2DT-Local-Topology' -- bash ~/.config/herdr-spreader/rack2dt-local-topology.sh"

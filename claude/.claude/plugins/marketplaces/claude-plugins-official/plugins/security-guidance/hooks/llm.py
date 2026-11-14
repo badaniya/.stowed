@@ -17,6 +17,7 @@ Two reassignable globals here are read by handlers in
 ``_last_review_truncated_bytes``. Handlers reference them as ``llm.X`` (not via
 ``from``-import) so they observe reassignment.
 """
+import contextlib
 import hashlib
 import json
 import logging
@@ -32,9 +33,14 @@ import urllib.parse
 import urllib.request
 from typing import Optional, Tuple, Dict, Any, List, Callable
 
+try:
+    import ssl
+except ImportError:  # a Python built without TLS
+    ssl = None
+
 import extensibility
 import review_api
-from _base import debug_log, _record_usage, _record_http_error, _PV, PROVENANCE_TAG, state_dir as _resolve_state_dir, agent_sdk_site_dirs  # noqa: F401
+from _base import debug_log, _record_usage, _record_http_error, _record_net_error, _clear_net_error, _PV, PROVENANCE_TAG, state_dir as _resolve_state_dir, agent_sdk_site_dirs, make_state_dir, other_host  # noqa: F401
 from session_state import load_state, with_locked_state
 from gitutil import git_config_env, SAFE_GIT_CONFIG
 
@@ -102,11 +108,45 @@ def _bootstrap_pywin32(site_packages_dir):
         debug_log(f"pywin32 bootstrap failed (may break SDK import on Windows): {e}")
 
 
-# Plan Security Check Configuration
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
-# OAuth access token — Claude Code passes this for /login users.
-# The Anthropic API accepts it as `Authorization: Bearer <token>` instead of `x-api-key`.
-ANTHROPIC_AUTH_TOKEN = os.environ.get("ANTHROPIC_AUTH_TOKEN", "")
+_CLAUDE_AI_TOKEN_PREFIX = "sk-ant-oat"
+_API_HOST = "api.anthropic.com"
+
+
+def _route_credentials(env, on_other_host: bool) -> bool:
+    """Put the credentials in `env` where the default API host can use them.
+    Returns whether a token was held back. Does nothing for another API host
+    or a cloud provider: what those take is their own business.
+
+    - Claude Code hands an apiKeyHelper's output over as ANTHROPIC_API_KEY,
+      also when it is a claude.ai token. The API takes that only as a
+      bearer, so as a key every review ends in a 401.
+    - A host other than Claude Code can hand its own gateway's bearer without
+      the gateway's address. It is no credential for the default API host, so
+      it is not sent there. Claude Code passes both, so its sessions are left
+      alone."""
+    base = env.get("ANTHROPIC_BASE_URL", "").strip()
+    try:
+        api_host = (urllib.parse.urlsplit(base).hostname or "").lower() if base else _API_HOST
+    except ValueError:
+        return False
+    if api_host != _API_HOST or _HAS_3P_PROVIDER_AT_LOAD:
+        return False
+    held_back = False
+    token = env.get("ANTHROPIC_AUTH_TOKEN", "")
+    # With a base URL the token was meant for it, whichever shape it has.
+    if on_other_host and not base and token and not token.startswith(_CLAUDE_AI_TOKEN_PREFIX):
+        del env["ANTHROPIC_AUTH_TOKEN"]
+        token, held_back = "", True
+        debug_log("ANTHROPIC_AUTH_TOKEN not used: it is not a claude.ai token and "
+                  "ANTHROPIC_BASE_URL is not set")
+    key = env.get("ANTHROPIC_API_KEY", "")
+    if key.startswith(_CLAUDE_AI_TOKEN_PREFIX) and (
+            not token or token.startswith(_CLAUDE_AI_TOKEN_PREFIX)):
+        env["ANTHROPIC_AUTH_TOKEN"] = token or key
+        del env["ANTHROPIC_API_KEY"]
+    return held_back
+
+
 # On 3P providers (Bedrock/Vertex/Foundry/Mantle), credentials live in the
 # provider env (AWS_PROFILE, GOOGLE_APPLICATION_CREDENTIALS, etc.) — not in
 # ANTHROPIC_*. Treat presence of any 3P provider flag as "has credentials"
@@ -124,6 +164,14 @@ _HAS_3P_PROVIDER_AT_LOAD = any(
         "CLAUDE_CODE_USE_ANTHROPIC_AWS",
     )
 )
+# In os.environ itself, so the CLI a review starts gets the same credentials.
+AUTH_TOKEN_HELD_BACK = _route_credentials(os.environ, other_host())
+
+# Plan Security Check Configuration
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+# OAuth access token — Claude Code passes this for /login users.
+# The Anthropic API accepts it as `Authorization: Bearer <token>` instead of `x-api-key`.
+ANTHROPIC_AUTH_TOKEN = os.environ.get("ANTHROPIC_AUTH_TOKEN", "")
 HAS_API_CREDENTIALS = bool(
     ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN or _HAS_3P_PROVIDER_AT_LOAD
 )
@@ -133,14 +181,23 @@ HAS_API_CREDENTIALS = bool(
 # driver, so the default favors precision over recall and over latency.
 # Override via the SECURITY_REVIEW_MODEL env var (see README).
 #
-# Without an override the review follows the newest Opus rather than a
-# release named here: default_review_model() resolves it per call path.
-# _PINNED_REVIEW_MODEL is only what a review uses when that lookup fails.
+# Every review gets its model from default_review_model(), retry_review_model()
+# or agentic_review_model(); nothing else in this plugin picks one. Without an
+# override they follow the newest Opus (and Sonnet, for a retry) the endpoint
+# lists rather than a release named here.
+#
+# These two names are only what a direct API call uses when the endpoint can't
+# list its models, because the API takes no alias.
 _PINNED_REVIEW_MODEL = "claude-opus-5-5"
-# Claude Code's own alias. The CLI the Agent SDK spawns resolves it to the
-# newest Opus it knows how to drive, in the provider's id form on 3P.
+_PINNED_RETRY_MODEL = "claude-sonnet-5-5"
+# Claude Code's own aliases, for reviews that run through a CLI. The CLI
+# resolves them to the newest model it knows how to drive, in the provider's
+# id form on 3P. A CLI that is out of date resolves them to an old model.
 _CLI_OPUS_ALIAS = "opus"
-SECURITY_REVIEW_MODEL = os.environ.get("SECURITY_REVIEW_MODEL", "").strip() or _PINNED_REVIEW_MODEL
+_CLI_SONNET_ALIAS = "sonnet"
+# What a named model runs at: a CLI older than the model doesn't know the
+# effort it should default to.
+_REVIEWER_EFFORT = "medium"
 
 # OAuth subscriber tokens (ANTHROPIC_AUTH_TOKEN) require this exact system prompt
 # for api.anthropic.com/v1/messages — the API checks for one of the known Claude
@@ -190,21 +247,219 @@ def _anthropic_base_url() -> str:
     Honors ANTHROPIC_BASE_URL (the convention the Anthropic SDK and CC itself
     use) so customers behind an LLM gateway (LiteLLM, Bifrost, self-hosted
     Anthropic-compatible proxy) can route the plugin's reviews through their
-    gateway. Defaults to https://api.anthropic.com. Always returns a string
-    with no trailing slash so callers can safely append /v1/messages etc.
+    gateway. Defaults to https://api.anthropic.com, also when the variable is
+    set but blank, which is how the SDK and CC read it. Always returns a
+    string with no trailing slash so callers can safely append /v1/messages
+    etc.
     """
-    return os.environ.get("ANTHROPIC_BASE_URL", "https://api.anthropic.com").rstrip("/")
+    base = os.environ.get("ANTHROPIC_BASE_URL", "").strip()
+    return (base or "https://api.anthropic.com").rstrip("/")
+
+
+# ── Windows certificate store with an entry OpenSSL cannot read ──────────
+# Older Python releases (3.11 and 3.12 among them) hand each Windows
+# certificate store to OpenSSL in one call, so a single certificate it cannot
+# parse makes ssl.create_default_context() raise, and every HTTPS call fails
+# before a byte is sent. SSL_CERT_FILE does not help: the store is read
+# first. Newer releases load the store one certificate at a time and skip
+# the ones that fail; _urlopen does the same on the releases that do not.
+
+_STORE_TLS_UNSET = object()
+_store_tls_context = _STORE_TLS_UNSET  # None once Python's default context is known to build
+_store_tls_lock = threading.Lock()
+# Store entries left out of that context; emit_metrics reports it.
+_store_certs_skipped = 0
+
+
+def _context_without_unreadable_store_certs():
+    """(context, skipped): Python's default TLS context built from the
+    Windows store entries OpenSSL can parse, and how many it could not.
+    The context is None when the default one builds as it is, off Windows,
+    or when no entry is readable. Trust is never widened: the certificates
+    come from the same stores, under the same server-authentication filter,
+    and the chain and host name are verified as in any default context."""
+    enum_certificates = getattr(ssl, "enum_certificates", None)  # Windows only
+    if enum_certificates is None:
+        return None, 0
+    try:
+        ssl.create_default_context()
+        return None, 0
+    except ssl.SSLError:
+        pass
+    server_auth = ssl.Purpose.SERVER_AUTH.oid
+    context, skipped = None, 0
+    for store in getattr(ssl.SSLContext, "_windows_cert_stores", ("CA", "ROOT")):
+        try:
+            for cert, encoding, trust in enum_certificates(store):
+                if encoding != "x509_asn" or not (trust is True or server_auth in trust):
+                    continue
+                try:
+                    if context is None:
+                        # With cadata, create_default_context applies every
+                        # default except reading the store itself.
+                        context = ssl.create_default_context(cadata=cert)
+                    else:
+                        context.load_verify_locations(cadata=cert)
+                except ssl.SSLError:
+                    skipped += 1
+        except PermissionError:
+            pass
+    if context is None:
+        return None, skipped
+    context.set_default_verify_paths()
+    # What http.client sets on the context it would have made.
+    context.set_alpn_protocols(["http/1.1"])
+    if context.post_handshake_auth is not None:
+        context.post_handshake_auth = True
+    return context, skipped
+
+
+def _urlopen(request, timeout):
+    """urllib.request.urlopen for the plugin's API calls. Uses Python's
+    default TLS context unless that cannot be built because of the Windows
+    certificate store (see above); checked once per process."""
+    global _store_tls_context, _store_certs_skipped
+    if _store_tls_context is _STORE_TLS_UNSET:
+        with _store_tls_lock:
+            if _store_tls_context is _STORE_TLS_UNSET:
+                try:
+                    context, skipped = _context_without_unreadable_store_certs()
+                except Exception as e:
+                    debug_log(f"TLS: certificate store check failed: {type(e).__name__}")
+                    context, skipped = None, 0
+                if context is not None:
+                    debug_log(f"TLS: the Windows certificate store has {skipped} certificate(s) "
+                              "OpenSSL cannot read; using the store without them")
+                    _store_certs_skipped = skipped
+                _store_tls_context = context
+    if _store_tls_context is None:
+        return urllib.request.urlopen(request, timeout=timeout)
+    return urllib.request.urlopen(request, timeout=timeout, context=_store_tls_context)
+
+
+def _is_remote_session() -> bool:
+    return os.environ.get("CLAUDE_CODE_REMOTE", "").lower() in ("1", "true", "yes", "on")
 
 
 def _probe_anthropic(timeout: float = 5.0) -> bool:
     req = urllib.request.Request(_anthropic_base_url() + "/", method="HEAD")
     try:
-        with urllib.request.urlopen(req, timeout=timeout):
+        with _urlopen(req, timeout):
             return True
     except urllib.error.HTTPError:
         return True  # got a status code → connected
-    except (urllib.error.URLError, TimeoutError, OSError):
+    except (urllib.error.URLError, TimeoutError, OSError) as e:
+        _record_net_error(_net_error_code(e))
         return False
+
+
+# =====================================================================
+# Why a call got no HTTP response
+# =====================================================================
+# Classes for the `net_err` metric. Measure only: nothing reads these to
+# decide what the plugin does.
+NET_ERR_CERT_VERIFY = 1   # the server certificate did not verify
+NET_ERR_TLS = 2           # any other TLS failure, including a default context that cannot be built
+NET_ERR_DNS = 3           # the host name did not resolve
+NET_ERR_CONNECT = 4       # refused, reset, closed early or unreachable
+NET_ERR_TIMEOUT = 5
+NET_ERR_PROXY = 6         # the proxy refused the tunnel
+NET_ERR_OTHER = 7         # another failure from the HTTP client
+NET_ERR_INNER_CLI = 9     # the review ran through a CLI, which failed
+NET_ERR_INNER_CLI_TIMEOUT = 10
+NET_ERR_NO_SDK = 11       # the review needed the agent SDK, which could not be imported
+
+_NET_FLAG_NO_CA_ON_DISK = 1   # Python's default CA file and directory are missing or empty
+_NET_FLAG_PROXY = 2           # the request would go through a proxy
+_NET_FLAG_NODE_EXTRA_CA = 4   # NODE_EXTRA_CA_CERTS is set (Python does not read it)
+_NET_FLAG_SSL_CERT_ENV = 8    # SSL_CERT_FILE or SSL_CERT_DIR is set
+
+
+def _net_error_class(exc) -> Tuple[int, int]:
+    """(class, X.509 verify code) for an exception from an API call; class 0
+    for one that is not a network failure. The verify code is OpenSSL's
+    (20 = issuer not found locally, 19 = self-signed certificate in the
+    chain, 10 = expired), 0 when the class is not NET_ERR_CERT_VERIFY."""
+    import errno
+    import http.client
+    import socket
+    try:
+        import ssl
+        cert_error, tls_error = ssl.SSLCertVerificationError, ssl.SSLError
+    except ImportError:
+        cert_error = tls_error = ()
+    reason = getattr(exc, "reason", None)
+    err = reason if isinstance(reason, BaseException) else exc
+    if isinstance(err, cert_error):
+        code = getattr(err, "verify_code", 0)
+        return NET_ERR_CERT_VERIFY, code if isinstance(code, int) and 0 < code < 100 else 0
+    if isinstance(err, tls_error):
+        return NET_ERR_TLS, 0
+    if isinstance(err, socket.gaierror):
+        return NET_ERR_DNS, 0
+    if isinstance(err, OSError):
+        text = str(err).lower()
+        if "tunnel connection failed" in text:
+            return NET_ERR_PROXY, 0
+        if isinstance(err, TimeoutError) or "timed out" in text:
+            return NET_ERR_TIMEOUT, 0
+        if isinstance(err, ConnectionError) or err.errno in (
+                errno.ENETUNREACH, errno.EHOSTUNREACH, errno.ENETDOWN,
+                errno.EHOSTDOWN, errno.EADDRNOTAVAIL):
+            return NET_ERR_CONNECT, 0
+        return NET_ERR_OTHER, 0
+    if isinstance(err, http.client.HTTPException) or isinstance(exc, urllib.error.URLError):
+        return NET_ERR_OTHER, 0
+    return 0, 0
+
+
+def _net_error_flags(tls: bool) -> int:
+    """What the machine's setup says about a failed call. Each check is
+    best effort: one that cannot be made leaves its flag off."""
+    flags = 0
+    if tls:
+        try:
+            import ssl
+            paths = ssl.get_default_verify_paths()
+            has_file = bool(paths.cafile) and os.path.getsize(paths.cafile) > 0
+            has_dir = False
+            if paths.capath:
+                with os.scandir(paths.capath) as it:
+                    has_dir = any(True for _ in it)
+            # Windows also reads the system store, which this cannot see.
+            if not has_file and not has_dir and sys.platform != "win32":
+                flags |= _NET_FLAG_NO_CA_ON_DISK
+        except Exception:
+            pass
+        if os.environ.get("NODE_EXTRA_CA_CERTS"):
+            flags |= _NET_FLAG_NODE_EXTRA_CA
+        if os.environ.get("SSL_CERT_FILE") or os.environ.get("SSL_CERT_DIR"):
+            flags |= _NET_FLAG_SSL_CERT_ENV
+    try:
+        url = urllib.parse.urlsplit(_anthropic_base_url())
+        # As urllib chooses: the proxy for the URL's scheme, bypass by host:port.
+        if (urllib.request.getproxies().get(url.scheme)
+                and not urllib.request.proxy_bypass(url.netloc.rpartition("@")[2])):
+            flags |= _NET_FLAG_PROXY
+    except Exception:
+        pass
+    return flags
+
+
+def _net_error_code(exc) -> int:
+    """`net_err` for an exception: class + 100 * verify code + 10000 * flags,
+    or 0 for an exception that is not a network failure."""
+    try:
+        cls, verify = _net_error_class(exc)
+    except Exception:
+        return 0
+    if not cls:
+        return 0
+    try:
+        flags = _net_error_flags(cls in (NET_ERR_CERT_VERIFY, NET_ERR_TLS))
+    except Exception:
+        flags = 0
+    return cls + 100 * verify + 10000 * flags
 
 
 def _strip_anthropic_from_no_proxy() -> None:
@@ -224,7 +479,7 @@ def ensure_anthropic_reachable() -> bool:
     global _anthropic_reachable
     if _anthropic_reachable is not None:
         return _anthropic_reachable
-    if os.environ.get("CLAUDE_CODE_REMOTE", "").lower() not in ("1", "true", "yes", "on"):
+    if not _is_remote_session():
         _anthropic_reachable = True
         return True
     if _probe_anthropic():
@@ -233,7 +488,9 @@ def ensure_anthropic_reachable() -> bool:
     debug_log("Remote env: api.anthropic.com unreachable, stripping anthropic.com from NO_PROXY")
     _strip_anthropic_from_no_proxy()
     _anthropic_reachable = _probe_anthropic()
-    if not _anthropic_reachable:
+    if _anthropic_reachable:
+        _clear_net_error()  # the first probe's failure; this one got through
+    else:
         debug_log("Remote env: api.anthropic.com still unreachable after NO_PROXY scrub")
     return _anthropic_reachable
 
@@ -387,6 +644,9 @@ _LEGACY_THINKING_MODELS = (
     "claude-sonnet-4-0",
     "claude-sonnet-4-5",
     "claude-haiku-4-5",
+    # Dated ids of the first 4.0 releases, which a listing can name.
+    "claude-opus-4-2",
+    "claude-sonnet-4-2",
 )
 
 
@@ -452,19 +712,23 @@ _REVIEW_MODEL_RETRY_SECONDS = 3600
 _REVIEW_MODEL_LOOKUP_TIMEOUT = 5
 _REVIEW_MODEL_LISTING_MAX_BYTES = 4 * 1024 * 1024
 
-# claude-opus-<major>[-<minor>][-<yyyymmdd>]. Anything else a listing or the
+# claude-<family>-<major>[-<minor>][-<yyyymmdd>]. Anything else a listing or the
 # cache file holds (other families, gateway-prefixed names, free text) is
 # never sent as a model id.
-_OPUS_ID = re.compile(r"claude-opus-(\d{1,2})(?:-(\d{1,2}))?(?:-(\d{8}))?")
+_MODEL_ID = {
+    family: re.compile(rf"claude-{family}-(\d{{1,2}})(?:-(\d{{1,2}}))?(?:-(\d{{8}}))?", re.ASCII)
+    for family in ("opus", "sonnet")
+}
 
-_review_model_memo: Optional[str] = None
+# The newest models this process knows the endpoint lists; None before the lookup.
+_review_model_memo: Optional[Dict[str, Optional[str]]] = None
 
 
-def _newest_opus(model_ids) -> Optional[str]:
-    """The highest-versioned Opus id in `model_ids`, or None."""
+def _newest_in_family(model_ids, family) -> Optional[str]:
+    """The highest-versioned id of `family` in `model_ids`, or None."""
     best = None
     for model_id in model_ids:
-        m = _OPUS_ID.fullmatch(model_id) if isinstance(model_id, str) else None
+        m = _MODEL_ID[family].fullmatch(model_id) if isinstance(model_id, str) else None
         if not m:
             continue
         version = (int(m.group(1)), int(m.group(2) or 0), m.group(3) or "")
@@ -473,8 +737,8 @@ def _newest_opus(model_ids) -> Optional[str]:
     return best[1] if best else None
 
 
-def _fetch_newest_opus() -> Optional[str]:
-    """Newest Opus the configured endpoint lists; None if it can't say."""
+def _fetch_newest_models() -> Dict[str, Optional[str]]:
+    """Newest Opus and Sonnet the configured endpoint lists; {} if it can't say."""
     # Newest first, so one modest page is enough; an org with many models
     # otherwise returns a megabyte-sized listing.
     url = _anthropic_base_url() + "/v1/models?limit=100"
@@ -484,67 +748,76 @@ def _fetch_newest_opus() -> Optional[str]:
             url, headers=_build_auth_headers(use_token, betas=()), method="GET",
         )
         try:
-            with urllib.request.urlopen(
-                request, timeout=_REVIEW_MODEL_LOOKUP_TIMEOUT,
-            ) as response:
+            with _urlopen(request, _REVIEW_MODEL_LOOKUP_TIMEOUT) as response:
                 listing = json.loads(
                     response.read(_REVIEW_MODEL_LISTING_MAX_BYTES).decode("utf-8")
                 )
             entries = listing.get("data") if isinstance(listing, dict) else None
             if not isinstance(entries, list):
                 debug_log("review model lookup: no model list in response")
-                return None
+                return {}
             ids = [e.get("id") for e in entries if isinstance(e, dict)]
-            if listing.get("has_more"):
-                # A truncated page may hold no current Opus at all (an org's
-                # own models can fill it); never let it pick an older one.
-                ids.append(_PINNED_REVIEW_MODEL)
-            return _newest_opus(ids)
+            def newest(family, pinned):
+                if not listing.get("has_more"):
+                    return _newest_in_family(ids, family)
+                # A truncated page may hold no current model at all (an org's
+                # own models can fill it). Never let it pick an older one.
+                found = _newest_in_family(ids + [pinned], family)
+                return None if found == pinned and pinned not in ids else found
+            return {"opus": newest("opus", _PINNED_REVIEW_MODEL),
+                    "sonnet": newest("sonnet", _PINNED_RETRY_MODEL)}
         except urllib.error.HTTPError as e:
             if e.code == 401 and not use_token and ANTHROPIC_AUTH_TOKEN:
                 use_token = True
                 continue
             debug_log(f"review model lookup: HTTP {e.code}")
-            return None
+            return {}
         except Exception as e:
             debug_log(f"review model lookup failed: {type(e).__name__}")
-            return None
-    return None
+            return {}
+    return {}
 
 
 def _read_review_model_cache(path, endpoint_key, now):
-    """(hit, model) from the cache file. `model` is None for a remembered
-    failed lookup. The file is user-writable state: every field is checked
-    and a model id is accepted only if it has the shape of an Opus id."""
+    """(hit, models) from the cache file. `models` has no "opus" for a
+    remembered failed lookup. The file is user-writable state: every field is
+    checked and a model id is accepted only if it has the shape of its family's
+    ids."""
     try:
         with open(path, "r", encoding="utf-8") as f:
             entry = json.loads(f.read(4096))
     except (OSError, ValueError):
-        return False, None
-    if not isinstance(entry, dict) or entry.get("endpoint") != endpoint_key:
-        return False, None
+        return False, {}
+    # Without "sonnet" it was written by a version that didn't look that up.
+    if (not isinstance(entry, dict) or entry.get("endpoint") != endpoint_key
+            or "sonnet" not in entry):
+        return False, {}
     at = entry.get("at")
     if isinstance(at, bool) or not isinstance(at, (int, float)):
-        return False, None
+        return False, {}
     model = entry.get("model")
     if model is None:
         ttl = _REVIEW_MODEL_RETRY_SECONDS
-    elif isinstance(model, str) and _OPUS_ID.fullmatch(model):
+    elif isinstance(model, str) and _MODEL_ID["opus"].fullmatch(model):
         ttl = _REVIEW_MODEL_TTL_SECONDS
     else:
-        return False, None
+        return False, {}
     if not 0 <= now - at < ttl:
-        return False, None
-    return True, model
+        return False, {}
+    sonnet = entry.get("sonnet")
+    if not (isinstance(sonnet, str) and _MODEL_ID["sonnet"].fullmatch(sonnet)):
+        sonnet = None
+    return True, {"opus": model, "sonnet": sonnet}
 
 
-def _write_review_model_cache(path, endpoint_key, model, now):
+def _write_review_model_cache(path, endpoint_key, models, now):
     tmp = None
     try:
-        os.makedirs(os.path.dirname(path), exist_ok=True)
+        make_state_dir(os.path.dirname(path))
         fd, tmp = tempfile.mkstemp(dir=os.path.dirname(path), prefix=".review_model.")
         with os.fdopen(fd, "w", encoding="utf-8") as f:
-            json.dump({"endpoint": endpoint_key, "model": model, "at": now}, f)
+            json.dump({"endpoint": endpoint_key, "model": models.get("opus"),
+                       "sonnet": models.get("sonnet"), "at": now}, f)
         os.replace(tmp, path)
     except OSError as e:
         debug_log(f"review model cache not written: {type(e).__name__}")
@@ -555,24 +828,12 @@ def _write_review_model_cache(path, endpoint_key, model, now):
                 pass
 
 
-def default_review_model() -> str:
-    """Model for a review the user hasn't pinned with SECURITY_REVIEW_MODEL.
-
-    3P providers and Claude apps gateway sign-ins go through the Agent SDK,
-    so the CLI alias does the work. 1P and LLM gateways set with
-    ANTHROPIC_BASE_URL get the newest Opus the endpoint lists, looked up at
-    most once per _REVIEW_MODEL_TTL_SECONDS; _PINNED_REVIEW_MODEL when the
-    lookup can't answer. Never raises.
-    """
+def _listed_models() -> Dict[str, Optional[str]]:
+    """Newest models the endpoint lists, looked up at most once per
+    _REVIEW_MODEL_TTL_SECONDS. {} (or no "opus") when it can't answer. Never
+    raises."""
     global _review_model_memo
-    explicit = os.environ.get("SECURITY_REVIEW_MODEL", "").strip()
-    if explicit:
-        return explicit
-    if _is_3p_provider() or _gateway_cli:
-        return _CLI_OPUS_ALIAS
-    if not HAS_API_CREDENTIALS:
-        return _PINNED_REVIEW_MODEL
-    if _review_model_memo:
+    if _review_model_memo is not None:
         return _review_model_memo
     try:
         path = os.path.join(_resolve_state_dir(), _REVIEW_MODEL_CACHE_FILE)
@@ -581,15 +842,62 @@ def default_review_model() -> str:
             _anthropic_base_url().encode("utf-8")
         ).hexdigest()[:16]
         now = time.time()
-        hit, model = _read_review_model_cache(path, endpoint_key, now)
+        hit, models = _read_review_model_cache(path, endpoint_key, now)
         if not hit:
-            model = _fetch_newest_opus()
-            _write_review_model_cache(path, endpoint_key, model, now)
+            models = _fetch_newest_models()
+            _write_review_model_cache(path, endpoint_key, models, now)
     except Exception as e:
         debug_log(f"review model resolution failed: {type(e).__name__}")
-        model = None
-    _review_model_memo = model or _PINNED_REVIEW_MODEL
-    return _review_model_memo
+        models = {}
+    _review_model_memo = models
+    return models
+
+
+def default_review_model() -> str:
+    """Model for a review the user hasn't pinned with SECURITY_REVIEW_MODEL.
+
+    3P providers and Claude apps gateway sign-ins go through the Agent SDK,
+    so the CLI alias does the work. 1P and LLM gateways set with
+    ANTHROPIC_BASE_URL get the newest Opus the endpoint lists;
+    _PINNED_REVIEW_MODEL when the lookup can't answer. Never raises.
+    """
+    explicit = os.environ.get("SECURITY_REVIEW_MODEL", "").strip()
+    if explicit:
+        return explicit
+    if _is_3p_provider() or _gateway_cli:
+        return _CLI_OPUS_ALIAS
+    if not HAS_API_CREDENTIALS:
+        return _PINNED_REVIEW_MODEL
+    return _listed_models().get("opus") or _PINNED_REVIEW_MODEL
+
+
+def retry_review_model() -> str:
+    """Model a review retries on when the default model's call fails: the CLI
+    alias through the Agent SDK, else the newest Sonnet the endpoint lists."""
+    if _is_3p_provider() or _gateway_cli:
+        # Through the user's CLI, the alias gives the Sonnet id the user's own
+        # sessions use, including any ANTHROPIC_DEFAULT_SONNET_MODEL.
+        return _CLI_SONNET_ALIAS
+    if not HAS_API_CREDENTIALS:
+        return _PINNED_RETRY_MODEL
+    return _listed_models().get("sonnet") or _PINNED_RETRY_MODEL
+
+
+def agentic_review_model() -> Tuple[str, bool]:
+    """(model, listed) for the agentic reviewer, which always runs through a
+    CLI. `listed` is True for the newest Opus the endpoint lists, named so that
+    a CLI that is out of date (the copy bundled with the Agent SDK is frozen
+    when the SDK is installed) still uses it. Otherwise the model is
+    SG_AGENTIC_MODEL, or the CLI alias where the plugin can't list models or
+    the user has told the CLI what `opus` means. Never raises."""
+    explicit = os.environ.get("SG_AGENTIC_MODEL", "").strip()
+    if explicit:
+        return explicit, False
+    if (_is_3p_provider() or _gateway_cli or not HAS_API_CREDENTIALS
+            or os.environ.get("ANTHROPIC_DEFAULT_OPUS_MODEL", "").strip()):
+        return _CLI_OPUS_ALIAS, False
+    model = _listed_models().get("opus")
+    return (model, True) if model else (_CLI_OPUS_ALIAS, False)
 
 
 # A session signed in to a Claude apps gateway with /login gives hooks no
@@ -611,11 +919,12 @@ _gateway_check_unanswered = False
 # depend on the model, so the Sonnet attempt is not made after it.
 _gateway_review_timed_out = False
 
+_WINDOWS = os.name == "nt"
+
 
 def _user_cli_path() -> Optional[str]:
-    """The user's own `claude`: SG_AGENTIC_CLI_PATH if set ("" selects the
-    SDK's bundled CLI), else the first of the absolute paths below that
-    exists, else None."""
+    """The user's own `claude`: SG_AGENTIC_CLI_PATH if set ("" names none), else
+    the first of the absolute paths below that exists, else None."""
     cli_path = os.environ.get("SG_AGENTIC_CLI_PATH")
     if cli_path is not None:
         return cli_path
@@ -627,16 +936,69 @@ def _user_cli_path() -> Optional[str]:
     # user's (potentially attacker-supplied) repo, and Windows shutil.which
     # searches cwd first — a checked-in ./claude.exe would get spawned.
     # Absolute-path probes only.
-    for p in (
-        os.environ.get("CLAUDE_CODE_EXECPATH"),
-        os.path.expanduser("~/.local/bin/claude"),
-        "/root/.local/bin/claude",
-        # Claude Code Remote container install path.
-        "/opt/claude-code/bin/claude",
-    ):
+    probes = [os.environ.get("CLAUDE_CODE_EXECPATH")]
+    if not _WINDOWS:
+        # Where Claude Code is installed on macOS and Linux.
+        probes += [
+            os.path.expanduser("~/.local/bin/claude"),
+            "/root/.local/bin/claude",
+            # Claude Code Remote container install path.
+            "/opt/claude-code/bin/claude",
+        ]
+    for p in probes:
         if p and os.path.isfile(p):
             return p
     return None
+
+
+def _windows_user_cli() -> Optional[str]:
+    """Windows: the full path of the user's claude.exe, from the native
+    installer's folder, else from PATH; None when neither has one. Skips any
+    folder that is not given as a full path, and the working directory and
+    project root, and any folder inside them (unless that root holds the home
+    folder, and with it the user's own tools)."""
+    skipped = [d for d in (os.getcwd(), os.environ.get("CLAUDE_PROJECT_DIR")) if d and os.path.isdir(d)]
+    home = os.path.expanduser("~")
+    real_home = os.path.normcase(os.path.realpath(home)).rstrip(os.sep) + os.sep
+    roots = [r.rstrip(os.sep) + os.sep for r in (os.path.normcase(os.path.realpath(d)) for d in skipped)]
+    roots = [r for r in roots if not real_home.startswith(r)]
+    home_bin = os.path.join(home, ".local", "bin")
+    for folder in [home_bin] + os.environ.get("PATH", "").split(os.pathsep):
+        folder = folder.strip().strip('"')
+        cli = os.path.join(folder, "claude.exe")
+        try:
+            real = os.path.normcase(os.path.realpath(folder))
+            # A full path is one that abspath leaves as it is.
+            if (os.path.normcase(os.path.abspath(folder)) == os.path.normcase(os.path.normpath(folder))
+                    and os.path.isfile(cli)
+                    and not any(os.path.samefile(folder, d) for d in skipped)
+                    and not any(real.startswith(r) for r in roots)):
+                return cli
+        except OSError:
+            pass
+    return None
+
+
+def _cli_for_sdk(cli_path: Optional[str]) -> Optional[str]:
+    """What to pass the Agent SDK as `cli_path`: a given one as it is. With none
+    given, the SDK chooses, except on Windows. There this names the CLI bundled
+    with the SDK, else the user's own, by its full path, and when neither exists
+    the bundled path anyway, so that the start fails."""
+    if cli_path or not _WINDOWS:
+        return cli_path or None
+    # When the SDK module has no file, any full path at which nothing exists will do.
+    sdk_file = getattr(sys.modules.get("claude_agent_sdk"), "__file__", None) or __file__
+    bundled = os.path.join(os.path.dirname(os.path.abspath(sdk_file)), "_bundled", "claude.exe")
+    if os.path.isfile(bundled):
+        return bundled
+    cli_path = _windows_user_cli()
+    if not cli_path:
+        debug_log("no Claude Code for the Agent SDK: none is bundled with it, and there is no claude.exe "
+                  "in ~\\.local\\bin or on PATH outside this project (SG_AGENTIC_CLI_PATH can name one)")
+        return bundled
+    debug_log(f"the Agent SDK has no bundled Claude Code; using {cli_path}")
+    _tolerate_unknown_sdk_messages()
+    return cli_path
 
 
 def _tolerate_unknown_sdk_messages() -> None:
@@ -704,7 +1066,13 @@ def gateway_review_cli(session_id) -> Optional[str]:
     global _gateway_cli, _gateway_check_unanswered
     if _gateway_cli is not None:
         return _gateway_cli or None
-    cli = _user_cli_path() or ""
+    cli = _user_cli_path()
+    if cli is None and _WINDOWS:
+        # The native installer's fixed path, as on macOS and Linux. Not PATH:
+        # this check starts the program with no user action.
+        native = os.path.join(os.path.expanduser("~"), ".local", "bin", "claude.exe")
+        cli = native if os.path.isfile(native) else None
+    cli = cli or ""
     ok = None
     # No skip for CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC, as on Bedrock and Vertex:
     # the gateway docs suggest setting it, and the review goes through the
@@ -738,6 +1106,14 @@ def can_review(session_id) -> bool:
     return HAS_API_CREDENTIALS or gateway_review_cli(session_id) is not None
 
 
+def _forget_failed_call():
+    """A review got its answer from another call running beside the one that
+    failed, so the row should not report that failure."""
+    global _last_call_claude_http_error
+    _last_call_claude_http_error = None
+    _clear_net_error()
+
+
 def _call_claude_via_sdk(prompt, output_schema, *, max_tokens=16000, model=None,
                          cli_path=None):
     """Single-turn SDK call as a substitute for the HTTP _call_claude path on
@@ -750,6 +1126,7 @@ def _call_claude_via_sdk(prompt, output_schema, *, max_tokens=16000, model=None,
     """
     global _last_call_claude_http_error, _gateway_review_timed_out
     _last_call_claude_http_error = None
+    _clear_net_error()
     route = "gateway" if cli_path else "3P"
 
     try:
@@ -778,13 +1155,14 @@ def _call_claude_via_sdk(prompt, output_schema, *, max_tokens=16000, model=None,
             debug_log(f"{route} sdk-single-turn: SDK unavailable ({e})")
             _last_call_claude_http_error = -1
             _record_http_error(-1)
+            _record_net_error(NET_ERR_NO_SDK)
             return None
 
     _send_sdk_logs_to_debug_log()
     if cli_path:
         _tolerate_unknown_sdk_messages()
     else:
-        cli_path = os.environ.get("SG_AGENTIC_CLI_PATH") or None
+        cli_path = _cli_for_sdk(os.environ.get("SG_AGENTIC_CLI_PATH") or None)
     default_model = default_review_model()
     chosen_model = model or default_model
 
@@ -800,7 +1178,7 @@ def _call_claude_via_sdk(prompt, output_schema, *, max_tokens=16000, model=None,
             system_prompt=CLAUDE_CODE_SYSTEM_PROMPT,
             cli_path=cli_path,
             allowed_tools=[],
-            extra_args=_only_tools_args(),
+            extra_args={**_only_tools_args(), **_reviewer_session_args()},
             setting_sources=[],
             max_turns=2,
             model=chosen_model,
@@ -827,9 +1205,8 @@ def _call_claude_via_sdk(prompt, output_schema, *, max_tokens=16000, model=None,
                 _record_usage(getattr(msg, "usage", None) or {}, chosen_model,
                               cost_usd=getattr(msg, "total_cost_usd", None))
             elif getattr(msg, "subtype", None) == "api_retry":
-                data = getattr(msg, "data", None)
-                status = data.get("error_status") if isinstance(data, dict) else None
-                _retried_after.add(str(status) if isinstance(status, int) else "no response")
+                status = _api_retry_status(msg)
+                _retried_after.add(str(status) if status is not None else "no response")
         return structured
 
     # 60s ceiling: a single review request on a healthy 3P endpoint completes
@@ -862,12 +1239,14 @@ def _call_claude_via_sdk(prompt, output_schema, *, max_tokens=16000, model=None,
             _gateway_review_timed_out = True
         _last_call_claude_http_error = -1
         _record_http_error(-1)
+        _record_net_error(NET_ERR_INNER_CLI_TIMEOUT)
         return None
     except Exception as e:
         debug_log(f"{route} sdk-single-turn: query failed ({e})")
         _log_child_stderr()
         _last_call_claude_http_error = -1
         _record_http_error(-1)
+        _record_net_error(NET_ERR_INNER_CLI)
         return None
 
 
@@ -890,6 +1269,7 @@ def _call_claude(prompt, output_schema, thinking_budget=10000, max_tokens=16000,
     """
     global _last_call_claude_http_error
     _last_call_claude_http_error = None
+    _clear_net_error()
 
     if _is_3p_provider():
         # On Bedrock/Vertex/Foundry/Mantle the api.anthropic.com path below
@@ -975,7 +1355,7 @@ def _call_claude(prompt, output_schema, thinking_budget=10000, max_tokens=16000,
                 headers=headers,
                 method="POST",
             )
-            with urllib.request.urlopen(request, timeout=120) as response:
+            with _urlopen(request, 120) as response:
                 response_body = response.read().decode("utf-8")
                 response_data = json.loads(response_body)
             _record_usage(response_data.get("usage") or {},
@@ -1008,6 +1388,7 @@ def _call_claude(prompt, output_schema, thinking_budget=10000, max_tokens=16000,
                 debug_log(f"Request failed after retries: {e}")
                 _last_call_claude_http_error = -1
                 _record_http_error(-1)
+                _record_net_error(_net_error_code(e))
                 return None
 
     if not response_data:
@@ -1068,9 +1449,8 @@ def _call_claude_dual_or(prompt, output_schema, *, bool_key: str, list_key: str,
 
     explicit = os.environ.get("SECURITY_REVIEW_MODEL", "").strip()
     primary = default_review_model()
-    # Through the user's CLI, the alias gives the Sonnet id the user's own
-    # sessions use on the gateway, including any ANTHROPIC_DEFAULT_SONNET_MODEL.
-    fallback = "sonnet" if _gateway_cli else "claude-sonnet-4-6"
+    # Not looked up for a pinned model, which is never retried on another.
+    fallback = None if explicit else retry_review_model()
 
     if not _dual_or_enabled():
         # Single-call path. Reuse the same sonnet-fallback retry as a dual_or
@@ -1123,6 +1503,7 @@ def _call_claude_dual_or(prompt, output_schema, *, bool_key: str, list_key: str,
             merged.append(item)
         elif item not in merged:
             merged.append(item)
+    _forget_failed_call()  # one leg got through; the other may have failed
     return {bool_key: bool(merged) or bool((ra or {}).get(bool_key)) or bool((rb or {}).get(bool_key)),
             list_key: merged}
 
@@ -1506,6 +1887,7 @@ Respond with a JSON object. If vulnerabilities are found, set hasVulnerabilities
                                         cacheable_prefix=_CODE_REVIEW_RUBRIC)
     except Exception as e:
         debug_log(f"LLM code review: call raised {type(e).__name__}: {e}")
+        _record_net_error(_net_error_code(e))
         analysis = None
     # A reply without the schema's required flag is not a verdict either.
     if not isinstance(analysis, dict) or "hasVulnerabilities" not in analysis:
@@ -1585,6 +1967,32 @@ def _send_sdk_logs_to_debug_log() -> None:
             sdk_logger.propagate = False
 
 
+# Claude Code older than 2.0.63 exits at startup with "unknown option" when
+# given --no-session-persistence. The flag is sent until an inner CLI
+# refuses it.
+_SESSION_FLAG = "no-session-persistence"
+_send_session_flag = True
+
+
+def _reviewer_session_args() -> Dict[str, Optional[str]]:
+    """Extra CLI flags for the SDK-spawned inner `claude`.
+
+    Review runs are one-shot and never resumed, so by default the inner CLI
+    is told not to save them as session transcripts (they hold the full
+    review prompt, including diff hunks). SECURITY_GUIDANCE_PERSIST_SESSIONS=1
+    keeps the transcripts, e.g. to debug a review.
+    """
+    keep = os.environ.get("SECURITY_GUIDANCE_PERSIST_SESSIONS", "").strip().lower()
+    if not _send_session_flag or keep in ("1", "on", "true", "yes"):
+        return {}
+    return {_SESSION_FLAG: None}
+
+
+def _names_session_flag(stderr_line: Any) -> bool:
+    text = str(stderr_line)
+    return _SESSION_FLAG in text and "unknown option" in text.lower()
+
+
 # The agentic reviewer reads a diff it must not trust, so it gets
 # file-reading tools and nothing else.
 _REVIEWER_TOOLS = ("Read", "Grep", "Glob")
@@ -1619,22 +2027,70 @@ def _names_strict_mcp_flag(stderr_line: Any) -> bool:
     return "--strict-mcp-config" in str(stderr_line)
 
 
+def _refused_flags(stderr_lines: List[Any]) -> List[str]:
+    """Which of the flags this plugin can leave out the lines refuse."""
+    refused = []
+    if any(_names_strict_mcp_flag(l) for l in stderr_lines):
+        refused.append("--strict-mcp-config")
+    if any(_names_session_flag(l) for l in stderr_lines):
+        refused.append("--" + _SESSION_FLAG)
+    return refused
+
+
 def _run_inner_cli(start: Callable[[], Any], stderr_lines: List[str]) -> Any:
     """start() runs one inner CLI to its result; stderr_lines receives what
     that CLI writes to stderr. A start the CLI refused over
-    --strict-mcp-config is made once more without the flag, and the flag is
-    left out for the rest of this process."""
-    global _send_strict_mcp
-    del stderr_lines[:]
-    try:
-        return start()
-    except Exception:
-        if not any(_names_strict_mcp_flag(l) for l in stderr_lines):
-            raise
-        _send_strict_mcp = False
-        debug_log("inner CLI refused --strict-mcp-config; starting it again without the flag")
+    --strict-mcp-config or --no-session-persistence is made again without
+    that flag, and the flag is left out for the rest of this process. A CLI
+    names one flag per start, so one that refuses both is started three
+    times."""
+    global _send_strict_mcp, _send_session_flag
+    left_out: List[str] = []
+    while True:
         del stderr_lines[:]
-        return start()
+        try:
+            return start()
+        except Exception:
+            refused = [f for f in _refused_flags(stderr_lines) if f not in left_out]
+            if not refused:
+                raise
+            if "--strict-mcp-config" in refused:
+                _send_strict_mcp = False
+            if "--" + _SESSION_FLAG in refused:
+                _send_session_flag = False
+            left_out += refused
+            debug_log(f"inner CLI refused {' and '.join(refused)}; "
+                      "starting it again without")
+
+
+class _ReviewerAuthFailed(Exception):
+    """The agentic reviewer's credentials were refused; retrying cannot help."""
+
+
+# Retry notices in a row, each after a 401, at which the review stops. One is
+# normal: the CLI renews a stored login after a 401 and tries again. Not used
+# in a remote session, where the CLI waits out a short sign-in outage on purpose.
+_AGENTIC_MAX_401_RETRIES = 3
+
+
+def _api_retry_status(msg: Any) -> Optional[int]:
+    """The HTTP status of the CLI's api_retry notice, if it gives one."""
+    data = getattr(msg, "data", None)
+    status = data.get("error_status") if isinstance(data, dict) else None
+    return status if isinstance(status, int) else None
+
+
+_OAUTH_TOKEN_PREFIX = "sk-ant-oat"
+
+
+def _oauth_variable_is_safe() -> bool:
+    """Whether a claude.ai token may move out of ANTHROPIC_AUTH_TOKEN. With a
+    base URL set it can be a gateway's bearer, bare mode ignores the OAuth
+    variable, and a cloud session has no stored login to protect and rotates
+    its own token."""
+    bare = os.environ.get("CLAUDE_CODE_SIMPLE", "").strip().lower()
+    return not (os.environ.get("ANTHROPIC_BASE_URL", "").strip()
+                or bare in ("1", "true", "yes", "on") or _is_remote_session())
 
 
 def _agentic_spawn_env() -> Dict[str, str]:
@@ -1652,7 +2108,8 @@ def _agentic_spawn_env() -> Dict[str, str]:
     blanking the inherited OAuth token there strands the grandchild with
     zero credentials → ProcessError → agentic silently falls back to
     single-shot on every commit. So forward the OAuth token whenever it
-    is the only credential.
+    is the only credential, as CLAUDE_CODE_OAUTH_TOKEN when it is a
+    claude.ai token.
     """
     env = {
         # Policy settings can enable this plugin inside the reviewing CLI too;
@@ -1684,12 +2141,29 @@ def _agentic_spawn_env() -> Dict[str, str]:
     # No API key — forward the OAuth token from the parent process so the
     # SDK grandchild has credentials. Empty string is fine (the SDK will
     # use whatever auth path is left).
-    env["ANTHROPIC_AUTH_TOKEN"] = os.environ.get("ANTHROPIC_AUTH_TOKEN") or ""
+    token = os.environ.get("ANTHROPIC_AUTH_TOKEN") or ""
+    if token.startswith(_OAUTH_TOKEN_PREFIX) and _oauth_variable_is_safe():
+        # Given as ANTHROPIC_AUTH_TOKEN, the inner CLI still renews a stored
+        # claude.ai login it does not run on, which can sign the user out.
+        # Given as its OAuth token, it leaves the stored login alone. That
+        # route also turns on 1-hour cache writes, which cost more.
+        env["CLAUDE_CODE_OAUTH_TOKEN"] = token
+        env["FORCE_PROMPT_CACHING_5M"] = "1"
+        token = ""
+    env["ANTHROPIC_AUTH_TOKEN"] = token
     return env
 
 
 # The tools the agentic reviewer is given to look around the repo.
 _REVIEWER_FILE_TOOLS = ("Read", "Grep", "Glob")
+
+
+def _is_wrapped_verdict(value: Any) -> bool:
+    """True for a verdict nested inside its own list key:
+    {"findings": {"findings": [...]}}."""
+    return isinstance(value, dict) and any(
+        isinstance(inner, dict) and isinstance(inner.get(key), list)
+        for key, inner in value.items())
 
 
 def _agentic_context_dir(repo_dir: str) -> str:
@@ -1707,11 +2181,19 @@ def agentic_review(
                      before the review, 2 = it went missing during it
       rv_tool_err    Read/Grep/Glob calls that came back as errors
       rv_tool_calls  Read/Grep/Glob calls made
+      rv_so_err      verdicts the CLI refused, e.g. for breaking the schema
+      rv_so_wrapped  of those, verdicts wrapped in their own key, as in
+                     {"findings": {"findings": [...]}}
+      rv_turns       turns the reviewer took, as the CLI counts them
+      rv_api_ms      time the reviewer spent waiting on the model, in ms
 
-    The counts cover all stages of the review. Keys are left out when 0."""
+    The counts cover all stages of the review. Keys are left out when 0.
+    rv_turns and rv_api_ms come from each stage's result message, so a stage
+    that ends without one (the CLI exits early) adds nothing to them."""
     context_dir = _agentic_context_dir(repo_dir)
     gone = 0 if os.path.isdir(context_dir) else 1
-    ctx = {"rv_tool_err": 0, "rv_tool_calls": 0}
+    ctx = {"rv_tool_err": 0, "rv_tool_calls": 0, "rv_turns": 0, "rv_api_ms": 0,
+           "rv_so_err": 0, "rv_so_wrapped": 0}
     guidance, vulns, metrics = _agentic_review(repo_dir, diff_files, touched_paths, ctx)
     if not gone and not os.path.isdir(context_dir):
         gone = 2
@@ -1772,8 +2254,10 @@ def _agentic_review(
             return None, [], {"agentic_fallback": f"import:{type(e).__name__}"}
 
     _send_sdk_logs_to_debug_log()
-    # Overridable via SG_AGENTIC_MODEL.
-    model = os.environ.get("SG_AGENTIC_MODEL") or _CLI_OPUS_ALIAS
+    model, listed = agentic_review_model()
+    spawn_env = _agentic_spawn_env()
+    if listed and not os.environ.get("CLAUDE_CODE_EFFORT_LEVEL", "").strip():
+        spawn_env["CLAUDE_CODE_EFFORT_LEVEL"] = _REVIEWER_EFFORT
     max_turns = int(os.environ.get("SG_AGENTIC_MAX_TURNS", "18"))
     # In production repo_dir is the user's working tree (full repo). Under the
     # eval harness it's a temp dir with ONLY touched_paths — the agent can't
@@ -1804,7 +2288,7 @@ def _agentic_review(
         "the findings list."
     )
 
-    # Always prefer the user's installed `claude` over the SDK's bundled CLI.
+    # Prefer the `claude` that _user_cli_path finds over the SDK's bundled CLI.
     # The bundled CLI is whatever shipped with the pip-installed SDK version
     # and can lag the user's CLI by months — protocol skew between them is a
     # top cause of agentic_fallback=2 in production (the SDK reads
@@ -1814,19 +2298,21 @@ def _agentic_review(
     cli_path = _gateway_cli or _user_cli_path()
     if cli_path:
         _tolerate_unknown_sdk_messages()
+    else:
+        cli_path = _cli_for_sdk(cli_path)
 
     # Without a callback the inner CLI writes to this hook's stderr, which
     # Claude Code shows Claude as the review notice. Log it instead.
     child_stderr_lines = [0]
-    # Lines of the current start that name --strict-mcp-config (_run_inner_cli).
+    # Lines of the current start that refuse a flag (_run_inner_cli).
     flag_refusals: List[str] = []
 
     def _child_stderr_metric() -> Dict[str, int]:
         return {"child_stderr": child_stderr_lines[0]} if child_stderr_lines[0] else {}
 
     def _on_child_stderr(line: str) -> None:
-        if _names_strict_mcp_flag(line):
-            # Not counted: where the flag is refused, every review gets this
+        if _refused_flags([line]):
+            # Not counted: where a flag is refused, every review gets this
             # line once, from the start that is then made again.
             flag_refusals.append(str(line))
             debug_log(f"agentic reviewer's CLI stderr | {str(line).rstrip()}")
@@ -1852,7 +2338,8 @@ def _agentic_review(
             # Pre-approved, and the only tools the reviewer has: no
             # permission mode can then let it write, run or fetch anything.
             allowed_tools=list(_REVIEWER_TOOLS),
-            extra_args=_only_tools_args(_REVIEWER_TOOLS),
+            extra_args={**_only_tools_args(_REVIEWER_TOOLS),
+                        **_reviewer_session_args()},
             setting_sources=[],
             max_turns=turns if turns is not None else max_turns,
             model=model,
@@ -1864,10 +2351,8 @@ def _agentic_review(
             #
             # Identical --model/--fallback-model is rejected by the inner CLI
             # at startup ("Fallback model cannot be the same as the main
-            # model", exit 1 → ProcessError). The default model here IS
-            # _CLI_OPUS_ALIAS, so an unconditional fallback_model would
-            # kill every spawn before the first API call. Omit the fallback
-            # when it would equal the primary.
+            # model", exit 1 → ProcessError). The check compares the two
+            # strings, so a listed id may fall back to the alias.
             fallback_model=(
                 _CLI_OPUS_ALIAS if model != _CLI_OPUS_ALIAS else None
             ),
@@ -1876,7 +2361,8 @@ def _agentic_review(
             # env as {**os.environ, **opts.env}, so the inner claude inherits
             # it and prefers it over ANTHROPIC_API_KEY — but some model
             # endpoints reject OAuth bearers (401 → exit 1 → silent
-            # fallback). Override with empty so API-key auth wins.
+            # fallback). Override with empty so API-key auth wins. With no
+            # API key, a claude.ai token moves to CLAUDE_CODE_OAUTH_TOKEN.
             #
             # On CCR (entrypoint=remote*) the daemon passes auth on file
             # descriptors to the top-level claude process; the SDK-spawned
@@ -1891,7 +2377,7 @@ def _agentic_review(
             # versions. Clearing WEBSOCKET_AUTH_FILE_DESCRIPTOR alone lets
             # the review run end-to-end; the others are belt-and-suspenders
             # for the same fd-passing pattern.
-            env=_agentic_spawn_env(),
+            env=spawn_env,
             stderr=_on_child_stderr,
         )
         n = 0
@@ -1911,32 +2397,64 @@ def _agentic_review(
 
         # Blocks are matched by shape so older SDK builds need no extra import.
         file_tool_ids = set()
-        async for msg in query(prompt=_once(), options=opts):
-            if isinstance(msg, AssistantMessage):
-                n += 1
-                for b in getattr(msg, "content", None) or []:
-                    if (getattr(b, "name", None) in _REVIEWER_FILE_TOOLS
-                            and getattr(b, "id", None)):
-                        file_tool_ids.add(b.id)
-                        ctx["rv_tool_calls"] += 1
-            elif isinstance(msg, ResultMessage):
-                subtype = msg.subtype
-                if msg.structured_output is not None:
-                    structured = msg.structured_output
-                # SDK ResultMessage carries aggregate usage + cache-aware
-                # cost across the whole multi-turn run; prefer its cost over
-                # the price-table estimate. getattr guards older SDK builds.
-                _record_usage(getattr(msg, "usage", None) or {}, model,
-                              cost_usd=getattr(msg, "total_cost_usd", None))
-            else:
-                # Tool results come back as user messages.
-                content = getattr(msg, "content", None)
-                if isinstance(content, list):
-                    ctx["rv_tool_err"] += sum(
-                        1 for b in content
-                        if getattr(b, "is_error", None) is True
-                        and getattr(b, "tool_use_id", None) in file_tool_ids
-                    )
+        # StructuredOutput call id -> whether its verdict was wrapped.
+        verdicts: Dict[str, bool] = {}
+        auth_retries = 0
+        # Closed on the way out, also on a raise, so the CLI stops with the review.
+        async with contextlib.aclosing(query(prompt=_once(), options=opts)) as messages:
+            async for msg in messages:
+                if isinstance(msg, AssistantMessage):
+                    # Old CLIs answer each refused request by asking the model
+                    # again, hundreds of times; the message is the same on all.
+                    if getattr(msg, "error", None) == "authentication_failed":
+                        raise _ReviewerAuthFailed("authentication_failed")
+                    auth_retries = 0
+                    n += 1
+                    for b in getattr(msg, "content", None) or []:
+                        if (getattr(b, "name", None) in _REVIEWER_FILE_TOOLS
+                                and getattr(b, "id", None)):
+                            file_tool_ids.add(b.id)
+                            ctx["rv_tool_calls"] += 1
+                        elif (getattr(b, "name", None) == "StructuredOutput"
+                                and getattr(b, "id", None)):
+                            verdicts[b.id] = _is_wrapped_verdict(getattr(b, "input", None))
+                elif isinstance(msg, ResultMessage):
+                    subtype = msg.subtype
+                    if msg.structured_output is not None:
+                        structured = msg.structured_output
+                    # SDK ResultMessage carries aggregate usage + cache-aware
+                    # cost across the whole multi-turn run; prefer its cost over
+                    # the price-table estimate. getattr guards older SDK builds.
+                    _record_usage(getattr(msg, "usage", None) or {}, model,
+                                  cost_usd=getattr(msg, "total_cost_usd", None))
+                    for key, attr in (("rv_turns", "num_turns"), ("rv_api_ms", "duration_api_ms")):
+                        value = getattr(msg, attr, None)
+                        # Counting must never fail the review: anything that
+                        # is not a positive finite number adds nothing.
+                        if (isinstance(value, (int, float)) and not isinstance(value, bool)
+                                and 0 < value < float("inf")):
+                            ctx[key] += int(value)
+                elif getattr(msg, "subtype", None) == "api_retry":
+                    # A gateway's 401 without the API's x-should-retry: false
+                    # keeps the CLI retrying for about three minutes.
+                    auth_retries = auth_retries + 1 if _api_retry_status(msg) == 401 else 0
+                    if (auth_retries >= _AGENTIC_MAX_401_RETRIES
+                            and not _is_remote_session()):
+                        raise _ReviewerAuthFailed(f"{auth_retries} retries after HTTP 401")
+                else:
+                    # Tool results come back as user messages.
+                    content = getattr(msg, "content", None)
+                    if isinstance(content, list):
+                        ctx["rv_tool_err"] += sum(
+                            1 for b in content
+                            if getattr(b, "is_error", None) is True
+                            and getattr(b, "tool_use_id", None) in file_tool_ids
+                        )
+                        for b in content:
+                            wrapped = verdicts.get(getattr(b, "tool_use_id", None))
+                            if wrapped is not None and getattr(b, "is_error", None) is True:
+                                ctx["rv_so_err"] += 1
+                                ctx["rv_so_wrapped"] += wrapped
         return structured, n, subtype
 
     def _run(system: str, prompt: str, *, schema: Dict[str, Any]

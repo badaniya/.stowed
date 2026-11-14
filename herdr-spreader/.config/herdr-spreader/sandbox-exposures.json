@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "id": "lab-sandbox-exposures",
+  "sandboxes": {
+    "emulator-11": {
+      "interface": "xiqfwd0",
+      "parent": "enp0s31f6",
+      "network": "agentbr0",
+      "project": "default",
+      "target": "10.77.10.14",
+      "ports": "all",
+      "expected_address": "134.141.48.93",
+      "proxy": {
+        "enabled": true,
+        "listen_port": 3128,
+        "client_cidrs": ["10.64.195.0/24", "10.59.216.0/24", "10.139.38.0/24"],
+        "target_ports": [443],
+        "allow_host_probe": true
+      }
+    }
+  }
+}

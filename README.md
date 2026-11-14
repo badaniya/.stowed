@@ -91,7 +91,7 @@ rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/mise; rm -rf $HOME/.config
 
 ```bash
 # Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
-rm -rf $HOME/.npmrc; rm -rf $HOME/.config/herdr;  rm -rf $HOME/.config/herdr-app; rm -rf $HOME/.claude.json; rm -rf $HOME/.claude; rm -rf $HOME/.copilot; rm -rf $HOME/.config/.copilot; rm -rf $HOME/.config/opencode; rm -rf $HOME/.pi; rm -rf $HOME/.agents; stow -d $HOME/.stowed npm herdr herdr-app claude copilot opencode pi agents
+rm -rf $HOME/.npmrc; rm -rf $HOME/.config/herdr;  rm -rf $HOME/.config/herdr-app; rm -rf $HOME/.config/herdr-spreader; rm -rf $HOME/.config/rex; rm -rf $HOME/.claude.json; rm -rf $HOME/.claude; rm -rf $HOME/.copilot; rm -rf $HOME/.config/.copilot; rm -rf $HOME/.config/opencode; rm -rf $HOME/.pi; rm -rf $HOME/.agents; stow -d $HOME/.stowed npm herdr herdr-app herdr-spreader rex claude copilot opencode pi agents
 ```
 
 ## Installing Stowed Terminal Tools
@@ -364,25 +364,31 @@ herdr plugin install ezcorp-org/herdr-pc-ram-and-cpu-usage-overlay --yes      # 
 herdr plugin install ogulcancelik/herdr-browser --yes                         # Web browser in the terminal (experimental)
 ```
 
-### 3) Claude Code - Anthropic's AI coding agent for the terminal
+### 3) Rex - Terminal Multiplexer for AI Agents (Superlogical)
+
+```bash
+curl -fsSL https://pkgs.superlogical.com/rex/install.sh | sh
+```
+
+### 4) Claude Code - Anthropic's AI coding agent for the terminal
 
 ```bash
 curl -fsSL https://claude.ai/install.sh | bash
 ```
 
-### 4) Copilot-cli - GitHub Copilot for the terminal
+### 5) Copilot-cli - GitHub Copilot for the terminal
 
 ```bash
 npm install -g @github/copilot
 ```
 
-### 5) Opencode - An open source AI coding agent for the terminal
+### 6) Opencode - An open source AI coding agent for the terminal
 
 ```bash
 curl -fsSL https://opencode.ai/install | bash
 ```
 
-### 6) Pi - A fully customizable AI coding agent for the terminal
+### 7) Pi - A fully customizable AI coding agent for the terminal
 
 ```bash
 curl -fsSL https://pi.dev/install.sh | sh           # Pi installation
@@ -401,7 +407,7 @@ pi install npm:pi-claude-auth                       # Claude code LLM access
 pi install npm:pi-free                              # Free LLM access
 ```
 
-### 7) Agents - A centralized skills area for all AI tools
+### 8) Agents - A centralized skills area for all AI tools
 
 ```bash
 # Sure-fire way to ensure stow symlink creation

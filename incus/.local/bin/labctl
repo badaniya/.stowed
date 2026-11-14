@@ -41,6 +41,8 @@ Commands:
   stage TICKET STAGE_NAME                    Run one allowlisted private application stage
   start TICKET [--dry-run]
   stop TICKET [--dry-run]
+  pause TICKET [--dry-run]                    Freeze processes; retain memory
+  resume TICKET [--dry-run]                   Unfreeze without rerunning stack hooks
   status TICKET
   verify TICKET [--dry-run]
   destroy TICKET --yes [--dry-run]
@@ -99,7 +101,11 @@ labctl_create() {
 	if [[ -f $state ]] && labctl_state_lookup "$ticket" >/dev/null 2>&1; then
 		ip=$(labctl_state_ip_for "$ticket")
 		if [[ -z $ip ]] || ! labctl_config_is_ipv4 "$ip"; then
-			ip=$(labctl_state_reserve_ip "$ticket")
+			if [[ ${LABCTL_DRY_RUN:-false} == true ]]; then
+				ip=$(labctl_state_preview_ip)
+			else
+				ip=$(labctl_state_reserve_ip "$ticket")
+			fi
 		fi
 	elif [[ ${LABCTL_DRY_RUN:-false} == true ]]; then
 		ip=$(labctl_state_preview_ip)
@@ -116,9 +122,9 @@ labctl_create() {
 		return 0
 	fi
 	labctl_incus_launch "$instance" "$ip"
-	labctl_incus_attach_workspace "$instance" "$root"
 	labctl_incus_configure_network "$instance"
 	labctl_incus_wait_ready "$instance" "$root"
+	labctl_incus_attach_workspace "$instance" "$root"
 	labctl_incus_configure_git_safe_directories "$instance" "$root"
 	if [[ ${LABCTL_DRY_RUN:-false} != true ]]; then
 		labctl_state_record "$ticket" "$instance" "$ip" "$workspace_type"
@@ -157,6 +163,28 @@ labctl_stop() {
 	}
 	labctl_incus_stop "$ticket" "$root"
 	[[ ${LABCTL_DRY_RUN:-false} == true ]] || labctl_state_set_status "$ticket" stopped
+}
+
+labctl_pause_resume() {
+	local action=$1 ticket=$2 status record
+	ticket=$(labctl_normalize_ticket "$ticket") || return 1
+	case $action in
+	pause) status=paused ;;
+	resume) status=running ;;
+	*) labctl_die "unsupported execution action: $action"; return 1 ;;
+	esac
+	record=$(labctl_state_lookup "$ticket") || return 1
+	jq -e 'type == "object" and .status != "destroyed"' <<<"$record" >/dev/null || {
+		labctl_die "sandbox is not registered or is destroyed: $ticket"
+		return 1
+	}
+	labctl_incus_instance_exists "$ticket" || {
+		labctl_die "sandbox instance does not exist: $ticket"
+		return 1
+	}
+	# Freeze/unfreeze only: stack hooks would restart work or hang in a frozen guest.
+	labctl_run incus --project "$LABCTL_INCUS_PROJECT" "$action" "$ticket" || return 1
+	[[ ${LABCTL_DRY_RUN:-false} == true ]] || labctl_state_set_status "$ticket" "$status"
 }
 
 labctl_status() {
@@ -348,7 +376,7 @@ instance-project)
 	}
 	printf '%s\n' "$LABCTL_INCUS_PROJECT"
 	;;
-create | bootstrap | start | stop | status | verify | destroy | cleanup-worktree)
+create | bootstrap | start | stop | pause | resume | status | verify | destroy | cleanup-worktree)
 	labctl_config_load "$config_path"
 	labctl_lifecycle_options "$@"
 	case $command in
@@ -356,6 +384,7 @@ create | bootstrap | start | stop | status | verify | destroy | cleanup-worktree
 	bootstrap) labctl_bootstrap "$LABCTL_LIFECYCLE_TICKET" "$LABCTL_REPO_SELECTOR" ;;
 	start) labctl_start "$LABCTL_LIFECYCLE_TICKET" ;;
 	stop) labctl_stop "$LABCTL_LIFECYCLE_TICKET" ;;
+	pause | resume) labctl_pause_resume "$command" "$LABCTL_LIFECYCLE_TICKET" ;;
 	status) labctl_status "$LABCTL_LIFECYCLE_TICKET" ;;
 	verify) labctl_verify "$LABCTL_LIFECYCLE_TICKET" ;;
 	destroy) labctl_destroy "$LABCTL_LIFECYCLE_TICKET" ;;

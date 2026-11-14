@@ -33,7 +33,7 @@ test('compactStatuses: healthy known strings', () => {
   ]);
   const result = compactStatuses(statuses);
   deepStrictEqual(result, [
-    { label: 'LSP 2', tone: 'info' as StatusTone },
+    { label: 'LSP 2', tone: 'success' as StatusTone },
     { label: 'MCP 2', tone: 'success' as StatusTone },
     { label: 'Langfuse', tone: 'success' as StatusTone },
   ]);
@@ -48,7 +48,7 @@ test('compactStatuses: spec example - trace sent, mcp with count, pi-lens with n
   const result = compactStatuses(statuses);
   strictEqual(result.length, 3);
   deepStrictEqual(result, [
-    { label: 'LSP 5', tone: 'info' as StatusTone },
+    { label: 'LSP 5', tone: 'success' as StatusTone },
     { label: 'MCP 2', tone: 'success' as StatusTone },
     { label: 'Langfuse', tone: 'success' as StatusTone },
   ]);
@@ -114,7 +114,7 @@ test('compactStatuses: keys are matched case-insensitively', () => {
   ]);
   const result = compactStatuses(statuses);
   deepStrictEqual(result, [
-    { label: 'LSP 1', tone: 'info' as StatusTone },
+    { label: 'LSP 1', tone: 'success' as StatusTone },
     { label: 'MCP 1', tone: 'success' as StatusTone },
     { label: 'Langfuse', tone: 'success' as StatusTone },
   ]);
@@ -134,7 +134,7 @@ test('compactStatuses: lsp counts comma-separated names', () => {
   const statuses = new Map([['lsp', 'LSP Active: python, rust, go, javascript']]);
   const result = compactStatuses(statuses);
   deepStrictEqual(result, [
-    { label: 'LSP 4', tone: 'info' as StatusTone },
+    { label: 'LSP 4', tone: 'success' as StatusTone },
     { label: 'MCP', tone: 'muted' as StatusTone },
     { label: 'Langfuse', tone: 'muted' as StatusTone },
   ]);
@@ -156,10 +156,46 @@ test('compactStatuses: pi-lens fallback when lsp absent', () => {
   const statuses = new Map([['pi-lens', 'LSP Active: rust, python']]);
   const result = compactStatuses(statuses);
   deepStrictEqual(result, [
-    { label: 'LSP 2', tone: 'info' as StatusTone },
+    { label: 'LSP 2', tone: 'success' as StatusTone },
     { label: 'MCP', tone: 'muted' as StatusTone },
     { label: 'Langfuse', tone: 'muted' as StatusTone },
   ]);
+});
+
+test('compactStatuses: pi-lens-lsp status reports its live active-server count', () => {
+  const statuses = new Map([['pi-lens-lsp', 'LSP Active: go, opengrep, typos, ast-grep']]);
+  const result = compactStatuses(statuses);
+  deepStrictEqual(result, [
+    { label: 'LSP 4', tone: 'success' as StatusTone },
+    { label: 'MCP', tone: 'muted' as StatusTone },
+    { label: 'Langfuse', tone: 'muted' as StatusTone },
+  ]);
+});
+
+test('compactStatuses: separates active and failed pi-lens servers', () => {
+  const statuses = new Map([['pi-lens-lsp', 'LSP Active: go, opengrep, typos, ast-grep · LSP Failed: gopls']]);
+  const result = compactStatuses(statuses);
+  deepStrictEqual(result, [
+    { label: 'LSP 4', tone: 'success' as StatusTone, failedServers: ['gopls'] },
+    { label: 'MCP', tone: 'muted' as StatusTone },
+    { label: 'Langfuse', tone: 'muted' as StatusTone },
+  ]);
+});
+
+test('compactStatuses: pi-lens LSP health uses muted, success, and warning tones with failed server names', () => {
+  const inactive = compactStatuses(new Map([['pi-lens-lsp', 'LSP Inactive']]))[0];
+  const healthy = compactStatuses(new Map([['pi-lens-lsp', 'LSP Active: typescript, opengrep']]))[0];
+  const partial = compactStatuses(
+    new Map([['pi-lens-lsp', 'LSP Active: typescript, opengrep · LSP Failed: gopls, clangd']]),
+  )[0];
+
+  deepStrictEqual(inactive, { label: 'LSP', tone: 'muted' as StatusTone });
+  deepStrictEqual(healthy, { label: 'LSP 2', tone: 'success' as StatusTone });
+  deepStrictEqual(partial, {
+    label: 'LSP 2',
+    tone: 'success' as StatusTone,
+    failedServers: ['gopls', 'clangd'],
+  });
 });
 
 test('compactStatuses: lsp key takes precedence over pi-lens fallback', () => {
@@ -169,7 +205,7 @@ test('compactStatuses: lsp key takes precedence over pi-lens fallback', () => {
   ]);
   const result = compactStatuses(statuses);
   strictEqual(result[0].label, 'LSP 1');
-  strictEqual(result[0].tone, 'info');
+  strictEqual(result[0].tone, 'success');
 });
 
 test('compactStatuses: case variations in pi-lens key', () => {
@@ -177,7 +213,7 @@ test('compactStatuses: case variations in pi-lens key', () => {
 ;
   const result = compactStatuses(statuses);
   deepStrictEqual(result, [
-    { label: 'LSP 1', tone: 'info' as StatusTone },
+    { label: 'LSP 1', tone: 'success' as StatusTone },
     { label: 'MCP', tone: 'muted' as StatusTone },
     { label: 'Langfuse', tone: 'muted' as StatusTone },
   ]);
@@ -188,7 +224,7 @@ test('compactStatuses: LSP Active with whitespace yields no count', () => {
 ;
   const result = compactStatuses(statuses);
   deepStrictEqual(result, [
-    { label: 'LSP', tone: 'info' as StatusTone },
+    { label: 'LSP', tone: 'muted' as StatusTone },
     { label: 'MCP', tone: 'muted' as StatusTone },
     { label: 'Langfuse', tone: 'muted' as StatusTone },
   ]);

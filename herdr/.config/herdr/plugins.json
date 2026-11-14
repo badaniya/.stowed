@@ -805,6 +805,45 @@
     }
   },
   {
+    "plugin_id": "local.action-errors",
+    "name": "Shared action errors",
+    "version": "0.1.0",
+    "min_herdr_version": "0.9.5",
+    "description": "Private failure logs and dismissible popups for local Herdr Plus actions",
+    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr-action-errors/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr-action-errors",
+    "enabled": true,
+    "platforms": [
+      "linux",
+      "macos"
+    ],
+    "panes": [
+      {
+        "id": "log",
+        "title": "Action failure log",
+        "placement": "tab",
+        "command": [
+          "bash",
+          "-c",
+          "python3 \"$HERDR_PLUGIN_ROOT/../herdr-spreader/herdr-action-errors.py\" log; exec \"${SHELL:-/bin/bash}\""
+        ]
+      },
+      {
+        "id": "popup",
+        "title": "Action failed",
+        "placement": "overlay",
+        "command": [
+          "bash",
+          "-c",
+          "exec python3 \"$HERDR_PLUGIN_ROOT/../herdr-spreader/herdr-action-errors.py\" popup"
+        ]
+      }
+    ],
+    "source": {
+      "kind": "local"
+    }
+  },
+  {
     "plugin_id": "mochi",
     "name": "mochi",
     "version": "6",

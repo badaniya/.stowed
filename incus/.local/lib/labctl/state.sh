@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # Lock-protected persistent sandbox registry.
+# Destroyed records are history, not reservations (including legacy records
+# that still contain an IP). All other statuses retain their reservations.
 set -euo pipefail
 
 labctl_state_path() {
@@ -69,7 +71,7 @@ labctl_state_claim_ip() {
 	exec {lock_fd}>"$lock"
 	flock "$lock_fd"
 	owner=$(jq -r --arg ip "$ip" --arg ticket "$ticket" \
-		'.sandboxes | to_entries[] | select(.key != $ticket and .value.ip == $ip) | .key' "$state" | head -n 1)
+		'.sandboxes | to_entries[] | select(.key != $ticket and .value.status != "destroyed" and .value.ip == $ip) | .key' "$state" | head -n 1)
 	if [[ -n $owner ]]; then
 		flock -u "$lock_fd"
 		exec {lock_fd}>&-
@@ -87,7 +89,7 @@ labctl_state_preview_ip() {
 	end=$(labctl_config_ipv4_number "$LABCTL_IP_POOL_END")
 	for ((value = start; value <= end; value++)); do
 		candidate=$(printf '%d.%d.%d.%d' "$((value >> 24 & 255))" "$((value >> 16 & 255))" "$((value >> 8 & 255))" "$((value & 255))")
-		if [[ ! -f $state ]] || ! jq -e --arg ip "$candidate" '[.sandboxes[] | select(.ip == $ip)] | length > 0' "$state" >/dev/null; then
+		if [[ ! -f $state ]] || ! jq -e --arg ip "$candidate" '[.sandboxes[] | select(.status != "destroyed" and .ip == $ip)] | length > 0' "$state" >/dev/null; then
 			printf '%s\n' "$candidate"
 			return 0
 		fi
@@ -103,7 +105,7 @@ labctl_state_reserve_ip() {
 	labctl_state_init
 	exec {lock_fd}>"$lock"
 	flock "$lock_fd"
-	existing=$(jq -r --arg ticket "$ticket" '.sandboxes[$ticket].ip // empty' "$state")
+	existing=$(jq -r --arg ticket "$ticket" '.sandboxes[$ticket] | select(.status != "destroyed") | .ip // empty' "$state")
 	if [[ -n $existing ]] && labctl_config_is_ipv4 "$existing"; then
 		printf '%s\n' "$existing"
 		flock -u "$lock_fd"
@@ -114,7 +116,7 @@ labctl_state_reserve_ip() {
 	end=$(labctl_config_ipv4_number "$LABCTL_IP_POOL_END")
 	for ((value = start; value <= end; value++)); do
 		candidate=$(printf '%d.%d.%d.%d' "$((value >> 24 & 255))" "$((value >> 16 & 255))" "$((value >> 8 & 255))" "$((value & 255))")
-		if ! jq -e --arg ip "$candidate" '[.sandboxes[] | select(.ip == $ip)] | length > 0' "$state" >/dev/null; then
+		if ! jq -e --arg ip "$candidate" '[.sandboxes[] | select(.status != "destroyed" and .ip == $ip)] | length > 0' "$state" >/dev/null; then
 			temporary=$(mktemp "${state}.tmp.XXXXXX")
 			# shellcheck disable=SC2016 # jq variables are intentionally literal.
 			jq --arg ticket "$ticket" --arg ip "$candidate" \
@@ -147,7 +149,7 @@ labctl_state_record() {
 	exec {lock_fd}>"$lock"
 	flock "$lock_fd"
 	owner=$(jq -r --arg ip "$ip" --arg ticket "$ticket" \
-		'.sandboxes | to_entries[] | select(.key != $ticket and .value.ip == $ip) | .key' "$state" | head -n 1)
+		'.sandboxes | to_entries[] | select(.key != $ticket and .value.status != "destroyed" and .value.ip == $ip) | .key' "$state" | head -n 1)
 	if [[ -n $owner ]]; then
 		flock -u "$lock_fd"
 		exec {lock_fd}>&-
@@ -176,11 +178,12 @@ labctl_state_set_status() {
 	ticket=$(labctl_normalize_ticket "$ticket") || return 1
 	# shellcheck disable=SC2016 # jq variables are intentionally literal.
 	labctl_state_write --arg ticket "$ticket" --arg status "$status" \
-		'.sandboxes[$ticket] = ((.sandboxes[$ticket] // error("sandbox is not registered")) + {status: $status, updated_at: (now | todateiso8601)})'
+		'.sandboxes[$ticket] = ((.sandboxes[$ticket] // error("sandbox is not registered")) + {status: $status, updated_at: (now | todateiso8601)}) |
+		 if $status == "destroyed" then .sandboxes[$ticket].ip = null else . end'
 }
 
 labctl_state_ip_for() {
 	local ticket
 	ticket=$(labctl_normalize_ticket "$1") || return 1
-	labctl_state_lookup "$ticket" | jq -r '.ip // empty'
+	labctl_state_lookup "$ticket" | jq -r 'select(.status != "destroyed") | .ip // empty'
 }

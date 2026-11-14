@@ -1,7 +1,7 @@
 name = "Sandbox: Control"
 type = "form"
-command = "bash ~/.config/herdr-spreader/nvo-sandbox-control.sh"
+command = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name 'Sandbox: Control' -- bash ~/.config/herdr-spreader/nvo-sandbox-control.sh"
 
 [form]
-prompt = "Sandbox target (ticket, comma-separated tickets, or all; choose lifecycle or snapshot actions next)"
+prompt = "Sandbox target (ticket, comma-separated tickets, or all; choose lifecycle, snapshot, or single-target deletion next)"
 placeholder = "NVO-20130,NVO-20224 or all"

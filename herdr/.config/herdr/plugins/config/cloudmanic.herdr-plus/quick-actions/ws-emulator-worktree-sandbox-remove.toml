@@ -1,0 +1,7 @@
+name = "Destroy sandbox & remove workspace: EMULATOR-WORKTREE-SANDBOX"
+type = "form"
+command = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name 'Destroy sandbox & remove workspace: EMULATOR-WORKTREE-SANDBOX' -- bash ~/.config/herdr-spreader/emulator-worktree-sandbox-remove-notify.sh '{{.Value}}'"
+
+[form]
+prompt = "DESTRUCTIVE: destroys the emulator sandbox and force-removes cloudemu and all four NVO worktrees and ticket branches; add --keep-worktrees to retain all worktrees"
+placeholder = "EMULATOR-10 [--keep-worktrees]"

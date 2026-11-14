@@ -20,7 +20,7 @@ import re
 import tempfile
 from datetime import datetime
 
-from _base import debug_log, state_dir as _state_dir
+from _base import debug_log, make_state_dir, state_dir as _state_dir
 
 
 def _state_key(session_id):
@@ -47,6 +47,31 @@ def get_lock_file(session_id):
     return os.path.join(state_dir, f"security_warnings_state_{_state_key(session_id)}.lock")
 
 
+def get_commit_log_file(session_id):
+    """Where diffstate notes the commits a session's hooks saw and counted."""
+    state_dir = _state_dir()
+    return os.path.join(state_dir, f"security_warnings_state_{_state_key(session_id)}.commits")
+
+
+def commit_log_files(newer_than):
+    """Those files of all sessions, written to since `newer_than` (epoch
+    seconds, with some slack for coarse file times)."""
+    state_dir = _state_dir()
+    out = []
+    try:
+        for name in os.listdir(state_dir):
+            if name.startswith("security_warnings_state_") and name.endswith(".commits"):
+                path = os.path.join(state_dir, name)
+                try:
+                    if os.path.getmtime(path) >= newer_than - 5:
+                        out.append(path)
+                except OSError:
+                    pass
+    except OSError:
+        pass
+    return out
+
+
 def cleanup_old_state_files():
     """Remove state files, lock files and leftover temporary files older than 30 days."""
     try:
@@ -59,7 +84,7 @@ def cleanup_old_state_files():
 
         for filename in os.listdir(state_dir):
             if filename.startswith("security_warnings_state_") and (
-                filename.endswith((".json", ".lock", ".tmp"))
+                filename.endswith((".json", ".lock", ".tmp", ".commits"))
             ):
                 file_path = os.path.join(state_dir, filename)
                 try:
@@ -139,6 +164,18 @@ def _write_then_rename(state_file, state):
         raise
 
 
+def _write_in_place(state_file, state):
+    """The fallback (Windows, or a folder that refuses the rename) writes the
+    state file itself. As with the rename, a link there is replaced, not
+    followed, and a new file is the user's only, as the temporary file is."""
+    if os.path.islink(state_file):
+        os.unlink(state_file)
+    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | getattr(os, "O_NOFOLLOW", 0)
+    fd = os.open(state_file, flags, 0o600)
+    with os.fdopen(fd, "w") as f:
+        json.dump(state, f)
+
+
 def save_state(session_id, state):
     """Save the full state dict to file.
 
@@ -152,12 +189,11 @@ def save_state(session_id, state):
     try:
         state_dir = os.path.dirname(state_file)
         if state_dir:
-            os.makedirs(state_dir, exist_ok=True)
+            make_state_dir(state_dir)
 
         if _RENAME_INTO_PLACE and _write_then_rename(state_file, state):
             return
-        with open(state_file, "w") as f:
-            json.dump(state, f)
+        _write_in_place(state_file, state)
     except (IOError, OSError) as e:
         debug_log(f"Failed to save state file {state_file}: {e}")
 
@@ -181,7 +217,7 @@ def with_locked_state(session_id, callback):
     state_dir = os.path.dirname(lock_file)
 
     try:
-        os.makedirs(state_dir, exist_ok=True)
+        make_state_dir(state_dir)
     except OSError:
         pass
 

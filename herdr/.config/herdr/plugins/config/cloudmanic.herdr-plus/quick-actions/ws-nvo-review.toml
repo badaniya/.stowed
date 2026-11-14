@@ -1,7 +1,7 @@
-name = "Open workspace: NVO-REVIEW branch"
+name = "Open workspace & bootstrap sandbox: NVO-REVIEW"
 type = "form"
-command = "bash ~/.config/herdr-spreader/nvo-review.sh '{{.Value}}'"
+command = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name 'Open workspace & bootstrap sandbox: NVO-REVIEW' -- bash ~/.config/herdr-spreader/nvo-review-notify.sh '{{.Value}}'"
 
 [form]
-prompt = "Branch and repo (e.g. CFD-17681/my-feature  or  CFD-17681/my-feature GoDCApp)"
+prompt = "Review branch and optional repo (Jira optional; repeat Jira-linked reviews to add related repo PRs)"
 placeholder = "branch [GoDCApp|PlatformServices|PlatformServicesCommon|PlatformCommonModels]"
