@@ -244,6 +244,16 @@ class ReporterTests(unittest.TestCase):
                             for method, params in self.calls))
         self.assertNotIn('pane.close', [method for method, _ in self.calls])
 
+    def test_error_panes_use_stable_home_instead_of_ephemeral_log_directory(self):
+        home = Path(self.temp.name) / 'home'
+        home.mkdir()
+        self.workspaces = []
+        with patch.dict(os.environ, {'HOME': str(home)}):
+            self.report()
+        locations = [params.get('cwd') for method, params in self.calls
+                     if method in ('workspace.create', 'plugin.pane.open')]
+        self.assertEqual(locations, [str(home)] * 3)
+
     def test_log_tab_failure_does_not_prevent_popup(self):
         original = self.api
         def fail(method, params):
@@ -424,6 +434,39 @@ class SocketIntegrationTests(RunnerTests):
 
 
 class IntegrationTests(unittest.TestCase):
+    def test_viewer_entrypoints_find_helper_with_canonical_stow_plugin_root(self):
+        manifest = ROOT / 'herdr/.config/herdr-action-errors/herdr-plugin.toml'
+        panes = tomllib.loads(manifest.read_text())['panes']
+        for custom_config in (False, True):
+            with self.subTest(custom_config=custom_config), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                home = root / 'home'
+                home.mkdir()
+                config = root / 'xdg-config' if custom_config else home / '.config'
+                scripts = config / 'herdr-spreader'
+                scripts.mkdir(parents=True)
+                # Probe both manifest commands without needing a curses terminal.
+                helper = scripts / RUNNER.name
+                helper.write_text('import sys\nprint("VIEWER_MODE=" + sys.argv[1])\n')
+                shell = root / 'shell'
+                shell.write_text('#!/bin/sh\nprintf "SHELL_CWD=%s\\n" "$PWD"\n')
+                shell.chmod(0o700)
+                logs = root / 'temporary-logs'
+                logs.mkdir()
+                env = {key: value for key, value in os.environ.items() if not key.startswith('HERDR_')}
+                env.update(HOME=str(home), SHELL=str(shell), HERDR_PLUGIN_ROOT=str(manifest.parent.resolve()))
+                if custom_config:
+                    env['XDG_CONFIG_HOME'] = str(config)
+                else:
+                    env.pop('XDG_CONFIG_HOME', None)
+                for pane in panes:
+                    result = subprocess.run(pane['command'], env=env, cwd=logs, capture_output=True,
+                                            text=True, timeout=5, check=False)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertIn(f'VIEWER_MODE={pane["id"]}', result.stdout, result.stderr)
+                    if pane['id'] == 'log':
+                        self.assertIn(f'SHELL_CWD={home}', result.stdout)
+
     def test_all_existing_actions_use_shared_runner(self):
         actions = list(ACTIONS.glob('*.toml'))
         self.assertGreaterEqual(len(actions), 44)

@@ -142,7 +142,8 @@ run_snapshot_command() {
 	case $action in
 	create | restore)
 		[[ $snapshot =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || return 1
-		printf -v snapshot_command '%q %q %q %q %q %q %q' incus --project "$project" snapshot "$action" "$ticket" "$snapshot"
+		# labctl lowercases instance names; keep display tickets and snapshot names intact.
+		printf -v snapshot_command '%q %q %q %q %q %q %q' incus --project "$project" snapshot "$action" "${ticket,,}" "$snapshot"
 		;;
 	*) return 1 ;;
 	esac
@@ -192,7 +193,7 @@ restore_snapshot() {
 	fi
 	project=$(project_for_snapshots) || return
 	local snapshot_list_command
-	printf -v snapshot_list_command '%q %q %q %q %q %q %q %q' incus --project "$project" snapshot list "$ticket" --format json
+	printf -v snapshot_list_command '%q %q %q %q %q %q %q %q' incus --project "$project" snapshot list "${ticket,,}" --format json
 	if ! snapshot_json=$(sg incus-admin -c "$snapshot_list_command"); then
 		printf 'Unable to list snapshots for %s. No sandbox was changed.\n' "$ticket"
 		return

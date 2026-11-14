@@ -104,6 +104,11 @@ cat >"$TEST_ROOT/bin/incus" <<'EOF_INCUS'
 set -euo pipefail
 printf 'incus %s\n' "$*" >>"${TEST_LOG:?}"
 [[ $1 == --project && $2 == "${TEST_PROJECT:-test-project}" && $3 == snapshot ]] || exit 2
+# Real labctl instances are lowercase; accepting display tickets hid a live bug.
+[[ $5 == "${5,,}" ]] || {
+	printf 'Error: instance not found: %s\n' "$5" >&2
+	exit 1
+}
 action=$4
 case $action in
 list)
@@ -355,10 +360,17 @@ done
 write_plan explicit NVO-20130
 printf '7\nrelease_2026.10-rc1\n\n' | run_dialog
 [[ ! -e $DIALOG_PLAN ]] || fail 'snapshot-create dialog did not delete its plan'
-assert_equals 1 "$(rg -c '^incus --project test-project snapshot create NVO-20130 release_2026.10-rc1$' "$LOG")" 'snapshot create did not use the selected safe name'
+assert_equals 1 "$(rg -c '^incus --project test-project snapshot create nvo-20130 release_2026.10-rc1$' "$LOG")" 'snapshot create did not use the selected safe name'
 if rg -q '^labctl (start|stop) ' "$LOG"; then
 	fail 'snapshot create changed lifecycle state'
 fi
+
+# Review IDs are normalized too, but the operator's snapshot name is preserved.
+: >"$LOG"
+write_plan explicit NVO-REVIEW-GODCAPP-PR-32941
+printf '7\nBefore-Fix\n\n' | run_dialog >"$DIALOG_OUTPUT"
+assert_equals 1 "$(rg -c '^incus --project test-project snapshot create nvo-review-godcapp-pr-32941 Before-Fix$' "$LOG")" 'review snapshot did not normalize only the instance name'
+rg -Fq 'snapshot-create NVO-REVIEW-GODCAPP-PR-32941/Before-Fix: succeeded' "$DIALOG_OUTPUT" || fail 'snapshot result lost its display ticket or snapshot name'
 
 # Snapshot creation rejects unsafe names before constructing an Incus command.
 : >"$LOG"
@@ -402,8 +414,9 @@ unset TEST_SNAPSHOT_JSON
 [[ ! -e $DIALOG_PLAN ]] || fail 'snapshot-restore dialog did not delete its plan'
 rg -q 'before-upgrade.*2026-10-22T12:30:00Z' "$DIALOG_OUTPUT" || fail 'restore menu did not show the first snapshot timestamp'
 rg -q 'after-upgrade.*2026-10-23T12:30:00Z' "$DIALOG_OUTPUT" || fail 'restore menu did not show the second snapshot timestamp'
+assert_equals 1 "$(rg -c '^incus --project test-project snapshot list nvo-20130 --format json$' "$LOG")" 'restore did not list snapshots on the normalized instance'
 stop_line=$(rg -n '^labctl stop NVO-20130$' "$LOG" | cut -d: -f1)
-restore_line=$(rg -n '^incus --project test-project snapshot restore NVO-20130 after-upgrade$' "$LOG" | cut -d: -f1)
+restore_line=$(rg -n '^incus --project test-project snapshot restore nvo-20130 after-upgrade$' "$LOG" | cut -d: -f1)
 start_line=$(rg -n '^labctl start NVO-20130$' "$LOG" | cut -d: -f1)
 [[ -n $stop_line && -n $restore_line && -n $start_line && $stop_line -lt $restore_line && $restore_line -lt $start_line ]] || fail 'restore did not run stop, Incus restore, then start in order'
 
@@ -462,7 +475,7 @@ write_plan explicit NVO-20130
 printf '8\n1\n\n' | TEST_FAIL_INCUS_ACTION=restore run_dialog
 unset TEST_SNAPSHOT_JSON
 assert_equals 1 "$(rg -c '^labctl stop NVO-20130$' "$LOG")" 'restore failure did not first stop the sandbox'
-assert_equals 1 "$(rg -c '^incus --project test-project snapshot restore NVO-20130 before-upgrade$' "$LOG")" 'restore failure did not invoke Incus restore'
+assert_equals 1 "$(rg -c '^incus --project test-project snapshot restore nvo-20130 before-upgrade$' "$LOG")" 'restore failure did not invoke Incus restore'
 if rg -q '^labctl start ' "$LOG"; then
 	fail 'restore failure restarted the sandbox'
 fi

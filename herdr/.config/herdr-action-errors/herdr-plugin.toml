@@ -9,10 +9,10 @@ platforms = ["linux", "macos"]
 id = "popup"
 title = "Action failed"
 placement = "overlay"
-command = ["bash", "-c", "exec python3 \"$HERDR_PLUGIN_ROOT/../herdr-spreader/herdr-action-errors.py\" popup"]
+command = ["bash", "-c", "exec python3 \"${XDG_CONFIG_HOME:-$HOME/.config}/herdr-spreader/herdr-action-errors.py\" popup"]
 
 [[panes]]
 id = "log"
 title = "Action failure log"
 placement = "tab"
-command = ["bash", "-c", "python3 \"$HERDR_PLUGIN_ROOT/../herdr-spreader/herdr-action-errors.py\" log; exec \"${SHELL:-/bin/bash}\""]
+command = ["bash", "-c", "python3 \"${XDG_CONFIG_HOME:-$HOME/.config}/herdr-spreader/herdr-action-errors.py\" log; cd \"$HOME\" || exit; exec \"${SHELL:-/bin/bash}\""]

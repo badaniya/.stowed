@@ -60,6 +60,8 @@ def report_failure(log):
     log = Path(log).resolve()
     meta = read_metadata(log)
     env = {'HERDR_ACTION_ERROR_LOG': str(log)}
+    # Log directories may be removed by cleanup; never strand an interactive shell there.
+    cwd = str(Path.home())
     # Serialize lookup/create across simultaneous action failures.
     lock_fd = os.open(log.parent / '.workspace.lock', os.O_CREAT | os.O_RDWR, 0o600)
     try:
@@ -69,7 +71,7 @@ def report_failure(log):
             workspace = next((item for item in workspaces if item.get('label') == 'HERDR-ACTION-ERRORS'), None)
             initial_pane = None
             if workspace is None:
-                created = api('workspace.create', {'label': 'HERDR-ACTION-ERRORS', 'cwd': str(log.parent), 'focus': False})
+                created = api('workspace.create', {'label': 'HERDR-ACTION-ERRORS', 'cwd': cwd, 'focus': False})
                 initial_pane = created['root_pane']['pane_id']
                 # Zoomed placement steals workspace focus even with focus=False.
                 # Split in the first tab, then remove only our new empty shell.
@@ -78,7 +80,7 @@ def report_failure(log):
                 placement = {'placement': 'tab', 'workspace_id': workspace['workspace_id']}
             api('plugin.pane.open', {
                 'plugin_id': PLUGIN_ID, 'entrypoint': 'log', **placement,
-                'focus': False, 'cwd': str(log.parent), 'env': env,
+                'focus': False, 'cwd': cwd, 'env': env,
             })
             if initial_pane is not None:
                 api('pane.close', {'pane_id': initial_pane})
@@ -89,7 +91,7 @@ def report_failure(log):
     try:
         api('plugin.pane.open', {
             'plugin_id': PLUGIN_ID, 'entrypoint': 'popup', 'placement': 'popup',
-            'width': '70%', 'height': '55%', 'focus': True, 'env': env,
+            'width': '70%', 'height': '55%', 'focus': True, 'cwd': cwd, 'env': env,
         })
     except (OSError, KeyError, ValueError, RuntimeError) as error:
         warn(f'could not open popup: {error}; {meta["name"]} failed; log: {log}')
