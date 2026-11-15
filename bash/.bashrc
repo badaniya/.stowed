@@ -119,10 +119,25 @@ if ! shopt -oq posix; then
 	fi
 fi
 
+# PATH helper
+path_prepend() {
+    case ":$PATH:" in
+        *":$1:"*) ;;
+        *) PATH="$1:$PATH" ;;
+    esac
+}
+
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
 [ -f ~/"$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
 
 # Mise - shells get tools (gh, tmux, fzf, ...) from mise, not nix
 if command -v mise >/dev/null 2>&1; then eval "$(mise activate bash)"; fi
 
-if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init bash)"; fi
+# Worktrunk Support (cached)
+_wt_cache="$HOME/.cache/worktrunk/bash"
+if command -v wt >/dev/null 2>&1; then
+    if [[ ! -f $_wt_cache || $commands[wt] -nt $_wt_cache ]]; then
+        wt config shell init bash > $_wt_cache 2>/dev/null
+    fi
+    source $_wt_cache
+fi

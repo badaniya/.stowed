@@ -3,6 +3,14 @@ export EDITOR=nvim
 #export LC_ALL="C"
 export VAGRANT_HOME=$HOME/.vagrant.d
 
+# PATH helper
+path_prepend() {
+    case ":$PATH:" in
+        *":$1:"*) ;;
+        *) PATH="$1:$PATH" ;;
+    esac
+}
+
 ## Golang Environment Settings ##
 export GOBASEPATH=$HOME/.go
 export GO111MODULE=on
@@ -10,22 +18,15 @@ export GOMODCACHE=$GOBASEPATH/pkg/mod
 export GOROOT="/usr/local/go"
 export GOPATH=$GOBASEPATH
 
-if [[ ! "$PATH" =~ $GOROOT/bin ]]; then
-    export PATH=$GOROOT/bin:$PATH
-fi
-
-if [[ ! "$PATH" =~ $GOBASEPATH/bin ]]; then
-    export PATH=$GOBASEPATH/bin:$PATH
-fi
+path_prepend "$GOROOT/bin"
+path_prepend "$GOBASEPATH/bin"
 
 export PATH=$PATH:$HOME/.local/bin:$HOME/.cargo/bin:/opt/nvim-linux-x86_64/bin:$HOME/.opencode/bin
 
 ## Mise Shims ##
 # Login/non-interactive shells do not run the activation hook; shims resolve the
 # right tool version per directory and keep gh/tmux/fzf available without nix.
-if [ -d "$HOME/.local/share/mise/shims" ] && [[ ":$PATH:" != *":$HOME/.local/share/mise/shims:"* ]]; then
-    export PATH="$HOME/.local/share/mise/shims:$PATH"
-fi
+path_prepend "$HOME/.local/share/mise/shims"
 
 ## Docker Environment Settings ##
 export DOCKER_BUILDKIT=1

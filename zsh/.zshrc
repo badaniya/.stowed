@@ -76,15 +76,19 @@ plugins=(
     git
     zsh-autosuggestions
     zsh-syntax-highlighting
-    zsh-vi-mode
-    urltools
-    tmux-xpanes
+    # zsh-vi-mode: using native bindkey -v instead
+    # urltools: lazy-load if needed
+    # tmux-xpanes: lazy-load only in tmux (see below)
 )
 
 # Only load tmux-aware plugins when actually inside a tmux session
 if [[ -n "$TMUX" ]]; then
     plugins+=(last-working-dir-tmux)
 fi
+
+# Native vi mode (replaces zsh-vi-mode plugin)
+bindkey -v
+export KEYTIMEOUT=1
 
 # Syntax highlighting plugin support
 [[ -f $ZSH/custom/plugins/zsh-syntax-highlighting/catppuccin/themes/catppuccin_mocha-zsh-syntax-highlighting.zsh ]] && source $ZSH/custom/plugins/zsh-syntax-highlighting/catppuccin/themes/catppuccin_mocha-zsh-syntax-highlighting.zsh
@@ -145,57 +149,71 @@ function down-line-or-local-history() {
 zle -N up-line-or-local-history
 zle -N down-line-or-local-history
 
-bindkey "${key[Up]}" up-line-or-local-history
-#bindkey "${key[Up]}" up-line-or-beginning-search
-bindkey "${key[Down]}" down-line-or-local-history
-#bindkey "${key[Down]}" down-line-or-beginning-search
+# Key bindings - use terminfo if available, fallback to common sequences
+if (( ${+terminfo[kcuu1]} )); then
+    bindkey "${terminfo[kcuu1]}" up-line-or-local-history
+fi
+if (( ${+terminfo[kcud1]} )); then
+    bindkey "${terminfo[kcud1]}" down-line-or-local-history
+fi
+# Fallback common sequences
+bindkey "^[[A" up-line-or-local-history
+bindkey "^[[B" down-line-or-local-history
+
 bindkey "^[[1;5A" up-line-or-search    # [CTRL] + Cursor up
 bindkey "^[[1;5B" down-line-or-search  # [CTRL] + Cursor down
-#bindkey "^[[1;3A" up-line-or-local-history    # [ALT] + Cursor up
 bindkey "^[[1;3A" up-line-or-beginning-search   # [ALT] + Cursor up
-#bindkey "^[[1;3B" down-line-or-local-history  # [ALT] + Cursor up
 bindkey "^[[1;3B" down-line-or-beginning-search  # [ALT] + Cursor up
 
 # Source in existing bash profile and aliases
 [[ -f ~/.bash_profile ]] && source ~/.bash_profile
 [[ -f ~/.bash_aliases ]] && source ~/.bash_aliases
 
-# NVM - Node Version Manager
-export NVM_DIR="$HOME/.nvm"
-[[ -s "$NVM_DIR/nvm.sh" ]] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[[ -s "$NVM_DIR/bash_completion" ]] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+# Mise - Development Environment Manager (manages Node, Rust, Go, etc.)
+which mise >/dev/null && eval "$(mise activate zsh)"
 
-# Carapace Shell Completion Support
-if which carapace >/dev/null; then 
-    export CARAPACE_BRIDGES='zsh,bash,cobra,inshellisense' # optional
+# Starship Shell
+which starship >/dev/null && eval "$(starship init zsh)"
+
+# Fuzzy Finder Support
+[[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
+
+# Zoxide Support
+which zoxide >/dev/null && eval "$(zoxide init zsh)"
+
+# Forgit Support
+[[ -f $ZSH/custom/plugins/forgit/forgit.plugin.zsh ]] && source $ZSH/custom/plugins/forgit/forgit.plugin.zsh
+
+# Carapace Shell Completion Support (cached)
+_carapace_cache="$HOME/.cache/carapace/zsh"
+if which carapace >/dev/null; then
+    export CARAPACE_BRIDGES='zsh,bash,cobra,inshellisense'
     zstyle ':completion:*' format $'\e[2;37mCompleting %d\e[m'
     zstyle ':completion:*:git:*' group-order 'main commands' 'alias commands' 'external commands'
-    source <(carapace _carapace)
+    if [[ ! -f $_carapace_cache || $commands[carapace] -nt $_carapace_cache ]]; then
+        mkdir -p "${_carapace_cache:h}"
+        carapace _carapace > $_carapace_cache
+    fi
+    source $_carapace_cache
 fi
 
 # JWT Shell Completion Support
 hash jwt >/dev/null && source <(jwt completion zsh)
 
-# Fuzzy Finder Support
-[[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
+# Worktrunk Support (cached)
+_wt_cache="$HOME/.cache/worktrunk/zsh"
+if command -v wt >/dev/null 2>&1; then
+    if [[ ! -f $_wt_cache || $commands[wt] -nt $_wt_cache ]]; then
+        mkdir -p "${_wt_cache:h}"
+        wt config shell init zsh > $_wt_cache
+    fi
+    source $_wt_cache
+fi
 
-# Forgit Support
-[[ -f $ZSH/custom/plugins/forgit/forgit.plugin.zsh ]] && source $ZSH/custom/plugins/forgit/forgit.plugin.zsh
-
-# Zoxide Support
-which zoxide >/dev/null && eval "$(zoxide init zsh)"
-
-# Xpanes Support
-[[ -f $ZSH/custom/plugins/tmux-xpanes/completion.zsh ]] && source $ZSH/custom/plugins/tmux-xpanes/completion.zsh
-
-# Starship Shell
-which starship >/dev/null && eval "$(starship init zsh)"
-
-# Worktrunk Support
-if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)"; fi
-
-# Mise - Development Environment Manager
-which mise >/dev/null && eval "$(~/.local/bin/mise activate zsh)"
+# Xpanes Support (lazy-load only in tmux)
+if [[ -n "$TMUX" ]]; then
+    [[ -f $ZSH/custom/plugins/tmux-xpanes/completion.zsh ]] && source $ZSH/custom/plugins/tmux-xpanes/completion.zsh
+fi
 
 # bun completions
 [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
