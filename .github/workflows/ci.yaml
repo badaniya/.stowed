@@ -1,0 +1,112 @@
+# This is a basic workflow to help you get started with Actions
+
+name: ci
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events, but only for the default branch
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v7
+    - uses: TypedDevs/bashunit@0.52.0
+      with:
+          verify-checksum: 'true'
+
+    # Runs a single command using the runners shell
+    - name: Install prerequisites
+      shell: bash
+      run: |
+        # shellcheck disable=SC2193
+        if [[ "${{ matrix.os }}" == macos* ]]; then
+          brew install zsh fish shellcheck
+        elif [[ "${{ matrix.os }}" == ubuntu* ]]; then
+          sudo apt-add-repository -y ppa:fish-shell/release-3
+          sudo apt -y update
+          sudo apt -y install --no-install-recommends zsh fish shellcheck
+        fi
+
+    - name: Show version
+      run: |
+        bash --version; echo
+        zsh  --version; echo
+        fish --version; echo
+        shellcheck --version; echo
+        lib/bashunit --version; echo
+
+    - name: Shellcheck
+      run: shellcheck forgit.plugin.sh bin/git-forgit
+
+    - name: Unit tests
+      run: bashunit tests
+
+    - name: Test bash
+      run: bash forgit.plugin.sh
+
+    - name: Test zsh
+      run: zsh forgit.plugin.zsh
+
+    - name: Test fish
+      run: fish conf.d/forgit.plugin.fish
+
+  # Validate conventional commit messages of PRs
+  commitlint:
+      runs-on: ubuntu-latest
+      if: github.event_name == 'pull_request'
+      steps:
+          - uses: actions/checkout@v7
+            with:
+              fetch-depth: 0
+          - name: Install npm
+            run: sudo apt update && sudo apt install --no-install-recommends -y npm
+          - name: Install commitlint
+            run: npm install -g @commitlint/cli @commitlint/config-conventional
+          - name: Validate PR commits
+            run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+
+  format:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+    - name: Check format
+      uses: mfinelli/setup-shfmt@v4
+      with:
+        shfmt-version: 3.13.1
+    - run: shfmt --diff .
+
+  rumdl-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: rvben/rumdl@v0.2.77
+
+  # Lint GitHub Actions workflows
+  actionlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Download actionlint
+        id: get_actionlint
+        run: bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash) 1.7.12
+        shell: bash
+      - name: Check workflow files
+        run: ${{ steps.get_actionlint.outputs.executable }} -color
+        shell: bash
