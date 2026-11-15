@@ -94,6 +94,9 @@ rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/mise; rm -rf $HOME/.config
 rm -rf $HOME/.npmrc; rm -rf $HOME/.config/herdr;  rm -rf $HOME/.config/herdr-app; rm -rf $HOME/.config/herdr-spreader; rm -rf $HOME/.config/rex; rm -rf $HOME/.claude.json; rm -rf $HOME/.claude; rm -rf $HOME/.copilot; rm -rf $HOME/.config/.copilot; rm -rf $HOME/.config/opencode; rm -rf $HOME/.pi; rm -rf $HOME/.agents; stow -d $HOME/.stowed npm herdr herdr-app herdr-spreader rex claude copilot opencode pi agents
 ```
 
+Stowing `pi` only restores its configuration. Its managed runtime is installed
+per machine ([step 7](#7-pi---a-fully-customizable-ai-coding-agent-for-the-terminal)).
+
 ## Installing Stowed Terminal Tools
 
 ### 0) Ghostty - A fast efficient terminal with GPU acceleration and Kitty image support
@@ -391,6 +394,14 @@ curl -fsSL https://opencode.ai/install | bash
 
 ```bash
 curl -fsSL https://pi.dev/install.sh | sh           # Pi installation
+
+# Pi's runtime (~/.pi/agent/install) is generated per machine and is not tracked,
+# while the rest of ~/.pi is stowed config. After stowing this repo on a new host,
+# or after a pull that bumps the Pi version, use the repo's bootstrap instead of
+# the raw installer: it removes a config-only release directory that the installer
+# would otherwise trust and skip, then verifies the launcher actually runs.
+$HOME/.stowed/scripts/pi-bootstrap.sh               # install or repair
+$HOME/.stowed/scripts/pi-bootstrap.sh --check       # verify only (CI friendly)
 
 pi install npm:@quintinshaw/pi-dynamic-workflows    # Claude code-like dynamic workflows and subagents
 pi install npm:pi-mcp-adapter                       # MCP server support (lazyloading vs. native pi mcp support)

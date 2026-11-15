@@ -27,6 +27,12 @@ docs/
 # Pi update check (auto-written by pi, not meaningful to track)
 pi/.pi/agent/.update-check
 
+# Pi's managed runtime is generated per machine by the pi.dev installer
+# (releases/<version>/node_modules). Tracking the install manifests without the
+# packages makes a synced config claim a version that has no executable.
+# Use scripts/pi-bootstrap.sh to install or repair this tree.
+pi/.pi/agent/install/
+
 # Ephemeral session/tmp artifacts
 .worktrees/
 pi-session-*.html

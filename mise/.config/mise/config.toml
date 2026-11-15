@@ -1,2 +1,10 @@
 [tools]
 node = "24.9.0"
+
+[tasks.pi-bootstrap]
+description = "Install or repair the per-machine managed Pi runtime"
+run = "bash \"$HOME/.stowed/scripts/pi-bootstrap.sh\""
+
+[tasks.pi-check]
+description = "Verify the managed Pi runtime without changing anything"
+run = "bash \"$HOME/.stowed/scripts/pi-bootstrap.sh\" --check"
