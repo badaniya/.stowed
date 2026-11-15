@@ -1,5 +1,17 @@
 [tools]
-node = "24.9.0"
+node = "24"
+# mermaid-cli renders diagrams through puppeteer; we reuse the host Chrome below
+# instead of letting puppeteer download its own copy (~180 MB).
+# chromium-bidi is Google's Chrome-versioned CDP lib; this release ships without
+# provenance attestation, which mise's npm backend flags as a trust downgrade.
+"npm:@mermaid-js/mermaid-cli" = { version = "12.2.0", trust_policy_excludes = ["chromium-bidi@157.0.8090-0"] }
+# ImageMagick converts images/diagrams for nvim (snacks.image). The aqua and AppImage
+# builds ship without librsvg, which breaks mermaid SVG -> PNG; the conda build keeps
+# full delegates (RSVG, ghostscript, libheif, libwebp).
+"conda:imagemagick" = "7.1.2_31"
+
+[env]
+PUPPETEER_EXECUTABLE_PATH = "/usr/bin/google-chrome"
 
 [tasks.pi-bootstrap]
 description = "Install or repair the per-machine managed Pi runtime"

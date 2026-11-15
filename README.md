@@ -202,8 +202,8 @@ sudo apt install -y mariadb-client
 #### CopilotChat Plugin - AI chat for github copilot and others which uses nodejs
 
 ```bash
-# Nix dependency
-nix-env -iA nixpkgs.nodejs_22
+# Node.js dependency - mise-managed, see "Mise" under optional terminal tools
+mise use -g node@24
 
 # Global install of copilot-cli
 npm install -g @github/copilot
@@ -231,8 +231,34 @@ sudo apt install -y emacs28
 # Install Mise-En-Place
 curl https://mise.run | sh
 
-# Ensure mise is loaded with the shell
-echo 'eval "$(~/.local/bin/mise activate zsh)"' >> ~/.zshrc
+# Node.js is managed exclusively by mise (see below)
+mise use -g node@24
+```
+
+`mise activate zsh` is already wired up in the stowed `.zshrc` — do **not** append
+a second `eval` line to it.
+
+#### Node.js - mise is the only owner
+
+Mise owns every Node.js install on the host. It reads the repo's `.nvmrc` and the
+global default in `~/.config/mise/config.toml`, and its `chpwd` hook re-resolves
+the active version per directory.
+
+```bash
+mise use -g node@24      # set global default (writes ~/.config/mise/config.toml)
+mise install             # download it
+node -v                  # confirm the mise copy wins
+```
+
+Do **not** install Node.js via `nix-env -iA nixpkgs.nodejs_*` or `apt install nodejs`.
+Each extra copy fights the mise shim for `PATH`, breaks `npm i -g` (the Nix store is
+read-only), and leaves `node` 18.x/22.x resolvable by anything launched outside the
+shell. If one already exists, remove it:
+
+```bash
+nix-env -e nodejs                  # drop the nix copy
+sudo apt purge -y nodejs npm       # drop the Ubuntu copy (18.19.1 on 24.04)
+sudo apt autoremove --purge        # clean the Debian node-* library deps
 ```
 
 ### 2) Nix Package Manager - A package manager with a massive amount of open-source installation images
@@ -312,11 +338,40 @@ gh extension upgrade dlvhdr/gh-dash
 
 ### 10) Image and Diagram Markdown Support in Neovim
 
+`snacks.image` renders images, mermaid blocks, PDFs and LaTeX math in markdown. It
+shells out to `magick` and `mmdc`, so both must be on `PATH`. Both come from mise:
+
 ```bash
-# Nix dependency
-nix-env -iA nixpkgs.imagemagick
-nix-env -iA nixpkgs.mermaid-cli
+mise use -g npm:@mermaid-js/mermaid-cli   # mmdc - mermaid diagrams
+mise use -g conda:imagemagick             # magick - every other conversion
 ```
+
+`mermaid-cli` runs on the mise-managed Node, and puppeteer reuses
+`/usr/bin/google-chrome` (`PUPPETEER_EXECUTABLE_PATH` in
+`mise/.config/mise/config.toml`) instead of downloading its own ~180 MB browser.
+
+```bash
+# Install without pulling a bundled browser
+PUPPETEER_SKIP_DOWNLOAD=1 mise install
+
+# Verify
+mmdc --version && magick -version && nvim "+checkhealth snacks"   # Snacks.image section
+```
+
+ImageMagick **must** come from the conda backend. The `aqua` entry doesn't resolve
+against ImageMagick's GitHub tags, and the upstream AppImage — downloadable via
+`ubi`/`http` — ships without librsvg, so `magick diagram.svg out.png` fails on
+mermaid's `stroke-dasharray` (snacks renders vector diagrams, so this is not
+optional). conda's build keeps the delegates: `RSVG`, ghostscript (`PDF`),
+libheif (`HEIC`/`AVIF`) and `WEBP`. It is ~578 MB unpacked vs ~261 MB for the nix
+closure — the price of keeping everything in mise.
+
+Two other pins in `mise/.config/mise/config.toml` matter here:
+
+- `PUPPETEER_EXECUTABLE_PATH` under `[env]` points puppeteer at the host Chrome.
+- `trust_policy_excludes = ["chromium-bidi@157.0.8090-0"]` — Google publishes
+  `chromium-bidi` versioned by Chrome build, and that release ships without
+  provenance attestation, which mise's npm backend reports as a trust downgrade.
 
 ### 11) Kulala format conversion - Openapi to http
 
@@ -339,9 +394,14 @@ cargo install --git https://github.com/webstonehq/tuxedo
 ### 1) NPM - Node package manager for AI tools
 
 ```bash
-# Nix dependency
-nix-env -iA nixpkgs.nodejs_22
+# Node.js and npm both come from mise - see "Mise" under optional terminal tools
+# (never nix-env nixpkgs.nodejs_* or apt install nodejs)
+mise use -g node@24
+mise install
 ```
+
+Global npm packages live under the mise-managed Node, so they survive `nix-env`
+profile changes and `apt` upgrades.
 
 ### 2) Herdr - An AI based terminal multiplexer - Multi agent harness observability
 
@@ -381,6 +441,9 @@ curl -fsSL https://claude.ai/install.sh | bash
 ### 5) Copilot-cli - GitHub Copilot for the terminal
 
 ```bash
+# Node.js dependency - mise-managed, see "Mise" under optional terminal tools
+mise use -g node@24
+
 npm install -g @github/copilot
 ```
 
