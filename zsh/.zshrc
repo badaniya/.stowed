@@ -76,7 +76,7 @@ plugins=(
     git
     zsh-autosuggestions
     zsh-syntax-highlighting
-    # zsh-vi-mode: using native bindkey -v instead
+    zsh-vi-mode
     # urltools: lazy-load if needed
     # tmux-xpanes: lazy-load only in tmux (see below)
 )
@@ -85,15 +85,6 @@ plugins=(
 if [[ -n "$TMUX" ]]; then
     plugins+=(last-working-dir-tmux)
 fi
-
-# Native vi mode (replaces zsh-vi-mode plugin)
-bindkey -v
-export KEYTIMEOUT=1
-
-# vv in vicmd mode → edit command in $EDITOR (nvim)
-autoload -Uz edit-command-line
-zle -N edit-command-line
-bindkey -M vicmd 'vv' edit-command-line
 
 # Syntax highlighting plugin support
 [[ -f $ZSH/custom/plugins/zsh-syntax-highlighting/catppuccin/themes/catppuccin_mocha-zsh-syntax-highlighting.zsh ]] && source $ZSH/custom/plugins/zsh-syntax-highlighting/catppuccin/themes/catppuccin_mocha-zsh-syntax-highlighting.zsh
