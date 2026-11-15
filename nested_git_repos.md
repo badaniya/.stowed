@@ -82,9 +82,15 @@ git remote add forgit https://github.com/wfxr/forgit
 git remote add tmux-xpanes https://github.com/greymd/tmux-xpanes
 git remote add last-working-dir-tmux https://github.com/badaniya/last-working-dir-tmux
 
-# NOTE: zsh-syntax-highlighting-catppuccin theme is NOT added.
-# The catppuccin theme for zsh-syntax-highlighting is NOT used; we use the
-# tmux catppuccin theme for status bar and starship for shell prompt.
+# Add remotes (idempotent)
+git remote add oh-my-zsh https://github.com/ohmyzsh/ohmyzsh
+git remote add zsh-syntax-highlighting https://github.com/zsh-users/zsh-syntax-highlighting
+git remote add zsh-autosuggestions https://github.com/zsh-users/zsh-autosuggestions
+git remote add zsh-vi-mode https://github.com/jeffreytse/zsh-vi-mode
+git remote add forgit https://github.com/wfxr/forgit
+git remote add tmux-xpanes https://github.com/greymd/tmux-xpanes
+git remote add last-working-dir-tmux https://github.com/badaniya/last-working-dir-tmux
+git remote add zsh-syntax-highlighting-catppuccin https://github.com/catppuccin/zsh-syntax-highlighting
 
 # Initial add (run once on fresh clone)
 git subtree add --prefix=zsh/.oh-my-zsh oh-my-zsh master --squash
@@ -94,6 +100,7 @@ git subtree add --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-vi-mode zsh-vi-mode m
 git subtree add --prefix=zsh/.oh-my-zsh/custom/plugins/forgit forgit HEAD --squash
 git subtree add --prefix=zsh/.oh-my-zsh/custom/plugins/tmux-xpanes tmux-xpanes master --squash
 git subtree add --prefix=zsh/.oh-my-zsh/custom/plugins/last-working-dir-tmux last-working-dir-tmux master --squash
+git subtree add --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting/catppuccin zsh-syntax-highlighting-catppuccin main --squash
 
 # Update all zsh plugins to latest
 git subtree pull --prefix=zsh/.oh-my-zsh oh-my-zsh master --squash
@@ -103,6 +110,7 @@ git subtree pull --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-vi-mode zsh-vi-mode 
 git subtree pull --prefix=zsh/.oh-my-zsh/custom/plugins/forgit forgit HEAD --squash
 git subtree pull --prefix=zsh/.oh-my-zsh/custom/plugins/tmux-xpanes tmux-xpanes master --squash
 git subtree pull --prefix=zsh/.oh-my-zsh/custom/plugins/last-working-dir-tmux last-working-dir-tmux master --squash
+git subtree pull --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting/catppuccin zsh-syntax-highlighting-catppuccin main --squash
 ```
 
 ---
@@ -217,6 +225,7 @@ to `~/.agents/skills/` outside this repo.
 | forgit | HEAD | Uses default branch (`HEAD`) |
 | tmux-xpanes | master | |
 | last-working-dir-tmux | master | |
+| zsh-syntax-highlighting-catppuccin | main | Catppuccin theme for zsh-syntax-highlighting |
 | ferret | master | |
 | lightline.vim | master | |
 | nerdtree | master | |
@@ -256,6 +265,7 @@ git subtree pull --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-vi-mode zsh-vi-mode 
 git subtree pull --prefix=zsh/.oh-my-zsh/custom/plugins/forgit forgit HEAD --squash
 git subtree pull --prefix=zsh/.oh-my-zsh/custom/plugins/tmux-xpanes tmux-xpanes master --squash
 git subtree pull --prefix=zsh/.oh-my-zsh/custom/plugins/last-working-dir-tmux last-working-dir-tmux master --squash
+git subtree pull --prefix=zsh/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting/catppuccin zsh-syntax-highlighting-catppuccin main --squash
 
 echo "Updating vim plugins..."
 git subtree pull --prefix=vim/.vim/plugged/ferret ferret master --squash
@@ -278,5 +288,5 @@ echo "  git add -A && git commit -m 'chore: update all subtrees' && git push"
 ### Last Updated
 
 - **Date**: 2026-11-15
-- **Commit**: `894be799d` (all subtrees refreshed with remote tracking)
+- **Commit**: `422609247` (all subtrees refreshed + catppuccin zsh theme added)
 - **Note**: All subtrees now have remotes configured for repeatable `git subtree pull` updates.
