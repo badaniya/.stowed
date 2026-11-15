@@ -20,6 +20,13 @@ fi
 
 export PATH=$PATH:$HOME/.local/bin:$HOME/.cargo/bin:/opt/nvim-linux-x86_64/bin:$HOME/.opencode/bin
 
+## Mise Shims ##
+# Login/non-interactive shells do not run the activation hook; shims resolve the
+# right tool version per directory and keep gh/tmux/fzf available without nix.
+if [ -d "$HOME/.local/share/mise/shims" ] && [[ ":$PATH:" != *":$HOME/.local/share/mise/shims:"* ]]; then
+    export PATH="$HOME/.local/share/mise/shims:$PATH"
+fi
+
 ## Docker Environment Settings ##
 export DOCKER_BUILDKIT=1
 

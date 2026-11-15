@@ -122,4 +122,7 @@ fi
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
 [ -f ~/"$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
 
+# Mise - shells get tools (gh, tmux, fzf, ...) from mise, not nix
+if command -v mise >/dev/null 2>&1; then eval "$(mise activate bash)"; fi
+
 if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init bash)"; fi

@@ -271,15 +271,15 @@ sh <(curl -L https://nixos.org/nix/install) --daemon
 ### 3) Tmuxinator - A tmux session layout creator
 
 ```bash
-# Nix dependency
-nix-env -iA nixpkgs.tmuxinator
+# mise dependency (Ruby gem)
+mise use -g gem:tmuxinator
 ```
 
 ### 4) Worktrunk - A Git worktree utility
 
 ```bash
-# Rust cargo dependency
-nix-env -iA nixpkgs.cargo
+# Rust via mise
+mise use -g rust
 
 # Worktrunk installation
 cargo install worktrunk && wt config shell install
@@ -288,25 +288,21 @@ cargo install worktrunk && wt config shell install
 ### 5) Gitui - Terminal Git TUI (Rust based)
 
 ```bash
-# Nix dependency
-nix-env -iA nixpkgs.gitui
+# mise dependency
+mise use -g gitui
 ```
 
 ### 6) Lazygit - Another Terminal Git TUI
 
 ```bash
-# Nix dependency
-nix-env -iA nixpkgs.lazygit
+# mise dependency (aqua backend)
+mise use -g aqua:jesseduffield/lazygit
 ```
 
 ### 7) Hunk - Terminal TUI Git Diff
 
 ```bash
-# Nix dependency
-nix-env -iA nixpkgs.hunk
-
-# OR
-# Npm (node) install
+# Npm (node) install - comes from mise-managed Node
 npm i -g hunkdiff
 
 # Add git hdiff/hshow aliases
@@ -317,10 +313,6 @@ git config --global alias.hshow "-c core.pager=\"hunk pager\" show"
 ### 8) Tuicr - Terminal TUI Git Review
 
 ```bash
-# Nix dependency
-nix-env -iA nixpkgs.tuicr
-
-# OR
 curl -fsSL tuicr.dev/install.sh | sh
 ```
 
@@ -377,9 +369,6 @@ Two other pins in `mise/.config/mise/config.toml` matter here:
 
 ```bash
 npm install -g @mistweaverco/kulala-fmt
-# or
-# Nix dependency
-nix-env -iA nixpkgs.kulala-fmt
 ```
 
 ### 12) Tuxedo - TUI Todo List
