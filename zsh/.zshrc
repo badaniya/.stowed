@@ -90,6 +90,11 @@ fi
 bindkey -v
 export KEYTIMEOUT=1
 
+# vv in vicmd mode → edit command in $EDITOR (nvim)
+autoload -Uz edit-command-line
+zle -N edit-command-line
+bindkey -M vicmd 'vv' edit-command-line
+
 # Syntax highlighting plugin support
 [[ -f $ZSH/custom/plugins/zsh-syntax-highlighting/catppuccin/themes/catppuccin_mocha-zsh-syntax-highlighting.zsh ]] && source $ZSH/custom/plugins/zsh-syntax-highlighting/catppuccin/themes/catppuccin_mocha-zsh-syntax-highlighting.zsh
 
