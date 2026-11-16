@@ -2,60 +2,51 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
 # Sets user-defined palette
+# Palettes must be defined _after_ this line
 palette = "catppuccin_mocha"
 
 # Inserts a blank line between shell prompts
 add_newline = true
 
+# Timeout for commands executed by starship (in milliseconds).
 command_timeout = 3600000
+
+# Timeout for starship to scan files (in milliseconds).
 scan_timeout = 500
 
-# Top line: cwd + git branch + node version + right-justified clock
-# Bottom line: custom prompt
-format = """
-$custom.vi_mode$directory$git_branch$nodejs$fill$time
-$character"""
+# Sets the prompt format
+format = "$directory$fill$all"
 
-[custom.vi_mode]
-command = "cat $HOME/.cache/vi_mode 2>/dev/null || echo ❯"
-when = "true"
-format = "[$output](bold lavender) "
-
+# Starship modules
 [character]
-success_symbol = "[[🤞(¬_¬٥)](green) ❯](peach)"
-error_symbol = "[[🫵(♯⌣̀᷼ ⌣́)](red) ❯](peach)"
-vimcmd_symbol = "[[💪(•́‿•́✧)](subtext1) ❮](rosewater)"
+# Note the use of Catppuccin color 'peach'
+#success_symbol = "[[󰄛](green) ❯](peach)"
+#error_symbol = "[[󰄛](red) ❯](peach)"
+#vimcmd_symbol = "[󰄛 ❮](subtext1)" # For use with zsh-vi-mode
+success_symbol = "[[🤞\\(¬_¬٥\\)](green) ❯](peach)"
+error_symbol = "[[🫵\\(♯⌣̀᷼ ⌣́\\)](red) ❯](peach)"
+vimcmd_symbol = "[[💪\\(•́‿•́✧\\)](subtext1) ❮](rosewater)"      # For use with zsh-vi-mode
+
+[git_branch]
+format = '[$symbol$branch(:$remote_branch)](bold mauve) '
 
 [directory]
 truncation_length = 5
 truncation_symbol = "…/"
 style = "bold lavender"
 
-[git_branch]
-format = "[$symbol$branch(:$remote_branch)](bold mauve) "
-symbol = " "
-
-[nodejs]
-format = "via [$symbol$version](bold green) "
-symbol = "⬢ "
-
-[time]
-disabled = false
-format = "[$time](bold yellow) "
-time_format = "%H:%M:%S"
-style = "bold yellow"
-
-[fill]
-symbol = " "
-
 [golang]
 symbol = " "
+
+[fill]
+symbol = ' '
 
 [custom.datetime]
 command = 'date +"%H:%M:%S"'
 when = "true"
-format = "[🕐 $symbol($output)](yellow) "
+format = '[🕐 $symbol($output)](yellow) '
 
+# Palette definitions
 [palettes.catppuccin_mocha]
 rosewater = "#f5e0dc"
 flamingo = "#f2cdcd"
