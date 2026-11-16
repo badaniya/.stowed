@@ -86,62 +86,9 @@ export ZSH="$HOME/.oh-my-zsh"
 # Would you like to use another custom folder than $ZSH/custom?
 # ZSH_CUSTOM=/path/to/new-custom-folder
 
-# Zsh-vi-mode config (must be defined before plugin loads)
-function zvm_config() {
-    ZVM_VI_INSERT_ESCAPE_BINDKEY=^[
-    ZVM_LAZY_KEYBINDINGS=true
-}
-
-# Alt+L to accept autosuggestion (zsh-autosuggestions)
-bindkey '^[l' autosuggest-accept
-
-# Add our init function to zsh-vi-mode's after_init commands array
-function vi_mode_init() {
-    # Vi-mode indicator file (for starship custom module)
-    VI_MODE_FILE="$HOME/.cache/vi_mode"
-
-    # Write initial mode
-    echo -n "❯" > $VI_MODE_FILE 2>/dev/null
-
-    # Get starship's preserved keymap-select widget
-    local starship_widget=${widgets[zle-keymap-select]#user:}
-    if [[ -n $starship_widget ]]; then
-        # Wrap it to write keymap to file
-        function starship_zle-keymap-select-wrapped() {
-            $starship_widget "$@" 2>/dev/null
-            if [[ $KEYMAP == vicmd ]]; then
-                echo -n "❮" > $VI_MODE_FILE
-            else
-                echo -n "❯" > $VI_MODE_FILE
-            fi
-        }
-        zle -N zle-keymap-select starship_zle-keymap-select-wrapped
-    fi
-
-    # Also write on line init
-    function vi_mode_zle-line-init() {
-        echo -n "❯" > $VI_MODE_FILE
-    }
-    zle -N zle-line-init vi_mode_zle-line-init
-}
-
-typeset -g -a zvm_after_init_commands
-zvm_after_init_commands+=(vi_mode_init)
-
-# Function to update vi mode indicator (for zvm_after_select_vi_mode_commands)
-function vi_mode_update_indicator() {
-    local mode="$1"
-    if [[ $mode == $ZVM_MODE_NORMAL ]]; then
-        export KEYMAP=vicmd
-        echo -n "❮" > $VI_MODE_FILE
-    else
-        export KEYMAP=viins
-        echo -n "❯" > $VI_MODE_FILE
-    fi
-}
-
-typeset -g -a zvm_after_select_vi_mode_commands
-zvm_after_select_vi_mode_commands+=(vi_mode_update_indicator)
+# Keep zsh-vi-mode's keymap and line-init widgets intact. Starship's native
+# zle-keymap-select hook redraws [character] from ZLE's read-only KEYMAP;
+# no custom indicator, exported KEYMAP or shared mode-cache file is needed.
 
 # Which plugins would you like to load?
 # Standard plugins can be found in ~/.oh-my-zsh/plugins/*
@@ -165,69 +112,16 @@ fi
 # Syntax highlighting plugin support
 [[ -f $ZSH/custom/plugins/zsh-syntax-highlighting/catppuccin/themes/catppuccin_mocha-zsh-syntax-highlighting.zsh ]] && source $ZSH/custom/plugins/zsh-syntax-highlighting/catppuccin/themes/catppuccin_mocha-zsh-syntax-highlighting.zsh
 
-# Completion init. `-C` trusts the cached dump instead of re-scanning it, which is
-# what makes startup fast. Plain `compinit` additionally runs `compaudit`, the check
-# that refuses to use completion directories which are group- or world-writable: a
-# writable $fpath entry lets any local user plant a function your shell autoloads on
-# demand. That audit stats every $fpath entry and costs ~1.2 s here, so it is not
-# skipped - it is cached (below, once a day, in the background). While a cached audit
-# still reports findings, every shell takes the strict path instead of the fast one.
-#
-# Keep these in sync: the strict branch must not use -C.
-_zcompdump=${ZSH_COMPDUMP:-$HOME/.cache/zcompdump}
-_zcompaudit_findings=${XDG_CACHE_HOME:-$HOME/.cache}/zsh/compaudit.findings
-
-autoload -Uz compinit
-if [[ -s $_zcompaudit_findings ]]; then
-    compinit -d "$_zcompdump"          # audit + refuse insecure dirs
-else
-    compinit -C -d "$_zcompdump"       # cached dump, fast path
-fi
-# No zrecompile here on purpose: the dump is only ~1.6 KB (compinit runs before OMZ
-# adds the plugin directories), so compiling it buys nothing measurable, while
-# `zrecompile -p` cost ~400 ms of startup every time it ran. Compiling OMZ itself was
-# measured too and made it slower (490 ms vs 468 ms), so nothing is zcompiled here.
-
-# Override compinit to no-op to prevent OMZ from re-running
-compinit() { return 0 }
-
-# Disable OMZ's compfix: it would run its own compaudit on every start, which is the
-# cost this block exists to avoid. The audit below replaces it.
-export ZSH_DISABLE_COMPFIX=true
-export ZSH_COMPDUMP=$_zcompdump
+# Let Oh My Zsh run compinit once, after it adds the plugin directories to fpath.
+# A versioned cache avoids the incomplete dump produced by the old early init.
+# Keep OMZ's normal completion security audit, including in an inherited shell
+# environment where the previous config exported ZSH_DISABLE_COMPFIX=true.
+export ZSH_COMPDUMP="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/zcompdump-$ZSH_VERSION"
+mkdir -p "${ZSH_COMPDUMP:h}"
+unset ZSH_DISABLE_COMPFIX
 
 # Main oh-my-zsh script
 [[ -f $ZSH/oh-my-zsh.sh ]] && source $ZSH/oh-my-zsh.sh
-
-# Restore compinit for interactive use
-unfunction compinit
-autoload -Uz compinit
-
-# Completion security audit (see the compinit block above). Runs at most once a day,
-# in the background, over the final $fpath - i.e. after OMZ, the custom plugins and
-# carapace have added their directories. Findings are cached and turn the next shell's
-# compinit into the strict, auditing variant; a clean run just refreshes the stamp.
-zmodload -F zsh/datetime p:EPOCHSECONDS 2>/dev/null
-zmodload -F zsh/stat b:zstat 2>/dev/null
-_zcompaudit_stamp=${_zcompaudit_findings:h}/compaudit.stamp
-[[ -d ${_zcompaudit_findings:h} ]] || mkdir -p ${_zcompaudit_findings:h} 2>/dev/null
-
-_zcompaudit_age=999999
-[[ -f $_zcompaudit_stamp ]] && _zcompaudit_age=$(( EPOCHSECONDS - $(zstat +mtime -- $_zcompaudit_stamp 2>/dev/null || print 0) ))
-
-if (( _zcompaudit_age > 86400 )); then
-    ( autoload -Uz compaudit
-      compaudit >| ${_zcompaudit_findings}.tmp 2>&1
-      mv -f ${_zcompaudit_findings}.tmp $_zcompaudit_findings 2>/dev/null
-      touch $_zcompaudit_stamp ) &!
-fi
-
-if [[ -s $_zcompaudit_findings ]]; then
-    print -u2 -- "zsh: compaudit flagged insecure \$fpath directories (completions are now audited on start):"
-    sed -n '1,5p' $_zcompaudit_findings | sed 's/^/  /' >&2
-    print -u2 -- "  fix with: chmod go-w <dir>  then: rm $_zcompaudit_findings"
-fi
-unset _zcompaudit_age
 
 # User configuration
 export ZVM_VI_EDITOR=nvim
@@ -348,12 +242,12 @@ if [[ -n $_carapace_bin ]]; then
         carapace _carapace > $_carapace_cache
     fi
     _carapace_boot() {
-        unfunction _carapace_boot
-        source "$_carapace_cache"
+        source "$_carapace_cache" && unfunction _carapace_boot
     }
     _carapace_complete_word() {
-        _carapace_boot
-        zle .expand-or-complete
+        (( ${+functions[_carapace_boot]} )) && _carapace_boot
+        # The dot-prefixed builtin bypasses compinit and all compdef handlers.
+        zle expand-or-complete
     }
     zle -N _carapace_complete_word
     bindkey -M emacs '^I' _carapace_complete_word 2>/dev/null
