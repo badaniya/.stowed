@@ -378,3 +378,6 @@ fi
 
 # bun completions
 if [[ -s "$HOME/.bun/_bun" ]]; then source "$HOME/.bun/_bun"; fi
+
+# Final PATH deduplication (after all PATH modifications)
+typeset -U path
