@@ -67,6 +67,44 @@ export ZSH="$HOME/.oh-my-zsh"
 # Would you like to use another custom folder than $ZSH/custom?
 # ZSH_CUSTOM=/path/to/new-custom-folder
 
+# Zsh-vi-mode config (must be defined before plugin loads)
+function zvm_config() {
+    ZVM_VI_INSERT_ESCAPE_BINDKEY=^[
+}
+
+# Add our init function to zsh-vi-mode's after_init commands array
+function vi_mode_init() {
+    # Vi-mode indicator file (for starship custom module)
+    VI_MODE_FILE="$HOME/.cache/vi_mode"
+
+    # Write initial mode
+    echo -n "❯" > $VI_MODE_FILE
+
+    # Get starship's preserved keymap-select widget
+    local starship_widget=${widgets[zle-keymap-select]#user:}
+    if [[ -n $starship_widget ]]; then
+        # Wrap it to write keymap to file
+        function starship_zle-keymap-select-wrapped() {
+            $starship_widget "$@"
+            if [[ $KEYMAP == vicmd ]]; then
+                echo -n "❮" > $VI_MODE_FILE
+            else
+                echo -n "❯" > $VI_MODE_FILE
+            fi
+        }
+        zle -N zle-keymap-select starship_zle-keymap-select-wrapped
+    fi
+
+    # Also write on line init
+    function vi_mode_zle-line-init() {
+        echo -n "❯" > $VI_MODE_FILE
+    }
+    zle -N zle-line-init vi_mode_zle-line-init
+}
+
+typeset -g -a zvm_after_init_commands
+zvm_after_init_commands+=(vi_mode_init)
+
 # Which plugins would you like to load?
 # Standard plugins can be found in ~/.oh-my-zsh/plugins/*
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
