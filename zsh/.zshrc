@@ -89,6 +89,7 @@ export ZSH="$HOME/.oh-my-zsh"
 # Zsh-vi-mode config (must be defined before plugin loads)
 function zvm_config() {
     ZVM_VI_INSERT_ESCAPE_BINDKEY=^[
+    ZVM_LAZY_KEYBINDINGS=true
 }
 
 # Alt+L to accept autosuggestion (zsh-autosuggestions)
@@ -126,6 +127,21 @@ function vi_mode_init() {
 
 typeset -g -a zvm_after_init_commands
 zvm_after_init_commands+=(vi_mode_init)
+
+# Function to update vi mode indicator (for zvm_after_select_vi_mode_commands)
+function vi_mode_update_indicator() {
+    local mode="$1"
+    if [[ $mode == $ZVM_MODE_NORMAL ]]; then
+        export KEYMAP=vicmd
+        echo -n "❮" > $VI_MODE_FILE
+    else
+        export KEYMAP=viins
+        echo -n "❯" > $VI_MODE_FILE
+    fi
+}
+
+typeset -g -a zvm_after_select_vi_mode_commands
+zvm_after_select_vi_mode_commands+=(vi_mode_update_indicator)
 
 # Which plugins would you like to load?
 # Standard plugins can be found in ~/.oh-my-zsh/plugins/*

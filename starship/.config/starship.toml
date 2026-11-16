@@ -15,9 +15,14 @@ command_timeout = 3600000
 scan_timeout = 500
 
 # Sets the prompt format
-format = "$directory$fill$all"
+format = "$custom.vi_mode$directory$fill$all"
 
 # Starship modules
+[custom.vi_mode]
+command = "cat $HOME/.cache/vi_mode 2>/dev/null || echo ❯"
+when = "true"
+format = "[$output](bold lavender) "
+
 [character]
 # Note the use of Catppuccin color 'peach'
 #success_symbol = "[[󰄛](green) ❯](peach)"
