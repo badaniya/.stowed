@@ -30,7 +30,7 @@ format = "[$output](bold lavender) "
 #vimcmd_symbol = "[󰄛 ❮](subtext1)" # For use with zsh-vi-mode
 success_symbol = "[[🤞\\(¬_¬٥\\)](green) ❯](peach)"
 error_symbol = "[[🫵\\(♯⌣̀᷼ ⌣́\\)](red) ❯](peach)"
-vimcmd_symbol = "[❮](bold lavender)"
+vimcmd_symbol = "[[💪\\(•́‿•́✧\\)](subtext1) ❮](rosewater)"
 
 [git_branch]
 format = '[$symbol$branch(:$remote_branch)](bold mauve) '
