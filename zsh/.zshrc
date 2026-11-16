@@ -81,14 +81,14 @@ function vi_mode_init() {
     VI_MODE_FILE="$HOME/.cache/vi_mode"
 
     # Write initial mode
-    echo -n "❯" > $VI_MODE_FILE
+    echo -n "❯" > $VI_MODE_FILE 2>/dev/null
 
     # Get starship's preserved keymap-select widget
     local starship_widget=${widgets[zle-keymap-select]#user:}
     if [[ -n $starship_widget ]]; then
         # Wrap it to write keymap to file
         function starship_zle-keymap-select-wrapped() {
-            $starship_widget "$@"
+            $starship_widget "$@" 2>/dev/null
             if [[ $KEYMAP == vicmd ]]; then
                 echo -n "❮" > $VI_MODE_FILE
             else

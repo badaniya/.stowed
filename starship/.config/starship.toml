@@ -15,7 +15,7 @@ command_timeout = 3600000
 scan_timeout = 500
 
 # Sets the prompt format
-format = "$custom.vi_mode$directory$fill$all"
+format = "$custom.vi_mode$all"
 
 # Starship modules
 [custom.vi_mode]
