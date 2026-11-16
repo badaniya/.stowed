@@ -148,7 +148,10 @@ if [[ -s $_zcompaudit_findings ]]; then
 else
     compinit -C -d "$_zcompdump"       # cached dump, fast path
 fi
-zrecompile -p "$_zcompdump" 2>/dev/null
+# No zrecompile here on purpose: the dump is only ~1.6 KB (compinit runs before OMZ
+# adds the plugin directories), so compiling it buys nothing measurable, while
+# `zrecompile -p` cost ~400 ms of startup every time it ran. Compiling OMZ itself was
+# measured too and made it slower (490 ms vs 468 ms), so nothing is zcompiled here.
 
 # Override compinit to no-op to prevent OMZ from re-running
 compinit() { return 0 }
@@ -290,31 +293,64 @@ which zoxide >/dev/null && eval "$(zoxide init zsh)"
 # Forgit Support
 [[ -f $ZSH/custom/plugins/forgit/forgit.plugin.zsh ]] && source $ZSH/custom/plugins/forgit/forgit.plugin.zsh
 
-# Carapace Shell Completion Support (cached)
+# Carapace Shell Completion Support (cached, loaded on first Tab)
+# Sourcing the generated cache registers ~1600 compdefs and costs ~370 ms - about a
+# sixth of the whole startup - for a feature only needed once you actually complete.
+# The cache is still generated eagerly (a shell without completions still needs it
+# current) but the *source* waits for the first Tab, which then pays the cost once.
+#
+# Never test staleness with $commands[name]: reading that array makes zsh build its
+# entire command hash table across all 108 PATH entries (~470 ms here). command -v
+# stops at the first match, so it costs microseconds.
 _carapace_cache="$HOME/.cache/carapace/zsh"
-if which carapace >/dev/null; then
+_carapace_bin=$(command -v carapace 2>/dev/null)
+if [[ -n $_carapace_bin ]]; then
     export CARAPACE_BRIDGES='zsh,bash,cobra,inshellisense'
     zstyle ':completion:*' format $'\e[2;37mCompleting %d\e[m'
     zstyle ':completion:*:git:*' group-order 'main commands' 'alias commands' 'external commands'
-    if [[ ! -f $_carapace_cache || $commands[carapace] -nt $_carapace_cache ]]; then
+    if [[ ! -f $_carapace_cache || $_carapace_bin -nt $_carapace_cache ]]; then
         mkdir -p "${_carapace_cache:h}"
         carapace _carapace > $_carapace_cache
     fi
-    source $_carapace_cache
+    _carapace_boot() {
+        unfunction _carapace_boot
+        source "$_carapace_cache"
+    }
+    _carapace_complete_word() {
+        _carapace_boot
+        zle .expand-or-complete
+    }
+    zle -N _carapace_complete_word
+    bindkey -M emacs '^I' _carapace_complete_word 2>/dev/null
+    bindkey -M viins '^I' _carapace_complete_word 2>/dev/null
 fi
+unset _carapace_bin
 
-# JWT Shell Completion Support
-hash jwt >/dev/null && source <(jwt completion zsh)
+# JWT Shell Completion Support (cached)
+# Generating this runs the jwt binary and evals ~7 KB on every start (measured ~400 ms
+# here); the output only changes when the binary does, so cache it like carapace/wt.
+_jwt_cache="$HOME/.cache/zsh/jwt-completion.zsh"
+_jwt_bin=$(command -v jwt 2>/dev/null)
+if [[ -n $_jwt_bin ]]; then
+    if [[ ! -f $_jwt_cache || $_jwt_bin -nt $_jwt_cache ]]; then
+        mkdir -p "${_jwt_cache:h}"
+        jwt completion zsh > $_jwt_cache 2>/dev/null
+    fi
+    source $_jwt_cache
+fi
+unset _jwt_bin
 
 # Worktrunk Support (cached)
 _wt_cache="$HOME/.cache/worktrunk/zsh"
-if command -v wt >/dev/null 2>&1; then
-    if [[ ! -f $_wt_cache || $commands[wt] -nt $_wt_cache ]]; then
+_wt_bin=$(command -v wt 2>/dev/null)
+if [[ -n $_wt_bin ]]; then
+    if [[ ! -f $_wt_cache || $_wt_bin -nt $_wt_cache ]]; then
         mkdir -p "${_wt_cache:h}"
         wt config shell init zsh > $_wt_cache
     fi
     source $_wt_cache
 fi
+unset _wt_bin
 
 # Xpanes Support (lazy-load only in tmux)
 if [[ -n "$TMUX" ]]; then
