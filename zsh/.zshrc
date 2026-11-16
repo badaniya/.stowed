@@ -1,6 +1,25 @@
 # If you come from bash you might have to change your $PATH.
 # export PATH=$HOME/bin:/usr/local/bin:$PATH
 
+# Trim WSL interop noise from $PATH (do this before anything looks a command up).
+# WSL appends the whole Windows PATH: 39 directories under /mnt/c, each on the drvfs
+# mount and costing ~6-13 ms to stat. Every *failed* lookup walks all of them, so a
+# single typo cost ~640 ms and zsh's command-hash build (triggered by $commands[...],
+# compinit, or a completion miss) cost ~470 ms. Keep only the three directories that
+# hold the interop tools used from here: explorer.exe, clip.exe, cmd.exe, wsl.exe and
+# powershell.exe. Anything else on the Windows side still works by full path:
+#   /mnt/c/Windows/system32/notepad.exe notepad
+if [[ -d /mnt/c/Windows ]]; then
+    path=(${path:#/mnt/*} /mnt/c/Windows /mnt/c/Windows/system32 /mnt/c/Windows/System32/WindowsPowerShell/v1.0)
+    # A parent shell can leave mise's snapshot of the untrimmed PATH in the
+    # environment, and `mise activate` rebuilds $PATH from that snapshot, silently
+    # undoing the trim above. Drop it so mise recomputes from the trimmed PATH.
+    unset __MISE_ORIG_PATH
+fi
+# Deduplicate: mise, conda and repeated profile sourcing add the same dirs several
+# times over, and every duplicate is another stat on each miss.
+typeset -U path
+
 # Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 
