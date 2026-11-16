@@ -72,6 +72,9 @@ function zvm_config() {
     ZVM_VI_INSERT_ESCAPE_BINDKEY=^[
 }
 
+# Alt+L to accept autosuggestion (zsh-autosuggestions)
+bindkey '^[l' autosuggest-accept
+
 # Add our init function to zsh-vi-mode's after_init commands array
 function vi_mode_init() {
     # Vi-mode indicator file (for starship custom module)
