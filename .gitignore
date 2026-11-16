@@ -43,3 +43,10 @@ agents/.agents/skills/dev-browser/tmp/
 
 # Herdr app: each mod's type file is generated on first load
 herdr-app/.config/herdr-app/mods/*/gpui-kit.d.ts
+
+# Herdr runtime state: sockets, flocks and counters are per-machine and change on
+# every run. Tracking them makes every session leave a dirty tree.
+herdr/.config/herdr/herdr.sock*
+claude/.claude/herdr-usagebar/*.flock
+claude/.claude/herdr-usagebar/*.lock.guard
+claude/.claude/herdr-usagebar/provider-limit-notify-state.json

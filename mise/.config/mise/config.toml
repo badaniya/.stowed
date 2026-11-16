@@ -17,7 +17,6 @@ node = "24"
 "aqua:carapace-sh/carapace-bin" = "1.0.5"
 "aqua:wagoodman/dive" = "0.12.0"
 "aqua:sharkdp/fd" = "10.1.0"
-"aqua:junegunn/fzf" = "0.67.0"
 "aqua:dundee/gdu" = "5.29.0"
 "aqua:cli/cli" = "2.55.0"
 "aqua:PaulJuliusMartinez/jless" = "0.9.0"
@@ -41,6 +40,9 @@ node = "24"
 rust = "stable"
 ruby = "4.0.9"
 "gem:tmuxinator" = "3.4.2"
+# pls ships prereleases only, so the tag has to be pinned manually (ls-remote hides them)
+"github:pls-rs/pls" = "7.0.0-beta.1"
+fzf = "0.75.0"
 
 [env]
 PUPPETEER_EXECUTABLE_PATH = "/usr/bin/google-chrome"

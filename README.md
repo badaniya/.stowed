@@ -381,13 +381,14 @@ cargo install --git https://github.com/webstonehq/tuxedo
 ### 13) pls - A prettier and powerful ls(1) for the pros
 
 ```bash
-# Binary from GitHub releases (recommended)
-curl -L https://github.com/pls-rs/pls/releases/download/v7.0.0-beta.1/pls-x86_64-unknown-linux-musl.zip -o /tmp/pls.zip \
-  && unzip -o /tmp/pls.zip -d /tmp/pls && cp /tmp/pls/pls ~/.local/bin/pls
-
-# Or via cargo (has no binaries, library only)
-# cargo install pls  # WON'T WORK - library only
+# mise (github backend) - pinned to the current prerelease
+mise use -g "github:pls-rs/pls@7.0.0-beta.1"
 ```
+
+`pls` publishes only prereleases, so `mise ls-remote` and GitHub's "latest release"
+API both come up empty — the version has to be pinned explicitly (as it is in
+`mise/.config/mise/config.toml`). The bare `cargo install pls` does not work: the
+crates.io package of that name is a library, not this binary.
 
 ## Installing Optional Stowed AI Terminal Tools
 
