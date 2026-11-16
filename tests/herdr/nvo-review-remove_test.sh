@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Real Git fixtures; destructive external services are test doubles.
 set -euo pipefail
+# Negative notification cases must never reach the operator's live Herdr UI.
+unset HERDR_ENV HERDR_SOCKET_PATH HERDR_ACTION_ERROR_ACTIVE
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 SCRIPT="$ROOT/herdr-spreader/.config/herdr-spreader/nvo-review-remove.sh"
 fail() { printf 'FAIL: %s\n' "$*" >&2; exit 1; }

@@ -1,0 +1,7 @@
+name = "Destroy sandbox & remove workspace: NVO-REVIEW (mono)"
+type = "form"
+command = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name 'Destroy sandbox & remove workspace: NVO-REVIEW (mono)' -- bash ~/.config/herdr-spreader/nvo-review-mono-remove-notify.sh '{{.Value}}'"
+
+[form]
+prompt = "DESTRUCTIVE: destroys the review sandbox and force-removes the review worktree; preserves the PR branch; add --keep-worktrees to retain it"
+placeholder = "CFD-18711 or NVO-REVIEW-PR-123 [--keep-worktrees]"

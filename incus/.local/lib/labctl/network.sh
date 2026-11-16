@@ -35,8 +35,40 @@ labctl_stack_health() {
 	labctl_stack_run "$1" "$LABCTL_STACK_HEALTH_COMMAND"
 }
 
+# Monorepo stage commands; each runs from the xcloud-platform-services worktree.
+labctl_mono_stage_command() {
+	case $1 in
+	# Existing golden images may lack file; the PCM context builder needs it.
+	# Atlas's installer treats a missing output directory as a filename.
+	shared) printf '%s\n' "${LABCTL_MONO_STAGE_SHARED_COMMAND:-if ! command -v file >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y --no-install-recommends file; fi && mkdir -p \"\$(go env GOPATH)/bin\"}" ;;
+	pcm-db) printf '%s\n' "${LABCTL_MONO_STAGE_PCM_DB_COMMAND:-export PATH=\"\$(go env GOPATH)/bin:\$PATH\" && cd ngxcp/PlatformCommonModels/scripts/development && IMAGE_IMPORT=false make setup-config-db}" ;;
+	platform-tagging-build) printf '%s\n' "${LABCTL_MONO_STAGE_PLATFORM_TAGGING_BUILD_COMMAND:-cd ngxcp/PlatformServices/scripts/development && make build-tagging}" ;;
+	platform-tagging-start) printf '%s\n' "${LABCTL_MONO_STAGE_PLATFORM_TAGGING_START_COMMAND:-cd ngxcp/PlatformServices/scripts/development && make start-tagging}" ;;
+	godcapp-build) printf '%s\n' "${LABCTL_MONO_STAGE_GODCAPP_BUILD_COMMAND:-cd NVO/scripts/development && make build}" ;;
+	godcapp-infra)
+		# Keep shell braces outside ${...:-...}: an unescaped } ends that expansion.
+		local default_command
+		default_command="cd NVO/scripts/development && { grep -q '^XIQ_THREAD_POOL ?=' Makefile || sed -i '/^XIQEmulatorKafkaContainerName=/a XIQ_THREAD_POOL ?= 1000' Makefile; } && sed -i 's/thread-pool=1000/thread-pool=\$(XIQ_THREAD_POOL)/' Makefile && make start-infra"
+		printf '%s\n' "${LABCTL_MONO_STAGE_GODCAPP_INFRA_COMMAND:-$default_command}"
+		;;
+	godcapp-services) printf '%s\n' "${LABCTL_MONO_STAGE_GODCAPP_SERVICES_COMMAND:-cd NVO/scripts/development && make start-services}" ;;
+	*) return 1 ;;
+	esac
+}
+
 labctl_stack_stage() {
-	local ticket=$1 stage=$2 command
+	local ticket=$1 stage=$2 command root mono_dir
+	root=$(labctl_workspace_ticket_root "$ticket") || return 1
+	if mono_dir=$(labctl_workspace_mono_dir "$root"); then
+		command=$(labctl_mono_stage_command "$stage") || {
+			labctl_die "invalid sandbox stage: $stage"
+			return 1
+		}
+		[[ $mono_dir == . ]] || command="cd $mono_dir && $command"
+		printf 'stage: %s ticket=%s (monorepo)\n' "$stage" "$ticket"
+		labctl_stack_run "$ticket" "$command"
+		return
+	fi
 	case $stage in
 	shared) command=$LABCTL_STAGE_SHARED_COMMAND ;;
 	pcm-db) command=$LABCTL_STAGE_PCM_DB_COMMAND ;;

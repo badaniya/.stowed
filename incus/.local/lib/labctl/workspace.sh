@@ -61,6 +61,20 @@ labctl_workspace_linked_worktrees() {
 	done < <(find "$root" -mindepth 2 -maxdepth 2 -type f -name .git -print0)
 }
 
+# Monorepo workspaces: the ticket root is itself a linked xcloud-platform-services
+# worktree, or (EMULATOR) a plain parent holding that worktree plus cloudemu.
+# Prints the monorepo directory relative to the ticket root ('.' or a subdirectory).
+labctl_workspace_mono_dir() {
+	local root=$1
+	if labctl_workspace_gitdir_is_under_master "$root/.git"; then
+		printf '%s\n' .
+	elif labctl_workspace_gitdir_is_under_master "$root/xcloud-platform-services/.git"; then
+		printf '%s\n' xcloud-platform-services
+	else
+		return 1
+	fi
+}
+
 labctl_workspace_detect() {
 	local ticket=$1 selector=${2:-} root repo valid_count=0 selected
 	root=$(labctl_workspace_ticket_root "$ticket") || return 1
@@ -68,6 +82,11 @@ labctl_workspace_detect() {
 		labctl_die "existing worktree prerequisite is missing: $root"
 		return 1
 	}
+
+	if labctl_workspace_mono_dir "$root" >/dev/null; then
+		printf '%s\n' mono
+		return 0
+	fi
 
 	local harness=true
 	while IFS= read -r repo; do
@@ -117,6 +136,12 @@ labctl_workspace_validate() {
 			return 1
 		}
 	done < <(find "$root" -mindepth 2 -maxdepth 2 -type f -name .git -print0)
+	if [[ -f $root/.git ]]; then
+		labctl_workspace_gitdir_is_under_master "$root/.git" || {
+			labctl_die "linked worktree gitdir is outside master root: $root/.git"
+			return 1
+		}
+	fi
 	printf '%s\n' "$workspace_type"
 }
 

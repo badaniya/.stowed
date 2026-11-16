@@ -1,0 +1,7 @@
+name = "Open workspace & bootstrap sandbox: EMULATOR-MONO-WORKTREE-SANDBOX"
+type = "form"
+command = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name 'Open workspace & bootstrap sandbox: EMULATOR-MONO-WORKTREE-SANDBOX' -- bash ~/.config/herdr-spreader/emulator-mono-worktree-sandbox-notify.sh '{{.Value}}'"
+
+[form]
+prompt = "EMULATOR ticket and xcloud-platform-services branch (monorepo + cloudemu worktrees under a non-git parent; boots its Incus sandbox)"
+placeholder = "EMULATOR-10 25.16.0"

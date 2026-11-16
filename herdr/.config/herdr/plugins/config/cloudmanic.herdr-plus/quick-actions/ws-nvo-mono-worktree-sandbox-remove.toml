@@ -1,0 +1,7 @@
+name = "Destroy sandbox & remove workspace: NVO-MONO-WORKTREE-SANDBOX"
+type = "form"
+command = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name 'Destroy sandbox & remove workspace: NVO-MONO-WORKTREE-SANDBOX' -- bash ~/.config/herdr-spreader/nvo-mono-worktree-sandbox-remove-notify.sh '{{.Value}}'"
+
+[form]
+prompt = "DESTRUCTIVE: destroys the sandbox and force-removes the monorepo worktree and ticket branch; add --keep-worktrees to retain them"
+placeholder = "NVO-20131 [--keep-worktrees]"

@@ -1,0 +1,7 @@
+name = "Open workspace & bootstrap sandbox: NVO-MONO-WORKTREE-SANDBOX"
+type = "form"
+command = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name 'Open workspace & bootstrap sandbox: NVO-MONO-WORKTREE-SANDBOX' -- bash ~/.config/herdr-spreader/nvo-mono-worktree-sandbox-notify.sh '{{.Value}}'"
+
+[form]
+prompt = "NVO ticket and xcloud-platform-services branch (worktree branch <owner>/<ticket> from origin/<branch>, tracking origin/main; boots its Incus sandbox)"
+placeholder = "NVO-20131 25.16.0"

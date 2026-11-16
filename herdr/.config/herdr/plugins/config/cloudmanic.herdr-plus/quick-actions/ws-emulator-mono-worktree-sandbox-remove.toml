@@ -1,0 +1,7 @@
+name = "Destroy sandbox & remove workspace: EMULATOR-MONO-WORKTREE-SANDBOX"
+type = "form"
+command = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name 'Destroy sandbox & remove workspace: EMULATOR-MONO-WORKTREE-SANDBOX' -- bash ~/.config/herdr-spreader/emulator-mono-worktree-sandbox-remove-notify.sh '{{.Value}}'"
+
+[form]
+prompt = "DESTRUCTIVE: destroys the emulator sandbox and force-removes the monorepo and cloudemu worktrees and ticket branches; add --keep-worktrees to retain them"
+placeholder = "EMULATOR-10 [--keep-worktrees]"

@@ -434,6 +434,45 @@ class SocketIntegrationTests(RunnerTests):
 
 
 class IntegrationTests(unittest.TestCase):
+    def test_review_remove_negative_fixture_never_contacts_inherited_herdr_socket(self):
+        with tempfile.TemporaryDirectory() as temporary, socket.socket(socket.AF_UNIX) as server:
+            path = Path(temporary) / 'herdr.sock'
+            server.bind(str(path))
+            server.listen()
+            server.settimeout(0.1)
+            requests = []
+            stopped = threading.Event()
+
+            def serve():
+                while not stopped.is_set():
+                    try:
+                        connection, _ = server.accept()
+                    except TimeoutError:
+                        continue
+                    except OSError:
+                        return
+                    with connection:
+                        connection.settimeout(1)
+                        with connection.makefile() as stream:
+                            request = json.loads(stream.readline())
+                        requests.append(request['method'])
+                        # Never create UI, even if the fixture leaks its context.
+                        response = {'id': request['id'], 'error': {'message': 'test socket: UI forbidden'}}
+                        connection.sendall((json.dumps(response) + '\n').encode())
+
+            thread = threading.Thread(target=serve, daemon=True)
+            thread.start()
+            env = {key: value for key, value in os.environ.items() if not key.startswith('HERDR_')}
+            env.update(HERDR_ENV='1', HERDR_SOCKET_PATH=str(path))
+            try:
+                result = subprocess.run(['bash', str(ROOT / 'tests/herdr/nvo-review-remove_test.sh')],
+                                        env=env, capture_output=True, text=True, timeout=30, check=False)
+            finally:
+                stopped.set()
+                thread.join(timeout=2)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertEqual(requests, [], 'negative cleanup tests must never contact an inherited Herdr socket')
+
     def test_viewer_entrypoints_find_helper_with_canonical_stow_plugin_root(self):
         manifest = ROOT / 'herdr/.config/herdr-action-errors/herdr-plugin.toml'
         panes = tomllib.loads(manifest.read_text())['panes']

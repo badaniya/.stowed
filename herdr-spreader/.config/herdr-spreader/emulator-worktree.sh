@@ -3,7 +3,8 @@
 
 emulator_worktree_paths_validate() {
   local root=$1 owner=$2 ticket=$3 path
-  [[ $root == /* && -d $root && $owner =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ && $ticket =~ ^EMULATOR-[0-9]+$ ]] || {
+  # A -MONO alias keeps live monorepo tests beside the original ticket workspace.
+  [[ $root == /* && -d $root && $owner =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ && $ticket =~ ^EMULATOR-[0-9]+(-MONO)?$ ]] || {
     printf 'Error: invalid EMULATOR workspace root, owner or ticket\n' >&2
     return 1
   }
