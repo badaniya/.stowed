@@ -130,11 +130,24 @@ fi
 # Syntax highlighting plugin support
 [[ -f $ZSH/custom/plugins/zsh-syntax-highlighting/catppuccin/themes/catppuccin_mocha-zsh-syntax-highlighting.zsh ]] && source $ZSH/custom/plugins/zsh-syntax-highlighting/catppuccin/themes/catppuccin_mocha-zsh-syntax-highlighting.zsh
 
-# Compinit optimization: use cache, let OMZ handle compinit
+# Compinit optimization: run once with cache, disable OMZ re-run
+autoload -Uz compinit
+compinit -C -d ~/.cache/zcompdump
+zrecompile -p ~/.cache/zcompdump 2>/dev/null
+
+# Override compinit to no-op to prevent OMZ from re-running
+compinit() { return 0 }
+
+# Disable OMZ's compfix
+export ZSH_DISABLE_COMPFIX=true
 export ZSH_COMPDUMP=~/.cache/zcompdump
 
 # Main oh-my-zsh script
 [[ -f $ZSH/oh-my-zsh.sh ]] && source $ZSH/oh-my-zsh.sh
+
+# Restore compinit for interactive use
+unfunction compinit
+autoload -Uz compinit
 
 # User configuration
 export ZVM_VI_EDITOR=nvim
