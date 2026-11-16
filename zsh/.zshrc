@@ -130,17 +130,33 @@ fi
 # Syntax highlighting plugin support
 [[ -f $ZSH/custom/plugins/zsh-syntax-highlighting/catppuccin/themes/catppuccin_mocha-zsh-syntax-highlighting.zsh ]] && source $ZSH/custom/plugins/zsh-syntax-highlighting/catppuccin/themes/catppuccin_mocha-zsh-syntax-highlighting.zsh
 
-# Compinit optimization: run once with cache, disable OMZ re-run
+# Completion init. `-C` trusts the cached dump instead of re-scanning it, which is
+# what makes startup fast. Plain `compinit` additionally runs `compaudit`, the check
+# that refuses to use completion directories which are group- or world-writable: a
+# writable $fpath entry lets any local user plant a function your shell autoloads on
+# demand. That audit stats every $fpath entry and costs ~1.2 s here, so it is not
+# skipped - it is cached (below, once a day, in the background). While a cached audit
+# still reports findings, every shell takes the strict path instead of the fast one.
+#
+# Keep these in sync: the strict branch must not use -C.
+_zcompdump=${ZSH_COMPDUMP:-$HOME/.cache/zcompdump}
+_zcompaudit_findings=${XDG_CACHE_HOME:-$HOME/.cache}/zsh/compaudit.findings
+
 autoload -Uz compinit
-compinit -C -d ~/.cache/zcompdump
-zrecompile -p ~/.cache/zcompdump 2>/dev/null
+if [[ -s $_zcompaudit_findings ]]; then
+    compinit -d "$_zcompdump"          # audit + refuse insecure dirs
+else
+    compinit -C -d "$_zcompdump"       # cached dump, fast path
+fi
+zrecompile -p "$_zcompdump" 2>/dev/null
 
 # Override compinit to no-op to prevent OMZ from re-running
 compinit() { return 0 }
 
-# Disable OMZ's compfix
+# Disable OMZ's compfix: it would run its own compaudit on every start, which is the
+# cost this block exists to avoid. The audit below replaces it.
 export ZSH_DISABLE_COMPFIX=true
-export ZSH_COMPDUMP=~/.cache/zcompdump
+export ZSH_COMPDUMP=$_zcompdump
 
 # Main oh-my-zsh script
 [[ -f $ZSH/oh-my-zsh.sh ]] && source $ZSH/oh-my-zsh.sh
@@ -148,6 +164,32 @@ export ZSH_COMPDUMP=~/.cache/zcompdump
 # Restore compinit for interactive use
 unfunction compinit
 autoload -Uz compinit
+
+# Completion security audit (see the compinit block above). Runs at most once a day,
+# in the background, over the final $fpath - i.e. after OMZ, the custom plugins and
+# carapace have added their directories. Findings are cached and turn the next shell's
+# compinit into the strict, auditing variant; a clean run just refreshes the stamp.
+zmodload -F zsh/datetime p:EPOCHSECONDS 2>/dev/null
+zmodload -F zsh/stat b:zstat 2>/dev/null
+_zcompaudit_stamp=${_zcompaudit_findings:h}/compaudit.stamp
+[[ -d ${_zcompaudit_findings:h} ]] || mkdir -p ${_zcompaudit_findings:h} 2>/dev/null
+
+_zcompaudit_age=999999
+[[ -f $_zcompaudit_stamp ]] && _zcompaudit_age=$(( EPOCHSECONDS - $(zstat +mtime -- $_zcompaudit_stamp 2>/dev/null || print 0) ))
+
+if (( _zcompaudit_age > 86400 )); then
+    ( autoload -Uz compaudit
+      compaudit >| ${_zcompaudit_findings}.tmp 2>&1
+      mv -f ${_zcompaudit_findings}.tmp $_zcompaudit_findings 2>/dev/null
+      touch $_zcompaudit_stamp ) &!
+fi
+
+if [[ -s $_zcompaudit_findings ]]; then
+    print -u2 -- "zsh: compaudit flagged insecure \$fpath directories (completions are now audited on start):"
+    sed -n '1,5p' $_zcompaudit_findings | sed 's/^/  /' >&2
+    print -u2 -- "  fix with: chmod go-w <dir>  then: rm $_zcompaudit_findings"
+fi
+unset _zcompaudit_age
 
 # User configuration
 export ZVM_VI_EDITOR=nvim
@@ -222,7 +264,18 @@ bindkey "^[[1;3B" down-line-or-beginning-search  # [ALT] + Cursor up
 [[ -f ~/.bash_profile ]] && source ~/.bash_profile
 [[ -f ~/.bash_aliases ]] && source ~/.bash_aliases
 
+# PATH entries that mise does not manage. They are added *before* mise activation on
+# purpose: `mise activate` prepends its own directories, so anything prepended after
+# it would take precedence over the mise-managed copy of the same tool (that is how a
+# hand-copied `pls` in ~/.local/bin shadowed the one mise installed).
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"      # added by codebase-memory-mcp install
+export PATH="$HOME/.pi/agent/bin:$PATH"   # Pi
+
 # Mise - Development Environment Manager (manages Node, Rust, Go, etc.)
+# Keep this after every other PATH modification in this file, or mise loses the
+# precedence it needs to own tool versions.
 which mise >/dev/null && eval "$(mise activate zsh)"
 
 # Starship Shell
@@ -269,14 +322,4 @@ if [[ -n "$TMUX" ]]; then
 fi
 
 # bun completions
-[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
-
-# bun
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
-
-# Added by codebase-memory-mcp install
-export PATH="$HOME/.local/bin:$PATH"
-
-# Pi
-export PATH="$HOME/.pi/agent/bin:$PATH"
+if [[ -s "$HOME/.bun/_bun" ]]; then source "$HOME/.bun/_bun"; fi

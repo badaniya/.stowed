@@ -268,6 +268,12 @@ sudo apt autoremove --purge        # clean the Debian node-* library deps
 sh <(curl -L https://nixos.org/nix/install) --daemon
 ```
 
+Nix is installed on this machine but deliberately no longer owns any package:
+every tool below moved to mise, and the nix profile is empty (`nix-env -q` returns
+nothing). Keep it installed for ad-hoc `nix-shell` experiments if useful, but do not
+add tools to the nix profile - two owners for one binary is what made Node.js
+ambiguous in the first place.
+
 ### 3) Tmuxinator - A tmux session layout creator
 
 ```bash
