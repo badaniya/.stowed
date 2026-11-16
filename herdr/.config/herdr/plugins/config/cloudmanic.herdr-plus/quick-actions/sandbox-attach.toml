@@ -1,0 +1,7 @@
+name = "Sandbox: Attach"
+type = "form"
+command = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name 'Sandbox: Attach' -- bash ~/.config/herdr-spreader/nvo-sandbox-attach.sh '{{.Value}}'"
+
+[form]
+prompt = "Sandbox ticket to repair its Build panes; optional --workspace ID for duplicate workspaces (busy panes are not interrupted)"
+placeholder = "NVO-20130 or NVO-20130 --workspace w4N"
