@@ -24,8 +24,8 @@ def read_config(path, parse_ports):
         require(isinstance(value, dict) and not set(value) - allowed, f'unknown config key for {name}')
         require({'interface', 'parent', 'target', 'ports'} <= set(value), f'missing exposure settings for {name}')
         interface = value['interface']
-        require(isinstance(interface, str) and interface.startswith('xiqfwd') and len(interface) <= 15, 'invalid interface')
-        suffix = interface[6:]
+        require(isinstance(interface, str) and interface.startswith('agtsbxfwd') and len(interface) <= 15, 'invalid interface')
+        suffix = interface[len('agtsbxfwd'):]
         require(suffix.isascii() and suffix.isdecimal() and (suffix == '0' or not suffix.startswith('0')), 'invalid interface')
         target = str(ipaddress.IPv4Address(value['target']))
         require(interface not in interfaces and target not in targets, 'interfaces and sandbox targets must be unique')
@@ -51,7 +51,7 @@ class ConfigManager:
         if not self.ctl.root.exists():
             return []
         self.ctl.safe_path(self.ctl.root, directory=True)
-        return [self.ctl.load(path.stem) for path in self.ctl.root.glob('xiqfwd*.json')]
+        return [self.ctl.load(path.stem) for path in self.ctl.root.glob('agtsbxfwd*.json')]
 
     def preflight(self, config, selected):
         for sandbox, entry in selected.items():

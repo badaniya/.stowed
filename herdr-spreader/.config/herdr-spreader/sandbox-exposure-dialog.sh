@@ -2,9 +2,9 @@
 # Prompts collect arguments only; root backend owns validation and confirmation.
 set -euo pipefail
 [[ $# -ge 1 && $# -le 2 &&
-  ( $1 == list || ( $1 =~ ^xiqfwd(0|[1-9][0-9]*)$ && ${#1} -le 15 ) ) &&
+  ( $1 == list || ( $1 =~ ^agtsbxfwd(0|[1-9][0-9]*)$ && ${#1} -le 15 ) ) &&
   ( $# -eq 1 || ( $1 != list && $2 =~ ^(create|update|delete|status|list|adopt)$ ) ) ]] || {
-  printf 'Usage: sandbox-exposure-dialog.sh <xiqfwdN> [create|update|delete|status|list|adopt] | list\n' >&2
+  printf 'Usage: sandbox-exposure-dialog.sh <agtsbxfwdN> [create|update|delete|status|list|adopt] | list\n' >&2
   exit 1
 }
 name=$1

@@ -27,7 +27,7 @@ from sandbox_exposure_proxy import (
 PROXY_UNSET = object()
 STATE = Path('/var/lib/herdr-sandbox-exposure')
 PREFIX = 'herdr-sandbox-exposure:'
-NAME = re.compile(r'xiqfwd(?:0|[1-9][0-9]*)\Z')
+NAME = re.compile(r'agtsbxfwd(?:0|[1-9][0-9]*)\Z')
 IDENTIFIER = re.compile(r'[A-Za-z0-9][A-Za-z0-9_.-]{0,62}\Z')
 
 
@@ -72,7 +72,7 @@ def check_dhcp_apparmor(enabled=Path('/sys/module/apparmor/parameters/enabled'),
 
 
 def valid_name(name):
-    require(bool(NAME.fullmatch(name)) and len(name) <= 15, 'invalid name: use xiqfwd0, xiqfwd1, ... (max 15 characters)')
+    require(bool(NAME.fullmatch(name)) and len(name) <= 15, 'invalid name: use agtsbxfwd0, agtsbxfwd1, ... (max 15 characters)')
     return name
 
 
@@ -226,7 +226,7 @@ class Controller:
         sandbox_name(name)
         if self.root.exists():
             self.safe_path(self.root, directory=True)
-            matches = [path.stem for path in self.root.glob('xiqfwd*.json')
+            matches = [path.stem for path in self.root.glob('agtsbxfwd*.json')
                        if (record := self.load(path.stem)) is not None and record.get('sandbox') == name]
             if not matches and missing_ok:
                 return None
@@ -239,7 +239,7 @@ class Controller:
     def unique_target(self, name, target):
         if self.root.exists():
             self.safe_path(self.root, directory=True)
-            for path in self.root.glob('xiqfwd*.json'):
+            for path in self.root.glob('agtsbxfwd*.json'):
                 other = self.load(path.stem)
                 require(other is None or other['name'] == name or other['target'] != target,
                         'sandbox target is already owned by another exposure')
@@ -643,7 +643,10 @@ class Controller:
             require(record['address'] is None, 'exposure interface disappeared; delete and recreate')
             require(not any(other.get('address') == record['mac'] for other in links.values()), 'MAC is already in use')
             self.runner.run(['ip', 'link', 'add', 'link', parent, 'name', name, 'address', record['mac'],
-                             'alias', record['marker'], 'type', 'macvlan', 'mode', 'bridge'])
+                             'type', 'macvlan', 'mode', 'bridge'])
+            # Some kernels ignore IFLA_IFALIAS during macvlan creation.
+            self.runner.run(['ip', 'link', 'set', 'dev', name, 'alias', record['marker']])
+            require(self.owned_link(record, self.links()) is not None, 'new exposure interface disappeared')
         self.runner.run(['sysctl', '-w', f'net.ipv6.conf.{name}.disable_ipv6=1'])
         self.runner.run(['ip', 'link', 'set', 'dev', name, 'up'])
         addresses = self.addresses(name)
@@ -744,7 +747,7 @@ class Controller:
         names = {n for n in links if NAME.fullmatch(n)}
         if self.root.exists():
             self.safe_path(self.root, directory=True)
-            names.update(p.stem for p in self.root.glob('xiqfwd*.json'))
+            names.update(p.stem for p in self.root.glob('agtsbxfwd*.json'))
         if name is not None:
             names = {name}
         result = []

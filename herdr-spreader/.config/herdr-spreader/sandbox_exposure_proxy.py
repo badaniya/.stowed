@@ -96,7 +96,7 @@ class ProxyManager:
     def ids(self, record):
         name = record['name']
         sandbox = sandbox_name(record['sandbox'])
-        require(bool(re.fullmatch(r'xiqfwd(?:0|[1-9][0-9]*)', name)) and len(name) <= 15, 'invalid proxy interface')
+        require(bool(re.fullmatch(r'agtsbxfwd(?:0|[1-9][0-9]*)', name)) and len(name) <= 15, 'invalid proxy interface')
         require(bool(re.fullmatch(r'herdr-sandbox-exposure:' + re.escape(name) + r':[a-f0-9]{32}', record['marker'])),
                 'invalid proxy ownership marker')
         address = ipaddress.IPv4Address(record['address'])

@@ -1,6 +1,6 @@
-name = "Open workspace & bootstrap sandbox: NVO-REVIEW (mono)"
+name = "Open workspace & bootstrap sandbox: NVO-MONO-REVIEW"
 type = "form"
-command = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name 'Open workspace & bootstrap sandbox: NVO-REVIEW (mono)' -- bash ~/.config/herdr-spreader/nvo-review-mono-notify.sh '{{.Value}}'"
+command = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name 'Open workspace & bootstrap sandbox: NVO-MONO-REVIEW' -- bash ~/.config/herdr-spreader/nvo-review-mono-notify.sh '{{.Value}}'"
 
 [form]
 prompt = "PR branch of an xcloud-platform-services review (Jira optional)"

@@ -62,7 +62,7 @@ def preserve_adopted_address(name, new, old, expected, command):
 def configure(env, command=run):
     name = env.get('interface', '')
     if (name != env.get('HERDR_EXPOSURE_INTERFACE') or len(name) > 15
-            or not re.fullmatch(r'xiqfwd(?:0|[1-9][0-9]*)', name)):
+            or not re.fullmatch(r'agtsbxfwd(?:0|[1-9][0-9]*)', name)):
         raise ValueError('DHCP interface does not match the owned exposure')
     try:
         links = json.loads(command(['ip', '-details', '-json', 'link', 'show']))

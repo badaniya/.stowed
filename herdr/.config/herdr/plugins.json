@@ -5,8 +5,8 @@
     "version": "1.3.1",
     "min_herdr_version": "0.7.5",
     "description": "Full-height nvim sidebar with agent annotations: toggle with one key, comment code, send to any agent.",
-    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/chmarax.herdr-nvim-178624809c23/1152960-0/checkout/herdr-plugin.toml",
-    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/chmarax.herdr-nvim-178624809c23/1152960-0/checkout",
+    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/chmarax.herdr-nvim-178624809c23/1999062-0/checkout/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/chmarax.herdr-nvim-178624809c23/1999062-0/checkout",
     "enabled": true,
     "platforms": [
       "macos",
@@ -133,9 +133,9 @@
       "kind": "github",
       "owner": "ChmaraX",
       "repo": "herdr-nvim",
-      "resolved_commit": "50b87a6219c148fd102b239e02071d54b53c385b",
-      "managed_path": "/home/badaniya/.config/herdr/plugins/github-installations/chmarax.herdr-nvim-178624809c23/1152960-0/checkout",
-      "installed_unix_ms": 1794682569652
+      "resolved_commit": "1bc902b6e5f1d7e56fd1480f6ec44d4bfee5e96e",
+      "managed_path": "/home/badaniya/.config/herdr/plugins/github-installations/chmarax.herdr-nvim-178624809c23/1999062-0/checkout",
+      "installed_unix_ms": 1794858474126
     }
   },
   {
@@ -144,8 +144,8 @@
     "version": "0.1.24",
     "min_herdr_version": "0.7.0",
     "description": "An extension for herdr — a collection of tools that make it better. Projects: fuzzy-pick a declarative template to spin up a whole workspace — every tab, pane, and startup command. Quick Actions: a fuzzy launcher for one-off scripts, run in the directory you launched from.",
-    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/cloudmanic.herdr-plus-0cce37b56fb9/1150085-0/checkout/herdr-plugin.toml",
-    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/cloudmanic.herdr-plus-0cce37b56fb9/1150085-0/checkout",
+    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/cloudmanic.herdr-plus-0cce37b56fb9/2003533-0/checkout/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/cloudmanic.herdr-plus-0cce37b56fb9/2003533-0/checkout",
     "enabled": true,
     "platforms": [
       "linux",
@@ -367,8 +367,8 @@
       "owner": "cloudmanic",
       "repo": "herdr-plus",
       "resolved_commit": "f38df3570bea8f7ca71dc1ba11bce3b123d14402",
-      "managed_path": "/home/badaniya/.config/herdr/plugins/github-installations/cloudmanic.herdr-plus-0cce37b56fb9/1150085-0/checkout",
-      "installed_unix_ms": 1794682418890
+      "managed_path": "/home/badaniya/.config/herdr/plugins/github-installations/cloudmanic.herdr-plus-0cce37b56fb9/2003533-0/checkout",
+      "installed_unix_ms": 1794858506930
     }
   },
   {
@@ -377,8 +377,8 @@
     "version": "0.2.0",
     "min_herdr_version": "0.7.0",
     "description": "Live token spend dashboard + cost notifications for Herdr agent panes",
-    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/dave.token-dashboard-c1bf535be307/1156124-0/checkout/herdr-plugin.toml",
-    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/dave.token-dashboard-c1bf535be307/1156124-0/checkout",
+    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/dave.token-dashboard-c1bf535be307/2004424-0/checkout/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/dave.token-dashboard-c1bf535be307/2004424-0/checkout",
     "enabled": true,
     "platforms": [
       "macos",
@@ -432,8 +432,8 @@
       "owner": "Davidcreador",
       "repo": "herdr-token-dashboard",
       "resolved_commit": "2623504549c0e40e3636bb59d0ac8af2ac996ace",
-      "managed_path": "/home/badaniya/.config/herdr/plugins/github-installations/dave.token-dashboard-c1bf535be307/1156124-0/checkout",
-      "installed_unix_ms": 1794682624251
+      "managed_path": "/home/badaniya/.config/herdr/plugins/github-installations/dave.token-dashboard-c1bf535be307/2004424-0/checkout",
+      "installed_unix_ms": 1794858511511
     }
   },
   {
@@ -442,8 +442,8 @@
     "version": "1.13.0",
     "min_herdr_version": "0.7.5",
     "description": "CPU and RAM usage per space, grouped under the branch name.",
-    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/ez-corp.space-usage-2ecf2abc9b18/1163931-0/checkout/herdr-plugin.toml",
-    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/ez-corp.space-usage-2ecf2abc9b18/1163931-0/checkout",
+    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/ez-corp.space-usage-2ecf2abc9b18/2005236-0/checkout/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/ez-corp.space-usage-2ecf2abc9b18/2005236-0/checkout",
     "enabled": true,
     "platforms": [
       "linux",
@@ -585,8 +585,8 @@
       "owner": "ezcorp-org",
       "repo": "herdr-pc-ram-and-cpu-usage-overlay",
       "resolved_commit": "21e6341ebb17971da2be724ec22ba37908dcc370",
-      "managed_path": "/home/badaniya/.config/herdr/plugins/github-installations/ez-corp.space-usage-2ecf2abc9b18/1163931-0/checkout",
-      "installed_unix_ms": 1794683317110
+      "managed_path": "/home/badaniya/.config/herdr/plugins/github-installations/ez-corp.space-usage-2ecf2abc9b18/2005236-0/checkout",
+      "installed_unix_ms": 1794858515257
     }
   },
   {
@@ -595,8 +595,8 @@
     "version": "1.18.0",
     "min_herdr_version": "0.7.5",
     "description": "A git-aware, read-only file viewer: a keyboard-driven TUI in a herdr split pane.",
-    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/herdr-file-viewer-c993314e2614/1153000-0/checkout/herdr-plugin.toml",
-    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/herdr-file-viewer-c993314e2614/1153000-0/checkout",
+    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/herdr-file-viewer-c993314e2614/2007103-0/checkout/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/herdr-file-viewer-c993314e2614/2007103-0/checkout",
     "enabled": true,
     "platforms": [
       "linux",
@@ -746,8 +746,8 @@
       "owner": "smarzban",
       "repo": "herdr-file-viewer",
       "resolved_commit": "d17a068ee753daf5ba205bafd59c130b81b8c6c0",
-      "managed_path": "/home/badaniya/.config/herdr/plugins/github-installations/herdr-file-viewer-c993314e2614/1153000-0/checkout",
-      "installed_unix_ms": 1794682571438
+      "managed_path": "/home/badaniya/.config/herdr/plugins/github-installations/herdr-file-viewer-c993314e2614/2007103-0/checkout",
+      "installed_unix_ms": 1794858530154
     }
   },
   {
@@ -756,8 +756,8 @@
     "version": "0.1.0",
     "min_herdr_version": "0.7.0",
     "description": "Apply tmuxinator-style project layouts from YAML",
-    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/herdr-spreader-f248c87aa2e2/1150298-0/checkout/herdr-plugin.toml",
-    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/herdr-spreader-f248c87aa2e2/1150298-0/checkout",
+    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/herdr-spreader-f248c87aa2e2/1999062-0/checkout/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/herdr-spreader-f248c87aa2e2/1999062-0/checkout",
     "enabled": true,
     "platforms": [
       "linux",
@@ -789,9 +789,9 @@
       "kind": "github",
       "owner": "yuk1ty",
       "repo": "herdr-spreader",
-      "resolved_commit": "25f11b6db123af40cf14a1c89fe576664e33b82e",
-      "managed_path": "/home/badaniya/.config/herdr/plugins/github-installations/herdr-spreader-f248c87aa2e2/1150298-0/checkout",
-      "installed_unix_ms": 1794682430687
+      "resolved_commit": "cf15e4f3828a4d65b1741d74b67176434b8fc1fa",
+      "managed_path": "/home/badaniya/.config/herdr/plugins/github-installations/herdr-spreader-f248c87aa2e2/1999062-0/checkout",
+      "installed_unix_ms": 1794858477624
     }
   },
   {
@@ -800,8 +800,8 @@
     "version": "0.1.0",
     "min_herdr_version": "0.7.0",
     "description": "tmux-fingers style visible-screen copy hints for Herdr",
-    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/hotchpotch.herdr-tiny-fingers-5596606cf4bb/1151287-0/checkout/herdr-plugin.toml",
-    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/hotchpotch.herdr-tiny-fingers-5596606cf4bb/1151287-0/checkout",
+    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/hotchpotch.herdr-tiny-fingers-5596606cf4bb/2007345-0/checkout/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/hotchpotch.herdr-tiny-fingers-5596606cf4bb/2007345-0/checkout",
     "enabled": true,
     "platforms": [
       "linux",
@@ -843,8 +843,8 @@
       "owner": "hotchpotch",
       "repo": "herdr-tiny-fingers",
       "resolved_commit": "3107e5d3547ab23b064f13576508bbd68186cf57",
-      "managed_path": "/home/badaniya/.config/herdr/plugins/github-installations/hotchpotch.herdr-tiny-fingers-5596606cf4bb/1151287-0/checkout",
-      "installed_unix_ms": 1794682491036
+      "managed_path": "/home/badaniya/.config/herdr/plugins/github-installations/hotchpotch.herdr-tiny-fingers-5596606cf4bb/2007345-0/checkout",
+      "installed_unix_ms": 1794858531773
     }
   },
   {
@@ -928,8 +928,8 @@
     "version": "0.2.0",
     "min_herdr_version": "0.7.0",
     "description": "tmux-resurrect for herdr: snapshot the whole herd (workspaces, tabs, panes, cwd, running programs, agents) and bring it back after a crash or reboot.",
-    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/ntindle.herdr-resurrect-6e4571261caf/1149976-0/checkout/herdr-plugin.toml",
-    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/ntindle.herdr-resurrect-6e4571261caf/1149976-0/checkout",
+    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/ntindle.herdr-resurrect-6e4571261caf/2015249-0/checkout/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/ntindle.herdr-resurrect-6e4571261caf/2015249-0/checkout",
     "enabled": true,
     "platforms": [
       "linux",
@@ -1118,8 +1118,8 @@
       "owner": "ntindle",
       "repo": "herdr-resurrect",
       "resolved_commit": "dab5bed632ccb28b480ae1bd601b4f60a41f66f1",
-      "managed_path": "/home/badaniya/.config/herdr/plugins/github-installations/ntindle.herdr-resurrect-6e4571261caf/1149976-0/checkout",
-      "installed_unix_ms": 1794682416593
+      "managed_path": "/home/badaniya/.config/herdr/plugins/github-installations/ntindle.herdr-resurrect-6e4571261caf/2015249-0/checkout",
+      "installed_unix_ms": 1794858568767
     }
   },
   {
@@ -1193,11 +1193,11 @@
   {
     "plugin_id": "persiyanov.reviewr",
     "name": "reviewr",
-    "version": "0.52.1",
+    "version": "0.52.2",
     "min_herdr_version": "0.9.3",
     "description": "Review agent-written diffs beside the chat and add line comments to the agent input.",
-    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/persiyanov.reviewr-e87b654a74f8/1153104-0/checkout/herdr-plugin.toml",
-    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/persiyanov.reviewr-e87b654a74f8/1153104-0/checkout",
+    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/persiyanov.reviewr-e87b654a74f8/1999062-0/checkout/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/persiyanov.reviewr-e87b654a74f8/1999062-0/checkout",
     "enabled": true,
     "platforms": [
       "macos",
@@ -1302,9 +1302,9 @@
       "kind": "github",
       "owner": "persiyanov",
       "repo": "herdr-reviewr",
-      "resolved_commit": "aede1794248fbfc3fc8f45ff77977a718aadbef0",
-      "managed_path": "/home/badaniya/.config/herdr/plugins/github-installations/persiyanov.reviewr-e87b654a74f8/1153104-0/checkout",
-      "installed_unix_ms": 1794682573761
+      "resolved_commit": "bb71050caa5d3a0b1a414527783eb7a772447f9f",
+      "managed_path": "/home/badaniya/.config/herdr/plugins/github-installations/persiyanov.reviewr-e87b654a74f8/1999062-0/checkout",
+      "installed_unix_ms": 1794858495179
     }
   },
   {
@@ -1313,8 +1313,8 @@
     "version": "0.1.0",
     "min_herdr_version": "0.7.0",
     "description": "Broadcast one command to every pane in the current tab",
-    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/synchronize-panes-77788742c0b8/1153156-0/checkout/herdr-plugin.toml",
-    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/synchronize-panes-77788742c0b8/1153156-0/checkout",
+    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/synchronize-panes-77788742c0b8/2015296-0/checkout/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/synchronize-panes-77788742c0b8/2015296-0/checkout",
     "enabled": true,
     "platforms": [
       "macos",
@@ -1349,8 +1349,8 @@
       "owner": "furuhashin",
       "repo": "herdr-synchronize-panes",
       "resolved_commit": "b827d3f3a68ceb01cf72a51546c68f9f33188adb",
-      "managed_path": "/home/badaniya/.config/herdr/plugins/github-installations/synchronize-panes-77788742c0b8/1153156-0/checkout",
-      "installed_unix_ms": 1794682575841
+      "managed_path": "/home/badaniya/.config/herdr/plugins/github-installations/synchronize-panes-77788742c0b8/2015296-0/checkout",
+      "installed_unix_ms": 1794858569322
     }
   },
   {
@@ -1359,8 +1359,8 @@
     "version": "0.5.24",
     "min_herdr_version": "0.7.5",
     "description": "Sidebar context meters, provider limit windows, and rate-limit toasts for Claude, Codex, OpenCode Go, OMP, Pi coding agent, Grok, Kilo Code, Devin, and Hermes Agent, plus context meters for Cursor",
-    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/usagebar-33803b79d616/1153172-0/checkout/herdr-plugin.toml",
-    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/usagebar-33803b79d616/1153172-0/checkout",
+    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/usagebar-33803b79d616/2015321-0/checkout/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/usagebar-33803b79d616/2015321-0/checkout",
     "enabled": true,
     "platforms": [
       "macos",
@@ -1493,8 +1493,8 @@
       "owner": "senna-lang",
       "repo": "herdr-agent-usage",
       "resolved_commit": "d42a94152dba27ccaf6caf18b2733207197c8307",
-      "managed_path": "/home/badaniya/.config/herdr/plugins/github-installations/usagebar-33803b79d616/1153172-0/checkout",
-      "installed_unix_ms": 1794682576785
+      "managed_path": "/home/badaniya/.config/herdr/plugins/github-installations/usagebar-33803b79d616/2015321-0/checkout",
+      "installed_unix_ms": 1794858569978
     }
   },
   {
@@ -1503,8 +1503,8 @@
     "version": "0.1.0",
     "min_herdr_version": "0.7.0",
     "description": "Seamless Ctrl+h/j/k/l navigation across herdr panes and Vim/Neovim splits",
-    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/vim-herdr-navigation-a8bf42123d81/1150069-0/checkout/herdr-plugin.toml",
-    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/vim-herdr-navigation-a8bf42123d81/1150069-0/checkout",
+    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/vim-herdr-navigation-a8bf42123d81/1058593-0/checkout/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/vim-herdr-navigation-a8bf42123d81/1058593-0/checkout",
     "enabled": true,
     "platforms": [
       "linux",
@@ -1564,9 +1564,10 @@
       "kind": "github",
       "owner": "paulbkim-dev",
       "repo": "vim-herdr-navigation",
+      "requested_ref": "7873100eb47212269005c693effb2a844986b30f",
       "resolved_commit": "7873100eb47212269005c693effb2a844986b30f",
-      "managed_path": "/home/badaniya/.config/herdr/plugins/github-installations/vim-herdr-navigation-a8bf42123d81/1150069-0/checkout",
-      "installed_unix_ms": 1794682417650
+      "managed_path": "/home/badaniya/.config/herdr/plugins/github-installations/vim-herdr-navigation-a8bf42123d81/1058593-0/checkout",
+      "installed_unix_ms": 1794848928163
     }
   },
   {
@@ -1574,25 +1575,100 @@
     "name": "Worktrunk",
     "version": "0.1.0",
     "min_herdr_version": "0.7.0",
-    "description": "Switch, create, or remove git worktrees via worktrunk",
-    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/worktrunk-7fb519583f31/herdr-plugin.toml",
-    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github/worktrunk-7fb519583f31",
+    "description": "Switch, create, remove, or merge git worktrees via worktrunk",
+    "manifest_path": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/worktrunk-7fb519583f31/1999062-0/checkout/herdr-plugin.toml",
+    "plugin_root": "/home/badaniya/.stowed/herdr/.config/herdr/plugins/github-installations/worktrunk-7fb519583f31/1999062-0/checkout",
     "enabled": true,
     "platforms": [
       "macos",
-      "linux"
+      "linux",
+      "windows"
     ],
     "actions": [
+      {
+        "id": "merge",
+        "title": "Worktree: merge into the target branch",
+        "contexts": [
+          "workspace"
+        ],
+        "platforms": [
+          "macos",
+          "linux"
+        ],
+        "command": [
+          "bash",
+          "-c",
+          "exec bash \"$HERDR_PLUGIN_ROOT/open.sh\" merger"
+        ]
+      },
+      {
+        "id": "merge-no-squash",
+        "title": "Worktree: merge into the target branch, keeping every commit",
+        "contexts": [
+          "workspace"
+        ],
+        "platforms": [
+          "macos",
+          "linux"
+        ],
+        "command": [
+          "bash",
+          "-c",
+          "exec bash \"$HERDR_PLUGIN_ROOT/open.sh\" merger-no-squash"
+        ]
+      },
+      {
+        "id": "merge-no-squash-windows",
+        "title": "Worktree: merge into the target branch, keeping every commit",
+        "contexts": [
+          "workspace"
+        ],
+        "platforms": [
+          "windows"
+        ],
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-NonInteractive",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-Command",
+          "& \"$env:HERDR_PLUGIN_ROOT/open.ps1\" merger-no-squash-windows"
+        ]
+      },
+      {
+        "id": "merge-windows",
+        "title": "Worktree: merge into the target branch",
+        "contexts": [
+          "workspace"
+        ],
+        "platforms": [
+          "windows"
+        ],
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-NonInteractive",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-Command",
+          "& \"$env:HERDR_PLUGIN_ROOT/open.ps1\" merger-windows"
+        ]
+      },
       {
         "id": "open",
         "title": "Worktree: switch / create from default branch",
         "contexts": [
           "workspace"
         ],
+        "platforms": [
+          "macos",
+          "linux"
+        ],
         "command": [
           "bash",
           "-c",
-          "cwd=$(jq -r '.workspace_cwd // .focused_pane_cwd' <<<\"$HERDR_PLUGIN_CONTEXT_JSON\"); exec \"$HERDR_BIN_PATH\" plugin pane open --plugin \"$HERDR_PLUGIN_ID\" --entrypoint picker-default --placement split --direction down --cwd \"$cwd\" --focus"
+          "exec bash \"$HERDR_PLUGIN_ROOT/open.sh\" picker-default"
         ]
       },
       {
@@ -1601,10 +1677,87 @@
         "contexts": [
           "workspace"
         ],
+        "platforms": [
+          "macos",
+          "linux"
+        ],
         "command": [
           "bash",
           "-c",
-          "cwd=$(jq -r '.workspace_cwd // .focused_pane_cwd' <<<\"$HERDR_PLUGIN_CONTEXT_JSON\"); exec \"$HERDR_BIN_PATH\" plugin pane open --plugin \"$HERDR_PLUGIN_ID\" --entrypoint picker-current --placement split --direction down --cwd \"$cwd\" --focus"
+          "exec bash \"$HERDR_PLUGIN_ROOT/open.sh\" picker-current"
+        ]
+      },
+      {
+        "id": "open-current-windows",
+        "title": "Worktree: switch / create from current branch",
+        "contexts": [
+          "workspace"
+        ],
+        "platforms": [
+          "windows"
+        ],
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-NonInteractive",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-Command",
+          "& \"$env:HERDR_PLUGIN_ROOT/open.ps1\" picker-current-windows"
+        ]
+      },
+      {
+        "id": "open-windows",
+        "title": "Worktree: switch / create from default branch",
+        "contexts": [
+          "workspace"
+        ],
+        "platforms": [
+          "windows"
+        ],
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-NonInteractive",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-Command",
+          "& \"$env:HERDR_PLUGIN_ROOT/open.ps1\" picker-default-windows"
+        ]
+      },
+      {
+        "id": "open-with-remotes",
+        "title": "Worktree: switch / create from local or remote branches",
+        "contexts": [
+          "workspace"
+        ],
+        "platforms": [
+          "macos",
+          "linux"
+        ],
+        "command": [
+          "bash",
+          "-c",
+          "exec bash \"$HERDR_PLUGIN_ROOT/open.sh\" picker-with-remotes"
+        ]
+      },
+      {
+        "id": "open-with-remotes-windows",
+        "title": "Worktree: switch / create from local or remote branches",
+        "contexts": [
+          "workspace"
+        ],
+        "platforms": [
+          "windows"
+        ],
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-NonInteractive",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-Command",
+          "& \"$env:HERDR_PLUGIN_ROOT/open.ps1\" picker-with-remotes-windows"
         ]
       },
       {
@@ -1613,17 +1766,104 @@
         "contexts": [
           "workspace"
         ],
+        "platforms": [
+          "macos",
+          "linux"
+        ],
         "command": [
           "bash",
           "-c",
-          "cwd=$(jq -r '.workspace_cwd // .focused_pane_cwd' <<<\"$HERDR_PLUGIN_CONTEXT_JSON\"); exec \"$HERDR_BIN_PATH\" plugin pane open --plugin \"$HERDR_PLUGIN_ID\" --entrypoint remover --placement split --direction down --cwd \"$cwd\" --focus"
+          "exec bash \"$HERDR_PLUGIN_ROOT/open.sh\" remover"
+        ]
+      },
+      {
+        "id": "remove-windows",
+        "title": "Worktree: remove",
+        "contexts": [
+          "workspace"
+        ],
+        "platforms": [
+          "windows"
+        ],
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-NonInteractive",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-Command",
+          "& \"$env:HERDR_PLUGIN_ROOT/open.ps1\" remover-windows"
         ]
       }
     ],
     "panes": [
       {
+        "id": "merger",
+        "title": "Worktrunk — merge",
+        "platforms": [
+          "macos",
+          "linux"
+        ],
+        "placement": "split",
+        "command": [
+          "bash",
+          "-c",
+          "exec bash \"$HERDR_PLUGIN_ROOT/merge.sh\""
+        ]
+      },
+      {
+        "id": "merger-no-squash",
+        "title": "Worktrunk — merge (no squash)",
+        "platforms": [
+          "macos",
+          "linux"
+        ],
+        "placement": "split",
+        "command": [
+          "bash",
+          "-c",
+          "exec bash \"$HERDR_PLUGIN_ROOT/merge.sh\" --no-squash"
+        ]
+      },
+      {
+        "id": "merger-no-squash-windows",
+        "title": "Worktrunk — merge (no squash)",
+        "platforms": [
+          "windows"
+        ],
+        "placement": "split",
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-Command",
+          "& \"$env:HERDR_PLUGIN_ROOT/merge.ps1\" --no-squash"
+        ]
+      },
+      {
+        "id": "merger-windows",
+        "title": "Worktrunk — merge",
+        "platforms": [
+          "windows"
+        ],
+        "placement": "split",
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-Command",
+          "& \"$env:HERDR_PLUGIN_ROOT/merge.ps1\""
+        ]
+      },
+      {
         "id": "picker-current",
         "title": "Worktrunk — current branch",
+        "platforms": [
+          "macos",
+          "linux"
+        ],
         "placement": "split",
         "command": [
           "bash",
@@ -1632,8 +1872,28 @@
         ]
       },
       {
+        "id": "picker-current-windows",
+        "title": "Worktrunk — current branch",
+        "platforms": [
+          "windows"
+        ],
+        "placement": "split",
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-Command",
+          "& \"$env:HERDR_PLUGIN_ROOT/picker.ps1\" --create-base=current"
+        ]
+      },
+      {
         "id": "picker-default",
         "title": "Worktrunk — default branch",
+        "platforms": [
+          "macos",
+          "linux"
+        ],
         "placement": "split",
         "command": [
           "bash",
@@ -1642,13 +1902,79 @@
         ]
       },
       {
+        "id": "picker-default-windows",
+        "title": "Worktrunk — default branch",
+        "platforms": [
+          "windows"
+        ],
+        "placement": "split",
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-Command",
+          "& \"$env:HERDR_PLUGIN_ROOT/picker.ps1\" --create-base=default"
+        ]
+      },
+      {
+        "id": "picker-with-remotes",
+        "title": "Worktrunk — local and remote branches",
+        "platforms": [
+          "macos",
+          "linux"
+        ],
+        "placement": "split",
+        "command": [
+          "bash",
+          "-c",
+          "exec bash \"$HERDR_PLUGIN_ROOT/picker.sh\" --show-with-remotes"
+        ]
+      },
+      {
+        "id": "picker-with-remotes-windows",
+        "title": "Worktrunk — local and remote branches",
+        "platforms": [
+          "windows"
+        ],
+        "placement": "split",
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-Command",
+          "& \"$env:HERDR_PLUGIN_ROOT/picker.ps1\" --show-with-remotes"
+        ]
+      },
+      {
         "id": "remover",
         "title": "Worktrunk — remove",
+        "platforms": [
+          "macos",
+          "linux"
+        ],
         "placement": "split",
         "command": [
           "bash",
           "-c",
           "exec bash \"$HERDR_PLUGIN_ROOT/remove.sh\""
+        ]
+      },
+      {
+        "id": "remover-windows",
+        "title": "Worktrunk — remove",
+        "platforms": [
+          "windows"
+        ],
+        "placement": "split",
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-Command",
+          "& \"$env:HERDR_PLUGIN_ROOT/remove.ps1\""
         ]
       }
     ],
@@ -1656,9 +1982,9 @@
       "kind": "github",
       "owner": "devashish2203",
       "repo": "herdr-worktrunk",
-      "resolved_commit": "a3107ca566bafcd463bc138007a0c01051970784",
-      "managed_path": "/home/badaniya/.config/herdr/plugins/github/worktrunk-7fb519583f31",
-      "installed_unix_ms": 1785168220678
+      "resolved_commit": "f9df9ba700b8a4f4d97ddfe3ea3eb345e80b880b",
+      "managed_path": "/home/badaniya/.config/herdr/plugins/github-installations/worktrunk-7fb519583f31/1999062-0/checkout",
+      "installed_unix_ms": 1794858499640
     }
   }
 ]

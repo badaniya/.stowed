@@ -56,10 +56,10 @@ def child(parent_netns):
     def transaction(commands):
         subprocess.run(['nft', '-j', '-f', '-'], input=json.dumps({'nftables': commands}), text=True, check=True)
     manager = module.ProxyManager(Path('/unused-test-root'), None)
-    first = {'name': 'xiqfwd0', 'sandbox': 'test-one', 'address': '198.18.0.2', 'target': '198.18.0.3',
-             'marker': 'herdr-sandbox-exposure:xiqfwd0:' + 'a' * 32}
-    second = {'name': 'xiqfwd1', 'sandbox': 'test-two', 'address': '198.18.0.4', 'target': '198.18.0.5',
-              'marker': 'herdr-sandbox-exposure:xiqfwd1:' + 'b' * 32}
+    first = {'name': 'agtsbxfwd0', 'sandbox': 'test-one', 'address': '198.18.0.2', 'target': '198.18.0.3',
+             'marker': 'herdr-sandbox-exposure:agtsbxfwd0:' + 'a' * 32}
+    second = {'name': 'agtsbxfwd1', 'sandbox': 'test-two', 'address': '198.18.0.4', 'target': '198.18.0.5',
+              'marker': 'herdr-sandbox-exposure:agtsbxfwd1:' + 'b' * 32}
     assert probe(first['address']) == b'GUEST1'
     assert probe(second['address']) == b'GUEST2'
     for record in (first, second):

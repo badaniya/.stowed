@@ -2,7 +2,7 @@
 # Open the exposure dialog in a focused sibling pane, like Sandbox: Control.
 set -euo pipefail
 usage() {
-  printf 'Usage: sandbox-exposure.sh <xiqfwdN> [create|update|delete|status|list|adopt] | list\n' >&2
+  printf 'Usage: sandbox-exposure.sh <agtsbxfwdN> [create|update|delete|status|list|adopt] | list\n' >&2
   exit 1
 }
 [[ $# -ge 1 && $# -le 2 ]] || usage
@@ -11,7 +11,7 @@ input=$1
 dialog_args=()
 if [[ $input == list ]]; then
   dialog_args=(list)
-elif [[ $input =~ ^(xiqfwd(0|[1-9][0-9]*))([[:blank:]]+(create|update|delete|status|list|adopt))?$ ]]; then
+elif [[ $input =~ ^(agtsbxfwd(0|[1-9][0-9]*))([[:blank:]]+(create|update|delete|status|list|adopt))?$ ]]; then
   name=${BASH_REMATCH[1]}
   operation=${BASH_REMATCH[4]}
   [[ ${#name} -le 15 ]] || usage

@@ -2,10 +2,33 @@
 
 **Sandbox: Exposure** gives a named sandbox a DHCP-backed, lab-facing IPv4
 address without requiring lab devices to route to its private bridge subnet.
-It creates a bridge-mode macvlan `xiqfwdN` on an explicitly selected lab NIC,
+It creates a bridge-mode macvlan `agtsbxfwdN` (agent-sandbox-forward) on an explicitly selected lab NIC,
 then creates an Incus network forward from that address to the supplied sandbox
 IPv4 address. Create never adopts pre-existing resources. A separate, confirmed
 **Adopt** operation can migrate the narrowly supported legacy setup below.
+
+## Interface naming and existing installations
+
+Interfaces use `agtsbxfwd0`, `agtsbxfwd1`, and so on, without leading zeroes.
+Linux's 15-character interface-name limit permits up to six suffix digits
+(`agtsbxfwd999999`). The picker, controller, DHCP hook, proxy, desired config,
+and state discovery all use this prefix.
+
+This source/config change does **not** rename existing live `xiqfwdN` interfaces
+or migrate their ownership records, DHCP clients, proxies, or forwards. The new
+controller does not manage or list those old names. Before deploying it to a host
+with old exposures, retain the previous controller/helpers and desired config,
+and plan an explicit operator-approved teardown/recreation using those old tools
+for cleanup. Do not merely rename a live link or edit ownership files: the name
+is embedded in ownership markers, DHCP arguments, and proxy paths. Recreating
+an interface generates a new MAC and may obtain a different DHCP address; review
+`expected_address` and DHCP reservations before applying the new desired config.
+
+Install and reload the updated AppArmor extension before using new exposures,
+after old exposures have been cleaned up. The controller checks that the installed
+policy matches the updated template. The historical `/run/xiqfwd/lease` and
+`/run/xiqfwd/pid` paths below remain intentional: they identify the narrowly
+supported legacy DHCP command, not the current interface-name prefix.
 
 ## Install and launch
 
@@ -27,10 +50,10 @@ links if needed, without replacing existing files.
 Installation makes the quick action and helpers available; it does **not** create an exposure.
 Open Herdr Plus's quick-actions picker and choose **Sandbox: Exposure**. Enter
 `list` to show all exposures directly, without supplying an interface name.
-Alternatively, enter an interface name such as `xiqfwd1`. A focused sibling pane
+Alternatively, enter an interface name such as `agtsbxfwd1`. A focused sibling pane
 offers create, update, delete, status, list, and **6) Adopt existing legacy exposure**.
 To skip the menu, enter the interface followed by an operation, for example
-`xiqfwd0 update` or `xiqfwd0 status`. Supported operations are `create`, `update`,
+`agtsbxfwd0 update` or `agtsbxfwd0 status`. Supported operations are `create`, `update`,
 `delete`, `status`, `list`, and `adopt`. Update still prompts for target/ports;
 backend validation and confirmation are unchanged. The result pane remains open
 for inspection. If the picker was already open, close and reopen it to reload actions.
@@ -102,33 +125,33 @@ Before Stowing, substitute the checkout path
 ```bash
 controller="$HOME/.config/herdr-spreader/sandbox-exposure.py"
 
-# Read-only; list includes unowned xiqfwdN interfaces and their existing forwards.
+# Read-only; list includes unowned agtsbxfwdN interfaces and their existing forwards.
 sudo -- python3 "$controller" list
-sudo -- python3 "$controller" status xiqfwd1
+sudo -- python3 "$controller" status agtsbxfwd1
 
 # Examples only: choose a FREE interface name, actual lab NIC, and sandbox IP.
 # Full exposure is deliberately explicit: --ports is mandatory for create.
-sudo -- python3 "$controller" create xiqfwd1 \
+sudo -- python3 "$controller" create agtsbxfwd1 \
   --parent LAB_NIC --network agentbr0 --project default \
   --target 10.77.10.20 --ports all
 
 # Retarget while preserving the previous port policy (asks for confirmation).
-sudo -- python3 "$controller" update xiqfwd1 --target 10.77.10.21
+sudo -- python3 "$controller" update agtsbxfwd1 --target 10.77.10.21
 
 # Restrict forwarded traffic, preserving the target (also asks for confirmation).
-sudo -- python3 "$controller" update xiqfwd1 --ports tcp:443,udp:5000-5002
+sudo -- python3 "$controller" update agtsbxfwd1 --ports tcp:443,udp:5000-5002
 
 # Change target and ports together, or explicitly restore all-port forwarding.
-sudo -- python3 "$controller" update xiqfwd1 \
+sudo -- python3 "$controller" update agtsbxfwd1 \
   --target 10.77.10.21 --ports tcp:443,udp:5000-5002
-sudo -- python3 "$controller" update xiqfwd1 --ports all
+sudo -- python3 "$controller" update agtsbxfwd1 --ports all
 
 # Deletes the owned forward, releases its DHCP lease, then removes the macvlan.
-sudo -- python3 "$controller" delete xiqfwd1
+sudo -- python3 "$controller" delete agtsbxfwd1
 ```
 
 **Do not use these mutation examples on a live name without operator approval.**
-Unmanaged interfaces, including legacy `xiqfwd0`, are still refused by create,
+Unmanaged interfaces, including legacy `agtsbxfwd0`, are still refused by create,
 update and delete. Use explicit adoption below; there is no force-delete option.
 
 Port syntax is `all` or comma-separated `tcp:PORT`, `udp:PORT`,
@@ -147,14 +170,14 @@ applied update performs no network mutation or additional confirmation.
 
 ## Adopt an existing legacy exposure
 
-Choose `xiqfwd0` in the quick action, then **6) Adopt**. Supply the existing
+Choose `agtsbxfwd0` in the quick action, then **6) Adopt**. Supply the existing
 parent NIC, bridge/network project, target IP, port policy and verified legacy
 DHCP PID. These are expectations to validate, not instructions to retarget.
 The CLI equivalent is:
 
 ```bash
 # Replace each placeholder with verified live values; the PID is not permanent.
-sudo -- python3 "$controller" adopt xiqfwd0 \
+sudo -- python3 "$controller" adopt agtsbxfwd0 \
   --parent LAB_NIC --network agentbr0 --project default \
   --target SANDBOX_IP --ports all --legacy-dhcp-pid VERIFIED_PID
 ```
@@ -248,7 +271,7 @@ linked at `~/.config/herdr-spreader/sandbox-exposures.json`.
   "id": "lab-sandbox-exposures",
   "sandboxes": {
     "emulator-11": {
-      "interface": "xiqfwd0",
+      "interface": "agtsbxfwd0",
       "parent": "enp0s31f6",
       "network": "agentbr0",
       "project": "default",
@@ -307,7 +330,7 @@ project changes require explicit delete/recreate. Network target/port changes
 and removals retain their existing controlling-TTY confirmation.
 
 To add a **second** sandbox, add a second `sandboxes` member (for example
-`emulator-12`) with an unused `interface: xiqfwd1`, the actual private target IP,
+`emulator-12`) with an unused `interface: agtsbxfwd1`, the actual private target IP,
 `parent`, `network`, `project`, `ports` and the same proxy object. Do not copy
 `.97` as its expected address. Omit `expected_address` to accept a DHCP-assigned
 unique lab IP, or supply its known DHCP-reserved address as an assertion. It is
@@ -338,7 +361,7 @@ Kernel-network-namespace tests verify the precedence and two-instance isolation.
 
 For emulator-11 the owned resources are:
 - `herdr-sandbox-exposure-proxy-emulator-11.service` on the **host**;
-- `/var/lib/herdr-sandbox-exposure/xiqfwd0.proxy/{owner.json,config.json,server.py}`;
+- `/var/lib/herdr-sandbox-exposure/agtsbxfwd0.proxy/{owner.json,config.json,server.py}`;
 - nft table `ip herdr_sandbox_exposure_emulator_11_proxy`, with the same ownership
   marker as the macvlan and Incus forward.
 

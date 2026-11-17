@@ -55,7 +55,6 @@ class FakeHost:
         if args[:3] == ['ip', 'link', 'add']:
             name = args[args.index('name') + 1]
             self.links[name] = {'ifname': name, 'link': args[args.index('link', 2) + 1],
-                                'ifalias': args[args.index('alias') + 1],
                                 'address': args[args.index('address') + 1],
                                 'linkinfo': {'info_kind': 'macvlan', 'info_data': {'mode': 'bridge'}}}
             return ''
@@ -122,10 +121,19 @@ class ExposureTests(unittest.TestCase):
         return self.answer
 
     def create(self, **kw):
-        values = {'name': 'xiqfwd1', 'parent': 'eth0', 'network': 'agentbr0', 'project': 'default',
+        values = {'name': 'agtsbxfwd1', 'parent': 'eth0', 'network': 'agentbr0', 'project': 'default',
                   'target': '10.77.10.20', 'ports': 'all'}
         values.update(kw)
         return self.ctl.create(**values)
+
+    def test_maximum_length_interface_has_full_lifecycle(self):
+        self.create(name='agtsbxfwd999999')
+        self.assertEqual('agtsbxfwd999999', self.ctl.status()[0]['name'])
+        self.ctl.update('agtsbxfwd999999', ports='tcp:443')
+        self.assertEqual(['tcp'], [port['protocol'] for port in self.host.forwards[0]['ports']])
+        self.ctl.delete('agtsbxfwd999999')
+        self.assertNotIn('agtsbxfwd999999', self.host.links)
+        self.assertEqual([], self.ctl.status())
 
     def test_decimal_conversion_errors_have_context(self):
         self.assertEqual(65535, self.mod.parse_decimal('65535', 'port'))
@@ -136,12 +144,12 @@ class ExposureTests(unittest.TestCase):
 
     def test_corrupt_state_has_context_and_blocks_mutation(self):
         self.create()
-        path = self.ctl.root / 'xiqfwd1.json'
+        path = self.ctl.root / 'agtsbxfwd1.json'
         self.host.calls.clear()
         for data in (b'not-json', b'\xff'):
             path.write_bytes(data)
-            with self.subTest(data=data), self.assertRaisesRegex(self.mod.ExposureError, 'ownership record.*xiqfwd1') as caught:
-                self.ctl.delete('xiqfwd1')
+            with self.subTest(data=data), self.assertRaisesRegex(self.mod.ExposureError, 'ownership record.*agtsbxfwd1') as caught:
+                self.ctl.delete('agtsbxfwd1')
             self.assertIsInstance(caught.exception.__cause__, ValueError)
         self.assertEqual([], self.host.mutations())
 
@@ -149,14 +157,14 @@ class ExposureTests(unittest.TestCase):
         self.create()
         self.host.calls.clear()
         with (mock.patch.object(Path, 'read_text', side_effect=PermissionError('read denied')),
-              self.assertRaisesRegex(self.mod.ExposureError, 'ownership record.*xiqfwd1') as caught):
-            self.ctl.delete('xiqfwd1')
+              self.assertRaisesRegex(self.mod.ExposureError, 'ownership record.*agtsbxfwd1') as caught):
+            self.ctl.delete('agtsbxfwd1')
         self.assertIsInstance(caught.exception.__cause__, PermissionError)
         self.assertEqual([], self.host.mutations())
 
     def test_invalid_link_and_address_json_have_context(self):
         for operation, context in ((self.ctl.links, 'link inventory'),
-                                   (lambda: self.ctl.addresses('xiqfwd1'), 'addresses.*xiqfwd1')):
+                                   (lambda: self.ctl.addresses('agtsbxfwd1'), 'addresses.*agtsbxfwd1')):
             with (self.subTest(context=context), mock.patch.object(self.host, 'run', return_value='not-json'),
                   self.assertRaisesRegex(self.mod.ExposureError, context) as caught):
                 operation()
@@ -174,17 +182,17 @@ class ExposureTests(unittest.TestCase):
         self.original_run = self.host.run
         with (mock.patch.object(self.host, 'run', side_effect=self.invalid_forward_inventory),
               self.assertRaisesRegex(self.mod.ExposureError, 'forward inventory.*default/agentbr0') as caught):
-            self.ctl.update('xiqfwd1', target='10.77.10.21')
+            self.ctl.update('agtsbxfwd1', target='10.77.10.21')
         self.assertIsInstance(caught.exception.__cause__, json.JSONDecodeError)
         self.assertEqual([], self.host.mutations())
 
     def test_invalid_unmanaged_forward_json_has_context(self):
-        self.host.links['xiqfwd0'] = {'ifname': 'xiqfwd0'}
-        self.host.addresses['xiqfwd0'] = ['192.0.2.41']
+        self.host.links['agtsbxfwd0'] = {'ifname': 'agtsbxfwd0'}
+        self.host.addresses['agtsbxfwd0'] = ['192.0.2.41']
         self.original_run = self.host.run
         with (mock.patch.object(self.host, 'run', side_effect=self.invalid_forward_inventory),
               self.assertRaisesRegex(self.mod.ExposureError, 'forward inventory.*default/agentbr0') as caught):
-            self.ctl.status('xiqfwd0')
+            self.ctl.status('agtsbxfwd0')
         self.assertIsInstance(caught.exception.__cause__, json.JSONDecodeError)
         self.assertEqual([], self.host.mutations())
 
@@ -192,11 +200,20 @@ class ExposureTests(unittest.TestCase):
         self.create()
         self.assertEqual('10.77.10.20', self.host.forwards[0]['config']['target_address'])
         self.assertEqual([], self.host.forwards[0]['ports'])
-        self.assertIn('herdr-sandbox-exposure:', self.host.links['xiqfwd1']['ifalias'])
+        self.assertIn('herdr-sandbox-exposure:', self.host.links['agtsbxfwd1']['ifalias'])
         self.assertIn('herdr-sandbox-exposure:', self.host.forwards[0]['description'])
         self.host.calls.clear()
         self.create()
         self.assertEqual([], self.host.mutations())
+
+    def test_new_interface_is_marked_before_bringup_and_dhcp(self):
+        record = self.create()
+        calls = [args for args, _ in self.host.calls]
+        mark = ['ip', 'link', 'set', 'dev', 'agtsbxfwd1', 'alias', record['marker']]
+        self.assertIn(mark, calls)
+        self.assertEqual(record['marker'], self.host.links['agtsbxfwd1']['ifalias'])
+        self.assertLess(calls.index(mark), calls.index(['ip', 'link', 'set', 'dev', 'agtsbxfwd1', 'up']))
+        self.assertLess(calls.index(mark), next(i for i, args in enumerate(calls) if args[0] == 'dhclient'))
 
     def test_parent_or_shared_lab_address_is_never_captured(self):
         self.host.addresses['eth0'] = [self.host.lease]
@@ -205,9 +222,9 @@ class ExposureTests(unittest.TestCase):
         self.assertEqual([], self.host.forwards)
 
     def test_unmanaged_interface_is_never_adopted(self):
-        self.host.links['xiqfwd0'] = {'ifname': 'xiqfwd0'}
+        self.host.links['agtsbxfwd0'] = {'ifname': 'agtsbxfwd0'}
         with self.assertRaisesRegex(self.mod.ExposureError, 'unmanaged|owned'):
-            self.create(name='xiqfwd0')
+            self.create(name='agtsbxfwd0')
         self.assertEqual([], self.host.mutations())
 
     def test_retarget_requires_confirmation_and_preserves_ports(self):
@@ -215,10 +232,10 @@ class ExposureTests(unittest.TestCase):
         self.host.calls.clear()
         self.answer = False
         with self.assertRaisesRegex(self.mod.ExposureError, 'cancel'):
-            self.ctl.update('xiqfwd1', target='10.77.10.21')
+            self.ctl.update('agtsbxfwd1', target='10.77.10.21')
         self.assertEqual([], self.host.mutations())
         self.answer = True
-        self.ctl.update('xiqfwd1', target='10.77.10.21')
+        self.ctl.update('agtsbxfwd1', target='10.77.10.21')
         forward = self.host.forwards[0]
         self.assertNotIn('target_address', forward['config'])
         self.assertEqual(['tcp', 'udp'], [p['protocol'] for p in forward['ports']])
@@ -228,11 +245,11 @@ class ExposureTests(unittest.TestCase):
 
     def test_restrict_removes_catch_all_and_same_update_is_noop(self):
         self.create()
-        self.ctl.update('xiqfwd1', ports='tcp:80,tcp:443')
+        self.ctl.update('agtsbxfwd1', ports='tcp:80,tcp:443')
         self.assertEqual({}, self.host.forwards[0]['config'])
         self.assertEqual(2, len(self.host.forwards[0]['ports']))
         self.host.calls.clear()
-        self.ctl.update('xiqfwd1', ports='tcp:80,tcp:443')
+        self.ctl.update('agtsbxfwd1', ports='tcp:80,tcp:443')
         self.assertEqual([], self.host.mutations())
 
     def test_delete_is_confirmed_and_ordered_then_repeat_is_noop(self):
@@ -240,22 +257,23 @@ class ExposureTests(unittest.TestCase):
         self.host.calls.clear()
         self.answer = False
         with self.assertRaisesRegex(self.mod.ExposureError, 'cancel'):
-            self.ctl.delete('xiqfwd1')
+            self.ctl.delete('agtsbxfwd1')
         self.assertEqual([], self.host.mutations())
         self.answer = True
-        self.ctl.delete('xiqfwd1')
+        self.ctl.delete('agtsbxfwd1')
         calls = [c[0] for c in self.host.mutations()]
         self.assertEqual('delete', calls[0][-3])
         self.assertEqual('dhclient', calls[1][0])
         self.assertIn('-r', calls[1])
-        self.assertEqual(['ip', 'link', 'delete', 'dev', 'xiqfwd1'], calls[2])
-        self.assertNotIn('xiqfwd1', self.host.links)
+        self.assertEqual(['ip', 'link', 'delete', 'dev', 'agtsbxfwd1'], calls[2])
+        self.assertNotIn('agtsbxfwd1', self.host.links)
         self.host.calls.clear()
-        self.ctl.delete('xiqfwd1')
+        self.ctl.delete('agtsbxfwd1')
         self.assertEqual([], self.host.mutations())
 
     def test_invalid_inputs_fail_before_mutation(self):
-        for kw in ({'name': 'xiqfwd1;id'}, {'name': 'xiqfwd01'}, {'target': '127.0.0.1'},
+        for kw in ({'name': 'agtsbxfwd1;id'}, {'name': 'agtsbxfwd01'}, {'name': 'xiqfwd1'},
+                   {'name': 'agtsbxfwd1000000'}, {'target': '127.0.0.1'},
                    {'target': '10.77.0.1'}, {'target': '10.77.255.255'},
                    {'target': '2001:db8::1'}, {'ports': 'tcp:0'}, {'ports': 'udp:65536'},
                    {'ports': 'tcp:80-1'}, {'ports': 'tcp:80,tcp:80'}, {'ports': ''},
@@ -278,8 +296,8 @@ class ExposureTests(unittest.TestCase):
         self.create()
         self.host.forwards[0]['config']['target_address'] = '10.77.2.3'
         self.host.calls.clear()
-        for action in (lambda: self.ctl.update('xiqfwd1', target='10.77.10.22'),
-                       lambda: self.ctl.delete('xiqfwd1')):
+        for action in (lambda: self.ctl.update('agtsbxfwd1', target='10.77.10.22'),
+                       lambda: self.ctl.delete('agtsbxfwd1')):
             with self.assertRaisesRegex(self.mod.ExposureError, 'drift|changed'):
                 action()
         self.assertEqual([], self.host.mutations())
@@ -288,7 +306,7 @@ class ExposureTests(unittest.TestCase):
         self.host.fail = lambda a: a[0] == 'dhclient' and '-r' not in a
         with self.assertRaises(RuntimeError):
             self.create()
-        self.assertIn('xiqfwd1', self.host.links)
+        self.assertIn('agtsbxfwd1', self.host.links)
         self.assertEqual([], self.host.forwards)
         self.host.fail = None
         self.create()
@@ -306,38 +324,38 @@ class ExposureTests(unittest.TestCase):
         self.create()
         self.host.fail = lambda a: a[0] == 'incus' and 'delete' in a
         with self.assertRaises(RuntimeError):
-            self.ctl.delete('xiqfwd1')
-        self.assertIn('xiqfwd1', self.host.links)
+            self.ctl.delete('agtsbxfwd1')
+        self.assertIn('agtsbxfwd1', self.host.links)
         self.host.fail = None
-        self.ctl.delete('xiqfwd1')
-        self.assertNotIn('xiqfwd1', self.host.links)
+        self.ctl.delete('agtsbxfwd1')
+        self.assertNotIn('agtsbxfwd1', self.host.links)
 
     def test_lease_change_blocks_update_but_owned_delete_still_works(self):
         self.create()
-        self.host.addresses['xiqfwd1'] = ['192.0.2.99']
+        self.host.addresses['agtsbxfwd1'] = ['192.0.2.99']
         self.host.calls.clear()
         with self.assertRaisesRegex(self.mod.ExposureError, 'address|lease'):
-            self.ctl.update('xiqfwd1', target='10.77.10.21')
+            self.ctl.update('agtsbxfwd1', target='10.77.10.21')
         self.assertEqual([], self.host.mutations())
-        self.ctl.delete('xiqfwd1')
+        self.ctl.delete('agtsbxfwd1')
         self.assertEqual([], self.host.forwards)
 
     def test_missing_owned_interface_still_cleans_its_forward(self):
         self.create()
-        del self.host.links['xiqfwd1']
-        self.ctl.delete('xiqfwd1')
+        del self.host.links['agtsbxfwd1']
+        self.ctl.delete('agtsbxfwd1')
         self.assertEqual([], self.host.forwards)
 
     def test_reused_interface_blocks_delete_even_with_owned_record(self):
         self.create()
-        self.host.links['xiqfwd1']['ifalias'] = 'someone else'
+        self.host.links['agtsbxfwd1']['ifalias'] = 'someone else'
         self.host.calls.clear()
         with self.assertRaisesRegex(self.mod.ExposureError, 'owned|ownership'):
-            self.ctl.delete('xiqfwd1')
+            self.ctl.delete('agtsbxfwd1')
         self.assertEqual([], self.host.mutations())
 
     def test_status_is_read_only_and_marks_unmanaged(self):
-        self.host.links['xiqfwd0'] = {'ifname': 'xiqfwd0'}
+        self.host.links['agtsbxfwd0'] = {'ifname': 'agtsbxfwd0'}
         result = self.ctl.status()
         self.assertEqual('unmanaged', result[0]['status'])
         self.assertEqual([], self.host.mutations())
@@ -345,23 +363,23 @@ class ExposureTests(unittest.TestCase):
 
     def test_state_permissions_and_symlinks_are_rejected(self):
         self.create()
-        path = self.ctl.root / 'xiqfwd1.json'
+        path = self.ctl.root / 'agtsbxfwd1.json'
         path.chmod(0o666)
         self.host.calls.clear()
         with self.assertRaisesRegex(self.mod.ExposureError, 'unsafe|permission'):
-            self.ctl.delete('xiqfwd1')
+            self.ctl.delete('agtsbxfwd1')
         self.assertEqual([], self.host.mutations())
 
     def test_pid_reuse_blocks_dhcp_release(self):
         self.create()
-        path = self.ctl.root / 'xiqfwd1.dhcp/client.pid'
+        path = self.ctl.root / 'agtsbxfwd1.dhcp/client.pid'
         path.write_text('12345\n')
         path.chmod(0o600)
         self.host.calls.clear()
         with (mock.patch.object(self.mod, 'process_command', return_value=['unrelated-service']),
               self.assertRaisesRegex(self.mod.ExposureError, 'PID|process')):
-            self.ctl.delete('xiqfwd1')
-        self.assertIn('xiqfwd1', self.host.links)
+            self.ctl.delete('agtsbxfwd1')
+        self.assertIn('agtsbxfwd1', self.host.links)
         self.assertFalse(any(c[0][0] == 'dhclient' for c in self.host.calls))
 
     def test_pid_reuse_blocks_retry_acquisition(self):
@@ -369,8 +387,8 @@ class ExposureTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             self.create()
         self.host.fail = None
-        self.host.addresses['xiqfwd1'] = []
-        path = self.ctl.root / 'xiqfwd1.dhcp/client.pid'
+        self.host.addresses['agtsbxfwd1'] = []
+        path = self.ctl.root / 'agtsbxfwd1.dhcp/client.pid'
         path.write_text('12345\n')
         path.chmod(0o600)
         self.host.calls.clear()
@@ -383,12 +401,12 @@ class ExposureTests(unittest.TestCase):
         self.create()
         self.host.fail = lambda a: a[0] == 'dhclient' and '-r' in a
         with self.assertRaises(RuntimeError):
-            self.ctl.delete('xiqfwd1')
+            self.ctl.delete('agtsbxfwd1')
         self.assertEqual([], self.host.forwards)
-        self.assertIn('xiqfwd1', self.host.links)
+        self.assertIn('agtsbxfwd1', self.host.links)
         self.host.fail = None
-        self.ctl.delete('xiqfwd1')
-        self.assertNotIn('xiqfwd1', self.host.links)
+        self.ctl.delete('agtsbxfwd1')
+        self.assertNotIn('agtsbxfwd1', self.host.links)
 
     def test_update_failure_after_effect_is_recoverable(self):
         self.create()
@@ -398,22 +416,22 @@ class ExposureTests(unittest.TestCase):
                 raise RuntimeError('simulated crash after edit')
             original(record)
         with mock.patch.object(self.ctl, 'save', side_effect=fail_final), self.assertRaises(RuntimeError):
-            self.ctl.update('xiqfwd1', target='10.77.10.21')
+            self.ctl.update('agtsbxfwd1', target='10.77.10.21')
         self.host.calls.clear()
         with self.assertRaisesRegex(self.mod.ExposureError, 'pending|update'):
             self.create()
-        self.ctl.update('xiqfwd1', target='10.77.10.21')
+        self.ctl.update('agtsbxfwd1', target='10.77.10.21')
         self.assertEqual([], self.host.mutations())
-        self.assertEqual('ready', self.ctl.status('xiqfwd1')[0]['status'])
+        self.assertEqual('ready', self.ctl.status('agtsbxfwd1')[0]['status'])
 
     def test_symlink_state_and_lock_contention_fail_closed(self):
         self.create()
-        path = self.ctl.root / 'xiqfwd1.json'
+        path = self.ctl.root / 'agtsbxfwd1.json'
         backup = path.with_suffix('.backup')
         path.rename(backup)
         path.symlink_to(backup)
         with self.assertRaisesRegex(self.mod.ExposureError, 'unsafe'):
-            self.ctl.delete('xiqfwd1')
+            self.ctl.delete('agtsbxfwd1')
         with self.ctl.lock(), self.assertRaisesRegex(self.mod.ExposureError, 'another exposure'), self.ctl.lock():
             self.fail('acquired held lock')
 
@@ -455,21 +473,21 @@ class ExposureTests(unittest.TestCase):
     def test_ipv6_is_disabled_only_on_owned_interface(self):
         self.create()
         calls = [c[0] for c in self.host.calls]
-        disable = ['sysctl', '-w', 'net.ipv6.conf.xiqfwd1.disable_ipv6=1']
+        disable = ['sysctl', '-w', 'net.ipv6.conf.agtsbxfwd1.disable_ipv6=1']
         self.assertIn(disable, calls)
-        self.assertLess(calls.index(disable), calls.index(['ip', 'link', 'set', 'dev', 'xiqfwd1', 'up']))
+        self.assertLess(calls.index(disable), calls.index(['ip', 'link', 'set', 'dev', 'agtsbxfwd1', 'up']))
 
     def legacy_exposure(self):
-        self.host.links['xiqfwd0'] = {'ifname': 'xiqfwd0', 'ifindex': 42, 'link': 'eth0',
+        self.host.links['agtsbxfwd0'] = {'ifname': 'agtsbxfwd0', 'ifindex': 42, 'link': 'eth0',
                                     'address': 'ae:63:1f:10:24:87',
                                     'linkinfo': {'info_kind': 'macvlan', 'info_data': {'mode': 'bridge'}}}
-        self.host.addresses['xiqfwd0'] = [self.host.lease]
+        self.host.addresses['agtsbxfwd0'] = [self.host.lease]
         self.host.forwards = [{'listen_address': self.host.lease, 'description': '',
                                'config': {'target_address': '10.77.10.20'}, 'ports': []}]
         self.legacy = {'pid': 12345, 'uid': 0, 'exe': '/usr/sbin/dhclient', 'start_ticks': '123',
                        'netns': os.readlink('/proc/self/ns/net'),
                        'args': ['dhclient', '-v', '-lf', '/run/xiqfwd/lease', '-pf', '/run/xiqfwd/pid',
-                                '-sf', '/bin/true', 'xiqfwd0']}
+                                '-sf', '/bin/true', 'agtsbxfwd0']}
         self.clients = [copy.deepcopy(self.legacy)]
         for name, effect in (
                 ('dhcp_processes', lambda name: copy.deepcopy(self.clients)),
@@ -503,29 +521,29 @@ class ExposureTests(unittest.TestCase):
         self.host.run = run
 
     def adopt(self, **kw):
-        values = {'name': 'xiqfwd0', 'parent': 'eth0', 'network': 'agentbr0', 'project': 'default',
+        values = {'name': 'agtsbxfwd0', 'parent': 'eth0', 'network': 'agentbr0', 'project': 'default',
                   'target': '10.77.10.20', 'ports': 'all', 'legacy_dhcp_pid': 12345}
         values.update(kw)
         return self.ctl.adopt(**values)
 
     def test_adopt_preserves_resources_and_hands_off_dhcp(self):
         self.legacy_exposure()
-        original_link = copy.deepcopy(self.host.links['xiqfwd0'])
+        original_link = copy.deepcopy(self.host.links['agtsbxfwd0'])
         record = self.adopt()
         self.assertEqual('ready', record['stage'])
         self.assertEqual(self.host.lease, record['address'])
         for key in ('ifindex', 'address', 'link', 'linkinfo'):
-            self.assertEqual(original_link[key], self.host.links['xiqfwd0'][key])
+            self.assertEqual(original_link[key], self.host.links['agtsbxfwd0'][key])
         self.assertEqual('10.77.10.20', self.host.forwards[0]['config']['target_address'])
         self.assertEqual([], self.host.forwards[0]['ports'])
-        self.assertEqual(record['marker'], self.host.links['xiqfwd0']['ifalias'])
+        self.assertEqual(record['marker'], self.host.links['agtsbxfwd0']['ifalias'])
         self.assertEqual(record['marker'], self.host.forwards[0]['description'])
         self.assertEqual(22222, self.clients[0]['pid'])
         calls = [c[0] for c in self.host.mutations()]
         self.assertFalse(any('delete' in c or 'add' in c or '-r' in c for c in calls))
         self.assertIn('send dhcp-requested-address 192.0.2.40;',
-                      (self.ctl.root / 'xiqfwd0.dhcp/dhclient.conf').read_text())
-        self.assertEqual('ready', self.ctl.status('xiqfwd0')[0]['status'])
+                      (self.ctl.root / 'agtsbxfwd0.dhcp/dhclient.conf').read_text())
+        self.assertEqual('ready', self.ctl.status('agtsbxfwd0')[0]['status'])
         self.host.calls.clear()
         self.adopt()
         self.assertEqual([], self.host.mutations())
@@ -534,7 +552,7 @@ class ExposureTests(unittest.TestCase):
     def test_apparmor_failure_blocks_before_resource_claim_or_dhcp_stop(self):
         self.legacy_exposure()
         self.preflight.side_effect = self.mod.ExposureError('AppArmor policy missing')
-        for action in (self.adopt, self.create, lambda: self.ctl.delete('xiqfwd0')):
+        for action in (self.adopt, self.create, lambda: self.ctl.delete('agtsbxfwd0')):
             with self.assertRaisesRegex(self.mod.ExposureError, 'AppArmor'):
                 action()
         self.assertEqual([], self.host.mutations())
@@ -551,7 +569,7 @@ class ExposureTests(unittest.TestCase):
 
     def test_adopt_rejects_mismatched_expectations(self):
         for change in ({'parent': 'other'}, {'target': '10.77.10.21'}, {'ports': 'tcp:443'},
-                       {'legacy_dhcp_pid': 999}, {'name': 'xiqfwd0;id'}):
+                       {'legacy_dhcp_pid': 999}, {'name': 'agtsbxfwd0;id'}):
             with self.subTest(change=change):
                 self.legacy_exposure()
                 with self.assertRaises((self.mod.ExposureError, ValueError)):
@@ -563,15 +581,15 @@ class ExposureTests(unittest.TestCase):
             with self.subTest(drift=drift):
                 self.legacy_exposure()
                 if drift == 'alias':
-                    self.host.links['xiqfwd0']['ifalias'] = 'another-owner'
+                    self.host.links['agtsbxfwd0']['ifalias'] = 'another-owner'
                 elif drift == 'description':
                     self.host.forwards[0]['description'] = 'another-owner'
                 elif drift == 'address':
-                    self.host.addresses['xiqfwd0'].append('192.0.2.41')
+                    self.host.addresses['agtsbxfwd0'].append('192.0.2.41')
                 elif drift == 'duplicate':
                     self.host.forwards.append(copy.deepcopy(self.host.forwards[0]))
                 elif drift == 'mode':
-                    self.host.links['xiqfwd0']['linkinfo']['info_data']['mode'] = 'private'
+                    self.host.links['agtsbxfwd0']['linkinfo']['info_data']['mode'] = 'private'
                 else:
                     self.clients.append(dict(self.legacy, pid=99999))
                 with self.assertRaises(self.mod.ExposureError):
@@ -586,7 +604,7 @@ class ExposureTests(unittest.TestCase):
                     if drift == 'forward':
                         self.host.forwards[0]['config']['target_address'] = '10.77.10.99'
                     elif drift == 'ifindex':
-                        self.host.links['xiqfwd0']['ifindex'] = 999
+                        self.host.links['agtsbxfwd0']['ifindex'] = 999
                     else:
                         self.clients[0]['start_ticks'] = 'reused'
                     return True
@@ -601,13 +619,13 @@ class ExposureTests(unittest.TestCase):
         self.host.fail = lambda a: a[0] == 'dhclient'
         with self.assertRaises(RuntimeError):
             self.adopt()
-        self.assertEqual('adopting', self.ctl.load('xiqfwd0')['stage'])
-        self.assertEqual([self.host.lease], self.host.addresses['xiqfwd0'])
+        self.assertEqual('adopting', self.ctl.load('agtsbxfwd0')['stage'])
+        self.assertEqual([self.host.lease], self.host.addresses['agtsbxfwd0'])
         self.assertEqual('10.77.10.20', self.host.forwards[0]['config']['target_address'])
         self.host.calls.clear()
-        for operation in (lambda: self.create(name='xiqfwd0'),
-                          lambda: self.ctl.update('xiqfwd0', target='10.77.10.21'),
-                          lambda: self.ctl.delete('xiqfwd0')):
+        for operation in (lambda: self.create(name='agtsbxfwd0'),
+                          lambda: self.ctl.update('agtsbxfwd0', target='10.77.10.21'),
+                          lambda: self.ctl.delete('agtsbxfwd0')):
             with self.assertRaises(self.mod.ExposureError):
                 operation()
         self.assertEqual([], self.host.mutations())
@@ -619,8 +637,8 @@ class ExposureTests(unittest.TestCase):
         self.host.lease = '192.0.2.99'
         with self.assertRaisesRegex(self.mod.ExposureError, 'ACK|lease'):
             self.adopt()
-        self.assertEqual('adopting', self.ctl.load('xiqfwd0')['stage'])
-        self.assertEqual(['192.0.2.40'], self.host.addresses['xiqfwd0'])
+        self.assertEqual('adopting', self.ctl.load('agtsbxfwd0')['stage'])
+        self.assertEqual(['192.0.2.40'], self.host.addresses['agtsbxfwd0'])
         self.assertEqual('192.0.2.40', self.host.forwards[0]['listen_address'])
 
     def test_adopt_final_record_write_failure_does_not_repeat_handoff(self):
@@ -648,11 +666,11 @@ class ExposureTests(unittest.TestCase):
     def test_adopted_exposure_can_be_updated_and_deleted(self):
         self.legacy_exposure()
         self.adopt()
-        self.ctl.update('xiqfwd0', ports='tcp:443')
-        self.ctl.delete('xiqfwd0')
-        self.assertNotIn('xiqfwd0', self.host.links)
+        self.ctl.update('agtsbxfwd0', ports='tcp:443')
+        self.ctl.delete('agtsbxfwd0')
+        self.assertNotIn('agtsbxfwd0', self.host.links)
         self.assertEqual([], self.host.forwards)
-        self.assertIsNone(self.ctl.load('xiqfwd0'))
+        self.assertIsNone(self.ctl.load('agtsbxfwd0'))
 
     def test_adopt_forward_tag_failure_is_resumable(self):
         self.legacy_exposure()
@@ -678,17 +696,17 @@ class ProcessTests(unittest.TestCase):
     def identity(self, **kw):
         value = {'pid': 12345, 'uid': 0, 'exe': '/usr/sbin/dhclient', 'start_ticks': '123',
                  'netns': 'net:[123]', 'args': ['dhclient', '-v', '-lf', '/run/xiqfwd/lease',
-                 '-pf', '/run/xiqfwd/pid', '-sf', '/bin/true', 'xiqfwd0']}
+                 '-pf', '/run/xiqfwd/pid', '-sf', '/bin/true', 'agtsbxfwd0']}
         value.update(kw)
         return value
 
     def test_legacy_client_validation_is_narrow_and_namespace_scoped(self):
         with mock.patch.object(self.mod.os, 'readlink', return_value='net:[123]'):
-            self.mod.validate_legacy_client(self.identity(), 'xiqfwd0')
+            self.mod.validate_legacy_client(self.identity(), 'agtsbxfwd0')
             for change in ({'uid': 1000}, {'exe': '/untrusted/dhclient'}, {'netns': 'net:[999]'},
-                           {'args': ['dhclient', '-sf', '/untrusted/hook', 'xiqfwd0']}):
+                           {'args': ['dhclient', '-sf', '/untrusted/hook', 'agtsbxfwd0']}):
                 with self.subTest(change=change), self.assertRaises(self.mod.ExposureError):
-                    self.mod.validate_legacy_client(self.identity(**change), 'xiqfwd0')
+                    self.mod.validate_legacy_client(self.identity(**change), 'agtsbxfwd0')
 
     def test_pid_reuse_after_pidfd_open_never_signals_a_process(self):
         identity = self.identity()
@@ -721,7 +739,7 @@ class DHCPTests(unittest.TestCase):
         cls.mod = load(SOURCE.with_name('sandbox-exposure-dhcp.py'), 'dhcp_hook')
 
     def run_hook(self, reason='BOUND', **overrides):
-        env = {'interface': 'xiqfwd1', 'HERDR_EXPOSURE_INTERFACE': 'xiqfwd1',
+        env = {'interface': 'agtsbxfwd1', 'HERDR_EXPOSURE_INTERFACE': 'agtsbxfwd1',
                'HERDR_EXPOSURE_MARKER': 'owned-marker', 'reason': reason,
                'new_ip_address': '192.0.2.40', 'new_subnet_mask': '255.255.255.0'}
         env.update(overrides)
@@ -729,7 +747,7 @@ class DHCPTests(unittest.TestCase):
         def run(args):
             calls.append(args)
             if args[:4] == ['ip', '-details', '-json', 'link']:
-                return json.dumps([{'ifname': 'xiqfwd1', 'ifalias': 'owned-marker'}])
+                return json.dumps([{'ifname': 'agtsbxfwd1', 'ifalias': 'owned-marker'}])
             if args[:4] == ['ip', '-json', '-4', 'addr']:
                 return json.dumps([{'addr_info': [{'local': '192.0.2.39', 'prefixlen': 24},
                                                   {'local': '192.0.2.40', 'prefixlen': 24}]}])
@@ -738,7 +756,7 @@ class DHCPTests(unittest.TestCase):
         return calls
 
     def test_invalid_link_inventory_is_reported_before_address_changes(self):
-        env = {'interface': 'xiqfwd1', 'HERDR_EXPOSURE_INTERFACE': 'xiqfwd1', 'reason': 'BOUND'}
+        env = {'interface': 'agtsbxfwd1', 'HERDR_EXPOSURE_INTERFACE': 'agtsbxfwd1', 'reason': 'BOUND'}
         for error in ('not-json', OSError('ip unavailable'), subprocess.CalledProcessError(1, ['ip'])):
             command = mock.Mock()
             if isinstance(error, Exception):
@@ -752,22 +770,22 @@ class DHCPTests(unittest.TestCase):
 
     def test_bound_sets_address_not_routes_or_dns(self):
         calls = self.run_hook()
-        self.assertIn(['ip', '-4', 'address', 'replace', '192.0.2.40/24', 'dev', 'xiqfwd1', 'noprefixroute'], calls)
+        self.assertIn(['ip', '-4', 'address', 'replace', '192.0.2.40/24', 'dev', 'agtsbxfwd1', 'noprefixroute'], calls)
         self.assertFalse(any('route' in a or 'resolv' in ' '.join(a) for a in calls))
 
     def test_renew_changed_address_removes_only_previous_address(self):
         calls = self.run_hook(reason='RENEW', old_ip_address='192.0.2.39', old_subnet_mask='255.255.255.0')
-        self.assertIn(['ip', '-4', 'address', 'delete', '192.0.2.39/24', 'dev', 'xiqfwd1'], calls)
+        self.assertIn(['ip', '-4', 'address', 'delete', '192.0.2.39/24', 'dev', 'agtsbxfwd1'], calls)
         self.assertFalse(any('flush' in a for a in calls))
 
     def test_expiry_removes_only_lease_address(self):
         calls = self.run_hook(reason='EXPIRE', old_ip_address='192.0.2.40', old_subnet_mask='255.255.255.0')
-        self.assertIn(['ip', '-4', 'address', 'delete', '192.0.2.40/24', 'dev', 'xiqfwd1'], calls)
+        self.assertIn(['ip', '-4', 'address', 'delete', '192.0.2.40/24', 'dev', 'agtsbxfwd1'], calls)
         self.assertFalse(any('replace' in a for a in calls))
 
     def test_expiry_without_old_mask_uses_live_prefix(self):
         calls = self.run_hook(reason='EXPIRE', old_ip_address='192.0.2.40')
-        self.assertIn(['ip', '-4', 'address', 'delete', '192.0.2.40/24', 'dev', 'xiqfwd1'], calls)
+        self.assertIn(['ip', '-4', 'address', 'delete', '192.0.2.40/24', 'dev', 'agtsbxfwd1'], calls)
 
     def test_timeout_and_wrong_marker_are_rejected(self):
         for overrides in ({'reason': 'TIMEOUT'}, {'HERDR_EXPOSURE_MARKER': 'wrong'}):
@@ -796,6 +814,14 @@ class DHCPTests(unittest.TestCase):
     def test_wrong_interface_is_rejected(self):
         with self.assertRaises((ValueError, RuntimeError)):
             self.run_hook(interface='eth0')
+
+    def test_invalid_owned_interface_names_are_rejected_before_commands(self):
+        for name in ('xiqfwd1', 'agtsbxfwd01', 'agtsbxfwd1000000'):
+            calls = []
+            env = {'interface': name, 'HERDR_EXPOSURE_INTERFACE': name, 'reason': 'BOUND'}
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                self.mod.configure(env, calls.append)
+            self.assertEqual([], calls)
 
 
 if __name__ == '__main__':

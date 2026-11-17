@@ -147,8 +147,8 @@ class ManagerTests(unittest.TestCase):
         self.runner = FakeRunner()
         self.manager = self.mod.ProxyManager(self.root / 'state', self.runner, self.root / 'units')
         self.config = self.mod.normalize_proxy({'enabled': True, 'client_cidrs': ['10.64.195.0/24']})
-        self.record = {'name': 'xiqfwd0', 'sandbox': 'emulator-11', 'address': '134.141.48.97',
-                       'target': '10.77.10.14', 'marker': 'herdr-sandbox-exposure:xiqfwd0:' + 'a' * 32}
+        self.record = {'name': 'agtsbxfwd0', 'sandbox': 'emulator-11', 'address': '134.141.48.97',
+                       'target': '10.77.10.14', 'marker': 'herdr-sandbox-exposure:agtsbxfwd0:' + 'a' * 32}
 
     def test_scoped_create_repeat_adopt_update_and_remove(self):
         self.manager.apply(self.record, self.config)
@@ -166,7 +166,7 @@ class ManagerTests(unittest.TestCase):
                              for args, _ in self.runner.calls))
         updated = dict(self.record, target='10.77.10.15')
         self.manager.apply(updated, self.config)
-        directory = self.root / 'state/xiqfwd0.proxy'
+        directory = self.root / 'state/agtsbxfwd0.proxy'
         self.assertEqual('10.77.10.15', json.loads((directory / 'config.json').read_text())['target'])
         self.manager.remove(updated)
         self.assertEqual({}, self.runner.tables)
@@ -175,8 +175,8 @@ class ManagerTests(unittest.TestCase):
         self.manager.remove(updated)
 
     def test_two_sandboxes_do_not_capture_or_remove_each_other(self):
-        second = {'name': 'xiqfwd1', 'sandbox': 'emulator-12', 'address': '134.141.48.98',
-                  'target': '10.77.10.15', 'marker': 'herdr-sandbox-exposure:xiqfwd1:' + 'b' * 32}
+        second = {'name': 'agtsbxfwd1', 'sandbox': 'emulator-12', 'address': '134.141.48.98',
+                  'target': '10.77.10.15', 'marker': 'herdr-sandbox-exposure:agtsbxfwd1:' + 'b' * 32}
         self.manager.apply(self.record, self.config)
         self.manager.apply(second, self.config)
         self.assertEqual(2, len(self.runner.tables))
