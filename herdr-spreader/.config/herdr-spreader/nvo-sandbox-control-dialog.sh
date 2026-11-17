@@ -13,6 +13,7 @@ die() {
 
 valid_sandbox_id() {
 	[[ $1 =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ||
+		$1 =~ ^EMULATOR-[0-9]+-MONO$ ||
 		$1 =~ ^NVO-REVIEW-[A-Z][A-Z0-9]+-[0-9]+$ ||
 		$1 =~ ^NVO-REVIEW-(GODCAPP|PCM|PS|PSC)-PR-[1-9][0-9]*$ ]]
 }

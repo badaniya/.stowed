@@ -35,6 +35,9 @@ cat >"$TEST_ROOT/state/labctl/sandboxes.json" <<'EOF_REGISTRY'
   "sandboxes": {
     "nvo-20130": {"status": "running"},
     "nvo-20224": {"status": "stopped"},
+    "emulator-12-mono": {"status": "created"},
+    "emulator-13-mono": {"status": "destroyed"},
+    "emulator-12-mono-extra": {"status": "running"},
     "nvo-review-cfd-18711": {"status": "running"},
     "nvo-review-godcapp-pr-32941": {"status": "running"},
     "nvo-20999": {"status": "destroyed"},
@@ -153,11 +156,30 @@ assert_file_equals $'scope=explicit\nNVO-20130\nNVO-20224' "$PLAN_PATH"
 assert_equals 1 "$(rg -c '^herdr pane split ' "$LOG")" 'expected one focused pane split'
 assert_equals 1 "$(rg -c '^herdr pane run ' "$LOG")" 'expected one dialog command'
 
-# all omits destroyed records while retaining registry ticket order.
+# Registered EMULATOR monorepo aliases pass both controller and dialog validation.
+: >"$LOG"
+run_controller EMULATOR-12-MONO
+PLAN_PATH=$(<"$PLAN_PATH_FILE")
+assert_file_equals $'scope=explicit\nEMULATOR-12-MONO' "$PLAN_PATH"
+DIALOG_PLAN=$PLAN_PATH
+printf '1\n' | run_dialog
+[[ ! -e $DIALOG_PLAN ]] || fail 'monorepo status dialog did not delete its plan'
+assert_equals 1 "$(rg -c '^labctl status EMULATOR-12-MONO$' "$LOG")" 'monorepo target did not reach labctl'
+
+# Destroyed, unregistered, or malformed monorepo aliases never open a control pane.
+for target in EMULATOR-13-MONO EMULATOR-99-MONO EMULATOR-12-MONO-extra EMULATOR-12-MONO-EXTRA; do
+	: >"$LOG"
+	if run_controller "$target"; then
+		fail "ineligible monorepo target unexpectedly succeeded: $target"
+	fi
+	[[ ! -s $LOG ]] || fail "ineligible monorepo target invoked a command: $target"
+done
+
+# all omits destroyed and malformed records while retaining registry ticket order.
 : >"$LOG"
 run_controller all
 PLAN_PATH=$(<"$PLAN_PATH_FILE")
-assert_file_equals $'scope=all\nNVO-20130\nNVO-20224\nNVO-REVIEW-CFD-18711\nNVO-REVIEW-GODCAPP-PR-32941' "$PLAN_PATH"
+assert_file_equals $'scope=all\nNVO-20130\nNVO-20224\nEMULATOR-12-MONO\nNVO-REVIEW-CFD-18711\nNVO-REVIEW-GODCAPP-PR-32941' "$PLAN_PATH"
 assert_equals 1 "$(rg -c '^herdr pane split ' "$LOG")" 'expected one focused pane split for all'
 
 # Jira-scoped review and repo-qualified PR sandbox IDs are eligible explicitly.

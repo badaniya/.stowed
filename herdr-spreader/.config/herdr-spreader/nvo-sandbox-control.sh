@@ -13,6 +13,7 @@ die() {
 
 valid_sandbox_id() {
 	[[ $1 =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ||
+		$1 =~ ^EMULATOR-[0-9]+-MONO$ ||
 		$1 =~ ^NVO-REVIEW-[A-Z][A-Z0-9]+-[0-9]+$ ||
 		$1 =~ ^NVO-REVIEW-(GODCAPP|PCM|PS|PSC)-PR-[1-9][0-9]*$ ]]
 }
@@ -35,7 +36,7 @@ declare -a tickets=()
 declare -A seen=()
 if [[ $target_input == all ]]; then
 	scope=all
-	mapfile -t tickets < <(jq -er '.sandboxes | to_entries[] | select((.key | test("^(nvo-review-)?[a-z][a-z0-9]+-[0-9]+$|^nvo-review-(godcapp|pcm|ps|psc)-pr-[1-9][0-9]*$")) and .value.status != "destroyed") | .key | ascii_upcase' "$state_file") || die 'unable to resolve sandbox targets'
+	mapfile -t tickets < <(jq -er '.sandboxes | to_entries[] | select((.key | test("^(nvo-review-)?[a-z][a-z0-9]+-[0-9]+$|^emulator-[0-9]+-mono$|^nvo-review-(godcapp|pcm|ps|psc)-pr-[1-9][0-9]*$")) and .value.status != "destroyed") | .key | ascii_upcase' "$state_file") || die 'unable to resolve sandbox targets'
 else
 	scope=explicit
 	[[ $target_input != ,* && $target_input != *, && $target_input != *,,* ]] || die 'sandbox target list contains an empty value'
