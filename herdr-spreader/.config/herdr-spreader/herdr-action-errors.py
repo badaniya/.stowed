@@ -161,15 +161,22 @@ def notify_failure(name, status, message, sources):
 
 
 def run_action(name, command):
+    env = dict(os.environ, **{ACTIVE: '1'})
+    # Herdr's persistent server can predate mise activation. Actions do not run
+    # login shells, so supply shims without sourcing interactive shell config.
+    data = Path(env.get('XDG_DATA_HOME') or Path.home() / '.local/share')
+    shims = Path(env.get('MISE_DATA_DIR') or data / 'mise') / 'shims'
+    path = env.get('PATH', os.defpath).split(os.pathsep)
+    if shims.is_dir() and str(shims) not in path:
+        env['PATH'] = os.pathsep.join([*path, str(shims)])
     if os.environ.get(ACTIVE) == '1':
         # An outer runner owns the capture, status, and single notification.
         try:
-            return exit_status(subprocess.call(command))
+            return exit_status(subprocess.call(command, env=env))
         except FileNotFoundError as error:
             warn(str(error))
             return 127
     fd, log = create_log()
-    env = dict(os.environ, **{ACTIVE: '1'})
     # Use a regular file, not a pipe: detached descendants must not keep the
     # launcher waiting forever after its immediate action exits.
     with os.fdopen(fd, 'wb') as capture, log.open('rb') as reader:

@@ -62,6 +62,83 @@ class RunnerTests(unittest.TestCase):
         self.assertIn('stderr', result.stdout + result.stderr)
         self.assertEqual(self.logs(), [])
 
+    def test_actions_find_mise_tools_without_interactive_shell_setup(self):
+        # Removing the runner's shim fallback must reproduce env: gh: not found.
+        for location in ('default', 'xdg', 'mise', 'mise-over-xdg'):
+            for nested in (False, True):
+                with self.subTest(location=location, nested=nested):
+                    self.env.pop('MISE_DATA_DIR', None)
+                    self.env.pop('XDG_DATA_HOME', None)
+                    self.env.pop('HERDR_ACTION_ERROR_ACTIVE', None)
+                    if location in ('mise', 'mise-over-xdg'):
+                        data = self.home / 'custom mise data'
+                        self.env['MISE_DATA_DIR'] = str(data)
+                        if location == 'mise-over-xdg':
+                            self.env['XDG_DATA_HOME'] = str(self.home / 'custom data')
+                    elif location == 'xdg':
+                        data = self.home / 'custom data' / 'mise'
+                        self.env['XDG_DATA_HOME'] = str(data.parent)
+                    else:
+                        data = self.home / '.local/share/mise'
+                    shims = data / 'shims'
+                    shims.mkdir(parents=True, exist_ok=True)
+                    gh = shims / 'gh'
+                    gh.write_text(f'#!/bin/sh\nprintf "mise-gh-{location}:%s\\n" "$*"\n')
+                    gh.chmod(0o700)
+                    self.env['PATH'] = '/usr/bin:/bin'
+                    if nested:
+                        self.env['HERDR_ACTION_ERROR_ACTIVE'] = '1'
+                    result = self.run_command(['env', '-u', 'GH_TOKEN', '-u', 'GITHUB_TOKEN',
+                                               'gh', '--version'])
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertEqual(result.stdout.strip(), f'mise-gh-{location}:--version')
+
+    def test_missing_mise_shims_leave_path_unchanged(self):
+        self.env['MISE_DATA_DIR'] = str(self.home / 'not-installed')
+        self.env['PATH'] = '/usr/bin:/bin'
+        result = self.run_command([sys.executable, '-c', 'import os; print(os.environ["PATH"])'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), self.env['PATH'])
+
+    def test_missing_parent_path_keeps_system_defaults_before_mise(self):
+        shims = self.home / 'mise/shims'
+        shims.mkdir(parents=True)
+        gh = shims / 'gh'
+        gh.write_text('#!/bin/sh\necho fallback-gh\n')
+        gh.chmod(0o700)
+        self.env['MISE_DATA_DIR'] = str(shims.parent)
+        self.env.pop('PATH', None)
+        result = self.run_command(['env', 'gh', '--version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), 'fallback-gh')
+        result = self.run_command([sys.executable, '-c', 'import os; print(os.environ["PATH"])'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip().split(os.pathsep),
+                         [*os.defpath.split(os.pathsep), str(shims)])
+
+    def test_mise_fallback_preserves_path_precedence_and_avoids_duplicates(self):
+        shims = self.home / '.local/share/mise/shims'
+        shims.mkdir(parents=True)
+        binary = self.home / 'bin'
+        binary.mkdir()
+        for directory, output in ((binary, 'existing-gh'), (shims, 'mise-gh')):
+            gh = directory / 'gh'
+            gh.write_text(f'#!/bin/sh\necho {output}\n')
+            gh.chmod(0o700)
+        for already_present in (False, True):
+            with self.subTest(already_present=already_present):
+                self.env.pop('MISE_DATA_DIR', None)
+                self.env.pop('XDG_DATA_HOME', None)
+                self.env['PATH'] = f'{binary}:/usr/bin:/bin'
+                if already_present:
+                    self.env['PATH'] += f':{shims}'
+                result = self.run_command(['sh', '-c', 'gh; printf "%s" "$PATH"'])
+                self.assertEqual(result.returncode, 0, result.stderr)
+                output, path = result.stdout.split('\n', 1)
+                self.assertEqual(output, 'existing-gh')
+                self.assertEqual(path.split(':').count(str(shims)), 1)
+                self.assertEqual(path.split(':')[0], str(binary))
+
     @unittest.skipUnless(RUNNER.exists(), 'runner not implemented yet')
     def test_failure_retains_private_unique_logs_metadata_and_original_status(self):
         for _ in range(2):
