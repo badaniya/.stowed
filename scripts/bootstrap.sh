@@ -106,7 +106,7 @@ fi
 
 step "Claude marketplaces and plugins"
 if ! command -v claude >/dev/null; then
-  warn "claude is not installed; skipping plugins"
+  note "claude is not installed; skipping plugins (optional)"
 else
   known="$(claude plugin marketplace list --json 2>/dev/null | jq -r '.[].name' || true)"
   while IFS=$'\t' read -r name repo; do
