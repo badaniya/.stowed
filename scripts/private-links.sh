@@ -89,4 +89,32 @@ for pair in "${links[@]}"; do
   printf '   %s: %d file(s) from %s\n' "$rel_dir" "$linked" "$src_dir"
 done
 
+# Also sync tracked quick-action files from plugin config to ~/.config/herdr-plus/quick-actions/
+# These are files committed to the repo (not private) that herdr-plus needs to see
+plugin_quick_actions="$repo_root/herdr/.config/herdr/plugins/config/cloudmanic.herdr-plus/quick-actions"
+if [ -d "$plugin_quick_actions" ]; then
+  linked=0
+  for src in "$plugin_quick_actions"/*.toml; do
+    [ -f "$src" ] || continue
+    # Skip symlinks (those are from private dir, already handled above)
+    [ -L "$src" ] && continue
+    dest="$HOME/.config/herdr-plus/quick-actions/${src##*/}"
+    if [ -L "$dest" ] && [ "$(readlink "$dest")" = "$src" ]; then
+      :
+    elif [ -e "$dest" ] || [ -L "$dest" ]; then
+      warn "$dest exists and is not a link to $src"
+      continue
+    elif $check_only; then
+      warn "$dest not linked"
+      continue
+    else
+      mkdir -p "$(dirname "$dest")"
+      ln -s "$src" "$dest"
+    fi
+    linked=$((linked + 1))
+  done
+  printf '   %s: %d tracked file(s) from plugin config
+' "$HOME/.config/herdr-plus/quick-actions" "$linked"
+fi
+
 [ "$problems" -eq 0 ]
