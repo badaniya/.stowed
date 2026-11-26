@@ -645,7 +645,7 @@ assert_command_log_ordered 'config device override jira-# eth0 ipv4.address=10.4
 assert_command_log_ordered 'start jira-#' 'exec jira-# -- bash -c set'
 # After both idmapped mounts and guest readiness, configure only direct ticket
 # worktrees in the instance user's global Git configuration.
-assert_command_log_ordered 'config device add jira-# ticket-workspace disk' 'exec jira-# -- bash -c set'
+assert_command_log_ordered 'config device add jira-# ticket-workspace disk' 'git config --global --add safe.directory'
 assert_command_log_ordered 'exec jira-# -- docker info' 'git config --global --add safe.directory'
 assert_command_log_contains "exec jira-# -- git config --global --add safe.directory ${TEST_ROOT}/workspace/jira-#/one"
 assert_command_log_contains "exec jira-# -- git config --global --add safe.directory ${TEST_ROOT}/workspace/jira-#/two"
@@ -1149,8 +1149,25 @@ assert_succeeds rg -F --quiet 'trap cleanup EXIT HUP INT TERM' "$REMOTE_SCRIPT"
 assert_succeeds rg -F --quiet 'rm -rf -- "$runtime_dir"' "$REMOTE_SCRIPT"
 assert_fails rg -F --quiet "$CREDENTIAL_SECRET" "$REMOTE_SCRIPT"
 
+# The remote script drops to the instance user with setpriv, which needs root.
+# Run it as the current user: a fake id maps the probe user to our UID/GID and a
+# fake setpriv runs the stack command directly, keeping the fake PATH.
+ASKPASS_BIN="${TEST_ROOT}/askpass-bin"
+mkdir -p "$ASKPASS_BIN"
+cat >"${ASKPASS_BIN}/id" <<'ID'
+#!/usr/bin/env bash
+if [[ $# == 2 && $2 == askpass-user && ($1 == -u || $1 == -g) ]]; then
+  exec /usr/bin/id "$1"
+fi
+exec /usr/bin/id "$@"
+ID
+cat >"${ASKPASS_BIN}/setpriv" <<'SETPRIV'
+#!/usr/bin/env bash
+exec bash -c "${!#}"
+SETPRIV
+chmod +x "${ASKPASS_BIN}/id" "${ASKPASS_BIN}/setpriv"
 set +e
-PATH="${FAKE_BIN}:$PATH" LABCTL_GIT_ASKPASS_RUNTIME_DIR="$REMOTE_RUNTIME" LABCTL_ASKPASS_PROBE_HASH="$REMOTE_PROBE_HASH" LABCTL_FAKE_GIT_PASSWORD="$CREDENTIAL_SECRET" bash "$REMOTE_SCRIPT" "${TEST_ROOT}/workspace/jira-#" "$CREDENTIAL_NAME" git.example.test 'askpass-probe'
+PATH="${ASKPASS_BIN}:${FAKE_BIN}:$PATH" LABCTL_GIT_ASKPASS_RUNTIME_DIR="$REMOTE_RUNTIME" LABCTL_ASKPASS_PROBE_HASH="$REMOTE_PROBE_HASH" LABCTL_FAKE_GIT_PASSWORD="$CREDENTIAL_SECRET" bash "$REMOTE_SCRIPT" "${TEST_ROOT}/workspace/jira-#" "$CREDENTIAL_NAME" git.example.test 'askpass-user'
 remote_status=$?
 set -e
 assert_equals '17' "$remote_status"
