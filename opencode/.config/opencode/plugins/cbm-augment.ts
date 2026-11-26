@@ -6,38 +6,88 @@
 // OpenCode already reaches every tool over MCP; this module adds the
 // context surfaces other clients get through hook configuration: graph
 // lookup after grep/glob, index-coverage notes after read, session-start
-// tier routing (carried on the first tool result of each session, since
-// OpenCode documents no context-output lifecycle hook), and reinjection
-// after compaction via the documented experimental surface.
+// tier routing (carried on the first tool result of each session), and
+// on OpenCode 1.18.x reinjection after compaction.
+//
+// Two runtimes load this module:
+// - OpenCode 1.18.x dispatches the hooks returned by server(ctx).
+// - OpenCode 2 ignores server and calls setup(ctx), which registers the
+//   tool hook on the context's tool domain. The registration fails open,
+//   and the server() tool hook yields once it has registered. OpenCode 2
+//   gets no note after compaction: no compaction channel has been run on
+//   a real 2.x host yet.
 import { spawn } from 'node:child_process';
 
 const BIN = '/home/badaniya/.local/bin/codebase-memory-mcp';
+const AUGMENT_TIMEOUT_MS = 10000;
 
 function augment(payload) {
   return new Promise((resolve) => {
     const child = spawn(BIN, ['hook-augment'], {
       stdio: ['pipe', 'pipe', 'ignore'],
-      env: { ...process.env, CBM_LOG_LEVEL: 'error' },
+      env: {
+        ...process.env,
+        CBM_LOG_LEVEL: 'error',
+        // The binary's own hook deadline defaults to 2000ms, but process
+        // init + graph open can take 2-5s, so the hook would self-kill
+        // before emitting. Keep it just under AUGMENT_TIMEOUT_MS.
+        CBM_HOOK_DEADLINE_MS: '9000',
+      },
     });
+    // Stream errors fire on the stream, not the child.
+    child.stdin.on('error', () => {});
+    const timer = setTimeout(() => {
+      child.kill('SIGKILL');
+      child.stdout.destroy();
+      resolve('');
+    }, AUGMENT_TIMEOUT_MS);
     let out = '';
     child.stdout.on('data', (d) => (out += d.toString()));
-    child.on('error', () => resolve(''));
+    child.on('error', () => {
+      clearTimeout(timer);
+      resolve('');
+    });
     child.on('close', () => {
+      clearTimeout(timer);
       try {
         const ctx = JSON.parse(out)?.hookSpecificOutput?.additionalContext;
         resolve(typeof ctx === 'string' ? ctx : '');
       } catch { resolve(''); }
     });
-    child.stdin.end(JSON.stringify(payload));
+    try {
+      child.stdin.end(JSON.stringify(payload));
+    } catch { resolve(''); }
   });
 }
 
+function appendResult(result, extra) {
+  if (!result || typeof result !== 'object') return result;
+  if (typeof result.content === 'string') {
+    return { ...result, content: result.content + '\n' + extra };
+  }
+  if (Array.isArray(result.content) && result.content.length > 0) {
+    const content = result.content.slice();
+    for (let i = content.length - 1; i >= 0; i--) {
+      if (content[i] && content[i].type === 'text') {
+        content[i] = { ...content[i], text: content[i].text + '\n' + extra };
+        return { ...result, content };
+      }
+    }
+    content.push({ type: 'text', text: extra });
+    return { ...result, content };
+  }
+  if (typeof result.output === 'string') {
+    return { ...result, output: result.output + '\n' + extra };
+  }
+  return result;
+}
+
+let toolHooksRegistered = false;
+
 export default {
   id: 'codebase-memory-augment',
-  // V2 config loader: requires id + setup|effect; no tool domain yet
-  // at this point, so there is nothing to register here.
-  setup() {},
-  // Server runtime: reads default.server and dispatches the hooks it returns.
+  // OpenCode 1.18.x server runtime: reads default.server and dispatches
+  // the hooks it returns.
   server: async (ctx) => {
     const dir = ctx?.directory;
     const seen = new Set();
@@ -45,6 +95,7 @@ export default {
       augment({ hook_event_name: 'SessionStart', cwd: dir });
     return {
       'tool.execute.after': async (input, output) => {
+        if (toolHooksRegistered) return;
         if (typeof output?.output !== 'string') return;
         const pieces = [];
         const sid = input?.sessionID;
@@ -88,80 +139,69 @@ export default {
       },
     };
   },
-};
-// codebase-memory-mcp:end
-// Owned wrapper (outside managed block): V2 API.
-// V1 `server()` kept for backwards compat; V2 reads `id` + `setup()`.
-async function setup(ctx) {
-  // Guard: V1 also invokes default.setup with a partial ctx lacking
-  // tool/session domains (observed pattern, see superpowers plugin).
-  if (!ctx || !ctx.tool || typeof ctx.tool.hook !== 'function') return;
-  const dir = ctx.location?.directory;
-  const seen = new Set();
-  try {
-    await ctx.tool.hook('execute.after', async (event) => {
+  // OpenCode 2 runtime: default.server is ignored and setup(ctx) registers
+  // the tool hook on the context's tool domain. The registration fails
+  // open, so a missing domain cannot break the host.
+  async setup(ctx) {
+    const seen = new Set();
+    const dirs = new Map();
+    const dirFor = async (sessionID) => {
+      if (typeof sessionID !== 'string' || sessionID === '') return undefined;
+      if (dirs.has(sessionID)) return dirs.get(sessionID);
       try {
-        const toolName = event?.tool ?? event?.toolID ?? event?.name;
-        const sessionID = event?.sessionID;
-        const pieces = [];
-        if (typeof sessionID === 'string' && !seen.has(sessionID)) {
-          seen.add(sessionID);
-          pieces.push(await augment({ hook_event_name: 'SessionStart', cwd: dir }));
+        const session = await ctx.session.get({ sessionID });
+        const dir = session?.location?.directory;
+        if (typeof dir === 'string' && dir !== '') {
+          dirs.set(sessionID, dir);
+          return dir;
         }
-        const norm = typeof toolName === 'string' ? toolName.toLowerCase() : '';
-        const input = event?.input ?? event?.args ?? {};
-        if (norm === 'grep' || norm === 'glob' || norm === 'list') {
-          pieces.push(await augment({
-            hook_event_name: 'PreToolUse',
-            tool_name: norm === 'grep' ? 'Grep' : 'Glob',
-            tool_input: input,
-            cwd: dir,
-          }));
-        } else if (norm === 'read') {
-          const filePath = input?.filePath ?? input?.file_path ?? input?.path ?? input?.file;
-          if (typeof filePath === 'string' && filePath) {
+      } catch {}
+      return undefined;
+    };
+    const lifecycle = (dir) =>
+      augment({ hook_event_name: 'SessionStart', cwd: dir });
+    if (ctx?.tool?.hook) {
+      try {
+        await ctx.tool.hook('execute.after', async (event) => {
+          if (event?.status !== 'completed') return;
+          const dir = await dirFor(event?.sessionID);
+          if (!dir) return;
+          const pieces = [];
+          if (typeof event?.sessionID === 'string' && !seen.has(event.sessionID)) {
+            seen.add(event.sessionID);
+            pieces.push(await lifecycle(dir));
+          }
+          const args = event?.input ?? {};
+          const search =
+            event?.tool === 'grep' ? 'Grep' : event?.tool === 'glob' ? 'Glob' : null;
+          if (search) {
             pieces.push(await augment({
-              hook_event_name: 'PostToolUse',
-              tool_name: 'Read',
-              tool_input: { file_path: filePath },
+              hook_event_name: 'PreToolUse',
+              tool_name: search,
+              tool_input: args,
               cwd: dir,
             }));
+          } else if (event?.tool === 'read') {
+            const filePath = args.filePath ?? args.file_path ?? args.path;
+            if (typeof filePath === 'string' && filePath) {
+              pieces.push(await augment({
+                hook_event_name: 'PostToolUse',
+                tool_name: 'Read',
+                tool_input: { file_path: filePath },
+                cwd: dir,
+              }));
+            }
           }
-        }
-        const extra = pieces.filter(Boolean).join('\n');
-        if (extra) {
-          const r = event?.result;
-          if (r && typeof r.output === 'string') r.output += '\n' + extra;
-          else if (typeof event?.output === 'string') event.output += '\n' + extra;
-          else if (r && typeof r.content === 'string') r.content += '\n' + extra;
-        }
-      } catch (err) {
-        console.error('[cbm-augment] execute.after hook failed:', err);
+          const extra = pieces.filter(Boolean).join('\n');
+          if (extra) {
+            event.result = appendResult(event.result, extra);
+          }
+        });
+        toolHooksRegistered = true;
+      } catch {
+        // Fail open: the server() tool hook stays active.
       }
-    });
-  } catch (err) {
-    console.error('[cbm-augment] tool hook registration failed:', err);
-  }
-  try {
-    if (ctx.session && typeof ctx.session.hook === 'function') {
-      await ctx.session.hook('compaction', async (event) => {
-        try {
-          const note = await augment({ hook_event_name: 'SessionStart', cwd: dir });
-          if (note && Array.isArray(event?.messages)) {
-            event.messages.push({ role: 'user', content: [{ type: 'text', text: note }] });
-          }
-        } catch (err) {
-          console.error('[cbm-augment] compaction hook failed:', err);
-        }
-      });
     }
-  } catch (err) {
-    console.error('[cbm-augment] compaction hook registration failed:', err);
-  }
-}
-
-export default {
-  id: 'cbm-augment',
-  setup,
-  server: CodebaseMemory,
+  },
 };
+// codebase-memory-mcp:end
