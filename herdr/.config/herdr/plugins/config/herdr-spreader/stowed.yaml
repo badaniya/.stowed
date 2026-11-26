@@ -1,0 +1,8 @@
+workspaces:
+  - name: STOWED
+    root: ~/.stowed
+    focus: true
+    tabs:
+      - label: 1 - Agent
+        panes:
+          - command: pi

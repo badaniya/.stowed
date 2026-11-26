@@ -1,0 +1,7 @@
+name = "Agent Sandbox: Control"
+type = "form"
+command = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name 'Agent Sandbox: Control' -- bash ~/.config/herdr-spreader/agent-sandbox-control.sh"
+
+[form]
+prompt = "Sandbox target (ticket, comma-separated tickets, or all; choose lifecycle, snapshot, or single-target deletion next)"
+placeholder = "ABC-123,ABC-124 or all"

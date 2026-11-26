@@ -1,0 +1,6 @@
+[
+  {
+    "key": "alt+c",
+    "command": "workbench.action.closeActiveEditor"
+  }
+]

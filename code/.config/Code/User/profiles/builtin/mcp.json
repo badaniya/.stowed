@@ -1,0 +1,8 @@
+{
+    "servers": {
+        "codebase-memory-mcp": {
+            "type": "stdio",
+            "command": "/home/badaniya/.local/bin/codebase-memory-mcp"
+        }
+    }
+}

@@ -1,0 +1,7 @@
+name = "Agent Sandbox: Attach"
+type = "form"
+command = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name 'Agent Sandbox: Attach' -- bash ~/.config/herdr-spreader/agent-sandbox-attach.sh '{{.Value}}'"
+
+[form]
+prompt = "Sandbox ticket to repair its Build panes; optional --workspace ID for duplicate workspaces (busy panes are not interrupted)"
+placeholder = "ABC-123 or ABC-123 --workspace w4N"

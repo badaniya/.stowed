@@ -1,0 +1,61 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": "allow",
+  "tools": {
+    "bash": true,
+    "edit": true,
+    "read": true,
+    "write": true,
+    "grep": false,
+    "glob": false,
+    "list": false,
+    "todoread": true,
+    "todowrite": true,
+    "webfetch": true
+  },
+  "agent": {
+    "build": {
+      "mode": "primary",
+      "model": "github-copilot/claude-sonnet-5.5",
+      "tools": {
+        "write": true,
+        "edit": true,
+        "bash": true
+      }
+    },
+    "plan": {
+      "mode": "primary",
+      "model": "github-copilot/claude-opus-5.5",
+      "tools": {
+        "write": false,
+        "edit": false,
+        "bash": true,
+        "mcphub*": false
+      }
+    },
+  },
+  "mcp": {
+    "servers": {
+      "codebase-memory-mcp": {
+        "type": "local",
+        "command": ["/home/badaniya/.local/bin/codebase-memory-mcp"],
+        "timeout": { "startup": 120000, "catalog": 120000 }
+      },
+      "chrome-devtools-brave": {
+        "type": "local",
+        "command": ["npx", "-y", "chrome-devtools-mcp@latest", "--executablePath", "/usr/bin/brave-browser", "--isolated"]
+      }
+    },
+    "codebase-memory-mcp": {"command":["/home/badaniya/.local/bin/codebase-memory-mcp"],"type":"local"},
+  },
+  "plugins": [
+    "superpowers@git+https://github.com/obra/superpowers.git",
+    "@langfuse/opencode-observability-plugin@latest"
+  ],
+  "experimental": {
+    "openTelemetry": true
+  },
+  "compaction": {
+    "auto": true
+  }
+}

@@ -1,0 +1,761 @@
+# .stowed
+
+This repository is used to store all dot-config files for various shells and editors.  This repository can be cloned to a new linux machine which can be setup quickly with GNU `stow`. This will bring back all custom shell and editor configurations or easily sync custom configuration between linux machines.
+
+[How Nested Git Repositories Are Configured - For Reference ONLY](nested_git_repos.md):  A reference on how this .stowed repository was created with the various nested git repositories for the shell and editor plugins.
+
+**Stowed Terminal Tools:**
+
+- ghostty
+- tmux
+- fzf
+- zoxide
+- bat
+- delta
+- starship
+
+**Stowed Shells:**
+
+- bash
+- zsh
+
+**Stowed Editors:**
+
+- nvim
+- vim
+- emacs
+
+**Stowed Optional Terminal Tools:**
+
+- tmuxinator
+- mise
+- gh-dash
+- gitui
+- lazygit
+- worktrunk
+- tuicr
+- hunk
+- imagemagick
+- mermaid-cli
+- kubecolor (kubectl)
+- tuxedo
+- incus (ticket sandbox control; see [the operator guide](incus/README.md))
+
+**Stowed Optional AI Terminal Tools:**
+
+- herdr
+- claude
+- copilot-cli
+- opencode
+- pi
+- agents (centralized skills for AI tools)
+
+## How To Use GNU Stow
+
+### 1) Install GNU Stow
+
+```bash
+# Install Stow
+sudo apt install -y stow
+```
+
+### 2) Clone This Repo on a New Linux Host
+
+```bash
+git clone https://github.com/badaniya/.stowed $HOME/.stowed
+```
+
+### 3) Run Stow Command to Establish Symlinks to the Repository
+
+```bash
+# Create Symlinks to Repo
+stow -d $HOME/.stowed stow ghostty tmux fzf bat delta starship bash zsh nvim vim emacs
+
+# To Force Symlink Creation (NOTE: May miss some hidden files or symlinks)
+stow -d $HOME/.stowed --adopt ghostty stow tmux fzf bat delta starship bash zsh nvim vim emacs
+cd $HOME/.stowed
+git reset --hard HEAD
+
+# Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
+rm -rf $HOME/.config/ghostty; rm -rf $HOME/.bash*; rm -rf $HOME/.zsh*; rm -rf $HOME/.oh-my-zsh; rm -rf $HOME/.tmux*; rm -rf $HOME/.config/nvim; rm -rf $HOME/.vim*; rm -rf $HOME/.emacs*; rm -rf $HOME/.config/github-copilot; rm -rf $HOME/.ai ; rm -rf $HOME/.config/Code/User; stow -d $HOME/.stowed stow ghostty tmux fzf bat delta starship bash zsh nvim vim emacs goland code
+```
+
+### 4) Run Stow Command to Establish Symlinks to the Repository for Optional Terminal Tools
+
+```bash
+# Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
+rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/mise; rm -rf $HOME/.config/worktrunk; rm -rf $HOME/.config/gh-dash; rm -rf $HOME/.config/gitui; rm -rf $HOME/.config/lazygit; rm -rf $HOME/.config/hunk; rm -rf $HOME/.config/tuicr; rm -rf $HOME/.config/tuxedo; stow -d $HOME/.stowed tmuxinator mise worktrunk gh-dash gitui lazygit hunk tuicr tuxedo
+```
+
+### 5) Run Stow Command to Establish Symlinks to the Repository for Optional AI Terminal Tools
+
+```bash
+# Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
+rm -rf $HOME/.npmrc; rm -rf $HOME/.config/herdr;  rm -rf $HOME/.config/herdr-app; rm -rf $HOME/.config/herdr-spreader; rm -rf $HOME/.config/rex; rm -rf $HOME/.claude.json; rm -rf $HOME/.claude; rm -rf $HOME/.copilot; rm -rf $HOME/.config/.copilot; rm -rf $HOME/.config/opencode; rm -rf $HOME/.pi; rm -rf $HOME/.agents; stow -d $HOME/.stowed npm herdr herdr-app herdr-spreader rex claude copilot opencode pi agents
+```
+
+Stowing `pi` only restores its configuration. Its managed runtime is installed
+per machine ([step 7](#7-pi---a-fully-customizable-ai-coding-agent-for-the-terminal)).
+
+### 6) Rebuild Per-Machine AI Tool State
+
+The repo tracks declared intent only. Plugin marketplaces, plugin caches, model
+catalogs and version stamps are gitignored and rebuilt here:
+
+```bash
+$HOME/.stowed/scripts/bootstrap.sh           # set up or repair (safe to rerun)
+$HOME/.stowed/scripts/bootstrap.sh --check   # report what is missing
+```
+
+It configures the git filter that hides Pi's version stamps, writes Claude's
+`settings.json` from the tracked `settings.base.json`, installs the declared
+Claude marketplaces and plugins, installs the Pi runtime and packages, and
+installs the Herdr plugins listed in `herdr/.config/herdr/plugins.txt` (add a
+line there when you install a new one).
+Secrets (Langfuse keys) go in `~/.private_bash_profile`, never in tracked files.
+Internal MCP servers (private hosts or IPs) go in the untracked
+`~/.config/mcp/mcp.json` (`{"mcpServers": {...}}`). pi-mcp-adapter merges it with
+the tracked `~/.pi/agent/mcp.json` and `mcp-adapter.json`, and the tracked files
+win for any server defined in both.
+Other files that name internal hosts, IPs or credentials live in `~/.private_*`
+directories, and bootstrap (via `scripts/private-links.sh`) symlinks them into
+the stowed config dirs, listing each link in `.git/info/exclude` so it is never
+committed: lab launchers and their Herdr quick actions
+(`~/.private_herdr_spreader/`, `~/.private_herdr_quick_actions/`), the reviewr
+plugin config (`~/.private_herdr_reviewr/`), labctl's `config.env`
+(`~/.private_labctl/`; start from `config.example.env`) and Copilot's
+`mcp-config.json` (`~/.private_copilot_config/`). The monorepo/multirepo
+worktree scripts read repository names, the extra repo clone URL and other
+work-specific values from `~/.private_work.env`.
+
+Claude's `settings.json` is untracked because Claude writes machine-specific and
+internal data into it. After changing plugins, hooks or permissions, publish the
+change with:
+
+```bash
+$HOME/.stowed/scripts/claude-settings.sh check    # what differs from the base
+$HOME/.stowed/scripts/claude-settings.sh export   # copy shared keys to settings.base.json
+```
+
+## Installing Stowed Terminal Tools
+
+### 0) Ghostty - A fast efficient terminal with GPU acceleration and Kitty image support
+
+```bash
+# ghostty: Ubuntu debian version - official w/systemd support
+sudo snap install ghostty --classic
+
+# ghostty: Ubuntu debian version - unofficial
+sudo /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/mkasberg/ghostty-ubuntu/HEAD/install.sh)"
+
+# NOTE: For WSL2 environment, stick with ghostty 1.1.3 because of CPU utilization for ghostty 1.2+ is high (in WSL2 only)
+wget https://github.com/mkasberg/ghostty-ubuntu/releases/download/1.1.3-0-ppa2/ghostty_1.1.3-0.ppa2_amd64_24.04.deb
+sudo dpkg -i ghostty_1.1.3-0.ppa2_amd64_24.04.deb
+
+# NOTE: Copy Ghostty's terminfo to a remote machine if tmux fails with: `missing or unsuitable terminal: xterm-ghostty`
+# The following one-liner will export the terminfo entry from your host and import it on the remote machine:
+# Reference: https://ghostty.org/docs/help/terminfo#copy-ghostty's-terminfo-to-a-remote-machine 
+infocmp -x xterm-ghostty | ssh <YOUR-REMOTE-SERVER-IP> -- tic -x -
+```
+
+### 1) Tmux - A terminal multiplexer to maintain terminal sessions and split-pane layouts
+
+```bash
+# tmux: Ubuntu package version
+sudo apt install -y tmux
+```
+
+### 2) Zsh - A powerful bash-like shell with command completion and syntax highlighting
+
+```bash
+# zsh: Ubuntu package version
+sudo apt install -y zsh
+```
+
+### 3) Fzf - A fuzzy finder that integrates with various shells and editors
+
+```bash
+# fzf: Shell script installer (NOTE: Ensure GNU Stow fzf is done before running the installation script)
+~/.fzf/install
+```
+
+### 4) Zoxide - A quick way to change directories to your most frequently used paths
+
+```bash
+# zoxide: Shell script installer
+curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh
+```
+
+### 5) Bat - A visually pleasing and themed `cat`
+
+```bash
+# bat: Ubuntu package version
+sudo apt install bat
+mkdir -p ~/.local/bin
+ln -s /usr/bin/batcat ~/.local/bin/bat
+bat cache --build
+```
+
+### 6) Delta - A visually pleasing and themed diff tool (using `bat`)
+
+```bash
+# delta: git diff colorized
+wget https://github.com/dandavison/delta/releases/download/0.18.2/git-delta_0.18.2_amd64.deb
+sudo dpkg -i git-delta_0.18.2_amd64.deb
+git config --global include.path '~/.config/delta/delta.gitconfig'
+```
+
+### 7) Starship - A tool to help customize your shell prompt
+
+```bash
+# starship: Shell script installer
+curl -sS https://starship.rs/install.sh | sh
+```
+
+### 8) Neovim - A `vim` editor with outstanding plug-in support to make a fully customizable programming IDE 
+
+```bash
+# neovim: Latest version
+curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
+sudo rm -rf /opt/nvim
+sudo tar -C /opt -xzf nvim-linux-x86_64.tar.gz
+
+# ripgrep: For NeoVIM search
+sudo apt install -y ripgrep
+
+# nerdfont: Terminal fonts for nvim theme
+wget https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/JetBrainsMono.zip
+unzip -od ~/.local/share/fonts/ JetBrainsMono.zip
+fc-cache -fv
+```
+
+### 8.1) Neovim Plugin Dependencies
+
+#### Database UI Plugin
+
+```bash
+# DB UI - postgres/mysql (vim-dadbod and vim-dadbod-ui)
+sudo apt install -y postgresql-client
+sudo apt install -y mariadb-client 
+```
+
+#### CopilotChat Plugin - AI chat for github copilot and others which uses nodejs
+
+```bash
+# Node.js dependency - mise-managed, see "Mise" under optional terminal tools
+mise use -g node@24
+
+# Global install of copilot-cli
+npm install -g @github/copilot
+```
+
+### 9) Vim - A ubiquitous editor
+
+```bash
+sudo apt install -y vim
+```
+
+### 10) Emacs - GNU editor
+
+```bash
+sudo apt-add-repository -y ppa:kelleyk/emacs
+sudo apt update -y
+sudo apt install -y emacs28
+```
+
+## Installing Optional Stowed Terminal Tools
+
+### 1) Mise - A development environment manager
+
+```bash
+# Install Mise-En-Place
+curl https://mise.run | sh
+
+# Node.js is managed exclusively by mise (see below)
+mise use -g node@24
+```
+
+`mise activate zsh` is already wired up in the stowed `.zshrc` — do **not** append
+a second `eval` line to it.
+
+#### Node.js - mise is the only owner
+
+Mise owns every Node.js install on the host. It reads the repo's `.nvmrc` and the
+global default in `~/.config/mise/config.toml`, and its `chpwd` hook re-resolves
+the active version per directory.
+
+```bash
+mise use -g node@24      # set global default (writes ~/.config/mise/config.toml)
+mise install             # download it
+node -v                  # confirm the mise copy wins
+```
+
+Do **not** install Node.js via `nix-env -iA nixpkgs.nodejs_*` or `apt install nodejs`.
+Each extra copy fights the mise shim for `PATH`, breaks `npm i -g` (the Nix store is
+read-only), and leaves `node` 18.x/22.x resolvable by anything launched outside the
+shell. If one already exists, remove it:
+
+```bash
+nix-env -e nodejs                  # drop the nix copy
+sudo apt purge -y nodejs npm       # drop the Ubuntu copy (18.19.1 on 24.04)
+sudo apt autoremove --purge        # clean the Debian node-* library deps
+```
+
+### 2) Nix Package Manager - A package manager with a massive amount of open-source installation images
+
+```bash
+# Multi-User Nix Package Manager Installer
+sh <(curl -L https://nixos.org/nix/install) --daemon
+```
+
+Nix is installed on this machine but deliberately no longer owns any package:
+every tool below moved to mise, and the nix profile is empty (`nix-env -q` returns
+nothing). Keep it installed for ad-hoc `nix-shell` experiments if useful, but do not
+add tools to the nix profile - two owners for one binary is what made Node.js
+ambiguous in the first place.
+
+### 3) Tmuxinator - A tmux session layout creator
+
+```bash
+# mise dependency (Ruby gem)
+mise use -g gem:tmuxinator
+```
+
+### 4) Worktrunk - A Git worktree utility
+
+```bash
+# Rust via mise
+mise use -g rust
+
+# Worktrunk installation
+cargo install worktrunk && wt config shell install
+```
+
+### 5) Gitui - Terminal Git TUI (Rust based)
+
+```bash
+# mise dependency
+mise use -g gitui
+```
+
+### 6) Lazygit - Another Terminal Git TUI
+
+```bash
+# mise dependency (aqua backend)
+mise use -g aqua:jesseduffield/lazygit
+```
+
+### 7) Hunk - Terminal TUI Git Diff
+
+```bash
+# Npm (node) install - comes from mise-managed Node
+npm i -g hunkdiff
+
+# Add git hdiff/hshow aliases
+git config --global alias.hdiff "-c core.pager=\"hunk pager\" diff"
+git config --global alias.hshow "-c core.pager=\"hunk pager\" show"
+```
+
+### 8) Tuicr - Terminal TUI Git Review
+
+```bash
+curl -fsSL tuicr.dev/install.sh | sh
+```
+
+### 9) GH Dash - Terminal TUI for Git Hub PRs
+
+```bash
+# gh CLI dependency
+
+# Install
+gh extension install dlvhdr/gh-dash
+
+# Upgrade
+gh extension upgrade dlvhdr/gh-dash
+```
+
+### 10) Image and Diagram Markdown Support in Neovim
+
+`snacks.image` renders images, mermaid blocks, PDFs and LaTeX math in markdown. It
+shells out to `magick` and `mmdc`, so both must be on `PATH`. Both come from mise:
+
+```bash
+mise use -g npm:@mermaid-js/mermaid-cli   # mmdc - mermaid diagrams
+mise use -g conda:imagemagick             # magick - every other conversion
+```
+
+`mermaid-cli` runs on the mise-managed Node, and puppeteer reuses
+`/usr/bin/google-chrome` (`PUPPETEER_EXECUTABLE_PATH` in
+`mise/.config/mise/config.toml`) instead of downloading its own ~180 MB browser.
+
+```bash
+# Install without pulling a bundled browser
+PUPPETEER_SKIP_DOWNLOAD=1 mise install
+
+# Verify
+mmdc --version && magick -version && nvim "+checkhealth snacks"   # Snacks.image section
+```
+
+ImageMagick **must** come from the conda backend. The `aqua` entry doesn't resolve
+against ImageMagick's GitHub tags, and the upstream AppImage — downloadable via
+`ubi`/`http` — ships without librsvg, so `magick diagram.svg out.png` fails on
+mermaid's `stroke-dasharray` (snacks renders vector diagrams, so this is not
+optional). conda's build keeps the delegates: `RSVG`, ghostscript (`PDF`),
+libheif (`HEIC`/`AVIF`) and `WEBP`. It is ~578 MB unpacked vs ~261 MB for the nix
+closure — the price of keeping everything in mise.
+
+Two other pins in `mise/.config/mise/config.toml` matter here:
+
+- `PUPPETEER_EXECUTABLE_PATH` under `[env]` points puppeteer at the host Chrome.
+- `trust_policy_excludes = ["chromium-bidi@157.0.8090-0"]` — Google publishes
+  `chromium-bidi` versioned by Chrome build, and that release ships without
+  provenance attestation, which mise's npm backend reports as a trust downgrade.
+
+### 11) Kulala format conversion - Openapi to http
+
+```bash
+npm install -g @mistweaverco/kulala-fmt
+```
+
+### 12) Tuxedo - TUI Todo List
+
+```bash
+# Rust cargo dependency
+cargo install --git https://github.com/webstonehq/tuxedo
+```
+
+### 13) pls - A prettier and powerful ls(1) for the pros
+
+```bash
+# mise (github backend) - pinned to the current prerelease
+mise use -g "github:pls-rs/pls@7.0.0-beta.1"
+```
+
+`pls` publishes only prereleases, so `mise ls-remote` and GitHub's "latest release"
+API both come up empty — the version has to be pinned explicitly (as it is in
+`mise/.config/mise/config.toml`). The bare `cargo install pls` does not work: the
+crates.io package of that name is a library, not this binary.
+
+## Installing Optional Stowed AI Terminal Tools
+
+### 1) NPM - Node package manager for AI tools
+
+```bash
+# Node.js and npm both come from mise - see "Mise" under optional terminal tools
+# (never nix-env nixpkgs.nodejs_* or apt install nodejs)
+mise use -g node@24
+mise install
+```
+
+Global npm packages live under the mise-managed Node, so they survive `nix-env`
+profile changes and `apt` upgrades.
+
+### 2) Herdr - An AI based terminal multiplexer - Multi agent harness observability
+
+```bash
+curl -fsSL https://herdr.dev/install.sh | sh                                  # Herdr installation
+# or
+# Mise dependency
+mise use -g herdr
+
+# 2) Install herdr plugins - from GitHub / the herdr plugin marketplace:
+herdr plugin install ntindle/herdr-resurrect --yes                            # Save and restore workspace sessions on restart
+herdr plugin install paulbkim-dev/vim-herdr-navigation --yes                  # Vim keyboard navigation on herdr workspace panes
+herdr plugin install cloudmanic/herdr-plus --yes                              # Herdr launcher to create customized actions
+herdr plugin install yuk1ty/herdr-spreader --yes                              # Custom herdr workspace layout creator (tmuxinator-like)
+herdr plugin install hotchpotch/herdr-tiny-fingers --yes                      # Fingers to quickly copy regex pattern text (tmux-fingers-like)
+herdr plugin install ChmaraX/herdr-nvim --yes                                 # Nvim sidepane launcher for any AI coding agent with nvim comment/copy integration
+herdr plugin install smarzban/herdr-file-viewer --yes                         # File viewer sidepane for any AI coding agent
+herdr plugin install persiyanov/herdr-reviewr --yes                           # File reviewer sidepane for any AI coding agent
+herdr plugin install furuhashin/herdr-synchronize-panes --yes                 # Broadcast a single command to all panes in a herdr workspace
+herdr plugin install senna-lang/herdr-agent-usage --yes                       # AI token usage for any AI coding agent
+herdr plugin install Davidcreador/herdr-token-dashboard --yes                 # AI dashboard for token usage for any AI coding agent
+herdr plugin install ezcorp-org/herdr-pc-ram-and-cpu-usage-overlay --yes      # CPU and memory stats for a herdr workspace
+```
+
+### 3) Rex - Terminal Multiplexer for AI Agents (Superlogical)
+
+```bash
+curl -fsSL https://pkgs.superlogical.com/rex/install.sh | sh
+```
+
+### 4) Claude Code - Anthropic's AI coding agent for the terminal
+
+```bash
+curl -fsSL https://claude.ai/install.sh | bash
+```
+
+### 5) Copilot-cli - GitHub Copilot for the terminal
+
+```bash
+# Node.js dependency - mise-managed, see "Mise" under optional terminal tools
+mise use -g node@24
+
+npm install -g @github/copilot
+```
+
+### 6) Opencode - An open source AI coding agent for the terminal
+
+```bash
+curl -fsSL https://opencode.ai/install | bash
+```
+
+### 7) Pi - A fully customizable AI coding agent for the terminal
+
+```bash
+curl -fsSL https://pi.dev/install.sh | sh           # Pi installation
+
+# Pi's runtime (~/.pi/agent/install) is generated per machine and is not tracked,
+# while the rest of ~/.pi is stowed config. After stowing this repo on a new host,
+# or after a pull that bumps the Pi version, use the repo's bootstrap instead of
+# the raw installer: it removes a config-only release directory that the installer
+# would otherwise trust and skip, then verifies the launcher actually runs.
+$HOME/.stowed/scripts/pi-bootstrap.sh               # install or repair
+$HOME/.stowed/scripts/pi-bootstrap.sh --check       # verify only (CI friendly)
+
+pi install npm:@quintinshaw/pi-dynamic-workflows    # Claude code-like dynamic workflows and subagents
+pi install npm:pi-mcp-adapter                       # MCP server support (lazyloading vs. native pi mcp support)
+pi install npm:@aliou/pi-guardrails                 # Prompt user for dangerous shell commands
+pi install npm:@eiei114/pi-sub-bar                  # Pi customized statusline with provider LLM usage stats
+pi install npm:@narumitw/pi-btw                     # Claude code-like by-the-way support
+pi install npm:@narumitw/pi-goal                    # Codex-like/Claude code-like goal support (background monitoring)
+pi install npm:pi-lens                              # LSP linting tracking and agent feedback
+pi install npm:@langfuse/pi-observability-plugin    # Langfuse agent turn observabilty
+# pi install npm:billion-context                      # Proxy for compression and token optimization - (Still a bit rough around the edges).
+pi install npm:pi-markdown-preview                  # Markdown rendering support
+pi install npm:pi-claude-auth                       # Claude code LLM access
+pi install npm:pi-free                              # Free LLM access
+```
+
+### 8) Agents - A centralized skills area for all AI tools
+
+```bash
+# Sure-fire way to ensure stow symlink creation
+rm -rf $HOME/.agents; stow -d $HOME/.stowed agents
+```
+
+## Installing Optional AI Skills
+
+### 1) SuperPowers - Spec Driven Development
+
+```bash
+# Skill.sh Install and Upgrade
+npx skills add obra/superpowers -g
+```
+
+### 2) Graphify - Knowledge Graph
+
+```bash
+# Install
+uv tool install graphifyy
+
+# Upgrade
+uv tool upgrade graphifyy
+graphify install --platform agents
+```
+
+### 3) Codebase-memory-mcp - Knowledge Graph
+
+```bash
+# Install and Upgrade
+curl -fsSL https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/install.sh | bash
+```
+
+### 4) Herdr - Terminal Multiplexer for AI Agents
+
+```bash
+# Install and Upgrade
+npx skills add herdrdev/herdr --skill herdr -g
+```
+
+### 5) OKF (Open Knowledge Format) - LLM Wiki Based Knowledge Graph
+
+```bash
+# Install and Upgrade
+npx skills add scaccogatto/okf-skills -g
+```
+
+### 6) Archify - Architecture Diagram Generator
+
+```bash
+# Install and Upgrade
+npx skills add tt-a1i/archify -g
+```
+
+### 7) Diagram-Design - All-Around Diagram Generator (Architecture, Sequence, ERD ...)
+
+```bash
+npx skills add cathrynlavery/diagram-design -g
+```
+
+### 8) Langfuse - Agent Observabilty
+
+```bash
+npx skills add langfuse/skills --skill "langfuse" -g
+```
+
+## Linux Development Environment Setup
+
+### 1) Golang
+
+```bash
+# golang:
+golang_version="1.26.10"
+wget https://go.dev/dl/go"$golang_version".linux-amd64.tar.gz
+sudo tar -xvf go"$golang_version".linux-amd64.tar.gz
+sudo rm -rf /usr/local/go && sudo mv go /usr/local
+
+# gopls:
+go install golang.org/x/tools/gopls@latest
+
+# dlv:
+go install github.com/go-delve/delve/cmd/dlv@latest
+
+# golangci-lint:
+curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sudo sh -s -- -b /usr/bin v1.55.2
+
+# gosec:
+cd ~/.go
+curl -sSfL https://raw.githubusercontent.com/securego/gosec/master/install.sh | sh -s v2.18.1
+
+# gotestsum:
+go install gotest.tools/gotestsum@latest
+```
+
+## How to Use These Stowed Shell/Editor Tools
+
+```bash
+# 1) Start a new tmux session
+tmux [new -s <session-name> [-c <start-directory>]]
+
+# 2) Start nvim from within tmux to maintain session persistence across remote shell logins
+nvim
+```
+
+## General Tmux Session Commands
+
+```bash
+# 1) List existing tmux sessions
+tmux ls
+
+# 2) Detach from a tmux session
+tmux detach
+
+# 3) Attach to a tmux session
+tmux attach -t <# | session-name>
+
+# 4) Delete a tmux session
+tmux kill-session -t <# | session-name>
+
+# 5) Delete all tmux sessions
+tmux kill-server
+```
+
+## Tmux Key Bindings
+
+```text
+# General Tmux Bindings (<C> is the Ctrl key)
+<C-b> $ : Rename the tmux session name
+<C-b> c : Creates a new tmux window
+<C-b> " : Creates a new tmux pane horizontally split below
+<C-b> % : Creates a new tmux pane vertically split on the right
+<C-b> x : Exits current tmux pane or window (user prompted)
+<C-b> q : Displays tmux pane numbers
+<C-b> # : Switch to the tmux window number
+
+# Tmux Sessions Switching
+<C-b> s : Displays a tmux sessions menu to switch between tmux sessions
+
+# Tmux Pane Switching
+<C-h> : Move to the pane on the left
+<C-j> : Move to the pane below
+<C-k> : Move to the pane above
+<C-l> : Move to the pane on the right
+<C-b> q # : Selects the pane number to switch to
+<C-b> p : Toggles a floating pane
+
+# Tmux Pane Zoom-in/Zoom-out
+<C-b> z : Toggles the current pane to zoom-in or zoom-out
+
+# Tmux Pan Resizing (keyboard)
+<C-b> <C-arrow-keys> : Fine grained resizing
+<C-b> <M-arrow-keys> : Coarse grained resizing
+
+# Newer Tmux 3.2 Copy/Paste (mouse)
+<left-mouse-click> : copy
+<middle-mouse-click> : paste
+
+# Older Tmux 3.0a Copy/Paste (mouse)
+<C-S-left-mouse-click> : copy
+<C-S-middle-mouse-click> : paste 
+
+# Tmux Copy/Paste vi-copy-mode (keyboard)
+<C-b> [ : Enters copy-mode
+<space> : Starts the selection (use vi motions to expand the selection)
+<enter> : Stores the selection
+<C-y>   : In copy-mode, pastes the selection into a tmux `search up/down` command line
+<C-b> ] : Pastes the selection outside of copy-mode
+```
+
+## Tmux Plugin Key Bindings
+
+```text
+# tmux-fzf-url - Fzf URL Links Launcher
+<C-b> u : Use the fuzzy finder to select from a list of URL links to launch 
+
+# tmux-thumbs - Activate a quick copy mode to make selections of text from the tmux pane
+<C-b> space : Quick copy mode to capture file paths, UUIDs, IP addresses...
+```
+
+## Nvim Key Bindings
+
+```text
+# General Nvim Bindings
+<space> : Main leader key for all menus
+<\> : Toggle NeoTree - Directory Browser
+<#> : Upwards search for the highlighted text object
+<*> : Downwards search for the highlighted text object
+<q-/> : Bring up search history
+<q-:> : Bring up command history
+<C-v> : Block-Visual editing mode (<C-q> for WSL2)
+
+# Nvim Search Bindings
+<C-r-w> : Paste highlighted text object in search mode
+
+# Nvim Window Switching (<C> is the Ctrl key)
+<C-h> : Move to the window on the left
+<C-j> : Move to the window below
+<C-k> : Move to the window above
+<C-l> : Move to the window on the right
+
+# Nvim Tab Switching (<M> is the Alt key)
+<M-#> : Switch to the file tab #
+<M-,> : Switch to the file tab on the left
+<M-.> : Switch to the file tab on the right
+<M-<> : Move the current file tab position to the left
+<M->> : Move the current file tab position to the right 
+<M-c> : Close out the current file tab
+<M-p> : Toggle pinning the current file tab
+
+# Nvim Code Navigation
+<C-]> | <C-left-mouse-click>: Go to Definition
+<C-t> | <C-right-mouse-click> : Pop back up the stack
+<leader> ld : LSP Definitions
+<leader> lr : LSP References
+<leader> li : LSP Implementations
+
+# Nvim Telescope
+<leader> sg : ripgrep search in project workspace
+<C-q> : Add telescope search results to the quickfix list
+
+# Nvim Debug
+<F2> : Step Into
+<F3> : Step Over
+<F4> : Step Out
+<F5> : Start/Continue
+<F6> : Debug Nearest Test
+<F7> : Restart Last Debug Session
+<F8> : Toggle Breakpoint
+<F9> : Toggle Conditional Breakpoint
+<F12> : Stop Debugger
+```

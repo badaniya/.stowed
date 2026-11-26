@@ -1,0 +1,17 @@
+*.sock
+*.log
+session.json
+session-history.json
+session-snapshots/
+plugins/config/cloudmanic.herdr-plus/projects
+plugins/config/usagebar/update-check-state.json
+
+# Plugin install state: herdr writes absolute per-run checkout paths into its
+# registry and clones each plugin from GitHub. plugins.txt declares the set and
+# scripts/bootstrap.sh reinstalls it; plugins/config/ stays tracked.
+plugins.json
+plugins/github/
+.plugins.lock
+*.bak
+# Cached upstream release notes
+release-notes.json

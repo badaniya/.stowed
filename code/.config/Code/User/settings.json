@@ -1,0 +1,31 @@
+{
+  "terminal.integrated.enableImages": true,
+  "vim.normalModeKeyBindingsNonRecursive": [
+    {
+      "before": ["g", "r"],
+      "commands": ["editor.action.goToReferences"]
+    },
+    {
+      "before": ["g", "d"],
+      "commands": ["editor.action.revealDefinition"]
+    },
+    {
+      "before": ["g", "I"],
+      "commands": ["editor.action.goToImplementation"]
+    },
+],
+"chat.permissions.default": "autoApprove",
+"editor.lineNumbers": "relative",
+"github.copilot.chat.agentDebugLog.fileLogging.enabled": true,
+"go.toolsManagement.autoUpdate": true,
+"workbench.startupEditor": "none",
+"workbench.editor.empty.hint": "hidden",
+"workbench.statusBar.visible": false,
+"pi-vscode.path": "/home/badaniya/.nvm/versions/node/v22.22.2/bin/pi",
+"claudeCode.preferredLocation": "panel",
+"agentTracing.langfuse.autoStart": false,
+"agentTracing.additionalExporters": [],
+"chat.useClaudeHooks": true,
+"claudeCode.hideOnboarding": true,
+"chat.viewSessions.orientation": "stacked"
+}

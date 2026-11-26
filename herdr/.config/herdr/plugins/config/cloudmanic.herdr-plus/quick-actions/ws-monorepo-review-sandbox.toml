@@ -1,0 +1,7 @@
+name = "Agent Sandbox Workspace: Create MONOREPO-REVIEW"
+type = "form"
+command = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name 'Agent Sandbox Workspace: Create MONOREPO-REVIEW' -- bash ~/.config/herdr-spreader/monorepo-review-sandbox-notify.sh '{{.Value}}'"
+
+[form]
+prompt = "PR branch of a monorepo review (Jira optional)"
+placeholder = "branch"

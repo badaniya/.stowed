@@ -1,0 +1,18 @@
+cache
+sessions
+auth.json
+trust.json
+.extmgr-cache
+.update-check
+mcp-cache.json
+
+# Caches and first-run state Pi and pi-mcp-adapter rewrite on their own.
+models-store.json
+mcp-npx-cache.json
+mcp-last-seen-version.json
+mcp-onboarding.json
+
+# Backups left by settings edits.
+*.bak
+*.backup
+*.bili-*

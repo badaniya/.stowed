@@ -1,0 +1,44 @@
+#cloud-config
+package_update: true
+packages:
+  - build-essential
+  - ca-certificates
+  - curl
+  - docker.io
+  - docker-compose-v2
+  - file
+  - git
+  - gzip
+  - jq
+  - make
+  - net-tools
+  - ripgrep
+  - screen
+  - tar
+  - wget
+users:
+  - name: __LABCTL_INSTANCE_USER__
+    groups: [docker]
+    shell: /bin/bash
+runcmd:
+  - install -d -o __LABCTL_INSTANCE_USER__ -g __LABCTL_INSTANCE_USER__ /home/__LABCTL_INSTANCE_USER__
+  - rm -rf /usr/local/go
+  - curl -fsSL https://go.dev/dl/go__LABCTL_GO_VERSION__.linux-amd64.tar.gz -o /tmp/labctl-go.tar.gz
+  - tar -C /usr/local -xzf /tmp/labctl-go.tar.gz
+  - rm -f /tmp/labctl-go.tar.gz
+  - ln -sf /usr/local/go/bin/go /usr/local/bin/go
+  - HOME=/root GOPATH=/root/go GOCACHE=/root/.cache/go-build GOBIN=/usr/local/bin /usr/local/go/bin/go install github.com/badaniya/loggo@6dba9bab7c9491890349935da50c14f2f346912d
+  - HOME=/root GOPATH=/root/go GOCACHE=/root/.cache/go-build GOBIN=/usr/local/bin /usr/local/go/bin/go install github.com/jesseduffield/lazydocker@v0.25.2
+  - printf '%s\n' 'export PATH="/usr/local/go/bin:$PATH"' > /etc/profile.d/labctl-go.sh
+  - |
+      if [ -e /root/go/bin ] && [ ! -d /root/go/bin ]; then
+        rm -f /root/go/bin
+      fi
+      install -d -m 0755 /root/go/bin
+  - |
+      cat > /etc/docker/daemon.json <<'EOF_DOCKER'
+      __LABCTL_DOCKER_DAEMON_JSON__
+      EOF_DOCKER
+  - systemctl restart docker
+  - systemctl is-active --quiet docker
+  - systemctl enable --now docker

@@ -1,0 +1,43 @@
+copy_toast = true
+
+enabled_builtin_patterns = [
+	"ip",
+	"uuid",
+	"sha",
+	"digit",
+	"url",
+	"path",
+	"hex",
+	"kubernetes",
+	"kubernetes-pod",
+	"git-status",
+	"git-status-branch",
+	"diff",
+]
+
+[style]
+hint_fg = "dark-gray"
+hint_bg = "yellow"
+match_fg = "yellow"
+selected_hint_fg = "dark-gray"
+selected_hint_bg = "light-magenta"
+selected_match_fg = "dark-gray"
+selected_match_bg = "magenta"
+status_fg = "black"
+status_bg = "gray"
+
+[[patterns]]
+name = "kubernetes-pod"
+regex = "[A-Za-z0-9-]+[a-z0-9]+"
+
+[[patterns]]
+name = "ticket"
+regex = "[A-Z][A-Z0-9]+-[0-9]+"
+
+[[patterns]]
+name = "env"
+regex = "env=(?P<match>[a-z0-9_-]+)"
+
+[[patterns]]
+name = "datetime"
+regex = "[0-9]{4}-[0-9]{2}-[0-9]{2}[ T][0-9]{2}:[0-9]{2}:[0-9]{2}"

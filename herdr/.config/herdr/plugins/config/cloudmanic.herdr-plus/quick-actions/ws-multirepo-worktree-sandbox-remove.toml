@@ -1,0 +1,7 @@
+name = "Agent Sandbox Workspace: Delete MULTI-REPO-WORKTREE"
+type = "form"
+command = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name 'Agent Sandbox Workspace: Delete MULTI-REPO-WORKTREE' -- bash ~/.config/herdr-spreader/multirepo-worktree-sandbox-remove-notify.sh '{{.Value}}'"
+
+[form]
+prompt = "DESTRUCTIVE: destroys the multirepo sandbox and force-removes the monorepo and extra repo worktrees and ticket branches; add --keep-worktrees to retain them"
+placeholder = "MULTI-10 [--keep-worktrees]"

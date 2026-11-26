@@ -1,0 +1,11 @@
+tasks/
+teams/
+cache/
+workflows/
+acp.log
+free-telemetry.json
+free.json
+free.log
+
+# Model catalog Pi refetches; rewritten on every refresh.
+opencode-catalog-cache.json

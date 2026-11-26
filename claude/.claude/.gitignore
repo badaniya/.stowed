@@ -1,0 +1,48 @@
+backups/
+cache/
+downloads/
+feedback/
+file-history/
+hooks/.langfuse_config.json
+image-cache/
+jobs/
+paste-cache/
+plugins/synced/
+plugins/.trash/
+projects/
+session-env/
+sessions/
+shell-snapshots/
+state/
+tasks/
+telemetry/
+transcripts/
+.credentials.json
+.last*
+daemon*
+gh-pr-status-cache.json
+history.jsonl
+plugin-catalog-cache.json
+policy-limits.json.stamp.json
+mcp-needs-auth-cache.json
+remote-settings.json
+settings.json*
+settings.local.json
+stats-cache.json
+herdr-usagebar/opencode-go-web.json
+
+# Plugin state that Claude regenerates from settings.json (enabledPlugins and
+# extraKnownMarketplaces, tracked via settings.base.json). Every marketplace
+# update rewrites hundreds of files here; scripts/bootstrap.sh reinstalls them.
+plugins/marketplaces/
+plugins/data/
+plugins/store/
+plugins/*.json
+
+# Org policy the server pushes and signs per account, not part of this config.
+policy-limits.json*
+remote-settings*
+
+# Usage bar runtime state.
+herdr-usagebar/usage-history.json
+herdr-usagebar/*.lock

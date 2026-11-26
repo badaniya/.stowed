@@ -1,0 +1,182 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Dotfiles Workspace Configuration",
+  "name": "dotfiles-workspace",
+  "version": "1.0.0",
+  "description": "Comprehensive dotfiles repository for shell environments, Neovim configuration, and development tools",
+  "system_prompt": "You are an expert system administrator and developer assistant helping with dotfiles configuration, shell environment setup, Neovim customization, and development tool management. Focus on GNU Stow usage, shell scripting, Lua configuration, and development workflow optimization.",
+  "vars": {
+    "nvim_config_path": "nvim/.config/nvim",
+    "shell_config_path": "zsh",
+    "tmux_config_path": "tmux",
+    "docs_path": "."
+  },
+  "groups": [
+    {
+      "name": "shell-environment",
+      "description": "Shell environment setup including zsh, tmux, and terminal tools configuration. Focus on shell customization, terminal multiplexing, and command-line productivity tools.",
+      "system_prompt": "You are a shell environment expert specializing in zsh configuration, tmux session management, Oh My Zsh customizations, and terminal productivity tools. Help with shell scripting, dotfiles management with GNU Stow, and terminal workflow optimization.",
+      "data": [
+        "main_readme",
+        "nested_repos_guide",
+        "stow_config"
+      ]
+    },
+    {
+      "name": "nvim-core-config",
+      "description": "Core Neovim configuration including init.lua, plugin management, and fundamental editor setup. Focus on the main configuration structure and essential plugins.",
+      "system_prompt": "You are a Neovim configuration expert specializing in Lua-based configurations, plugin management with lazy.nvim, and editor customization. Help with Neovim setup, plugin configuration, and workflow optimization.",
+      "data": [
+        "nvim_init",
+        "codecompanion_config",
+        "snacks_config",
+        "blink_cmp_config",
+        "barbar_config"
+      ]
+    },
+    {
+      "name": "nvim-navigation-ui",
+      "description": "Neovim navigation and UI enhancements including flash navigation, trouble diagnostics, and user interface improvements.",
+      "system_prompt": "You are a Neovim UI/UX expert focusing on navigation enhancements, diagnostics management, and user interface optimization. Help with motion plugins, diagnostic tools, and editor usability.",
+      "data": [
+        "nvim_init",
+        "flash_config",
+        "trouble_config",
+        "snacks_config"
+      ]
+    },
+    {
+      "name": "ai-development-tools",
+      "description": "AI-powered development assistance including GitHub Copilot, CodeCompanion, and intelligent code completion setup.",
+      "system_prompt": "You are an AI development tools specialist focusing on GitHub Copilot integration, AI-powered code completion, and intelligent development assistance. Help with AI tool configuration and development workflow enhancement.",
+      "data": [
+        "codecompanion_config",
+        "copilot_config",
+        "blink_cmp_config"
+      ]
+    },
+    {
+      "name": "testing-debugging",
+      "description": "Testing and debugging tools configuration including neotest, vim-test, DAP debugging, and code coverage analysis.",
+      "system_prompt": "You are a testing and debugging expert specializing in Neovim-based development workflows. Help with test execution, debugging setup, code coverage analysis, and development testing strategies.",
+      "data": [
+        "neotest_config",
+        "vim_test_config",
+        "debug_config",
+        "coverage_config"
+      ]
+    },
+    {
+      "name": "database-git-tools",
+      "description": "Database management and Git workflow tools including vim-dadbod for SQL, neogit, and diffview for version control.",
+      "system_prompt": "You are a database and version control specialist focusing on SQL database management and Git workflow optimization within Neovim. Help with database queries, Git operations, and repository management.",
+      "data": [
+        "sql_config",
+        "neogit_config",
+        "diffview_config"
+      ]
+    },
+    {
+      "name": "repository-management",
+      "description": "Repository structure, documentation, and nested git repository management for the dotfiles setup.",
+      "system_prompt": "You are a repository management expert specializing in dotfiles organization, GNU Stow configuration, and nested git repository management. Help with repository structure, documentation, and maintenance workflows.",
+      "data": [
+        "main_readme",
+        "nested_repos_guide",
+        "stow_config"
+      ]
+    }
+  ],
+  "data": {
+    "main_readme": {
+      "type": "file",
+      "path": "README.md",
+      "description": "Main documentation for the dotfiles repository including installation instructions, tool descriptions, and usage guides"
+    },
+    "nested_repos_guide": {
+      "type": "file",
+      "path": "nested_git_repos.md",
+      "description": "Guide for managing nested git repositories and subtree maintenance within the dotfiles structure"
+    },
+    "stow_config": {
+      "type": "file",
+      "path": "stow/.stowrc",
+      "description": "GNU Stow configuration file for managing dotfiles symlinks"
+    },
+    "nvim_init": {
+      "type": "file",
+      "path": "${nvim_config_path}/init.lua",
+      "description": "Main Neovim initialization file with core configuration, plugin setup, and keybindings"
+    },
+    "codecompanion_config": {
+      "type": "file",
+      "path": "${nvim_config_path}/lua/custom/plugins/codecompanion.lua",
+      "description": "CodeCompanion plugin configuration for AI-powered development assistance and chat interface"
+    },
+    "snacks_config": {
+      "type": "file",
+      "path": "${nvim_config_path}/lua/custom/plugins/snacks.lua",
+      "description": "Snacks.nvim plugin configuration providing dashboard, picker, file explorer, and various UI enhancements"
+    },
+    "blink_cmp_config": {
+      "type": "file",
+      "path": "${nvim_config_path}/lua/custom/plugins/blink-cmp.lua",
+      "description": "Blink completion engine configuration with LSP, copilot, emoji, git, and spell completion sources"
+    },
+    "barbar_config": {
+      "type": "file",
+      "path": "${nvim_config_path}/lua/custom/plugins/barbar.lua",
+      "description": "Barbar buffer management plugin configuration with tab-line interface and navigation keybindings"
+    },
+    "flash_config": {
+      "type": "file",
+      "path": "${nvim_config_path}/lua/custom/plugins/flash.lua",
+      "description": "Flash navigation plugin for fast cursor movement and text object selection"
+    },
+    "trouble_config": {
+      "type": "file",
+      "path": "${nvim_config_path}/lua/custom/plugins/trouble.lua",
+      "description": "Trouble diagnostics plugin for displaying and navigating code issues, LSP diagnostics, and quickfix lists"
+    },
+    "copilot_config": {
+      "type": "file",
+      "path": "${nvim_config_path}/lua/custom/plugins/copilot.lua",
+      "description": "GitHub Copilot integration configuration for AI-powered code suggestions and completion"
+    },
+    "neotest_config": {
+      "type": "file",
+      "path": "${nvim_config_path}/lua/custom/plugins/neotest.lua",
+      "description": "Neotest framework configuration for running and managing tests, particularly Go tests with coverage"
+    },
+    "vim_test_config": {
+      "type": "file",
+      "path": "${nvim_config_path}/lua/custom/plugins/vim-test.lua",
+      "description": "Vim-test plugin configuration for running tests with tmux integration and Go-specific settings"
+    },
+    "debug_config": {
+      "type": "file",
+      "path": "${nvim_config_path}/lua/kickstart/plugins/debug.lua",
+      "description": "DAP (Debug Adapter Protocol) configuration for debugging support, particularly for Go development"
+    },
+    "coverage_config": {
+      "type": "file",
+      "path": "${nvim_config_path}/lua/custom/plugins/nvim-coverage.lua",
+      "description": "Code coverage visualization plugin configuration for Go development with coverage.out support"
+    },
+    "sql_config": {
+      "type": "file",
+      "path": "${nvim_config_path}/lua/custom/plugins/sql.lua",
+      "description": "Database management configuration using vim-dadbod and vim-dadbod-ui for SQL operations"
+    },
+    "neogit_config": {
+      "type": "file",
+      "path": "${nvim_config_path}/lua/custom/plugins/neogit.lua",
+      "description": "Neogit plugin configuration for Git operations and repository management within Neovim"
+    },
+    "diffview_config": {
+      "type": "file",
+      "path": "${nvim_config_path}/lua/custom/plugins/diffview.lua",
+      "description": "Diffview plugin configuration for viewing Git diffs and merge conflicts with enhanced visualization"
+    }
+  }
+}

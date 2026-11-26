@@ -1,0 +1,7 @@
+name = "Agent Sandbox Workspace: Create MULTI-REPO-WORKTREE"
+type = "form"
+command = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name 'Agent Sandbox Workspace: Create MULTI-REPO-WORKTREE' -- bash ~/.config/herdr-spreader/multirepo-worktree-sandbox-notify.sh '{{.Value}}'"
+
+[form]
+prompt = "Multirepo ticket and monorepo branch (monorepo + extra repo worktrees under a non-git parent; boots its Incus sandbox)"
+placeholder = "MULTI-10 1.2.0"

@@ -1,0 +1,20 @@
+{
+    "servers": {
+        "chrome-devtools-brave": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "chrome-devtools-mcp",
+                "--executablePath",
+                "/usr/bin/brave-browser",
+                "--isolated"
+            ],
+            "env": {}
+        },
+        "codebase-memory-mcp": {
+            "type": "stdio",
+            "command": "/home/badaniya/.local/bin/codebase-memory-mcp"
+        }
+    },
+    "inputs": []
+}

@@ -1,0 +1,7 @@
+name = "Agent Sandbox Workspace: Create MONOREPO-WORKTREE"
+type = "form"
+command = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name 'Agent Sandbox Workspace: Create MONOREPO-WORKTREE' -- bash ~/.config/herdr-spreader/monorepo-worktree-sandbox-notify.sh '{{.Value}}'"
+
+[form]
+prompt = "Ticket and monorepo branch (worktree branch <owner>/<ticket> from origin/<branch>, tracking origin/main; boots its Incus sandbox)"
+placeholder = "ABC-123 1.2.0"

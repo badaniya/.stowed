@@ -1,0 +1,8 @@
+intellij/images/
+go
+*.json
+*.db*
+
+# Allow
+!intellij/sampling.json
+!intellij/mcp.json

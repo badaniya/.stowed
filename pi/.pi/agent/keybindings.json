@@ -1,0 +1,111 @@
+{
+  "tui.editor.cursorUp": [
+    "up",
+    "alt+k"
+  ],
+  "tui.editor.cursorDown": [
+    "down",
+    "alt+j"
+  ],
+  "tui.editor.cursorLeft": [
+    "left",
+    "alt+h"
+  ],
+  "tui.editor.cursorRight": [
+    "right",
+    "alt+l"
+  ],
+  "tui.editor.cursorWordLeft": [
+    "alt+left",
+    "alt+b"
+  ],
+  "tui.editor.cursorWordRight": [
+    "alt+right",
+    "alt+w"
+  ],
+  "tui.editor.cursorLineStart": [
+    "home",
+    "shift+^"
+  ],
+  "tui.editor.cursorLineEnd": [
+    "end",
+    "shift+$"
+  ],
+  "tui.editor.jumpForward": [
+    "ctrl+]",
+    "alt+;"
+  ],
+  "tui.editor.jumpBackward": [
+    "ctrl+alt+]",
+    "alt+,"
+  ],
+  "tui.editor.pageUp": [
+    "pageUp",
+    "alt+u"
+  ],
+  "tui.editor.pageDown": [
+    "pageDown",
+    "alt+d"
+  ],
+  "tui.editor.deleteWordBackward": [
+    "alt+backspace",
+    "ctrl+alt+b"
+  ],
+  "tui.editor.deleteWordForward": [
+    "alt+delete",
+    "ctrl+alt+w"
+  ],
+  "tui.editor.deleteToLineStart": [
+    "alt+shift+^"
+  ],
+  "tui.editor.deleteToLineEnd": [
+    "alt+shift+$"
+  ],
+  "tui.editor.undo": [
+    "alt+r"
+  ],
+  "tui.select.up": [
+    "up",
+    "alt+k"
+  ],
+  "tui.select.down": [
+    "down",
+    "alt+j"
+  ],
+  "tui.select.pageUp": [
+    "pageUp",
+    "alt+u"
+  ],
+  "tui.select.pageDown": [
+    "pageDown",
+    "alt+d"
+  ],
+  "tui.altScreen.pageUp": [
+    "pageUp",
+    "alt+u"
+  ],
+  "tui.altScreen.pageDown": [
+    "pageDown",
+    "ctrl+f",
+    "alt+d"
+  ],
+  "tui.altScreen.halfPageUp": "ctrl+u",
+  "tui.altScreen.halfPageDown": "ctrl+d",
+  "tui.altScreen.top": [
+    "ctrl+home",
+    "ctrl+g",
+    "alt+g"
+  ],
+  "tui.altScreen.bottom": [
+    "ctrl+end",
+    "ctrl+shift+g",
+    "alt+shift+g"
+  ],
+  "app.editor.external": "ctrl+e",
+  "app.exit": [
+    "ctrl+c"
+  ],
+  "app.model.select": [
+    "alt+m"
+  ]
+}

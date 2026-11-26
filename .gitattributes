@@ -1,0 +1,4 @@
+# Pi rewrites these version stamps on every update. The filter strips them
+# before Git compares the file, so only real setting changes show as diffs.
+# scripts/bootstrap.sh defines the filter (git config does not travel with clones).
+pi/.pi/agent/settings.json filter=pi-settings

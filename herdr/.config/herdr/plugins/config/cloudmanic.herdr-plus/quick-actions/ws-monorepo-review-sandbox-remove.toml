@@ -1,0 +1,7 @@
+name = "Agent Sandbox Workspace: Delete MONOREPO-REVIEW"
+type = "form"
+command = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name 'Agent Sandbox Workspace: Delete MONOREPO-REVIEW' -- bash ~/.config/herdr-spreader/monorepo-review-sandbox-remove-notify.sh '{{.Value}}'"
+
+[form]
+prompt = "DESTRUCTIVE: destroys the review sandbox and force-removes the review worktree; preserves the PR branch; add --keep-worktrees to retain it"
+placeholder = "ABC-123 or REVIEW-PR-123 [--keep-worktrees]"

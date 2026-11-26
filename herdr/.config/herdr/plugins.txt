@@ -1,0 +1,23 @@
+# Herdr plugins to install on a new machine (scripts/bootstrap.sh reads this).
+# herdr's own registry (plugins.json) and the plugin checkouts hold absolute
+# per-run paths, so they are not tracked; this list is the declared intent.
+#
+#   github <owner/repo> <ref>    install from GitHub at ref (a fresh install)
+#   local  <repo-relative path>  link a plugin kept in this repo
+#
+# Plugin configuration stays tracked under plugins/config/.
+github ChmaraX/herdr-nvim 1bc902b6e5f1d7e56fd1480f6ec44d4bfee5e96e
+github cloudmanic/herdr-plus f38df3570bea8f7ca71dc1ba11bce3b123d14402
+github Davidcreador/herdr-token-dashboard 2623504549c0e40e3636bb59d0ac8af2ac996ace
+github devashish2203/herdr-worktrunk f9df9ba700b8a4f4d97ddfe3ea3eb345e80b880b
+github ezcorp-org/herdr-pc-ram-and-cpu-usage-overlay 21e6341ebb17971da2be724ec22ba37908dcc370
+github furuhashin/herdr-synchronize-panes b827d3f3a68ceb01cf72a51546c68f9f33188adb
+github hotchpotch/herdr-tiny-fingers 3107e5d3547ab23b064f13576508bbd68186cf57
+github ntindle/herdr-resurrect dab5bed632ccb28b480ae1bd601b4f60a41f66f1
+github ogulcancelik/herdr-browser be6888b71cf4eb5939ee79a746bd1a1c22ade046
+github paulbkim-dev/vim-herdr-navigation 7873100eb47212269005c693effb2a844986b30f
+github persiyanov/herdr-reviewr bb71050caa5d3a0b1a414527783eb7a772447f9f
+github senna-lang/herdr-agent-usage d42a94152dba27ccaf6caf18b2733207197c8307
+github smarzban/herdr-file-viewer d17a068ee753daf5ba205bafd59c130b81b8c6c0
+github yuk1ty/herdr-spreader cf15e4f3828a4d65b1741d74b67176434b8fc1fa
+local  herdr/.config/herdr-action-errors

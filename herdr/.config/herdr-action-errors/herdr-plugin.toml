@@ -1,0 +1,18 @@
+id = "local.action-errors"
+name = "Shared action errors"
+version = "0.1.0"
+min_herdr_version = "0.9.5"
+description = "Private failure logs and dismissible popups for local Herdr Plus actions"
+platforms = ["linux", "macos"]
+
+[[panes]]
+id = "popup"
+title = "Action failed"
+placement = "overlay"
+command = ["bash", "-c", "exec python3 \"${XDG_CONFIG_HOME:-$HOME/.config}/herdr-spreader/herdr-action-errors.py\" popup"]
+
+[[panes]]
+id = "log"
+title = "Action failure log"
+placement = "tab"
+command = ["bash", "-c", "python3 \"${XDG_CONFIG_HOME:-$HOME/.config}/herdr-spreader/herdr-action-errors.py\" log; cd \"$HOME\" || exit; exec \"${SHELL:-/bin/bash}\""]

@@ -1,0 +1,7 @@
+name = "Agent Sandbox: Exposure"
+type = "form"
+command = "python3 ~/.config/herdr-spreader/herdr-action-errors.py run --name 'Agent Sandbox: Exposure' -- bash ~/.config/herdr-spreader/sandbox-exposure.sh"
+
+[form]
+prompt = "Enter list, agtsbxfwdN for the menu, or agtsbxfwdN followed by create/update/delete/status/list/adopt"
+placeholder = "list or agtsbxfwd0 update"

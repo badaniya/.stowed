@@ -1,0 +1,405 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+source_path=${BASH_SOURCE[0]}
+while [[ -L $source_path ]]; do
+	source_dir=$(cd -P "$(dirname "$source_path")" && pwd)
+	source_path=$(readlink "$source_path")
+	[[ $source_path == /* ]] || source_path=$source_dir/$source_path
+done
+bin_dir=$(cd -P "$(dirname "$source_path")" && pwd)
+lib_dir=$(cd "$bin_dir/../lib/labctl" && pwd)
+# shellcheck source=/dev/null
+source "$lib_dir/common.sh"
+# shellcheck source=/dev/null
+source "$lib_dir/config.sh"
+# shellcheck source=/dev/null
+source "$lib_dir/state.sh"
+# shellcheck source=/dev/null
+source "$lib_dir/incus.sh"
+# shellcheck source=/dev/null
+source "$lib_dir/network.sh"
+# shellcheck source=/dev/null
+source "$lib_dir/monorepo-env.sh"
+# shellcheck source=/dev/null
+source "$lib_dir/image.sh"
+# shellcheck source=/dev/null
+source "$lib_dir/workspace.sh"
+# shellcheck source=/dev/null
+source "$lib_dir/host-setup.sh"
+
+usage() {
+	cat <<'USAGE'
+Usage: labctl [--config PATH] [--dry-run] <command> [args]
+
+Commands:
+  help                                      Show this help text
+  preflight                                 Validate host and configuration prerequisites
+  setup-host --yes                          Create or reconcile only labctl's Incus bridge and profile
+  create TICKET [--repo NAME] [--ensure-worktree] [--dry-run]
+  bootstrap TICKET [--repo NAME] [--ensure-worktree] [--dry-run]
+  stage TICKET STAGE_NAME                    Run one allowlisted private application stage
+  start TICKET [--dry-run]
+  stop TICKET [--dry-run]
+  pause TICKET [--dry-run]                    Freeze processes; retain memory
+  resume TICKET [--dry-run]                   Unfreeze without rerunning stack hooks
+  status TICKET
+  verify TICKET [--dry-run]
+  destroy TICKET --yes [--dry-run]
+  cleanup-worktree TICKET --yes [--dry-run]
+  credential sync TICKET                     Sync host Git credential into the sandbox
+  credential unset TICKET                    Remove the sandbox Git credential
+  template sync TICKET                       Copy the private Loggo template into the sandbox
+  monorepo-env sync TICKET                   Sync the private rendered monorepo environment into the sandbox
+  image build YYYY-MM-DD-N                   Build a scrubbed private local golden image
+  instance-user                              Print the configured sandbox user
+  instance-project                           Print the configured Incus project
+USAGE
+}
+
+labctl_lifecycle_options() {
+	LABCTL_LIFECYCLE_TICKET=
+	LABCTL_LIFECYCLE_YES=false
+	export LABCTL_ENSURE_WORKTREE=false
+	LABCTL_REPO_SELECTOR=
+	while (($#)); do
+		case $1 in
+		--yes) LABCTL_LIFECYCLE_YES=true ;;
+		--ensure-worktree) export LABCTL_ENSURE_WORKTREE=true ;;
+		--repo)
+			[[ $# -ge 2 ]] || {
+				labctl_die '--repo requires a repository name'
+				return 1
+			}
+			LABCTL_REPO_SELECTOR=$2
+			shift
+			;;
+		--dry-run) export LABCTL_DRY_RUN=true ;;
+		-*)
+			labctl_die "unknown lifecycle option: $1"
+			return 1
+			;;
+		*)
+			[[ -z $LABCTL_LIFECYCLE_TICKET ]] || {
+				labctl_die "unexpected lifecycle argument: $1"
+				return 1
+			}
+			LABCTL_LIFECYCLE_TICKET=$1
+			;;
+		esac
+		shift
+	done
+	[[ -n $LABCTL_LIFECYCLE_TICKET ]] || {
+		labctl_die 'ticket is required'
+		return 1
+	}
+}
+
+labctl_ticket_root() { labctl_workspace_ticket_root "$1"; }
+
+labctl_create() {
+	local ticket=$1 selector=${2:-} instance root workspace_type ip existing_ip state
+	ticket=$(labctl_normalize_ticket "$ticket") || return 1
+	workspace_type=$(labctl_workspace_ensure "$ticket" "$selector") || return 1
+	root=$(labctl_ticket_root "$ticket") || return 1
+	instance=$ticket
+	state=$(labctl_state_path)
+	if [[ -f $state ]] && labctl_state_lookup "$ticket" >/dev/null 2>&1; then
+		ip=$(labctl_state_ip_for "$ticket")
+		if [[ -z $ip ]] || ! labctl_config_is_ipv4 "$ip"; then
+			if [[ ${LABCTL_DRY_RUN:-false} == true ]]; then
+				ip=$(labctl_state_preview_ip)
+			else
+				ip=$(labctl_state_reserve_ip "$ticket")
+			fi
+		fi
+	elif [[ ${LABCTL_DRY_RUN:-false} == true ]]; then
+		ip=$(labctl_state_preview_ip)
+	else
+		ip=$(labctl_state_reserve_ip "$ticket")
+	fi
+	if labctl_incus_instance_exists "$instance"; then
+		existing_ip=$(labctl_incus_instance_ip "$instance")
+		[[ $existing_ip == "$ip" ]] || {
+			labctl_die "existing instance has a conflicting assigned IP: $instance ($existing_ip, expected $ip)"
+			return 1
+		}
+		[[ ${LABCTL_DRY_RUN:-false} == true ]] || labctl_state_record "$ticket" "$instance" "$ip" "$workspace_type"
+		return 0
+	fi
+	labctl_incus_launch "$instance" "$ip"
+	labctl_incus_configure_network "$instance"
+	labctl_incus_wait_ready "$instance" "$root"
+	labctl_incus_attach_workspace "$instance" "$root"
+	labctl_incus_configure_git_safe_directories "$instance" "$root"
+	if [[ ${LABCTL_DRY_RUN:-false} != true ]]; then
+		labctl_state_record "$ticket" "$instance" "$ip" "$workspace_type"
+	fi
+}
+
+labctl_bootstrap() {
+	local ticket=$1 selector=${2:-}
+	ticket=$(labctl_normalize_ticket "$ticket") || return 1
+	printf 'bootstrap: validate/create ticket=%s\n' "$ticket"
+	labctl_create "$ticket" "$selector"
+	printf 'bootstrap: running/ready ticket=%s\n' "$ticket"
+	printf 'bootstrap: stack-up ticket=%s\n' "$ticket"
+	labctl_start "$ticket"
+}
+
+labctl_start() {
+	local ticket=$1 root
+	ticket=$(labctl_normalize_ticket "$ticket") || return 1
+	root=$(labctl_ticket_root "$ticket") || return 1
+	labctl_incus_instance_exists "$ticket" || {
+		labctl_die "sandbox instance does not exist: $ticket"
+		return 1
+	}
+	labctl_incus_start "$ticket" "$root"
+	[[ ${LABCTL_DRY_RUN:-false} == true ]] || labctl_state_set_status "$ticket" running
+}
+
+labctl_stop() {
+	local ticket=$1 root
+	ticket=$(labctl_normalize_ticket "$ticket") || return 1
+	root=$(labctl_ticket_root "$ticket") || return 1
+	labctl_incus_instance_exists "$ticket" || {
+		labctl_die "sandbox instance does not exist: $ticket"
+		return 1
+	}
+	labctl_incus_stop "$ticket" "$root"
+	[[ ${LABCTL_DRY_RUN:-false} == true ]] || labctl_state_set_status "$ticket" stopped
+}
+
+labctl_pause_resume() {
+	local action=$1 ticket=$2 status record
+	ticket=$(labctl_normalize_ticket "$ticket") || return 1
+	case $action in
+	pause) status=paused ;;
+	resume) status=running ;;
+	*) labctl_die "unsupported execution action: $action"; return 1 ;;
+	esac
+	record=$(labctl_state_lookup "$ticket") || return 1
+	jq -e 'type == "object" and .status != "destroyed"' <<<"$record" >/dev/null || {
+		labctl_die "sandbox is not registered or is destroyed: $ticket"
+		return 1
+	}
+	labctl_incus_instance_exists "$ticket" || {
+		labctl_die "sandbox instance does not exist: $ticket"
+		return 1
+	}
+	# Freeze/unfreeze only: stack hooks would restart work or hang in a frozen guest.
+	labctl_run incus --project "$LABCTL_INCUS_PROJECT" "$action" "$ticket" || return 1
+	[[ ${LABCTL_DRY_RUN:-false} == true ]] || labctl_state_set_status "$ticket" "$status"
+}
+
+labctl_status() {
+	local ticket=$1 root record
+	ticket=$(labctl_normalize_ticket "$ticket") || return 1
+	root=$(labctl_ticket_root "$ticket") || return 1
+	record=$(labctl_state_lookup "$ticket") || {
+		labctl_die "sandbox is not registered: $ticket"
+		return 1
+	}
+	if labctl_workspace_validate "$ticket" >/dev/null; then
+		jq '. + {workspace_valid: true}' <<<"$record"
+	else
+		jq '. + {workspace_valid: false}' <<<"$record"
+	fi
+	if labctl_incus_instance_exists "$ticket"; then
+		labctl_incus_inspect "$ticket"
+		labctl_run incus exec "$ticket" -- docker info
+	fi
+	[[ -d $root ]] || labctl_die "ticket root is missing: $root"
+}
+
+labctl_destroy() {
+	local ticket=$1
+	ticket=$(labctl_normalize_ticket "$ticket") || return 1
+	[[ ${LABCTL_LIFECYCLE_YES:-false} == true ]] || {
+		labctl_die 'destroy requires --yes'
+		return 1
+	}
+	printf 'target: destroy instance=%s ticket=%s\n' "$ticket" "$ticket"
+	if labctl_incus_instance_exists "$ticket"; then
+		labctl_incus_stop "$ticket" "$(labctl_ticket_root "$ticket")"
+		labctl_run incus delete "$ticket" --force
+	fi
+	[[ ${LABCTL_DRY_RUN:-false} == true ]] || labctl_state_set_status "$ticket" destroyed
+}
+
+labctl_credential() {
+	local action=${1:-} ticket=${2:-}
+	[[ $action == sync || $action == unset ]] || {
+		labctl_die 'credential requires: credential <sync|unset> TICKET'
+		return 1
+	}
+	ticket=$(labctl_normalize_ticket "$ticket") || return 1
+	case $action in
+	sync) labctl_incus_set_systemd_credential "$ticket" "$LABCTL_GIT_CREDENTIAL_NAME" ;;
+	unset) labctl_incus_unset_systemd_credential "$ticket" "$LABCTL_GIT_CREDENTIAL_NAME" ;;
+	esac
+}
+
+labctl_template() {
+	local action=${1:-} ticket=${2:-}
+	[[ $action == sync && $# -eq 2 ]] || {
+		labctl_die 'template requires: template sync TICKET'
+		return 1
+	}
+	ticket=$(labctl_normalize_ticket "$ticket") || return 1
+	labctl_incus_sync_loggo_template "$ticket"
+}
+
+labctl_stage() {
+	local ticket=$1 stage=$2
+	ticket=$(labctl_normalize_ticket "$ticket") || return 1
+	labctl_stack_stage "$ticket" "$stage"
+}
+
+labctl_monorepo_env() {
+	local action=$1 ticket=$2
+	[[ $action == sync ]] || {
+		labctl_die 'monorepo-env requires: monorepo-env sync TICKET'
+		return 1
+	}
+	ticket=$(labctl_normalize_ticket "$ticket") || return 1
+	labctl_incus_sync_monorepo_environment "$ticket" "$ticket"
+}
+
+labctl_cleanup_worktree() {
+	local ticket=$1
+	ticket=$(labctl_normalize_ticket "$ticket") || return 1
+	[[ ${LABCTL_LIFECYCLE_YES:-false} == true ]] || {
+		labctl_die 'cleanup-worktree requires --yes'
+		return 1
+	}
+	printf 'target: cleanup-worktree instance=%s ticket=%s\n' "$ticket" "$ticket"
+	if labctl_incus_instance_exists "$ticket" && labctl_incus_is_running "$ticket"; then
+		labctl_die "refusing worktree cleanup while sandbox instance is running: $ticket"
+		return 1
+	fi
+	labctl_run "$LABCTL_WORKTREE_REMOVE_HOOK" "$ticket"
+}
+
+config_path="${XDG_CONFIG_HOME:-$HOME/.config}/labctl/config.env"
+while (($#)); do
+	case $1 in
+	--config)
+		[[ $# -ge 2 ]] || {
+			labctl_die '--config requires a path'
+			exit 1
+		}
+		config_path=$2
+		shift 2
+		;;
+	--dry-run)
+		export LABCTL_DRY_RUN=true
+		shift
+		;;
+	--help | -h)
+		usage
+		exit 0
+		;;
+	--)
+		shift
+		break
+		;;
+	-*)
+		labctl_die "unknown global option: $1"
+		exit 1
+		;;
+	*) break ;;
+	esac
+done
+command=${1:-help}
+if (($#)); then shift; fi
+case $command in
+help) usage ;;
+config-load) labctl_config_load "$config_path" ;;
+preflight)
+	labctl_config_load "$config_path"
+	labctl_incus_preflight
+	;;
+setup-host)
+	labctl_config_load "$config_path"
+	[[ ${1:-} == --yes && $# -eq 1 ]] || {
+		labctl_die 'setup-host requires exactly: setup-host --yes'
+		exit 1
+	}
+	export LABCTL_ASSUME_YES=true
+	labctl_incus_setup_host
+	;;
+credential)
+	labctl_config_load "$config_path"
+	[[ $# -eq 2 ]] || {
+		labctl_die 'credential requires: credential <sync|unset> TICKET'
+		exit 1
+	}
+	labctl_credential "$1" "$2"
+	;;
+template)
+	labctl_config_load "$config_path"
+	labctl_template "$@"
+	;;
+monorepo-env)
+	labctl_config_load "$config_path"
+	[[ $# -eq 2 ]] || {
+		labctl_die 'monorepo-env requires exactly: monorepo-env sync TICKET'
+		exit 1
+	}
+	labctl_monorepo_env "$1" "$2"
+	;;
+image)
+	labctl_config_load "$config_path"
+	[[ ${1:-} == build && $# -eq 2 ]] || {
+		labctl_die 'image requires exactly: image build YYYY-MM-DD-N'
+		exit 1
+	}
+	labctl_image_build "$2"
+	;;
+stage)
+	labctl_config_load "$config_path"
+	[[ $# -eq 2 ]] || {
+		labctl_die 'stage requires exactly: stage TICKET STAGE_NAME'
+		exit 1
+	}
+	labctl_stage "$1" "$2"
+	;;
+instance-user)
+	labctl_config_load "$config_path"
+	[[ $# -eq 0 ]] || {
+		labctl_die 'instance-user takes no arguments'
+		exit 1
+	}
+	printf '%s\n' "$LABCTL_INSTANCE_USER"
+	;;
+instance-project)
+	labctl_config_load "$config_path"
+	[[ $# -eq 0 ]] || {
+		labctl_die 'instance-project takes no arguments'
+		exit 1
+	}
+	printf '%s\n' "$LABCTL_INCUS_PROJECT"
+	;;
+create | bootstrap | start | stop | pause | resume | status | verify | destroy | cleanup-worktree)
+	labctl_config_load "$config_path"
+	labctl_lifecycle_options "$@"
+	case $command in
+	create) labctl_create "$LABCTL_LIFECYCLE_TICKET" "$LABCTL_REPO_SELECTOR" ;;
+	bootstrap) labctl_bootstrap "$LABCTL_LIFECYCLE_TICKET" "$LABCTL_REPO_SELECTOR" ;;
+	start) labctl_start "$LABCTL_LIFECYCLE_TICKET" ;;
+	stop) labctl_stop "$LABCTL_LIFECYCLE_TICKET" ;;
+	pause | resume) labctl_pause_resume "$command" "$LABCTL_LIFECYCLE_TICKET" ;;
+	status) labctl_status "$LABCTL_LIFECYCLE_TICKET" ;;
+	verify) labctl_verify "$LABCTL_LIFECYCLE_TICKET" ;;
+	destroy) labctl_destroy "$LABCTL_LIFECYCLE_TICKET" ;;
+	cleanup-worktree) labctl_cleanup_worktree "$LABCTL_LIFECYCLE_TICKET" ;;
+	esac
+	;;
+*)
+	labctl_die "unknown command: $command"
+	usage >&2
+	exit 1
+	;;
+esac

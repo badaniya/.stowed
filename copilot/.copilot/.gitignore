@@ -1,0 +1,8 @@
+ide/
+jb/
+logs/
+restart/
+session-state/
+session-store.db*
+*.json
+*.lock

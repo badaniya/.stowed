@@ -1,0 +1,66 @@
+Session.vim
+vim/**/session/
+transient/
+.cache/
+.lsp-session-v1
+.firecrawl/
+emacs/.emacs.d/projectile-bookmarks.eld
+emacs/.emacs.d/eln-cache/
+emacs/.emacs.d/elpa/
+copilot/**/logs/
+goose/**/githubcopilot
+goose/**/*.bak*
+goose/**/*.yaml
+goose/**/history.txt
+docs/
+
+# Dependencies
+**/node_modules/
+
+# Browser automation profiles
+**/browser-data/
+
+# Python build artifacts
+**/__pycache__/
+**/*.pyc
+
+# Pi update check (auto-written by pi, not meaningful to track)
+pi/.pi/agent/.update-check
+
+# Pi's managed runtime is generated per machine by the pi.dev installer
+# (releases/<version>/node_modules). Tracking the install manifests without the
+# packages makes a synced config claim a version that has no executable.
+# Use scripts/pi-bootstrap.sh to install or repair this tree.
+pi/.pi/agent/install/
+
+# Ephemeral session/tmp artifacts
+.worktrees/
+pi-session-*.html
+**/skills/*/tmp/.sisyphus/
+agents/.agents/skills/dev-browser/tmp/
+.superpowers/
+.archify/
+
+# Herdr app: each mod's type file is generated on first load
+herdr-app/.config/herdr-app/mods/*/gpui-kit.d.ts
+
+# Herdr runtime state: sockets, flocks, counters and per-run plugin checkouts
+# (herdr recreates one per run) are per-machine and change on every
+# run. Tracking them makes every session leave a dirty tree.
+herdr/.config/herdr/herdr.sock*
+claude/.claude/herdr-usagebar/*.flock
+claude/.claude/herdr-usagebar/*.lock.guard
+claude/.claude/herdr-usagebar/provider-limit-notify-state.json
+herdr/.config/herdr/plugins/github-installations/
+herdr/.config/herdr/plugins/.locks/
+
+# Herdr app runtime state: telemetry ID and counters, window/view state, mod
+# install hashes, per-mod stores and cached update notes. Settings, keys,
+# layouts, themes and mods stay tracked.
+herdr-app/.config/herdr-app/telemetry/
+herdr-app/.config/herdr-app/data/
+herdr-app/.config/herdr-app/installed.json
+herdr-app/.config/herdr-app/seen.json
+herdr-app/.config/herdr-app/view.json
+herdr-app/.config/herdr-app/window.json
+herdr-app/.config/herdr-app/update-notes*

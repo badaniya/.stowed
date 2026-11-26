@@ -1,0 +1,185 @@
+{
+  "env": {
+    "AGENT_TRACING_ENABLED": "true",
+    "CC_LANGFUSE_DEBUG": "true",
+    "LANGFUSE_HOST": "http://localhost:3000",
+    "LANGFUSE_USER_ID": "badaniya",
+    "TRACE_TO_LANGFUSE": "true"
+  },
+  "permissions": {
+    "allow": [
+      "Read(/home/**)",
+      "Bash(gh:*)",
+      "Bash(tmux:*)",
+      "Bash(gh pr comment * --body \"run-*\")",
+      "Bash(gh api -X DELETE repos/*/*/issues/comments/*)",
+      "Bash(tsh *)",
+      "Bash(tkl *)",
+      "Bash(*.agents/skills/*)",
+      "Bash(herdr *)",
+      "teams_create_chat"
+    ],
+    "defaultMode": "bypassPermissions"
+  },
+  "model": "opus",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/badaniya/.local/bin/codebase-memory-mcp",
+            "args": [
+              "hook-augment"
+            ],
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/badaniya/.local/bin/codebase-memory-mcp",
+            "args": [
+              "hook-augment"
+            ],
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/badaniya/.local/bin/codebase-memory-mcp",
+            "args": [
+              "hook-augment"
+            ],
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/badaniya/.local/bin/codebase-memory-mcp",
+            "args": [
+              "hook-augment"
+            ],
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "^(startup|resume|clear|compact|fork)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/home/badaniya/.claude/hooks/herdr-agent-state.sh' session",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/agent_tracing_hook.py"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Grep|Glob|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/badaniya/.local/bin/codebase-memory-mcp",
+            "args": [
+              "hook-augment"
+            ],
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/badaniya/.local/bin/codebase-memory-mcp",
+            "args": [
+              "hook-augment"
+            ],
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/badaniya/.local/bin/codebase-memory-mcp",
+            "args": [
+              "hook-augment"
+            ],
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/statusline-command.sh"
+  },
+  "enabledPlugins": {
+    "code-review@claude-plugins-official": false,
+    "code-simplifier@claude-plugins-official": false,
+    "frontend-design@claude-plugins-official": false,
+    "gopls-lsp@claude-plugins-official": true,
+    "langfuse-observability@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true,
+    "chrome-devtools-mcp@chrome-devtools-plugins": true,
+    "github@claude-plugins-official": false
+  },
+  "extraKnownMarketplaces": {
+    "langfuse-observability": {
+      "source": {
+        "source": "github",
+        "repo": "langfuse/Claude-Observability-Plugin"
+      }
+    },
+    "chrome-devtools-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "ChromeDevTools/chrome-devtools-mcp"
+      }
+    }
+  },
+  "outputStyle": "Concise",
+  "effortLevel": "medium",
+  "modelSettings": {
+    "claude-sonnet-5-5": {
+      "effortLevel": "medium"
+    }
+  },
+  "autoCompactWindow": 180000,
+  "skipDangerousModePermissionPrompt": true,
+  "theme": "auto"
+}
