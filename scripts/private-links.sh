@@ -22,6 +22,7 @@ case "$exclude" in /*) ;; *) exclude="$repo_root/$exclude" ;; esac
 links=(
   "$HOME/.private_herdr_spreader:herdr-spreader/.config/herdr-spreader"
   "$HOME/.private_herdr_quick_actions:herdr/.config/herdr/plugins/config/cloudmanic.herdr-plus/quick-actions"
+  "$HOME/.private_herdr_quick_actions:$HOME/.config/herdr-plus/quick-actions"
   "$HOME/.private_herdr_reviewr:herdr/.config/herdr/plugins/config/persiyanov.reviewr"
   "$HOME/.private_herdr_spreader_workspaces:herdr/.config/herdr/plugins/config/herdr-spreader"
   "$HOME/.private_labctl:incus/.config/labctl"
@@ -59,7 +60,11 @@ for pair in "${links[@]}"; do
   for src in "$src_dir"/*; do
     [ -f "$src" ] || continue
     rel="$rel_dir/${src##*/}"
-    dest="$repo_root/$rel"
+    # Handle absolute paths (starting with / or $HOME/)
+    case "$rel_dir" in
+      /*|$HOME/*) dest="$rel_dir/${src##*/}" ;;
+      *) dest="$repo_root/$rel" ;;
+    esac
     if [ -L "$dest" ] && [ "$(readlink "$dest")" = "$src" ]; then
       :
     elif [ -e "$dest" ] || [ -L "$dest" ]; then
@@ -69,6 +74,7 @@ for pair in "${links[@]}"; do
       warn "$rel not linked"
       continue
     else
+      mkdir -p "$(dirname "$dest")"
       ln -s "$src" "$dest"
     fi
     if ! rg -qxF -- "/$rel" "$exclude"; then
