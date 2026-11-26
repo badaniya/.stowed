@@ -12,6 +12,7 @@ import time
 from pathlib import Path
 
 LABELS = ('Monitor', 'LazyDocker', 'Database', 'Platform', 'App')
+BOOTSTRAP_DONE = re.compile(r'(?:[A-Z][A-Z0-9]*_)?SANDBOX_BOOTSTRAP_(?:SUCCESS|FAILED)')
 # Multirepo aliases (<PREFIX>-N-MONO) and review sandboxes (REVIEW-[<REPO>-]PR-N).
 TICKET = re.compile(
     r'(?:[A-Z][A-Z0-9]+-[0-9]+'
@@ -76,8 +77,8 @@ def is_completed_bootstrap_viewer(pane, info, instance):
         return False
     try:
         with log.open() as stream:
-            return any(line.rstrip('\n') in ('SANDBOX_BOOTSTRAP_SUCCESS', 'SANDBOX_BOOTSTRAP_FAILED')
-                       for line in stream)
+            # The log marker may carry a project prefix (e.g. NVO_SANDBOX_BOOTSTRAP_SUCCESS).
+            return any(BOOTSTRAP_DONE.fullmatch(line.rstrip('\n')) for line in stream)
     except (OSError, UnicodeError):
         return False
 
