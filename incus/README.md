@@ -37,6 +37,25 @@ The local prerequisites are:
   `incus-admin`) rather than using broad elevation, then confirm `incus info`
   succeeds as that account.
 
+## Synced private golden images
+
+For a configured `LABCTL_INSTANCE_IMAGE=local:golden:<version>`, sandbox creation
+checks the owner-only `~/.private-sandbox-images/manifest.json`. Each image record
+must contain `alias`, `archive`, `fingerprint`, `sha256`, `bytes`, `architecture`
+(`x86_64`) and `type` (`container`), under `schema_version: 1` and an `images` array.
+The unified `.tar.gz` archive must have matching SHA256 and Incus fingerprint.
+Keep directories `0700` and manifest/archive files `0600`; sync this private
+directory outside public Git. Symlinks and archive path escapes are rejected.
+
+All labctl creation paths share this check. If the alias is already installed,
+its fingerprint must match the manifest. Otherwise the archive size and checksum
+are verified before importing it into the configured project. Per-alias locking
+prevents parallel creations from racing the import. A mismatched installed alias,
+missing/corrupt asset or unavailable daemon fails creation before `incus init`;
+there is no implicit Ubuntu fallback or alias replacement. Explicit non-golden
+image selections remain explicit. Dry runs never import or create lock files.
+Running containers are never recreated or changed by this image check.
+
 ## Host prerequisites and proof
 
 Before any setup, inventory the host's existing container, virtualization,

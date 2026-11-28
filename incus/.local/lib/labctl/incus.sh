@@ -141,6 +141,9 @@ labctl_incus_launch() {
 		return 1
 	}
 	labctl_incus_validate_launch_profiles || return 1
+	local -a image_check=(python3 "$(dirname "${BASH_SOURCE[0]}")/ensure-private-image.py" --image "$LABCTL_INSTANCE_IMAGE" --project "$LABCTL_INCUS_PROJECT")
+	[[ ${LABCTL_DRY_RUN:-false} != true ]] || image_check+=(--dry-run)
+	"${image_check[@]}" || return 1
 	labctl_run incus init "$LABCTL_INSTANCE_IMAGE" "$instance" --profile default --profile "$LABCTL_INCUS_PROFILE"
 	labctl_run incus config device override "$instance" eth0 ipv4.address="$ip"
 	labctl_run incus start "$instance"
