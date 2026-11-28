@@ -163,14 +163,16 @@ if ! git -C "$BARE_REPO" config --get-all remote.origin.fetch | rg -Fxq -- "$MON
 	git -C "$BARE_REPO" config --replace-all remote.origin.fetch "$MONO_REMOTE_FETCH"
 fi
 
-# The monorepo lives in a managed org; authenticate git and git-lfs as the
-# MONOREPO_GH_USER gh account regardless of the active account or a stale GH_TOKEN in the environment.
-if mono_token=$(env -u GH_TOKEN -u GITHUB_TOKEN gh auth token --hostname github.com --user "$(private_env MONOREPO_GH_USER)" 2>/dev/null) && [[ -n $mono_token ]]; then
-	export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=http.https://github.com/.extraheader
-	GIT_CONFIG_VALUE_0="Authorization: basic $(printf 'x-access-token:%s' "$mono_token" | base64 -w0)"
-	export GIT_CONFIG_VALUE_0
-fi
-unset mono_token
+# Fetch and LFS checkout use pass-backed command-scoped credentials, not native
+# gh storage or exported token-bearing HTTP headers. Clear inherited overrides.
+unset GH_TOKEN GITHUB_TOKEN GH_ENTERPRISE_TOKEN GITHUB_ENTERPRISE_TOKEN
+export GIT_CONFIG_COUNT=4
+export GIT_CONFIG_KEY_0=http.extraheader GIT_CONFIG_VALUE_0=''
+export GIT_CONFIG_KEY_1=http.https://github.com/.extraheader GIT_CONFIG_VALUE_1=''
+export GIT_CONFIG_KEY_2=credential.helper GIT_CONFIG_VALUE_2=''
+export GIT_CONFIG_KEY_3=credential.helper
+GIT_CONFIG_VALUE_3="!\"$HOME/.local/bin/gh-work\" auth git-credential"
+export GIT_CONFIG_VALUE_3
 mono_fetch() { git -C "$BARE_REPO" fetch --quiet origin; }
 
 if [[ -e "${MONO_DIR}/.git" ]]; then
@@ -194,7 +196,11 @@ else
 	if [[ ${MONO_REVIEW_MODE:-false} == true ]]; then
 		# Review: check out the PR branch itself (tracking origin/<branch>); no private branch.
 		echo "→ Creating review worktree for '${BASE_BRANCH}' at ${MONO_DIR}…"
-		if git -C "$BARE_REPO" show-ref --verify --quiet "refs/heads/${BASE_BRANCH}"; then
+		if git -C "$BARE_REPO" worktree list --porcelain | rg -Fxq -- "branch refs/heads/${BASE_BRANCH}"; then
+			# A developer may already be using this branch. Review the remote PR
+			# snapshot detached; never force a second checkout or alter their files.
+			git -C "$BARE_REPO" worktree add --detach "$MONO_DIR" "refs/remotes/origin/${BASE_BRANCH}"
+		elif git -C "$BARE_REPO" show-ref --verify --quiet "refs/heads/${BASE_BRANCH}"; then
 			git -C "$BARE_REPO" merge-base --is-ancestor "refs/heads/${BASE_BRANCH}" "refs/remotes/origin/${BASE_BRANCH}" || {
 				printf 'Error: local branch %s has commits not in the PR; refusing to replace it\n' "$BASE_BRANCH" >&2
 				exit 1

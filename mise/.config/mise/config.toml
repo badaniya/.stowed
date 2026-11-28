@@ -20,6 +20,8 @@ node = "24"
 "aqua:sharkdp/fd" = "10.1.0"
 "aqua:dundee/gdu" = "5.29.0"
 "aqua:cli/cli" = "2.96.0"
+"cargo:tuicr" = "0.30.0"
+# Plain pass/password-store is an OS package; see secrets/README.md.
 "aqua:PaulJuliusMartinez/jless" = "0.9.0"
 "aqua:mike-engel/jwt-cli" = "6.2.0"
 # Match the Kubernetes ktop previously installed by Nix (ynqa/kTOP is a different tool).

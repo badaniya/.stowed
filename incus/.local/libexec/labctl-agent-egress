@@ -1,0 +1,51 @@
+#!/usr/bin/python3 -I
+"""Reconcile only controller-owned IPv4 bridge egress; never flush host rules."""
+import argparse
+import ipaddress
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--bridge', required=True)
+    bridge = parser.parse_args().bridge
+    if os.geteuid() != 0 or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]{0,14}', bridge):
+        raise ValueError('root and a valid bridge name are required')
+    incus = ['/usr/bin/incus', '--force-local']
+    owner = subprocess.check_output([*incus, 'network', 'get', bridge, 'user.labctl-owner'], text=True).strip()
+    if owner != 'labctl':
+        raise ValueError('bridge is not controller-owned')
+    cidr = str(ipaddress.ip_network(subprocess.check_output([*incus, 'network', 'get', bridge, 'ipv4.address'], text=True).strip(), strict=False))
+    try:
+        routes = json.loads(subprocess.check_output(['/usr/sbin/ip', '-j', '-4', 'route', 'get', '1.1.1.1'], text=True))
+        uplink = routes[0]['dev']
+    except (ValueError, KeyError, IndexError) as error:
+        raise ValueError('cannot determine the outbound uplink') from error
+    if uplink == bridge or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]{0,14}', uplink):
+        raise ValueError('invalid outbound uplink')
+    for name in ['iptables-nft', 'iptables-legacy']:
+        binary = shutil.which(name)
+        if not binary:
+            continue
+        rules = [
+            ['-i', bridge, '-o', uplink, '-s', cidr, '-m', 'comment', '--comment', 'labctl-managed-egress', '-j', 'ACCEPT'],
+            ['-i', uplink, '-o', bridge, '-d', cidr, '-m', 'conntrack', '--ctstate', 'ESTABLISHED,RELATED', '-m', 'comment', '--comment', 'labctl-managed-egress-return', '-j', 'ACCEPT'],
+        ]
+        for rule in rules:
+            found = subprocess.run([binary, '-w', '-C', 'FORWARD', *rule], capture_output=True)
+            if found.returncode:
+                subprocess.run([binary, '-w', '-I', 'FORWARD', '1', *rule], check=True)
+    print('Scoped sandbox egress reconciled; existing policies and unrelated rules retained')
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception:
+        print('labctl-agent-egress: reconciliation failed; inspect owned bridge and firewall', file=sys.stderr)
+        sys.exit(1)

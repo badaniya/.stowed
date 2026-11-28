@@ -20,9 +20,11 @@ labctl_config_required_vars=(
 labctl_config_optional_vars=(
 	LABCTL_GIT_CREDENTIAL_NAME
 	LABCTL_LOGGO_TEMPLATE_PATH
+	LABCTL_LOGGO_PASS_REFERENCE
 	LABCTL_MONOREPO_ENV_SOURCE_PATH
 	LABCTL_MONOREPO_ENV_SECTION
 	LABCTL_MONOREPO_ENV_ALLOWED
+	LABCTL_MONOREPO_ENV_PASS_REFERENCES
 	LABCTL_MONOREPO_ENV_SKIPPED
 	LABCTL_MONOREPO_ENV_HOST_IP_VARS
 	LABCTL_MONOREPO_ENV_INSTANCE_ID_VAR
@@ -111,7 +113,12 @@ labctl_config_validate() {
 	if [[ -n ${LABCTL_GIT_CREDENTIAL_NAME:-} ]] && ! labctl_config_validate_credential_name "$LABCTL_GIT_CREDENTIAL_NAME"; then
 		return 1
 	fi
-	if [[ -n ${LABCTL_LOGGO_TEMPLATE_PATH:-} ]]; then
+	if [[ -n ${LABCTL_LOGGO_PASS_REFERENCE:-} ]]; then
+		[[ $LABCTL_LOGGO_PASS_REFERENCE =~ ^[A-Za-z0-9][A-Za-z0-9/_.-]*$ && $LABCTL_LOGGO_PASS_REFERENCE != *..* ]] || {
+			labctl_die 'invalid Loggo pass reference'
+			return 1
+		}
+	elif [[ -n ${LABCTL_LOGGO_TEMPLATE_PATH:-} ]]; then
 		[[ $LABCTL_LOGGO_TEMPLATE_PATH == /* && -f $LABCTL_LOGGO_TEMPLATE_PATH && -r $LABCTL_LOGGO_TEMPLATE_PATH && -O $LABCTL_LOGGO_TEMPLATE_PATH ]] || {
 			labctl_die 'Loggo template must be an absolute readable regular file owned by the current user'
 			return 1

@@ -267,9 +267,23 @@ assert_equals '1' "$race_successes"
 assert_equals '1' "$(jq '[.sandboxes[] | select(.ip == "10.42.0.10")] | length' "${RACE_STATE_HOME}/labctl/sandboxes.json")"
 
 FAKE_BIN="${TEST_ROOT}/fake-bin"
+export LABCTL_LXD_SOCKET="${TEST_ROOT}/fake-lxd.sock"
+python3 -c 'import socket,sys; s=socket.socket(socket.AF_UNIX); s.bind(sys.argv[1]); s.close()' "$LABCTL_LXD_SOCKET"
 COMMAND_LOG="${TEST_ROOT}/command.log"
 mkdir -p "$FAKE_BIN"
 export COMMAND_LOG
+export LABCTL_TEST_REAL_PYTHON
+LABCTL_TEST_REAL_PYTHON=$(command -v python3)
+cat >"${FAKE_BIN}/python3" <<'PYTHON'
+#!/usr/bin/env bash
+if [[ ${1:-} == */pass-credential-sync.py ]]; then
+	printf 'memory-credential %s\n' "${*:2}" >>"$COMMAND_LOG"
+	if [[ " $* " == *' --source - '* ]]; then cat >/dev/null; fi
+	exit 0
+fi
+exec "$LABCTL_TEST_REAL_PYTHON" "$@"
+PYTHON
+chmod +x "${FAKE_BIN}/python3"
 cat >"${FAKE_BIN}/incus" <<'INCUS'
 #!/usr/bin/env bash
 # The real Incus CLI accepts --project as a global option before or after a
@@ -450,7 +464,17 @@ cat >"${FAKE_BIN}/lxc" <<'LXC'
 #!/usr/bin/env bash
 printf 'lxc %s\n' "$*" >>"$COMMAND_LOG"
 [[ ${LABCTL_LXC_INVENTORY_FAILURE:-false} != true ]] || exit 1
-[[ ${LABCTL_EXTERNAL_NAME_CONFLICT:-false} != true ]] || printf 'agentbr0\n'
+if [[ $* == 'network list --format json' ]]; then
+	if [[ ${LABCTL_EXTERNAL_NAME_CONFLICT:-false} == true ]]; then
+		printf '[{"name":"agentbr0","managed":true}]\n'
+	elif [[ ${LABCTL_LXD_UNMANAGED_NETWORK:-false} == true ]]; then
+		printf '[{"name":"agentbr0","managed":false}]\n'
+	else
+		printf '[]\n'
+	fi
+else
+	[[ ${LABCTL_EXTERNAL_NAME_CONFLICT:-false} != true ]] || printf 'agentbr0\n'
+fi
 LXC
 cat >"${FAKE_BIN}/multipass" <<'MULTIPASS'
 #!/usr/bin/env bash
@@ -474,14 +498,14 @@ for fake_command in incus ip sysctl df lxc multipass docker nc; do chmod +x "${F
 
 assert_command_log_contains() {
 	local expected=$1
-	if ! rg -F --quiet "$expected" "$COMMAND_LOG"; then
+	if ! rg -F --quiet -- "$expected" "$COMMAND_LOG"; then
 		fail "expected command log to contain [$expected]"
 	fi
 }
 
 assert_command_log_not_contains() {
 	local unexpected=$1
-	if rg -F --quiet "$unexpected" "$COMMAND_LOG"; then
+	if rg -F --quiet -- "$unexpected" "$COMMAND_LOG"; then
 		fail "expected command log not to contain [$unexpected]"
 	fi
 }
@@ -529,8 +553,11 @@ command() {
 	builtin command "$@"
 }
 COMMAND
-for unavailable in incus jq flock docker lxc multipass; do
+for unavailable in incus jq flock docker; do
 	PATH="${FAKE_BIN}:$PATH" BASH_ENV="$COMMAND_OVERRIDE" LABCTL_MISSING_COMMAND="$unavailable" assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
+done
+for optional in lxc multipass; do
+	PATH="${FAKE_BIN}:$PATH" BASH_ENV="$COMMAND_OVERRIDE" LABCTL_MISSING_COMMAND="$optional" assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
 done
 
 PATH="${FAKE_BIN}:$PATH" LABCTL_INCUS_ACCESS_DENIED=true assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
@@ -540,6 +567,7 @@ PATH="${FAKE_BIN}:$PATH" LABCTL_HOST_BRIDGE_CONFLICT=true assert_fails "$LABCTL_
 export LABCTL_EXTERNAL_NAME_CONFLICT=true
 PATH="${FAKE_BIN}:$PATH" assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
 unset LABCTL_EXTERNAL_NAME_CONFLICT
+PATH="${FAKE_BIN}:$PATH" LABCTL_LXD_UNMANAGED_NETWORK=true assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
 PATH="${FAKE_BIN}:$PATH" LABCTL_MULTIPASS_NAME_CONFLICT=true assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
 PATH="${FAKE_BIN}:$PATH" LABCTL_LXC_INVENTORY_FAILURE=true assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
 PATH="${FAKE_BIN}:$PATH" LABCTL_MULTIPASS_INVENTORY_FAILURE=true assert_fails "$LABCTL_BIN" --config "$CONFIG_PATH" preflight
@@ -705,8 +733,7 @@ fi
 assert_fails rg -F --quiet "$INSTANCE_CREDENTIAL_SECRET" "$QUERY_FAILURE_OUTPUT"
 assert_command_log_not_contains "$INSTANCE_CREDENTIAL_SECRET"
 
-# Private Loggo templates must be owner-only configuration, passed only through
-# an Incus systemd credential, and installed by the guest with private ownership.
+# Private Loggo templates stay owner-only on the host and are delivered to memory.
 MISSING_TEMPLATE_CONFIG="${TEST_ROOT}/missing-loggo-template.env"
 sed 's|^LABCTL_LOGGO_TEMPLATE_PATH=.*|LABCTL_LOGGO_TEMPLATE_PATH=/missing/private-loggo.tpl|' "$CONFIG_PATH" >"$MISSING_TEMPLATE_CONFIG"
 chmod 600 "$MISSING_TEMPLATE_CONFIG"
@@ -722,18 +749,12 @@ PATH="${FAKE_BIN}:$PATH" assert_fails "$LABCTL_BIN" --config "$INSECURE_TEMPLATE
 chmod 600 "$LOGGO_TEMPLATE_PATH"
 
 LOGGO_TEMPLATE_SECRET=$(<"$LOGGO_TEMPLATE_PATH")
-LOGGO_PATCH_CAPTURE="${TEST_ROOT}/loggo-patch.json"
-LOGGO_PATCH_VALIDATION="${TEST_ROOT}/loggo-patch-validation"
 : >"$COMMAND_LOG"
-PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_CREDENTIAL_NAME=loggo-template LABCTL_FAKE_PATCH_VALIDATION="$LOGGO_PATCH_VALIDATION" LABCTL_FAKE_PATCH_CAPTURE="$LOGGO_PATCH_CAPTURE" assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" template sync 'JIRA-#'
-assert_equals 'valid' "$(cat "$LOGGO_PATCH_VALIDATION")"
-assert_equals "$LOGGO_TEMPLATE_SECRET" "$(jq -r '.config["systemd.credential.loggo-template"]' "$LOGGO_PATCH_CAPTURE")"
-assert_equals '["systemd.credential.loggo-template"]' "$(jq -c '.config | keys' "$LOGGO_PATCH_CAPTURE")"
-assert_command_log_contains 'incus query /1.0/instances/jira-%23 --request PATCH --data-file '
-assert_command_log_contains 'incus exec jira-# -- bash -c '
-assert_command_log_contains 'systemd-creds cat loggo-template'
-assert_command_log_contains "chmod 0600 \"/home/\$1/.private-monorepo-loggo.tpl\""
-assert_command_log_contains "chown \"\$1:\$1\" \"/home/\$1/.private-monorepo-loggo.tpl\""
+PATH="${FAKE_BIN}:$PATH" assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" template sync 'JIRA-#'
+assert_command_log_contains 'memory-credential blob --instance jira-#'
+assert_command_log_contains '--format loggo-template'
+assert_command_log_not_contains '--data-file'
+assert_command_log_not_contains 'systemd-creds cat'
 assert_command_log_not_contains "$LOGGO_TEMPLATE_SECRET"
 
 # Credential values must remain redacted in both normal and expanded config.
@@ -989,7 +1010,7 @@ if ! PATH="${FAKE_BIN}:$PATH" "$LABCTL_BIN" --config "$CONFIG_PATH" --dry-run ve
 fi
 assert_command_log_contains 'nc -z -w 3 10.42.0.10 10001'
 assert_command_log_contains 'nc -z -w 3 10.42.0.10 10002'
-assert_command_log_contains 'exec jira-# -- bash -s --'
+assert_command_log_contains 'sandbox stack command via stdin: jira-#'
 assert_command_log_not_contains 'config device add jira-# proxy'
 
 : >"$COMMAND_LOG"
@@ -1072,108 +1093,58 @@ if [[ -f $DOC_README ]]; then
 	fi
 fi
 
-# Credential delivery: sync reads host Git credentials through stdin/stdout only,
-# sends a restrictive temporary API payload, and never prints the secret.
-CREDENTIAL_SECRET=$(printf '%s%s' 'credential-test-token-' 'not-for-logs')
-CREDENTIAL_NAME='git-module-token'
-PATCH_VALIDATION="${TEST_ROOT}/patch-validation"
-cat >"${FAKE_BIN}/git" <<'GIT'
-#!/usr/bin/env bash
-printf 'git %s\n' "$*" >>"$COMMAND_LOG"
-if [[ ${1:-} == credential && ${2:-} == fill ]]; then
-  cat >/dev/null
-  printf 'protocol=https\nhost=git.example.test\nusername=credential-user\npassword=%s\n\n' "$LABCTL_FAKE_GIT_PASSWORD"
-elif [[ ${1:-} == -C && ${3:-} == rev-parse && ${4:-} == --show-toplevel ]]; then
-  printf '%s\n' "$2"
-fi
-GIT
-cat >"${FAKE_BIN}/systemd-creds" <<'CREDS'
-#!/usr/bin/env bash
-printf 'systemd-creds %s\n' "$*" >>"$COMMAND_LOG"
-[[ ${1:-} == cat ]] || exit 2
-printf '%s\n%s\n' credential-user "$LABCTL_FAKE_GIT_PASSWORD"
-CREDS
-cat >"${FAKE_BIN}/askpass-probe" <<'PROBE'
-#!/usr/bin/env bash
-username=$("$GIT_ASKPASS" 'Username for https://git.example.test:')
-password=$("$GIT_ASKPASS" 'Password for https://git.example.test:')
-printf '%s:%s\n' "$username" "$password" | sha256sum | cut -d' ' -f1 >"$LABCTL_ASKPASS_PROBE_HASH"
-exit 17
-PROBE
-chmod +x "${FAKE_BIN}/git" "${FAKE_BIN}/systemd-creds" "${FAKE_BIN}/askpass-probe"
-
-# Capture API payloads without writing their content to the command log. Incus
-# must receive the JSON from a temporary file through --data-file, not a
-# literal @temporary-file value passed through --data.
+# Credential commands dispatch to the separately tested pass/memory transport.
 : >"$COMMAND_LOG"
-PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_GIT_PASSWORD="$CREDENTIAL_SECRET" LABCTL_FAKE_PATCH_VALIDATION="$PATCH_VALIDATION" assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" credential sync 'JIRA-#'
-assert_equals 'valid' "$(cat "$PATCH_VALIDATION")"
-assert_command_log_contains 'git credential fill'
-assert_command_log_contains 'incus query /1.0/instances/jira-%23 --request PATCH --data-file '
-assert_command_log_not_contains ' --data @'
-assert_command_log_not_contains "$CREDENTIAL_SECRET"
-assert_command_log_not_contains 'username=credential-user'
-assert_command_log_not_contains 'password='
-assert_fails rg -F --quiet "$CREDENTIAL_SECRET" "${REPO_ROOT}/incus" "${REPO_ROOT}/tests/incus" "$CONFIG_PATH" "${XDG_STATE_HOME}"
+PATH="${FAKE_BIN}:$PATH" assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" credential sync 'JIRA-#'
+assert_command_log_contains 'memory-credential sync --instance jira-#'
+assert_command_log_not_contains 'git credential fill'
+assert_command_log_not_contains '--data-file'
 
-# Names must map to exactly one safe systemd credential key and no other
-# instance configuration.  Invalid configured names fail before Git runs.
 INVALID_CREDENTIAL_CONFIG="${TEST_ROOT}/invalid-credential-name.env"
-sed 's/^LABCTL_GIT_CREDENTIAL_NAME=.*/LABCTL_GIT_CREDENTIAL_NAME=bad name/' "$CONFIG_PATH" >"$INVALID_CREDENTIAL_CONFIG"
+python3 - "$CONFIG_PATH" "$INVALID_CREDENTIAL_CONFIG" <<'PY'
+from pathlib import Path
+import sys
+text=Path(sys.argv[1]).read_text()
+lines=['LABCTL_GIT_CREDENTIAL_NAME=bad name' if line.startswith('LABCTL_GIT_CREDENTIAL_NAME=') else line for line in text.splitlines()]
+Path(sys.argv[2]).write_text('\n'.join(lines)+'\n')
+PY
 chmod 600 "$INVALID_CREDENTIAL_CONFIG"
 : >"$COMMAND_LOG"
 PATH="${FAKE_BIN}:$PATH" assert_fails "$LABCTL_BIN" --config "$INVALID_CREDENTIAL_CONFIG" credential sync 'JIRA-#'
-assert_command_log_not_contains 'git credential fill'
+assert_command_log_not_contains 'memory-credential '
 
 : >"$COMMAND_LOG"
-rm -f "$PATCH_VALIDATION"
-PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_PATCH_VALIDATION="$PATCH_VALIDATION" assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" credential unset 'JIRA-#'
-assert_equals 'valid' "$(cat "$PATCH_VALIDATION")"
-assert_command_log_contains 'incus query /1.0/instances/jira-%23 --request PATCH --data-file '
-assert_command_log_not_contains ' --data @'
-assert_command_log_not_contains "$CREDENTIAL_SECRET"
+PATH="${FAKE_BIN}:$PATH" assert_succeeds "$LABCTL_BIN" --config "$CONFIG_PATH" credential unset 'JIRA-#'
+assert_command_log_contains 'memory-credential unset --instance jira-#'
+assert_command_log_not_contains '--data-file'
 
-# The guest wrapper creates a root-only temporary askpass helper, obtains its
-# values only at runtime through systemd-creds, and removes the helper directory
-# even when the wrapped stack command fails.
 REMOTE_SCRIPT="${TEST_ROOT}/remote-stack.sh"
-REMOTE_RUNTIME="${TEST_ROOT}/remote-run"
-REMOTE_PROBE_HASH="${TEST_ROOT}/askpass-hash"
-mkdir -p "$REMOTE_RUNTIME"
 : >"$COMMAND_LOG"
-PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_CAPTURE_REMOTE_SCRIPT="$REMOTE_SCRIPT" LABCTL_FAKE_GIT_PASSWORD="$CREDENTIAL_SECRET" assert_succeeds labctl_incus_stack_command 'jira-#' "${TEST_ROOT}/workspace/jira-#" 'askpass-probe'
-# shellcheck disable=SC2016 # Inspect the generated helper's literal variable expansion.
-assert_succeeds rg -F --quiet 'systemd-creds cat "$credential_name"' "$REMOTE_SCRIPT"
-assert_succeeds rg -F --quiet 'trap cleanup EXIT HUP INT TERM' "$REMOTE_SCRIPT"
-# shellcheck disable=SC2016 # Inspect the generated cleanup command literally.
-assert_succeeds rg -F --quiet 'rm -rf -- "$runtime_dir"' "$REMOTE_SCRIPT"
-assert_fails rg -F --quiet "$CREDENTIAL_SECRET" "$REMOTE_SCRIPT"
+PATH="${FAKE_BIN}:$PATH" LABCTL_FAKE_CAPTURE_REMOTE_SCRIPT="$REMOTE_SCRIPT" assert_succeeds labctl_incus_stack_command 'jira-#' "${TEST_ROOT}/workspace/jira-#" 'exit 17'
+assert_succeeds rg -F --quiet 'labctl-memory-git run --name monorepo-environment' "$REMOTE_SCRIPT"
+assert_fails rg -F --quiet 'systemd-creds' "$REMOTE_SCRIPT"
+assert_fails rg -F --quiet 'credential_file=' "$REMOTE_SCRIPT"
+assert_fails rg -F --quiet 'mktemp' "$REMOTE_SCRIPT"
+assert_command_log_contains 'memory-credential sync'
 
-# The remote script drops to the instance user with setpriv, which needs root.
-# Run it as the current user: a fake id maps the probe user to our UID/GID and a
-# fake setpriv runs the stack command directly, keeping the fake PATH.
-ASKPASS_BIN="${TEST_ROOT}/askpass-bin"
-mkdir -p "$ASKPASS_BIN"
-cat >"${ASKPASS_BIN}/id" <<'ID'
+PROBE_BIN="${TEST_ROOT}/stack-probe-bin"
+mkdir -p "$PROBE_BIN"
+cat >"${PROBE_BIN}/id" <<'ID'
 #!/usr/bin/env bash
-if [[ $# == 2 && $2 == askpass-user && ($1 == -u || $1 == -g) ]]; then
-  exec /usr/bin/id "$1"
-fi
+if [[ $# == 2 && $2 == probe-user && ($1 == -u || $1 == -g) ]]; then exec /usr/bin/id "$1"; fi
 exec /usr/bin/id "$@"
 ID
-cat >"${ASKPASS_BIN}/setpriv" <<'SETPRIV'
+cat >"${PROBE_BIN}/setpriv" <<'SETPRIV'
 #!/usr/bin/env bash
-exec bash -c "${!#}"
+exec /bin/bash -s
 SETPRIV
-chmod +x "${ASKPASS_BIN}/id" "${ASKPASS_BIN}/setpriv"
+chmod +x "${PROBE_BIN}/id" "${PROBE_BIN}/setpriv"
 set +e
-PATH="${ASKPASS_BIN}:${FAKE_BIN}:$PATH" LABCTL_GIT_ASKPASS_RUNTIME_DIR="$REMOTE_RUNTIME" LABCTL_ASKPASS_PROBE_HASH="$REMOTE_PROBE_HASH" LABCTL_FAKE_GIT_PASSWORD="$CREDENTIAL_SECRET" bash "$REMOTE_SCRIPT" "${TEST_ROOT}/workspace/jira-#" "$CREDENTIAL_NAME" git.example.test 'askpass-user'
+PATH="${PROBE_BIN}:${FAKE_BIN}:$PATH" bash "$REMOTE_SCRIPT" "${TEST_ROOT}/workspace/jira-#" git-module-token git.example.test probe-user
 remote_status=$?
 set -e
 assert_equals '17' "$remote_status"
-assert_equals "$(printf 'credential-user:%s\n' "$CREDENTIAL_SECRET" | sha256sum | cut -d' ' -f1)" "$(cat "$REMOTE_PROBE_HASH")"
-assert_equals '0' "$(find "$REMOTE_RUNTIME" -mindepth 1 -maxdepth 1 | wc -l | tr -d ' ')"
-assert_command_log_not_contains "$CREDENTIAL_SECRET"
+assert_command_log_not_contains 'stack-command-secret-not-for-logs'
 
 # Golden images are explicit, versioned, private-project resources. The builder
 # must scrub and verify before it can publish, then be removed on success.

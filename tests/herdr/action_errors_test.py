@@ -62,6 +62,30 @@ class RunnerTests(unittest.TestCase):
         self.assertIn('stderr', result.stdout + result.stderr)
         self.assertEqual(self.logs(), [])
 
+    def test_actions_find_stable_local_launchers_without_login_shell(self):
+        local_bin = self.home / '.local/bin'
+        local_bin.mkdir(parents=True)
+        binary = local_bin / 'herdr-test-spreader'
+        binary.write_text('#!/bin/sh\nprintf "stable-spreader:%s\\n" "$*"\n')
+        binary.chmod(0o700)
+        for nested in (False, True):
+            for already_present in (False, True):
+                with self.subTest(nested=nested, already_present=already_present):
+                    self.env.pop('HERDR_ACTION_ERROR_ACTIVE', None)
+                    self.env['PATH'] = '/usr/bin:/bin'
+                    if already_present:
+                        self.env['PATH'] += f':{local_bin}'
+                    if nested:
+                        self.env['HERDR_ACTION_ERROR_ACTIVE'] = '1'
+                    result = self.run_command(['herdr-test-spreader', '--help'])
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertEqual(result.stdout.strip(), 'stable-spreader:--help')
+                    result = self.run_command([sys.executable, '-c', 'import os; print(os.environ["PATH"])'])
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    paths = result.stdout.strip().split(os.pathsep)
+                    self.assertEqual(paths.count(str(local_bin)), 1)
+                    self.assertEqual(paths[:2], ['/usr/bin', '/bin'])
+
     def test_actions_find_mise_tools_without_interactive_shell_setup(self):
         # Removing the runner's shim fallback must reproduce env: gh: not found.
         for location in ('default', 'xdg', 'mise', 'mise-over-xdg'):
@@ -82,14 +106,15 @@ class RunnerTests(unittest.TestCase):
                         data = self.home / '.local/share/mise'
                     shims = data / 'shims'
                     shims.mkdir(parents=True, exist_ok=True)
-                    gh = shims / 'gh'
+                    # Unique fixture name: a real /usr/bin/gh must not shadow it.
+                    gh = shims / 'herdr-test-gh'
                     gh.write_text(f'#!/bin/sh\nprintf "mise-gh-{location}:%s\\n" "$*"\n')
                     gh.chmod(0o700)
                     self.env['PATH'] = '/usr/bin:/bin'
                     if nested:
                         self.env['HERDR_ACTION_ERROR_ACTIVE'] = '1'
                     result = self.run_command(['env', '-u', 'GH_TOKEN', '-u', 'GITHUB_TOKEN',
-                                               'gh', '--version'])
+                                               'herdr-test-gh', '--version'])
                     self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                     self.assertEqual(result.stdout.strip(), f'mise-gh-{location}:--version')
 
@@ -103,12 +128,12 @@ class RunnerTests(unittest.TestCase):
     def test_missing_parent_path_keeps_system_defaults_before_mise(self):
         shims = self.home / 'mise/shims'
         shims.mkdir(parents=True)
-        gh = shims / 'gh'
+        gh = shims / 'herdr-test-fallback-gh'
         gh.write_text('#!/bin/sh\necho fallback-gh\n')
         gh.chmod(0o700)
         self.env['MISE_DATA_DIR'] = str(shims.parent)
         self.env.pop('PATH', None)
-        result = self.run_command(['env', 'gh', '--version'])
+        result = self.run_command(['env', 'herdr-test-fallback-gh', '--version'])
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout.strip(), 'fallback-gh')
         result = self.run_command([sys.executable, '-c', 'import os; print(os.environ["PATH"])'])
@@ -585,7 +610,9 @@ class IntegrationTests(unittest.TestCase):
 
     def test_all_existing_actions_use_shared_runner(self):
         actions = list(ACTIONS.glob('*.toml'))
-        self.assertGreaterEqual(len(actions), 44)
+        # Private actions are optional on public-profile hosts.
+        self.assertTrue({'ws-stowed.toml', 'ws-jira.toml', 'ws-vault.toml'}.issubset(
+            {action.name for action in actions}))
         for action in actions:
             data = tomllib.loads(action.read_text())
             with self.subTest(action=action.name):

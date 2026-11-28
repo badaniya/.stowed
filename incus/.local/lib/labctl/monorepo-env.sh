@@ -30,15 +30,30 @@ labctl_monorepo_env_quote() {
 	printf "'%s'" "$value"
 }
 
+labctl_monorepo_env_pass() {
+	local reference=$1 automatic="$HOME/.local/bin/pass-auto-unlock"
+	[[ ! -x $automatic ]] || "$automatic" --quiet || return 1
+	PASSWORD_STORE_DIR="$HOME/.password-store" PASSWORD_STORE_GPG_OPTS='--batch --pinentry-mode error' /usr/bin/pass show "$reference"
+}
+
 labctl_monorepo_env_render() {
-	local ticket=$1 output=$2 source mode line in_section=false section_header_separator_pending=false name value ip section pair
-	local -A seen=() values=()
-	local -a allowed=() skipped=() host_ip_vars=() fixed=() instance_id_var=()
+	local ticket=$1 output=$2 source mode line in_section=false section_header_separator_pending=false name value ip section pair render_fd
+	local -A seen=() values=() references=() emitted=()
+	local -a allowed=() skipped=() host_ip_vars=() fixed=() instance_id_var=() pass_pairs=() order=()
 	labctl_monorepo_env_list allowed "${LABCTL_MONOREPO_ENV_ALLOWED:-}"
 	labctl_monorepo_env_list skipped "${LABCTL_MONOREPO_ENV_SKIPPED:-}"
 	labctl_monorepo_env_list host_ip_vars "${LABCTL_MONOREPO_ENV_HOST_IP_VARS:-}"
 	labctl_monorepo_env_list fixed "${LABCTL_MONOREPO_ENV_FIXED:-}"
 	labctl_monorepo_env_list instance_id_var "${LABCTL_MONOREPO_ENV_INSTANCE_ID_VAR:-}"
+	labctl_monorepo_env_list pass_pairs "${LABCTL_MONOREPO_ENV_PASS_REFERENCES:-}"
+	for pair in "${pass_pairs[@]}"; do
+		[[ $pair =~ ^[A-Za-z_][A-Za-z0-9_]*=[A-Za-z0-9][A-Za-z0-9/_.-]*$ && ${pair#*=} != *..* ]] || { labctl_die 'invalid pass environment reference'; return 1; }
+		name=${pair%%=*}
+		labctl_monorepo_env_in "$name" "${allowed[@]}" || { labctl_die 'pass environment name is not allowlisted'; return 1; }
+		! labctl_monorepo_env_in "$name" "${skipped[@]}" "${host_ip_vars[@]}" "${instance_id_var[@]}" || { labctl_die 'pass reference conflicts with a host-only or derived variable'; return 1; }
+		[[ ! ${references[$name]+present} ]] || { labctl_die 'duplicate pass environment reference'; return 1; }
+		references[$name]=${pair#*=}
+	done
 	section=${LABCTL_MONOREPO_ENV_SECTION:-}
 	[[ -n $section && ${#allowed[@]} -gt 0 ]] || {
 		labctl_die 'set LABCTL_MONOREPO_ENV_SECTION and LABCTL_MONOREPO_ENV_ALLOWED in the labctl configuration'
@@ -91,7 +106,7 @@ labctl_monorepo_env_render() {
 		name=${BASH_REMATCH[1]}
 		value=${BASH_REMATCH[2]}
 		if [[ $value == \"*\" || $value == \'*\' ]]; then value=${value:1:${#value}-2}; fi
-		if labctl_monorepo_env_in "$name" "${skipped[@]}" "${host_ip_vars[@]}" "${instance_id_var[@]}"; then
+		if [[ ${references[$name]+present} ]] || labctl_monorepo_env_in "$name" "${skipped[@]}" "${host_ip_vars[@]}" "${instance_id_var[@]}"; then
 			continue
 		fi
 		labctl_monorepo_env_in "$name" "${allowed[@]}" || {
@@ -113,33 +128,37 @@ labctl_monorepo_env_render() {
 		labctl_die "monorepo environment section is missing: ${section}"
 		return 1
 	}
+	for name in "${!references[@]}"; do
+		value=$(labctl_monorepo_env_pass "${references[$name]}") || { labctl_die 'pass environment lookup failed'; return 1; }
+		[[ $value != *$'\n'* && $value != *$'\r'* ]] || { labctl_die 'pass environment value must be single-line'; return 1; }
+		values[$name]=$value
+	done
 	ip=$(labctl_incus_instance_ip "$ticket") || return 1
 	labctl_config_is_ipv4 "$ip" || {
 		labctl_die 'sandbox has no valid routed IP'
 		return 1
 	}
 	umask 077
-	: >"$output"
-	for name in "${allowed[@]}"; do
-		[[ ${values[$name]+present} ]] || continue
-		printf 'export %s=' "$name" >>"$output"
-		labctl_monorepo_env_quote "${values[$name]}" >>"$output"
-		printf '\n' >>"$output"
-	done
-	for name in "${host_ip_vars[@]}"; do
-		printf 'export %s=' "$name" >>"$output"
-		labctl_monorepo_env_quote "$ip" >>"$output"
-		printf '\n' >>"$output"
-	done
-	for name in "${instance_id_var[@]}"; do
-		printf 'export %s=' "$name" >>"$output"
-		labctl_monorepo_env_quote "${LABCTL_INSTANCE_USER}:$(hostname):${ip}" >>"$output"
-		printf '\n' >>"$output"
-	done
+	if [[ $output == - ]]; then
+		exec {render_fd}>&1
+	else
+		exec {render_fd}>"$output"
+	fi
+	order=("${allowed[@]}" "${host_ip_vars[@]}" "${instance_id_var[@]}")
+	for name in "${host_ip_vars[@]}"; do values[$name]=$ip; done
+	for name in "${instance_id_var[@]}"; do values[$name]="${LABCTL_INSTANCE_USER}:$(hostname):${ip}"; done
 	for pair in "${fixed[@]}"; do
-		printf 'export %s=' "${pair%%=*}" >>"$output"
-		labctl_monorepo_env_quote "${pair#*=}" >>"$output"
-		printf '\n' >>"$output"
+		name=${pair%%=*}
+		values[$name]=${pair#*=}
+		order+=("$name")
 	done
-	chmod 600 "$output"
+	for name in "${order[@]}"; do
+		[[ ${values[$name]+present} && ! ${emitted[$name]+present} ]] || continue
+		emitted[$name]=1
+		printf 'export %s=' "$name" >&"$render_fd"
+		labctl_monorepo_env_quote "${values[$name]}" >&"$render_fd"
+		printf '\n' >&"$render_fd"
+	done
+	exec {render_fd}>&-
+	[[ $output == - ]] || chmod 600 "$output"
 }

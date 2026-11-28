@@ -117,6 +117,21 @@ class MonoContextTests(unittest.TestCase):
         self.assertEqual((project / '.agents/skills/extra-only/SKILL.md').read_text(), 'extra skill')
         self.assertFalse((project / '.git').exists())
 
+    def test_review_of_checked_out_branch_is_detached_and_preserves_development_files(self):
+        bare = self.workspace / 'master/mono-repo'
+        development = self.workspace / 'DEV'
+        self.run_command('git', '-C', bare, 'worktree', 'add', development, 'main')
+        source = development / 'app/.agents/skills/app-only/SKILL.md'
+        source.write_text('Uncommitted developer change')
+        self.run_command('bash', self.scripts / 'monorepo-worktree-sandbox-base.sh',
+                         'REVIEW-ABC-990001', 'main', extra={'MONO_REVIEW_MODE': 'true'})
+        review = self.workspace / 'REVIEW-ABC-990001'
+        self.assertEqual(source.read_text(), 'Uncommitted developer change')
+        self.assertEqual(self.run_command('git', '-C', development, 'branch', '--show-current').stdout.strip(), 'main')
+        self.assertEqual(self.run_command('git', '-C', review, 'branch', '--show-current').stdout.strip(), '')
+        self.assertEqual(self.run_command('git', '-C', review, 'rev-parse', 'HEAD').stdout,
+                         self.run_command('git', '-C', bare, 'rev-parse', 'origin/main').stdout)
+
     def test_unmanaged_context_is_not_replaced(self):
         self.launch()
         project = self.workspace / 'ABC-990001'

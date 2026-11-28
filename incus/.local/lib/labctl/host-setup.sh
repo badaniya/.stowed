@@ -2,7 +2,13 @@
 # Read-only Incus coexistence checks and the narrowly scoped host setup actions.
 set -euo pipefail
 
-labctl_incus_required_commands=(incus jq flock docker ip sysctl df lxc multipass)
+labctl_incus_required_commands=(incus jq flock docker ip sysctl df python3 pass)
+
+labctl_lxd_is_present() {
+	command -v lxc >/dev/null 2>&1 && {
+		[[ -S ${LABCTL_LXD_SOCKET:-/var/snap/lxd/common/lxd/unix.socket} ]] || [[ -S /var/lib/lxd/unix.socket ]]
+	}
+}
 
 labctl_incus_require_commands() {
 	local command
@@ -40,20 +46,45 @@ labctl_incus_inventory() {
 	printf '%s\n' "$output"
 }
 
+labctl_lxd_inventory() {
+	local label=$1 output socket=${LABCTL_LXD_SOCKET:-/var/snap/lxd/common/lxd/unix.socket}
+	shift
+	[[ -S $socket ]] || socket=/var/lib/lxd/unix.socket
+	if [[ -r $socket && -w $socket ]]; then
+		output=$(lxc "$@" 2>/dev/null) || {
+			labctl_die "unable to inventory $label; inspect the service and retry"
+			return 1
+		}
+	else
+		output=$(sudo -n lxc "$@" 2>/dev/null) || {
+			labctl_die "unable to inventory $label with existing administrator access"
+			return 1
+		}
+	fi
+	printf '%s\n' "$output"
+}
+
 labctl_incus_reject_external_name_conflicts() {
 	local name output resource
 	local -a inventories
 
-	output=$(labctl_incus_inventory 'LXD networks' lxc network list --format csv -c n) || return 1
-	inventories+=("$output")
-	output=$(labctl_incus_inventory 'LXD storage pools' lxc storage list --format csv -c n) || return 1
-	inventories+=("$output")
-	output=$(labctl_incus_inventory 'LXD profiles' lxc profile list --format csv -c n) || return 1
-	inventories+=("$output")
-	output=$(labctl_incus_inventory 'LXD instances' lxc list --format csv -c n) || return 1
-	inventories+=("$output")
-	output=$(labctl_incus_inventory 'Multipass instances' multipass list --format csv) || return 1
-	inventories+=("$output")
+	inventories=()
+	# Do not invoke Ubuntu's LXD installation shim when no daemon is present.
+	if labctl_lxd_is_present; then
+		# Legacy LXD also lists unmanaged host interfaces, including our own bridge.
+		output=$(labctl_lxd_inventory 'LXD networks' network list --format json | jq -r '.[] | select(.managed == true) | .name') || return 1
+		inventories+=("$output")
+		output=$(labctl_lxd_inventory 'LXD storage pools' storage list --format csv) || return 1
+		inventories+=("$output")
+		output=$(labctl_lxd_inventory 'LXD profiles' profile list --format csv) || return 1
+		inventories+=("$output")
+		output=$(labctl_lxd_inventory 'LXD instances' list --format csv) || return 1
+		inventories+=("$output")
+	fi
+	if command -v multipass >/dev/null 2>&1; then
+		output=$(labctl_incus_inventory 'Multipass instances' multipass list --format csv) || return 1
+		inventories+=("$output")
+	fi
 
 	for name in "$LABCTL_AGENT_BRIDGE" "$LABCTL_INCUS_PROFILE" "$LABCTL_INCUS_STORAGE_POOL"; do
 		for output in "${inventories[@]}"; do
@@ -70,7 +101,7 @@ labctl_incus_reject_external_name_conflicts() {
 }
 
 labctl_incus_reject_network_conflicts() {
-	local route destination routes
+	local route destination routes managed_cidr
 	if ip link show "$LABCTL_AGENT_BRIDGE" >/dev/null 2>&1 && ! incus network show "$LABCTL_AGENT_BRIDGE" >/dev/null 2>&1; then
 		labctl_die "configured Incus bridge conflicts with an existing host bridge: $LABCTL_AGENT_BRIDGE"
 		return 1
@@ -83,6 +114,10 @@ labctl_incus_reject_network_conflicts() {
 		destination=${route%% *}
 		[[ $destination == */* ]] || continue
 		if labctl_incus_cidr_overlaps "$LABCTL_AGENT_CIDR" "$destination"; then
+			if [[ $destination == "$LABCTL_AGENT_CIDR" && " $route " == *" dev $LABCTL_AGENT_BRIDGE "* ]]; then
+				managed_cidr=$(incus network get "$LABCTL_AGENT_BRIDGE" ipv4.address 2>/dev/null || true)
+				[[ $managed_cidr == "$LABCTL_AGENT_GATEWAY/${LABCTL_AGENT_CIDR#*/}" ]] && continue
+			fi
 			labctl_die "configured agent subnet overlaps an existing host, LXD, or Multipass route: $destination"
 			return 1
 		fi

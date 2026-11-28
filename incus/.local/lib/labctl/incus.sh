@@ -60,20 +60,27 @@ labctl_incus_profile_query() {
 labctl_incus_ensure_profile() {
 	labctl_incus_validate_profile_name "$LABCTL_INCUS_PROFILE" || return 1
 	if ! labctl_incus_profile_query "$LABCTL_INCUS_PROFILE" >/dev/null 2>&1; then
-		labctl_run incus profile create "$LABCTL_INCUS_PROFILE"
+		labctl_run incus --project "$LABCTL_INCUS_PROJECT" profile create "$LABCTL_INCUS_PROFILE"
 	fi
 
-	labctl_run incus profile set "$LABCTL_INCUS_PROFILE" security.privileged=false
-	labctl_run incus profile set "$LABCTL_INCUS_PROFILE" security.nesting=true
-	labctl_run incus profile set "$LABCTL_INCUS_PROFILE" limits.cpu=4
-	labctl_run incus profile set "$LABCTL_INCUS_PROFILE" limits.memory=6GiB
-	labctl_run incus profile set "$LABCTL_INCUS_PROFILE" limits.memory.enforce=hard
-	labctl_run incus profile set "$LABCTL_INCUS_PROFILE" limits.memory.swap=false
-	labctl_run incus profile set "$LABCTL_INCUS_PROFILE" limits.processes=4096
-	if incus --project "$LABCTL_INCUS_PROJECT" profile device show "$LABCTL_INCUS_PROFILE" eth0 >/dev/null 2>&1; then
-		labctl_run incus profile device set "$LABCTL_INCUS_PROFILE" eth0 network="$LABCTL_AGENT_BRIDGE"
+	labctl_run incus --project "$LABCTL_INCUS_PROJECT" profile set "$LABCTL_INCUS_PROFILE" security.privileged=false
+	labctl_run incus --project "$LABCTL_INCUS_PROJECT" profile set "$LABCTL_INCUS_PROFILE" security.nesting=true
+	labctl_run incus --project "$LABCTL_INCUS_PROJECT" profile set "$LABCTL_INCUS_PROFILE" security.syscalls.intercept.mknod=true
+	labctl_run incus --project "$LABCTL_INCUS_PROJECT" profile set "$LABCTL_INCUS_PROFILE" security.syscalls.intercept.setxattr=true
+	labctl_run incus --project "$LABCTL_INCUS_PROJECT" profile set "$LABCTL_INCUS_PROFILE" limits.cpu=4
+	labctl_run incus --project "$LABCTL_INCUS_PROJECT" profile set "$LABCTL_INCUS_PROFILE" limits.memory=6GiB
+	labctl_run incus --project "$LABCTL_INCUS_PROJECT" profile set "$LABCTL_INCUS_PROFILE" limits.memory.enforce=hard
+	labctl_run incus --project "$LABCTL_INCUS_PROJECT" profile set "$LABCTL_INCUS_PROFILE" limits.memory.swap=false
+	labctl_run incus --project "$LABCTL_INCUS_PROJECT" profile set "$LABCTL_INCUS_PROFILE" limits.processes=4096
+	if incus --project "$LABCTL_INCUS_PROJECT" profile device get "$LABCTL_INCUS_PROFILE" eth0 network >/dev/null 2>&1; then
+		labctl_run incus --project "$LABCTL_INCUS_PROJECT" profile device set "$LABCTL_INCUS_PROFILE" eth0 network="$LABCTL_AGENT_BRIDGE"
 	else
-		labctl_run incus profile device add "$LABCTL_INCUS_PROFILE" eth0 nic network="$LABCTL_AGENT_BRIDGE" name=eth0
+		labctl_run incus --project "$LABCTL_INCUS_PROJECT" profile device add "$LABCTL_INCUS_PROFILE" eth0 nic network="$LABCTL_AGENT_BRIDGE" name=eth0
+	fi
+	if incus --project "$LABCTL_INCUS_PROJECT" profile device get "$LABCTL_INCUS_PROFILE" root pool >/dev/null 2>&1; then
+		labctl_run incus --project "$LABCTL_INCUS_PROJECT" profile device set "$LABCTL_INCUS_PROFILE" root pool="$LABCTL_INCUS_STORAGE_POOL"
+	else
+		labctl_run incus --project "$LABCTL_INCUS_PROJECT" profile device add "$LABCTL_INCUS_PROFILE" root disk path=/ pool="$LABCTL_INCUS_STORAGE_POOL"
 	fi
 }
 
@@ -473,61 +480,24 @@ labctl_incus_verify_isolation() {
 labctl_incus_stack_command() (
 	set -euo pipefail
 	local instance=$1 ticket_root=$2 command=$3 helper
-	umask 077
-	helper=$(mktemp "${TMPDIR:-/tmp}/labctl-stack-wrapper.XXXXXX")
-	trap 'rm -f -- "$helper"' EXIT
-	chmod 600 "$helper"
-	cat >"$helper" <<'SCRIPT'
-#!/usr/bin/env bash
-set -euo pipefail
-
-ticket_root=$1
-credential_name=$2
-git_host=$3
-instance_user=$4
-SCRIPT
-	printf 'stack_command=%q\n' "$command" >>"$helper"
-	cat >>"$helper" <<'SCRIPT'
-user_uid=$(id -u "$instance_user")
-user_gid=$(id -g "$instance_user")
-[[ $user_uid =~ ^[1-9][0-9]*$ && $user_gid =~ ^[1-9][0-9]*$ ]] || exit 1
-runtime_parent=${LABCTL_GIT_ASKPASS_RUNTIME_DIR:-/run}
-runtime_dir=$(mktemp -d "$runtime_parent/labctl-git-askpass.XXXXXX")
-cleanup() {
-  rm -rf -- "$runtime_dir"
-}
-trap cleanup EXIT HUP INT TERM
-credential_file="$runtime_dir/credential"
-systemd-creds cat "$credential_name" >"$credential_file"
-chmod 600 "$credential_file"
-askpass="$runtime_dir/askpass"
-cat >"$askpass" <<'ASKPASS'
-#!/usr/bin/env bash
-set -euo pipefail
-mapfile -t credential_lines <"${LABCTL_GIT_CREDENTIAL_FILE:?}"
-(( ${#credential_lines[@]} == 2 )) || exit 1
-case ${1:-} in
-  Username*) printf '%s\n' "${credential_lines[0]}" ;;
-  Password*) printf '%s\n' "${credential_lines[1]}" ;;
-  *) exit 1 ;;
-esac
-ASKPASS
-chmod 700 "$askpass"
-chown -R "$user_uid:$user_gid" "$runtime_dir"
-export LABCTL_GIT_CREDENTIAL_FILE="$credential_file"
-export GIT_ASKPASS="$askpass"
-export GIT_TERMINAL_PROMPT=0
-export GOPRIVATE="$git_host"
-export GONOSUMDB="$git_host"
-cd -- "$ticket_root"
-env_file="/home/${instance_user}/.config/monorepo/sandbox.env"
-[[ -r $env_file ]] && source "$env_file"
-setpriv --reuid "$user_uid" --regid "$user_gid" --init-groups env \
-  HOME="/home/$instance_user" USER="$instance_user" LOGNAME="$instance_user" \
-  PATH="/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" \
-  bash -lc "$stack_command"
-SCRIPT
-	labctl_run incus exec "$instance" -- bash -s -- "$ticket_root" "$LABCTL_GIT_CREDENTIAL_NAME" "$LABCTL_GIT_HOST" "$LABCTL_INSTANCE_USER" <"$helper"
+	helper="$(dirname "${BASH_SOURCE[0]}")/../../share/labctl/stack-wrapper.sh"
+	[[ -r $helper ]] || { labctl_die 'stack wrapper is missing'; return 1; }
+	labctl_incus_set_systemd_credential "$instance" "$LABCTL_GIT_CREDENTIAL_NAME" || return 1
+	if [[ -n ${LABCTL_LOGGO_TEMPLATE_PATH:-}${LABCTL_LOGGO_PASS_REFERENCE:-} ]]; then
+		labctl_incus_sync_loggo_template "$instance" || return 1
+	fi
+	if [[ -n ${LABCTL_MONOREPO_ENV_SOURCE_PATH:-} ]]; then
+		labctl_incus_sync_monorepo_environment "$instance" "$instance" || return 1
+	fi
+	if [[ ${LABCTL_DRY_RUN:-false} == true ]]; then
+		printf '+ sandbox stack command via stdin: %s\n' "$instance"
+		return 0
+	fi
+	{
+		printf 'stack_command=%q\n' "$command"
+		cat "$helper"
+	} | labctl_run incus --project "$LABCTL_INCUS_PROJECT" exec "$instance" -- bash -s -- \
+		"$ticket_root" "$LABCTL_GIT_CREDENTIAL_NAME" "$LABCTL_GIT_HOST" "$LABCTL_INSTANCE_USER"
 )
 
 labctl_incus_start() {
@@ -561,135 +531,87 @@ labctl_incus_instance_api_path() {
 	printf '/1.0/instances/%s?project=%s\n' "$encoded_instance" "$(jq -rn --arg project "$LABCTL_INCUS_PROJECT" '$project | @uri')"
 }
 
-labctl_incus_patch_config_file() {
-	local instance=$1 payload=$2 api_path
-	api_path=$(labctl_incus_instance_api_path "$instance") || return 1
-	[[ -r $payload ]] || {
-		labctl_die 'Incus configuration patch payload is unreadable'
-		return 1
-	}
-	labctl_run incus query "$api_path" --request PATCH --data-file "$payload" >/dev/null
+labctl_incus_set_systemd_credential() {
+	local instance=$1 credential_name=$2 helper
+	labctl_incus_validate_credential_name "$credential_name" || return 1
+	if [[ ${LABCTL_DRY_RUN:-false} == true ]]; then
+		printf '+ pass-backed sandbox memory credential sync: %s\n' "$instance"
+		return 0
+	fi
+	helper="$(dirname "${BASH_SOURCE[0]}")/pass-credential-sync.py"
+	python3 "$helper" sync --instance "$instance" --project "$LABCTL_INCUS_PROJECT" \
+		--host "$LABCTL_GIT_HOST" --name "$credential_name" --user "$LABCTL_INSTANCE_USER"
 }
 
-labctl_incus_set_systemd_credential() (
-	set -euo pipefail
-	local instance=$1 credential_name=$2 credential_request credential_response credential_value payload
-	local line username='' password='' username_count=0 password_count=0 api_key
-	labctl_incus_validate_credential_name "$credential_name"
-	labctl_incus_instance_exists "$instance" || {
-		labctl_die "sandbox instance does not exist: $instance"
-		return 1
-	}
-	umask 077
-	credential_request=$(mktemp "${TMPDIR:-/tmp}/labctl-git-request.XXXXXX")
-	credential_response=$(mktemp "${TMPDIR:-/tmp}/labctl-git-response.XXXXXX")
-	credential_value=$(mktemp "${TMPDIR:-/tmp}/labctl-git-value.XXXXXX")
-	payload=$(mktemp "${TMPDIR:-/tmp}/labctl-incus-patch.XXXXXX")
-	trap 'rm -f -- "$credential_request" "$credential_response" "$credential_value" "$payload"' EXIT
-	chmod 600 "$credential_request" "$credential_response" "$credential_value" "$payload"
-	printf 'protocol=https\nhost=%s\n\n' "$LABCTL_GIT_HOST" >"$credential_request"
-	git credential fill <"$credential_request" >"$credential_response"
-	while IFS= read -r line || [[ -n $line ]]; do
-		case $line in
-		username=*)
-			username=${line#username=}
-			username_count=$((username_count + 1))
-			;;
-		password=*)
-			password=${line#password=}
-			password_count=$((password_count + 1))
-			;;
-		esac
-	done <"$credential_response"
-	[[ $username_count == 1 && -n $username && $username != *$'\n'* && $password_count == 1 && -n $password && $password != *$'\n'* ]] || {
-		labctl_die 'Git credential helper did not return exactly one username and password'
-		return 1
-	}
-	printf '%s\n%s\n' "$username" "$password" >"$credential_value"
-	api_key="systemd.credential.$credential_name"
-	jq -n --arg key "$api_key" --rawfile value "$credential_value" '{config: {($key): $value}}' >"$payload"
-	labctl_incus_patch_config_file "$instance" "$payload"
-)
-
-labctl_incus_set_systemd_credential_file() (
-	set -euo pipefail
-	local instance=$1 credential_name=$2 source_file=$3 payload api_key
-	labctl_incus_validate_credential_name "$credential_name"
-	[[ -f $source_file && -r $source_file && -O $source_file ]] || {
-		labctl_die 'credential source file is unreadable or not owned by the current user'
-		return 1
-	}
-	umask 077
-	payload=$(mktemp "${TMPDIR:-/tmp}/labctl-incus-patch.XXXXXX")
-	trap 'rm -f -- "$payload"' EXIT
-	chmod 600 "$payload"
-	api_key="systemd.credential.$credential_name"
-	jq -n --arg key "$api_key" --rawfile value "$source_file" '{config: {($key): $value}}' >"$payload"
-	labctl_incus_patch_config_file "$instance" "$payload"
-)
+labctl_incus_set_systemd_credential_file() {
+	local instance=$1 credential_name=$2 source_file=$3 format helper
+	labctl_incus_validate_credential_name "$credential_name" || return 1
+	case $credential_name in
+		loggo-template) format=loggo-template ;;
+		monorepo-environment) format=environment ;;
+		*) labctl_die 'unsupported private memory input'; return 1 ;;
+	esac
+	if [[ ${LABCTL_DRY_RUN:-false} == true ]]; then
+		printf '+ private input via sandbox memory: %s\n' "$credential_name"
+		return 0
+	fi
+	helper="$(dirname "${BASH_SOURCE[0]}")/pass-credential-sync.py"
+	python3 "$helper" blob --instance "$instance" --project "$LABCTL_INCUS_PROJECT" \
+		--host "$LABCTL_GIT_HOST" --name "$credential_name" --user "$LABCTL_INSTANCE_USER" \
+		--format "$format" --source "$source_file"
+}
 
 labctl_incus_sync_loggo_template() {
-	local instance=$1 template=${LABCTL_LOGGO_TEMPLATE_PATH:-}
-	[[ -n $template ]] || {
-		labctl_die 'Loggo template is not configured; set LABCTL_LOGGO_TEMPLATE_PATH in private configuration'
-		return 1
-	}
-	labctl_incus_set_systemd_credential_file "$instance" loggo-template "$template" || return 1
-	# shellcheck disable=SC2016 # The guest shell, not this shell, expands its positional argument.
-	labctl_run incus exec "$instance" -- bash -c 'set -euo pipefail; install -d -m 0700 -o "$1" -g "$1" "/home/$1"; systemd-creds cat loggo-template >"/home/$1/.private-monorepo-loggo.tpl"; chown "$1:$1" "/home/$1/.private-monorepo-loggo.tpl"; chmod 0600 "/home/$1/.private-monorepo-loggo.tpl"' -- "$LABCTL_INSTANCE_USER"
+	local instance=$1 template=${LABCTL_LOGGO_TEMPLATE_PATH:-} reference=${LABCTL_LOGGO_PASS_REFERENCE:-} helper
+	if [[ -n $reference ]]; then
+		if [[ ${LABCTL_DRY_RUN:-false} == true ]]; then
+			printf '+ pass-backed template via sandbox memory: %s\n' "$instance"
+			return 0
+		fi
+		helper="$(dirname "${BASH_SOURCE[0]}")/pass-credential-sync.py"
+		python3 "$helper" blob --instance "$instance" --project "$LABCTL_INCUS_PROJECT" \
+			--host "$LABCTL_GIT_HOST" --name loggo-template --user "$LABCTL_INSTANCE_USER" \
+			--format loggo-template --pass-reference "$reference"
+	else
+		[[ -n $template ]] || { labctl_die 'configure a Loggo template path or pass reference'; return 1; }
+		labctl_incus_set_systemd_credential_file "$instance" loggo-template "$template"
+	fi
 }
 
 labctl_incus_sync_monorepo_environment() (
 	set -euo pipefail
-	local instance=$1 ticket=$2 rendered
+	local instance=$1 ticket=$2 helper rendered
 	local -a log_dirs=()
 	read -r -a log_dirs <<<"${LABCTL_MONOREPO_SERVICE_LOG_DIRS:-}"
-	umask 077
-	rendered=$(mktemp "${TMPDIR:-/tmp}/labctl-monorepo-env.XXXXXX")
-	trap 'rm -f -- "$rendered"' EXIT
-	labctl_monorepo_env_render "$ticket" "$rendered"
-	labctl_incus_set_systemd_credential_file "$instance" monorepo-environment "$rendered"
-	# shellcheck disable=SC2016 # Guest shell expands the configured user argument.
-	labctl_run incus exec "$instance" -- bash -c 'set -euo pipefail
+	if [[ ${LABCTL_DRY_RUN:-false} == true ]]; then
+		printf '+ monorepo environment via sandbox memory: %s\n' "$instance"
+		return 0
+	fi
+	helper="$(dirname "${BASH_SOURCE[0]}")/pass-credential-sync.py"
+	# Validate the complete render in memory before replacing any live broker input.
+	rendered=$(labctl_monorepo_env_render "$ticket" -) || return 1
+	printf '%s\n' "$rendered" | python3 "$helper" blob \
+		--instance "$instance" --project "$LABCTL_INCUS_PROJECT" --host "$LABCTL_GIT_HOST" \
+		--name monorepo-environment --user "$LABCTL_INSTANCE_USER" --format environment --source -
+	labctl_run incus --project "$LABCTL_INCUS_PROJECT" exec "$instance" -- bash -s -- "$LABCTL_INSTANCE_USER" "${log_dirs[@]}" <<'SCRIPT'
+set -euo pipefail
 username=$1
-env_file="/home/$username/.config/monorepo/sandbox.env"
-profile_file=/etc/profile.d/labctl-monorepo-environment.sh
-install -d -m 0700 -o "$username" -g "$username" "/home/$username/.config"
-install -d -m 0700 -o "$username" -g "$username" "/home/$username/.config/monorepo"
 shift
-# Service log directories the guest stack writes as the sandbox user.
 for service in "$@"; do
-  [[ $service =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || { printf "invalid service log directory: %s\n" "$service" >&2; exit 1; }
+  [[ $service =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || exit 1
   install -d -m 0755 -o "$username" -g "$username" "/var/log/$service"
-  chown -R "$username:$username" "/var/log/$service"
 done
-systemd-creds cat monorepo-environment >"$env_file"
-chown "$username:$username" "$env_file"
-chmod 0600 "$env_file"
-cat >"$profile_file" <<EOF
-# Generated by labctl. Source the per-user sandbox environment at login.
-env_file="\$HOME/.config/monorepo/sandbox.env"
-if [ -r "\$env_file" ]; then
-  . "\$env_file"
-fi
-EOF
-chown root:root "$profile_file"
-chmod 0644 "$profile_file"' -- "$LABCTL_INSTANCE_USER" "${log_dirs[@]}"
+SCRIPT
 )
 
-labctl_incus_unset_systemd_credential() (
-	set -euo pipefail
-	local instance=$1 credential_name=$2 payload api_key
-	labctl_incus_validate_credential_name "$credential_name"
-	labctl_incus_instance_exists "$instance" || {
-		labctl_die "sandbox instance does not exist: $instance"
-		return 1
-	}
-	umask 077
-	payload=$(mktemp "${TMPDIR:-/tmp}/labctl-incus-patch.XXXXXX")
-	trap 'rm -f -- "$payload"' EXIT
-	chmod 600 "$payload"
-	api_key="systemd.credential.$credential_name"
-	jq -n --arg key "$api_key" '{config: {($key): null}}' >"$payload"
-	labctl_incus_patch_config_file "$instance" "$payload"
-)
+labctl_incus_unset_systemd_credential() {
+	local instance=$1 credential_name=$2 helper
+	labctl_incus_validate_credential_name "$credential_name" || return 1
+	if [[ ${LABCTL_DRY_RUN:-false} == true ]]; then
+		printf '+ sandbox memory credential unset: %s\n' "$instance"
+		return 0
+	fi
+	helper="$(dirname "${BASH_SOURCE[0]}")/pass-credential-sync.py"
+	python3 "$helper" unset --instance "$instance" --project "$LABCTL_INCUS_PROJECT" \
+		--host "$LABCTL_GIT_HOST" --name "$credential_name" --user "$LABCTL_INSTANCE_USER"
+}

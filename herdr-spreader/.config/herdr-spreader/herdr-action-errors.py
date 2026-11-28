@@ -162,13 +162,15 @@ def notify_failure(name, status, message, sources):
 
 def run_action(name, command):
     env = dict(os.environ, **{ACTIVE: '1'})
-    # Herdr's persistent server can predate mise activation. Actions do not run
-    # login shells, so supply shims without sourcing interactive shell config.
+    # Persistent servers can predate shell setup. Supply stable user launchers
+    # and mise shims without sourcing profiles or overriding inherited precedence.
     data = Path(env.get('XDG_DATA_HOME') or Path.home() / '.local/share')
     shims = Path(env.get('MISE_DATA_DIR') or data / 'mise') / 'shims'
     path = env.get('PATH', os.defpath).split(os.pathsep)
-    if shims.is_dir() and str(shims) not in path:
-        env['PATH'] = os.pathsep.join([*path, str(shims)])
+    for directory in (Path.home() / '.local/bin', shims):
+        if directory.is_dir() and str(directory) not in path:
+            path.append(str(directory))
+    env['PATH'] = os.pathsep.join(path)
     if os.environ.get(ACTIVE) == '1':
         # An outer runner owns the capture, status, and single notification.
         try:

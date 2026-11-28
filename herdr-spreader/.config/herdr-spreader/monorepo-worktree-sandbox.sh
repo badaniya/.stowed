@@ -342,8 +342,8 @@ monitor_label() {
 		printf '%s\n' 'Sandbox bootstrap did not provide a safe instance project' >&2
 		return 1
 	}
-	printf -v command 'incus --project %q list %q --format json | jq -er %q' \
-		"$instance_project" "$normalized_ticket" '[.[].state.network.eth0.addresses[] | select(.family == "inet" and .scope == "global") | .address] | first'
+	printf -v command 'incus --project %q list %q --format json | jq -er --arg name %q %q' \
+		"$instance_project" "$normalized_ticket" "$normalized_ticket" '[.[] | select(.name == $name and .status == "Running") | .state.network.eth0.addresses[]? | select(.family == "inet" and .scope == "global") | .address] | first'
 	ip=$(sg incus-admin -c "$command") || {
 		printf '%s\n' 'Sandbox has no accessible external IPv4 address' >&2
 		return 1

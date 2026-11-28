@@ -28,8 +28,12 @@ owner-writable only.
 
 The local prerequisites are:
 
-- `bash`, `incus`, `jq`, `flock`, `docker`, `ip`, `sysctl`, `df`, `lxc`, and
-  `multipass`; these are the commands checked by `labctl preflight`.
+- `bash`, `incus`, `jq`, `flock`, `docker`, `ip`, `sysctl`, `df`, `python3`, and `pass`; these
+  are the commands checked by `labctl preflight`.
+- LXD and Multipass are optional coexistence inventories, not prerequisites.
+  LXD is queried only when an existing daemon socket is present. If that socket
+  is inaccessible, inventory may use existing noninteractive administrator access;
+  no legacy daemon is installed, initialized, or reconfigured.
 - `nc` for the `verify` TCP reachability checks.
 - GNU Stow for package installation.
 - An account that can query and manage only the intended Incus daemon. Grant
@@ -55,6 +59,60 @@ missing/corrupt asset or unavailable daemon fails creation before `incus init`;
 there is no implicit Ubuntu fallback or alias replacement. Explicit non-golden
 image selections remain explicit. Dry runs never import or create lock files.
 Running containers are never recreated or changed by this image check.
+
+## Runtime compatibility and credential gate
+
+Use a maintained Incus release with the nested-runc AppArmor fix. The maintained
+6.0 LTS packages (6.0.7 tested) support current runc without disabling confinement.
+See [upstream issue 2623](https://github.com/lxc/incus/issues/2623).
+Do not downgrade security-patched runc or use privileged/unconfined containers
+as a workaround.
+
+WSL mirrored networking may reserve Windows-owned DHCP ports. A Linux-side
+socket inventory alone cannot rule out a Windows UDP 67 conflict. Review WSL
+port settings and schedule a WSL restart rather than stopping existing Windows
+network services.
+
+Git credentials now use the host's plain pass store and a sandbox-local
+in-memory broker. The host selects only the configured work/enterprise account
+from owner-only account references, transfers the token through Incus stdin,
+and installs a user-restricted Unix socket. Tokens are not written to temporary
+files, Git configuration, command arguments, or persistent Incus configuration.
+The sandbox user and host administrators can access the credential. This remains
+an operational isolation boundary, not a hostile-code boundary.
+
+Stack operations refresh the broker before execution. Credential unset removes
+its memory state; container restart loses that state until the next host sync.
+Guest Git receives tokens only for the configured HTTPS host. Command-scoped Git
+settings override host-only helper references in mounted worktree metadata.
+
+Loggo templates and monorepo environments use the same memory-only delivery.
+Environment rendering completes and validates in host memory before the live
+broker input is replaced. Guest login hooks load literal exports from IPC;
+there is no generated `sandbox.env`. Templates are inherited through sealed
+anonymous `memfd` descriptors, not copied into a guest credential file. Existing
+controller-generated plaintext copies and matching legacy Incus keys are removed
+only after the replacement broker input is ready.
+
+Optional `LABCTL_LOGGO_PASS_REFERENCE` selects a template from pass instead of an
+owner-only host file. `LABCTL_MONOREPO_ENV_PASS_REFERENCES` maps allowlisted variable
+names to pass references; mapped names override their old profile values without
+copying those values. Skipped/host-derived variables cannot be overridden this way.
+
+For a file-based Loggo consumer, run as the sandbox user:
+
+```bash
+labctl-with-inputs loggo stream --template '{template}'
+```
+
+The wrapper preserves stdin and passes the anonymous descriptor to the child.
+The template is read-only; edit the authoritative host/pass source instead.
+Environment values exist in the consuming process environment. The sandbox user
+and administrators can inspect them. Unset prevents future retrieval but cannot
+revoke values or descriptors already held by running processes.
+
+Private application-stack startup, health and external-device reachability remain
+separate acceptance gates; transport proofs do not establish those workloads.
 
 ## Host prerequisites and proof
 
@@ -155,8 +213,8 @@ placeholders below; never put private identifiers in committed documentation.
 | `labctl verify <ticket>` | Checks isolation, private Docker, stack health, and configured TCP reachability. |
 | `labctl destroy <ticket> --yes` | Removes the named sandbox and private runtime state, not source worktrees. |
 | `labctl cleanup-worktree <ticket> --yes` | Separately delegates source-worktree removal after explicit confirmation. |
-| `labctl credential sync <ticket>` | Reads the configured HTTPS host credential without displaying it and updates only the configured sandbox system credential. |
-| `labctl credential unset <ticket>` | Removes only the configured sandbox system credential. |
+| `labctl credential sync <ticket>` | Reads the configured work/enterprise token from pass and refreshes the sandbox memory broker without displaying it. |
+| `labctl credential unset <ticket>` | Removes the configured broker's in-memory credential and any matching legacy Incus credential key. |
 
 Use `--dry-run` before every state-changing action, including host setup,
 creation, destruction, and worktree cleanup. The global form places it before
@@ -232,12 +290,13 @@ deferred. They are not part of this package's initial rollout.
 Set `LABCTL_GIT_HOST` to the Git HTTPS host. `LABCTL_GIT_CREDENTIAL_NAME` is
 optional and defaults to `git-module-token`. Do not place a credential value or
 username in active configuration. `labctl credential sync <ticket>` uses the
-host Git credential helper, writes restrictive temporary files, and patches only
-`systemd.credential.<configured-name>` on the target instance. It never prints
-the returned credential. Use `labctl credential unset <ticket>` to remove that
-key.
+configured pass reference and transfers the credential to a user-restricted
+in-memory broker over Incus stdin. It never prints the returned credential or
+writes it to a temporary file, Git config, or persistent Incus key. Use
+`labctl credential unset <ticket>` to clear future broker retrieval.
 
-During stack hooks, a root-only temporary askpass helper reads the systemd
-credential at runtime, supplies the returned username and token to Git, sets
-`GOPRIVATE` and `GONOSUMDB` for the configured host, and removes itself even if
-the hook fails. The token is not written to the sandbox filesystem.
+Stack hooks refresh the broker before execution. Per-sandbox delivery locking
+serializes public helper installation, broker updates and guest configuration
+when multiple stages start concurrently. Command-scoped Git settings use the
+broker only for its configured HTTPS host; already-running consumers retain any
+values they previously retrieved until those processes exit.

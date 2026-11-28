@@ -174,7 +174,7 @@ labctl_verify() {
 		return 1
 	}
 	# shellcheck disable=SC2016 # The guest shell validates its positional arguments and owns probe cleanup.
-	labctl_run incus exec "$ticket" -- su - "$LABCTL_INSTANCE_USER" -c 'set -euo pipefail
+	labctl_run incus exec "$ticket" -- runuser -u "$LABCTL_INSTANCE_USER" -- bash -c 'set -euo pipefail
 instance_user=$1
 expected_uid=$2
 expected_gid=$3
@@ -207,7 +207,7 @@ for mount in "${shifted_mounts[@]}"; do
 	}
 	probe=$(mktemp -d "$mount/.labctl-write-probe.XXXXXX")
 	probes+=("$probe")
-done' -- "$LABCTL_INSTANCE_USER" "$uid" "$gid" "$LABCTL_MASTER_ROOT" "$root" || return 1
+done' labctl-verify "$LABCTL_INSTANCE_USER" "$uid" "$gid" "$LABCTL_MASTER_ROOT" "$root" || return 1
 	labctl_run incus exec "$ticket" -- docker info
 	labctl_stack_health "$ticket"
 	labctl_verify_ports "$ticket"
