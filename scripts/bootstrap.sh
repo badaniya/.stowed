@@ -54,13 +54,15 @@ note "ok"
 
 step "Git filters"
 pi_filter="jq 'del(.lastChangelogVersion, .extensionChangelogVersions)'"
-if [ "$(git -C "$repo_root" config --get filter.pi-settings.clean || true)" = "$pi_filter" ]; then
-  note "pi-settings filter configured"
+if [ "$(git -C "$repo_root" config --get filter.pi-settings.clean || true)" = "$pi_filter" ] &&
+   [ "$(git -C "$repo_root" config --bool --get filter.pi-settings.required || true)" = true ]; then
+  note "required pi-settings filter configured"
 elif $check_only; then
-  warn "pi-settings filter missing: Pi version stamps will show as changes"
+  warn "pi-settings filter missing or not required: run scripts/bootstrap.sh to repair"
 else
   git -C "$repo_root" config filter.pi-settings.clean "$pi_filter"
-  note "configured pi-settings filter"
+  git -C "$repo_root" config filter.pi-settings.required true
+  note "configured required pi-settings filter"
 fi
 
 step "Private settings"

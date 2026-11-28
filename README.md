@@ -106,11 +106,22 @@ $HOME/.stowed/scripts/bootstrap.sh           # set up or repair (safe to rerun)
 $HOME/.stowed/scripts/bootstrap.sh --check   # report what is missing
 ```
 
-It configures the git filter that hides Pi's version stamps, writes Claude's
+It configures the required Git clean filter that excludes Pi's version stamps from commits, writes Claude's
 `settings.json` from the tracked `settings.base.json`, installs the declared
 Claude marketplaces and plugins, installs the Pi runtime and packages, and
 installs the Herdr plugins listed in `herdr/.config/herdr/plugins.txt` (add a
 line there when you install a new one).
+
+Pi's `settings.json` stays tracked: only `lastChangelogVersion` and
+`extensionChangelogVersions` are stripped from Git's staged content. The live
+file retains these fields, and all other settings (including new keys) remain
+tracked. Bootstrap installs this local filter on each clone and makes failures
+fatal, so invalid JSON or an unavailable `jq` cannot silently bypass it.
+If Git reports the file modified but `git diff` is empty, run
+`git add -- pi/.pi/agent/settings.json` from the repo root to refresh its status
+through the filter without rewriting the live file. Avoid `assume-unchanged`
+and `skip-worktree`, which would also hide actual configuration changes.
+
 Secrets (Langfuse keys) go in `~/.private_bash_profile`, never in tracked files.
 Internal MCP servers (private hosts or IPs) go in the untracked
 `~/.config/mcp/mcp.json` (`{"mcpServers": {...}}`). pi-mcp-adapter merges it with
