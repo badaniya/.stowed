@@ -27,7 +27,7 @@ class PiSettingsFilterTests(unittest.TestCase):
             path = self.repo / 'scripts' / name
             path.write_text('#!/usr/bin/env bash\nexit 0\n')
             path.chmod(0o755)
-        for name in ('bash', 'git', 'jq', 'rg', 'dirname'):
+        for name in ('bash', 'git', 'jq', 'rg', 'dirname', 'python3'):
             executable = shutil.which(name)
             assert executable is not None, f'{name} is required for these tests'
             (self.bin / name).symlink_to(executable)
@@ -36,7 +36,7 @@ class PiSettingsFilterTests(unittest.TestCase):
             'export LANGFUSE_PUBLIC_KEY=fixture\nexport LANGFUSE_SECRET_KEY=fixture\nexport LANGFUSE_BASE_URL=fixture\n')
         self.env = dict(os.environ, HOME=str(self.home), PATH=str(self.bin),
                         GIT_CONFIG_NOSYSTEM='1', GIT_CONFIG_GLOBAL=str(self.home / '.gitconfig'),
-                        PI_LAUNCHER=str(self.home / 'absent-pi'))
+                        PI_LAUNCHER=str(self.home / 'absent-pi'), DOTFILES_PROFILE='public')
         for key in ('GIT_DIR', 'GIT_WORK_TREE', 'GIT_COMMON_DIR'):
             self.env.pop(key, None)
         self.git('init', '-q')

@@ -43,7 +43,7 @@ warn() {
 }
 
 step "Required tools"
-for tool in git jq rg stow; do
+for tool in git jq rg stow python3; do
   command -v "$tool" >/dev/null || warn "$tool is not installed"
 done
 [ "$problems" -eq 0 ] || {
@@ -51,6 +51,23 @@ done
   exit 1
 }
 note "ok"
+
+step "Review workspace host tools"
+review_profile=${DOTFILES_PROFILE:-public}
+if [[ -z ${DOTFILES_PROFILE+x} && -f "$HOME/.private_work.env" ]]; then
+  review_profile=work
+fi
+if [[ $review_profile == work ]]; then
+  PATH="$(python3 "$repo_root/scripts/review-tools.py" --path)"
+  export PATH
+  if $check_only; then
+    python3 "$repo_root/scripts/review-tools.py" --check || warn "Review host tools incomplete"
+  else
+    python3 "$repo_root/scripts/review-tools.py" --install
+  fi
+else
+  note "optional: DOTFILES_PROFILE=work enables review-tool provisioning"
+fi
 
 step "Git filters"
 pi_filter="jq 'del(.lastChangelogVersion, .extensionChangelogVersions)'"

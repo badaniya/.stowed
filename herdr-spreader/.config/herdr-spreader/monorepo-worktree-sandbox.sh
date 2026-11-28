@@ -55,6 +55,14 @@ fi
 normalized_ticket=${ticket,,}
 
 spreader_dir="${HOME}/.config/herdr-spreader"
+# Check host programs before creating state, worktrees, panes or a sandbox.
+# Worker processes inherit the already-checked parent launch.
+if [[ $review_mode == true && $bootstrap_worker != true ]]; then
+	python3 "$HOME/.stowed/scripts/review-tools.py" --check || {
+		printf 'Review tools incomplete: run DOTFILES_PROFILE=work bash ~/.stowed/scripts/bootstrap.sh\n' >&2
+		exit 1
+	}
+fi
 if [[ $review_mode == true ]]; then
 	# shellcheck source=/dev/null
 	source "${spreader_dir}/monorepo-review-sandbox.sh"

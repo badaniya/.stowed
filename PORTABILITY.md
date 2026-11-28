@@ -40,6 +40,39 @@ Native per-file overlays remain preferred for Herdr actions and layouts. For app
 
 `.git/info/exclude` is convenience, not a security boundary: force-add bypasses it. Run a secret scanner before publishing changes and review staged filenames/diffs. Prefer an encrypted private repository or age-encrypted archive backed up separately. Do not assume ignored files are excluded from tar, rsync, or backups.
 
+## Review workspace host tools
+
+`scripts/review-tools.json` declares the host dependencies for review workspaces.
+Tuicr is pinned to 0.30.0 (matching mise) and the gh-dash extension to 4.26.0.
+Pi reuses its managed `install/current-version` and launcher: its existing
+installer selects the initial release and locks dependencies; this is not a
+second repository-wide Pi version pin. Bootstrap enables this toolset automatically
+when `~/.private_work.env` exists (without sourcing it). Set `DOTFILES_PROFILE=work`
+to require it explicitly, or `DOTFILES_PROFILE=public` to opt out.
+
+```sh
+# Install/repair only the review tools, then verify them.
+python3 "$HOME/.stowed/scripts/review-tools.py" --install
+# Read-only checks; no installation, network or credential lookup.
+python3 "$HOME/.stowed/scripts/review-tools.py" --check
+# Full work bootstrap also installs and checks the review toolset.
+DOTFILES_PROFILE=work bash "$HOME/.stowed/scripts/bootstrap.sh"
+DOTFILES_PROFILE=work bash "$HOME/.stowed/scripts/bootstrap.sh" --check
+```
+
+Checks run version probes, verify the Node minimum (22.19.0), require the managed
+Pi launcher's version to match its version file, and verify both gh-dash's local
+registration and binary version. Missing OS/toolchain prerequisites are reported;
+these scripts do not acquire sudo or install the entire optional mise catalog.
+Tuicr uses mise; gh-dash installation uses the existing pass-scoped gh-work
+wrapper, not native-token fallback. An existing official gh-dash installation is
+backed up under `~/.local/state/dotfiles/review-tools` before replacement.
+
+Review creation checks these host dependencies before creating worktrees, panes
+or a sandbox. The worker skips the parent check. Check mode does not test provider
+login or Kubernetes access. Build-pane guest tools remain the golden image and
+labctl's responsibility; no image is rebuilt by host-tool provisioning.
+
 ## Runtime migration (offline only)
 
 The current folded Stow link remains valid. To move Herdr's sessions, plugin builds, caches and registry out of the checkout, quit Herdr yourself first. This will interrupt its sessions: plan downtime and save important work.
