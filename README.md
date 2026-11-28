@@ -71,27 +71,26 @@ git clone https://github.com/badaniya/.stowed $HOME/.stowed
 # Create Symlinks to Repo
 stow -d $HOME/.stowed stow ghostty tmux fzf bat delta starship bash zsh nvim vim emacs
 
-# To Force Symlink Creation (NOTE: May miss some hidden files or symlinks)
-stow -d $HOME/.stowed --adopt ghostty stow tmux fzf bat delta starship bash zsh nvim vim emacs
-cd $HOME/.stowed
-git reset --hard HEAD
-
-# Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
-rm -rf $HOME/.config/ghostty; rm -rf $HOME/.bash*; rm -rf $HOME/.zsh*; rm -rf $HOME/.oh-my-zsh; rm -rf $HOME/.tmux*; rm -rf $HOME/.config/nvim; rm -rf $HOME/.vim*; rm -rf $HOME/.emacs*; rm -rf $HOME/.config/github-copilot; rm -rf $HOME/.ai ; rm -rf $HOME/.config/Code/User; stow -d $HOME/.stowed stow ghostty tmux fzf bat delta starship bash zsh nvim vim emacs goland code
+# Preview conflicts first. Back up individual conflicting files before retrying.
+# Do not use --adopt or delete existing configuration as a bootstrap shortcut.
+stow --simulate -d "$HOME/.stowed" -t "$HOME" stow ghostty tmux fzf bat delta starship bash zsh nvim vim emacs
 ```
 
 ### 4) Run Stow Command to Establish Symlinks to the Repository for Optional Terminal Tools
 
 ```bash
-# Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
-rm -rf $HOME/.config/tmuxinator; rm -rf $HOME/.config/mise; rm -rf $HOME/.config/worktrunk; rm -rf $HOME/.config/gh-dash; rm -rf $HOME/.config/gitui; rm -rf $HOME/.config/lazygit; rm -rf $HOME/.config/hunk; rm -rf $HOME/.config/tuicr; rm -rf $HOME/.config/tuxedo; stow -d $HOME/.stowed tmuxinator mise worktrunk gh-dash gitui lazygit hunk tuicr tuxedo
+stow --simulate -d "$HOME/.stowed" -t "$HOME" tmuxinator mise worktrunk gh-dash gitui lazygit hunk tuicr tuxedo
+# After reviewing conflicts and backups, rerun without --simulate.
 ```
 
 ### 5) Run Stow Command to Establish Symlinks to the Repository for Optional AI Terminal Tools
 
 ```bash
-# Sure-fire way to ensure stow symlink creation (NOTE: Ensure the GNU Stow succeeds before quitting the shell) 
-rm -rf $HOME/.npmrc; rm -rf $HOME/.config/herdr;  rm -rf $HOME/.config/herdr-app; rm -rf $HOME/.config/herdr-spreader; rm -rf $HOME/.config/rex; rm -rf $HOME/.claude.json; rm -rf $HOME/.claude; rm -rf $HOME/.copilot; rm -rf $HOME/.config/.copilot; rm -rf $HOME/.config/opencode; rm -rf $HOME/.pi; rm -rf $HOME/.agents; stow -d $HOME/.stowed npm herdr herdr-app herdr-spreader rex claude copilot opencode pi agents
+# Herdr: safe deployment, stable CLI wrapper and canonical action directory.
+bash "$HOME/.stowed/scripts/setup-host.sh"
+# Other tools: preview before deployment.
+stow --simulate -d "$HOME/.stowed" -t "$HOME" npm rex claude copilot opencode pi agents
+# After reviewing conflicts and backups, rerun without --simulate.
 ```
 
 Stowing `pi` only restores its configuration. Its managed runtime is installed
@@ -119,8 +118,8 @@ the tracked `~/.pi/agent/mcp.json` and `mcp-adapter.json`, and the tracked files
 win for any server defined in both.
 Other files that name internal hosts, IPs or credentials live in `~/.private_*`
 directories, and bootstrap (via `scripts/private-links.sh`) symlinks them into
-the stowed config dirs, listing each link in `.git/info/exclude` so it is never
-committed: lab launchers and their Herdr quick actions
+the stowed config dirs, listing each link in `.git/info/exclude` to prevent
+accidental normal adds (not a security boundary; force-add can bypass it): lab launchers and their Herdr quick actions
 (`~/.private_herdr_spreader/`, `~/.private_herdr_quick_actions/`), the reviewr
 plugin config (`~/.private_herdr_reviewr/`), labctl's `config.env`
 (`~/.private_labctl/`; start from `config.example.env`) and Copilot's
@@ -136,6 +135,9 @@ change with:
 $HOME/.stowed/scripts/claude-settings.sh check    # what differs from the base
 $HOME/.stowed/scripts/claude-settings.sh export   # copy shared keys to settings.base.json
 ```
+
+See [portable Herdr deployment and private profiles](PORTABILITY.md) for checks,
+private-data provisioning, and offline runtime migration.
 
 ## Installing Stowed Terminal Tools
 

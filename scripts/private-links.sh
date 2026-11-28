@@ -22,7 +22,6 @@ case "$exclude" in /*) ;; *) exclude="$repo_root/$exclude" ;; esac
 links=(
   "$HOME/.private_herdr_spreader:herdr-spreader/.config/herdr-spreader"
   "$HOME/.private_herdr_quick_actions:herdr/.config/herdr/plugins/config/cloudmanic.herdr-plus/quick-actions"
-  "$HOME/.private_herdr_quick_actions:$HOME/.config/herdr-plus/quick-actions"
   "$HOME/.private_herdr_reviewr:herdr/.config/herdr/plugins/config/persiyanov.reviewr"
   "$HOME/.private_herdr_spreader_workspaces:herdr/.config/herdr/plugins/config/herdr-spreader"
   "$HOME/.private_labctl:incus/.config/labctl"
@@ -46,8 +45,10 @@ warn() {
   problems=$((problems + 1))
 }
 
-mkdir -p "$(dirname "$exclude")"
-touch "$exclude"
+if ! $check_only; then
+  mkdir -p "$(dirname "$exclude")"
+  touch "$exclude"
+fi
 
 for pair in "${links[@]}"; do
   src_dir="${pair%%:*}"
@@ -77,7 +78,7 @@ for pair in "${links[@]}"; do
       mkdir -p "$(dirname "$dest")"
       ln -s "$src" "$dest"
     fi
-    if ! rg -qxF -- "/$rel" "$exclude"; then
+    if [ ! -f "$exclude" ] || ! rg -qxF -- "/$rel" "$exclude"; then
       if $check_only; then
         warn "/$rel missing from $exclude"
       else
@@ -89,32 +90,19 @@ for pair in "${links[@]}"; do
   printf '   %s: %d file(s) from %s\n' "$rel_dir" "$linked" "$src_dir"
 done
 
-# Also sync tracked quick-action files from plugin config to ~/.config/herdr-plus/quick-actions/
-# These are files committed to the repo (not private) that herdr-plus needs to see
-plugin_quick_actions="$repo_root/herdr/.config/herdr/plugins/config/cloudmanic.herdr-plus/quick-actions"
-if [ -d "$plugin_quick_actions" ]; then
-  linked=0
-  for src in "$plugin_quick_actions"/*.toml; do
-    [ -f "$src" ] || continue
-    # Skip symlinks (those are from private dir, already handled above)
-    [ -L "$src" ] && continue
-    dest="$HOME/.config/herdr-plus/quick-actions/${src##*/}"
-    if [ -L "$dest" ] && [ "$(readlink "$dest")" = "$src" ]; then
-      :
-    elif [ -e "$dest" ] || [ -L "$dest" ]; then
-      warn "$dest exists and is not a link to $src"
-      continue
-    elif $check_only; then
-      warn "$dest not linked"
-      continue
-    else
-      mkdir -p "$(dirname "$dest")"
-      ln -s "$src" "$dest"
-    fi
-    linked=$((linked + 1))
+# Herdr Plus uses its managed plugin directory. Standalone compatibility is
+# handled by setup-host.sh with a single directory link, not a second file tree.
+# Check links whose private sources have been removed, too.
+for pair in "${links[@]}"; do
+  rel_dir="${pair#*:}"
+  case "$rel_dir" in /*) dest_dir="$rel_dir" ;; *) dest_dir="$repo_root/$rel_dir" ;; esac
+  [ -d "$dest_dir" ] || continue
+  for dest in "$dest_dir"/*; do
+    [ -L "$dest" ] || continue
+    # This checker owns only links into the mapped private source directory.
+    case "$(readlink "$dest")" in "${pair%%:*}"/*) ;; *) continue ;; esac
+    [ -e "$dest" ] || warn "broken private link: $dest"
   done
-  printf '   %s: %d tracked file(s) from plugin config
-' "$HOME/.config/herdr-plus/quick-actions" "$linked"
-fi
+done
 
 [ "$problems" -eq 0 ]

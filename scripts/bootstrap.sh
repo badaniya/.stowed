@@ -161,10 +161,10 @@ else
   herdr_listed="$(herdr plugin list 2>/dev/null || true)"
   while read -r kind src ref; do
     case "$kind" in
-      github) marker="[github:$src@" ;;
+      github) marker="enabled [github:$src@$ref]" ;;
       local)
         src="$repo_root/$src"
-        marker="[local:$src]"
+        marker="enabled [local:$src]"
         ;;
       *) continue ;;
     esac
@@ -178,6 +178,11 @@ else
       herdr plugin link "$src"
     fi
   done < <(rg -v '^\s*(#|$)' "$repo_root/herdr/.config/herdr/plugins.txt")
+fi
+
+step "Herdr deployment and dependencies"
+if command -v herdr >/dev/null; then
+  python3 "$repo_root/scripts/herdr-doctor.py" --profile "${DOTFILES_PROFILE:-public}" || warn "Herdr deployment incomplete; run scripts/setup-host.sh"
 fi
 
 printf '\n'

@@ -63,4 +63,5 @@ herdr-app/.config/herdr-app/installed.json
 herdr-app/.config/herdr-app/seen.json
 herdr-app/.config/herdr-app/view.json
 herdr-app/.config/herdr-app/window.json
+herdr-app/.config/herdr-app/layouts/.state/
 herdr-app/.config/herdr-app/update-notes*

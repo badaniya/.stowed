@@ -1,0 +1,27 @@
+#!/usr/bin/env python3
+"""Stable entrypoint for the binary owned by Herdr's Spreader plugin."""
+import json
+import os
+import sys
+from pathlib import Path
+
+
+def main():
+    config = Path(os.environ.get('XDG_CONFIG_HOME') or Path.home() / '.config')
+    registry = config / 'herdr/plugins.json'
+    try:
+        entries = json.loads(registry.read_text())
+        entry = next(e for e in entries if e.get('plugin_id') == 'herdr-spreader' and e.get('enabled'))
+        binary = Path(entry['plugin_root']) / 'target/release/herdr-spreader'
+        if not binary.is_file() or not os.access(binary, os.X_OK):
+            raise ValueError('plugin binary is not executable')
+        if binary.resolve() == Path(__file__).resolve():
+            raise ValueError('recursive launcher path')
+    except (OSError, ValueError, KeyError, StopIteration, TypeError):
+        print('Spreader is unavailable: run herdr plugin install yuk1ty/herdr-spreader, then retry.', file=sys.stderr)
+        return 127
+    os.execv(str(binary), [str(binary), *sys.argv[1:]])
+
+
+if __name__ == '__main__':
+    sys.exit(main())
