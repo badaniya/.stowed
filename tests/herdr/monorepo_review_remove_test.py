@@ -18,7 +18,7 @@ class ReviewMonoRemoveTests(unittest.TestCase):
         self.bin = self.root / 'bin'
         self.workspace = self.root / 'workspace'
         self.bare = self.workspace / 'master/mono-repo'
-        self.key = 'REVIEW-ABC-21463'
+        self.key = 'REVIEW-JIRA-12345'
         self.project = self.workspace / self.key
         self.state = self.root / 'state/herdr-spreader'
         self.log = self.root / 'commands.log'
@@ -37,7 +37,7 @@ class ReviewMonoRemoveTests(unittest.TestCase):
         self.command(self.bin / 'herdr', '''
 printf 'herdr %s\\n' "$*" >>"$TEST_LOG"
 if [[ $1 == workspace && $2 == list ]]; then
-  printf '%s\\n' '{"result":{"workspaces":[{"label":"REVIEW-ABC-21463 - Review","workspace_id":"w1"},{"label":"REVIEW-ABC-214630","workspace_id":"w2"}]}}'
+  printf '%s\\n' '{"result":{"workspaces":[{"label":"REVIEW-JIRA-12345 - Review","workspace_id":"w1"},{"label":"REVIEW-JIRA-123450","workspace_id":"w2"}]}}'
 else
   [[ $1 == workspace && $2 == close && $3 == w1 ]]
 fi
@@ -49,14 +49,14 @@ fi
         self.git('-C', str(seed), '-c', 'user.name=Fixture', '-c', 'user.email=test@example.invalid',
                  'commit', '-qm', 'initial')
         self.git('clone', '-q', '--bare', str(seed), str(self.bare))
-        self.git('-C', str(self.bare), 'worktree', 'add', '-q', '-b', 'alice/ABC-21463', str(self.project), 'main')
+        self.git('-C', str(self.bare), 'worktree', 'add', '-q', '-b', 'alice/JIRA-12345', str(self.project), 'main')
         (self.project / 'file').write_text('unpushed commit\n')
         self.git('-C', str(self.project), '-c', 'user.name=Fixture', '-c', 'user.email=test@example.invalid',
                  'commit', '-qam', 'local work')
         self.commit = self.git('-C', str(self.project), 'rev-parse', 'HEAD').strip()
         (self.project / 'dirty-file').write_text('local changes\n')
         self.admin = Path(self.git('-C', str(self.project), 'rev-parse', '--absolute-git-dir').strip())
-        self.other = self.workspace / 'ABC-21466'
+        self.other = self.workspace / 'JIRA-12346'
         self.git('-C', str(self.bare), 'worktree', 'add', '-q', '--detach', str(self.other), 'main')
         (self.state / f'{self.key}.stages').mkdir(parents=True)
         (self.state / f'{self.key}.log').touch()
@@ -78,13 +78,51 @@ fi
 
     def assert_cleaned(self):
         self.assertFalse(self.project.exists())
-        self.assertEqual(self.git('-C', str(self.bare), 'rev-parse', 'alice/ABC-21463').strip(), self.commit)
+        self.assertEqual(self.git('-C', str(self.bare), 'rev-parse', 'alice/JIRA-12345').strip(), self.commit)
         self.assertEqual(self.git('-C', str(self.other), 'rev-parse', '--is-inside-work-tree').strip(), 'true')
         self.assertFalse((self.state / f'{self.key}.log').exists())
         self.assertTrue((self.state / f'{self.key}-other.log').exists())
         calls = self.log.read_text().splitlines()
-        self.assertIn('labctl destroy REVIEW-ABC-21463 --yes', calls)
+        self.assertIn(f'labctl destroy {self.key} --yes', calls)
         self.assertEqual(calls[-1], 'herdr workspace close w1')
+
+    def check_suffixed_identity(self, key):
+        old_key = self.key
+        old_project = self.project
+        self.key = key
+        self.project = self.workspace / key
+        self.git('-C', str(self.bare), 'worktree', 'move', str(old_project), str(self.project))
+        for suffix in ('.stages', '.log', '-other.log'):
+            (self.state / f'{old_key}{suffix}').rename(self.state / f'{key}{suffix}')
+        # The unsuffixed and longer identities must not be closed by teardown.
+        self.command(self.bin / 'herdr', f'''
+printf 'herdr %s\\n' "$*" >>"$TEST_LOG"
+if [[ $1 == workspace && $2 == list ]]; then
+  printf '%s\\n' '{{"result":{{"workspaces":[{{"label":"{key} - Review","workspace_id":"w1"}},{{"label":"{old_key}","workspace_id":"w2"}},{{"label":"{key}-OTHER","workspace_id":"w3"}}]}}}}'
+else
+  [[ $1 == workspace && $2 == close && $3 == w1 ]]
+fi
+''')
+        result = self.remove()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assert_cleaned()
+        self.assertNotIn(f'labctl destroy {old_key} --yes', self.log.read_text())
+
+    def test_suffixed_jira_identity_is_removed_without_truncation(self):
+        self.check_suffixed_identity('REVIEW-JIRA-12345-TEST')
+
+    def test_suffixed_pr_identity_is_removed_without_truncation(self):
+        self.check_suffixed_identity('REVIEW-PR-9795-TEST-2')
+
+    def test_unsafe_suffixes_are_rejected_before_destroy(self):
+        for key in ('REVIEW-JIRA-12345-../OTHER', 'REVIEW-JIRA-12345-TEST/OTHER',
+                    'REVIEW-JIRA-12345-TEST;', 'REVIEW-JIRA-12345-', 'REVIEW-JIRA-12345--TEST'):
+            with self.subTest(key=key):
+                self.key = key
+                result = self.remove()
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(self.log.read_text(), '')
+                self.assertTrue(self.project.exists())
 
     def test_registered_worktree_cleanup_preserves_pr_branch(self):
         result = self.remove()

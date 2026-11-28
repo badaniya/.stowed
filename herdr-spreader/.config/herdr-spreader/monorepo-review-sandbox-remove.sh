@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 # Destroy a monorepo review sandbox and force-remove its worktree.
 # The local PR branch (incl. unpushed commits) and the remote branch are retained.
-# Usage: monorepo-review-sandbox-remove.sh '<JIRA#|REVIEW-JIRA#|REVIEW-PR-#> [--keep-worktrees]'
+# Usage: monorepo-review-sandbox-remove.sh '<JIRA#|REVIEW-JIRA#|REVIEW-PR-#>[-SUFFIX] [--keep-worktrees]'
 set -euo pipefail
 
 error() { printf 'Error: %s\n' "$*" >&2; exit 1; }
 if (($# == 1)); then read -r -a args <<<"$1"; else args=("$@"); fi
 ((${#args[@]} >= 1 && ${#args[@]} <= 2)) || error 'Usage: monorepo-review-sandbox-remove.sh <JIRA#|REVIEW-PR-#> [--keep-worktrees]'
 ticket=${args[0]#REVIEW-}
-[[ $ticket =~ ^[A-Z][A-Z0-9]+-[0-9]+$ || $ticket =~ ^PR-[1-9][0-9]*$ ]] || error 'invalid review identity; use a Jira key or REVIEW-PR-<number>'
+# Preserve optional safe suffixes so test sandboxes target their own resources.
+[[ $ticket =~ ^[A-Z][A-Z0-9]+-[0-9]+(-[A-Z0-9]+)*$ || $ticket =~ ^PR-[1-9][0-9]*(-[A-Z0-9]+)*$ ]] ||
+  error 'invalid review identity; use a Jira key or REVIEW-PR-<number>, optionally followed by -SUFFIX'
 keep=false
 case ${args[1]:-} in
   '') ;;
