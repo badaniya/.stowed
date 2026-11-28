@@ -18,7 +18,7 @@ def read_config(path, parse_ports):
     require(isinstance(config['sandboxes'], dict), 'sandboxes must be an object keyed by sandbox name')
     interfaces, targets, addresses = set(), set(), set()
     result = {}
-    allowed = {'interface', 'parent', 'network', 'project', 'target', 'ports', 'expected_address', 'proxy', 'legacy_dhcp_pid', 'legacy_dhcp_dir'}
+    allowed = {'interface', 'parent', 'network', 'project', 'target', 'ports', 'expected_address', 'proxy', 'legacy_dhcp_pid', 'legacy_dhcp_dir', 'mode', 'address', 'clients'}
     for name, value in config['sandboxes'].items():
         sandbox_name(name)
         require(isinstance(value, dict) and not set(value) - allowed, f'unknown config key for {name}')
@@ -33,6 +33,23 @@ def read_config(path, parse_ports):
         targets.add(target)
         entry: dict[str, Any] = dict(value, target=target, network=value.get('network', 'agentbr0'), project=value.get('project', 'default'),
                      ports=parse_ports(value['ports']), proxy=normalize_proxy(value.get('proxy')))
+        mode = entry.get('mode', 'dhcp')
+        require(mode in ('dhcp', 'host-address'), 'unknown exposure mode')
+        if mode == 'host-address':
+            require({'address', 'clients'} <= set(entry), 'shared mode requires address and client CIDRs')
+            require(not any(key in entry for key in ('expected_address', 'legacy_dhcp_pid', 'legacy_dhcp_dir'))
+                    and entry['proxy'] is None, 'DHCP/adoption/CONNECT options cannot be used in shared mode')
+            require(entry['ports'] != 'all' and all(p.startswith('tcp:') for p in entry['ports'].split(',')),
+                    'shared mode supports explicit TCP ports only')
+            entry['address'] = str(ipaddress.IPv4Address(entry['address']))
+            require(entry['address'] not in addresses, 'one shared exposure per host address')
+            addresses.add(entry['address'])
+            require(isinstance(entry['clients'], list) and bool(entry['clients']), 'client CIDRs required')
+            clients = [ipaddress.IPv4Network(c, strict=True) for c in entry['clients']]
+            require(all(c.prefixlen >= 8 and not c.is_multicast and not c.is_unspecified for c in clients), 'open client range')
+            entry['clients'] = sorted({str(c) for c in clients})
+        else:
+            require('address' not in entry and 'clients' not in entry, 'shared options require host-address mode')
         if entry.get('expected_address') is not None:
             entry['expected_address'] = str(ipaddress.IPv4Address(entry['expected_address']))
             require(entry['expected_address'] not in addresses, 'expected lab addresses must be unique')
@@ -63,6 +80,10 @@ class ConfigManager:
             self.ctl.validate_target({'network': entry['network'], 'project': entry['project']}, entry['target'])
             for record in self.records():
                 if record['name'] == entry['interface']:
+                    require(record.get('mode', 'dhcp') == entry.get('mode', 'dhcp'), 'mode change requires delete/recreate')
+                    if entry.get('mode') == 'host-address':
+                        require(record['address'] == entry['address'] and record['clients'] == entry['clients'],
+                                'address/client changes require explicit delete/recreate')
                     require(record.get('sandbox') in (None, sandbox), 'interface belongs to a different sandbox')
                     require(record.get('config_id') in (None, config['id']), 'interface belongs to a different config')
                     require(all(record[key] == entry[key] for key in ('parent', 'network', 'project')),
@@ -86,6 +107,8 @@ class ConfigManager:
             name = entry['interface']
             record = self.ctl.load(name)
             network_args = {key: entry[key] for key in ('parent', 'network', 'project', 'target', 'ports')}
+            if entry.get('mode') == 'host-address':
+                network_args.update(mode='host-address', address=entry['address'], clients=entry['clients'])
             if record is None or record['stage'] in ('creating', 'adopting'):
                 if entry.get('legacy_dhcp_pid'):
                     record = self.ctl.adopt(name, **network_args, legacy_dhcp_pid=entry['legacy_dhcp_pid'],

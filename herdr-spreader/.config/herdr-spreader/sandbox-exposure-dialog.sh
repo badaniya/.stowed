@@ -2,9 +2,9 @@
 # Prompts collect arguments only; root backend owns validation and confirmation.
 set -euo pipefail
 [[ $# -ge 1 && $# -le 2 &&
-  ( $1 == list || ( $1 =~ ^agtsbxfwd(0|[1-9][0-9]*)$ && ${#1} -le 15 ) ) &&
-  ( $# -eq 1 || ( $1 != list && $2 =~ ^(create|update|delete|status|list|adopt)$ ) ) ]] || {
-  printf 'Usage: sandbox-exposure-dialog.sh <agtsbxfwdN> [create|update|delete|status|list|adopt] | list\n' >&2
+  ( $1 == list || $1 == detect || ( $1 =~ ^agtsbxfwd(0|[1-9][0-9]*)$ && ${#1} -le 15 ) ) &&
+  ( $# -eq 1 || ( $1 != list && $1 != detect && $2 =~ ^(create|create-host|update|delete|status|list|adopt|detect|probe)$ ) ) ]] || {
+  printf 'Usage: sandbox-exposure-dialog.sh <agtsbxfwdN> [create|create-host|update|delete|status|list|adopt|detect|probe] | list|detect\n' >&2
   exit 1
 }
 name=$1
@@ -13,6 +13,8 @@ backend="$script_dir/sandbox-exposure.py"
 if [[ $name == list ]]; then
   printf 'Sandbox exposures:\n\n'
   choice=5
+elif [[ $name == detect ]]; then
+  choice=7
 elif [[ $# -eq 2 ]]; then
   printf 'Sandbox exposure: %s — %s\n\n' "$name" "$2"
   case $2 in
@@ -22,10 +24,13 @@ elif [[ $# -eq 2 ]]; then
   status) choice=4 ;;
   list) choice=5 ;;
   adopt) choice=6 ;;
+  detect) choice=7 ;;
+  create-host) choice=8 ;;
+  probe) choice=9 ;;
   esac
 else
   printf 'Sandbox exposure: %s\n\n' "$name"
-  printf '1) Create (new owned macvlan + DHCP + forward)\n2) Update target/ports\n3) Delete\n4) Status\n5) List\n6) Adopt existing legacy exposure (preserve IP/forward)\nq) Cancel\n'
+  printf '1) Create (new owned macvlan + DHCP + forward)\n2) Update target/ports\n3) Delete\n4) Status\n5) List\n6) Adopt existing legacy exposure (preserve IP/forward)\n7) Exposure Detection (read-only)\n8) Create single host/VPN-address TCP exposure\n9) Test extra DHCP address (confirmed temporary probe)\nq) Cancel\n'
   IFS= read -r -p 'Choose: ' choice || exit 0
 fi
 args=()
@@ -64,6 +69,33 @@ case $choice in
 3) args=(delete "$name") ;;
 4) args=(status "$name") ;;
 5) args=(list) ;;
+7)
+  IFS= read -r -p 'Uplink NIC to inspect (blank lists candidates): ' parent || parent=''
+  args=(detect)
+  [[ -z $parent ]] || args+=(--parent "$parent")
+  ;;
+8)
+  IFS= read -r -p 'Existing host/VPN NIC: ' parent || exit 0
+  IFS= read -r -p 'Existing IPv4 address on that NIC: ' address || exit 0
+  IFS= read -r -p 'Incus bridge [agentbr0]: ' network || exit 0
+  IFS= read -r -p 'Network project [default]: ' project || exit 0
+  IFS= read -r -p 'Sandbox IPv4 target: ' target || exit 0
+  IFS= read -r -p 'Explicit TCP ports (tcp:443,tcp:8090; no all/UDP): ' ports || exit 0
+  IFS= read -r -p 'Allowed client CIDRs (space-separated): ' client_text || exit 0
+  read -r -a clients <<<"$client_text"
+  [[ -n $parent && -n $address && -n $target && -n $ports && ${#clients[@]} -gt 0 ]] || exit 1
+  args=(create "$name" --mode host-address --parent "$parent" --address "$address"
+        --network "${network:-agentbr0}" --project "${project:-default}" --target "$target"
+        --ports "$ports" --clients "${clients[@]}")
+  ;;
+9)
+  IFS= read -r -p 'Lab uplink NIC to test: ' parent || exit 0
+  IFS= read -r -p 'Incus bridge [agentbr0]: ' network || exit 0
+  IFS= read -r -p 'Network project [default]: ' project || exit 0
+  IFS= read -r -p 'Sandbox IPv4 in that bridge (no traffic is forwarded): ' target || exit 0
+  [[ -n $parent && -n $target ]] || exit 1
+  args=(probe "$name" --parent "$parent" --network "${network:-agentbr0}" --project "${project:-default}" --target "$target")
+  ;;
 *)
   printf 'Cancelled.\n'
   exit 0

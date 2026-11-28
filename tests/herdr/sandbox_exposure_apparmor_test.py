@@ -83,6 +83,13 @@ class AppArmorTests(unittest.TestCase):
         with self.assertRaisesRegex(self.mod.ExposureError, 'AppArmor'):
             self.check()
 
+    def test_python_uid_lookup_has_scoped_read_permissions(self):
+        snippet = POLICY.read_text()
+        self.assertIn('/etc/nsswitch.conf r,', snippet)
+        self.assertIn('/etc/passwd r,', snippet)
+        self.assertNotIn('/etc/shadow', snippet)
+        self.assertNotIn('<abstractions/nameservice>', snippet)
+
     @unittest.skipUnless(shutil.which('apparmor_parser'), 'AppArmor parser not installed')
     def test_shipped_policy_compiles_without_loading(self):
         snippet = POLICY.read_text()

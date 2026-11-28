@@ -2,16 +2,16 @@
 # Open the exposure dialog in a focused sibling pane, like Agent Sandbox: Control.
 set -euo pipefail
 usage() {
-  printf 'Usage: sandbox-exposure.sh <agtsbxfwdN> [create|update|delete|status|list|adopt] | list\n' >&2
+  printf 'Usage: sandbox-exposure.sh <agtsbxfwdN> [create|create-host|update|delete|status|list|adopt|detect|probe] | list|detect\n' >&2
   exit 1
 }
 [[ $# -ge 1 && $# -le 2 ]] || usage
 input=$1
 [[ $# -eq 1 ]] || input+=" $2"
 dialog_args=()
-if [[ $input == list ]]; then
-  dialog_args=(list)
-elif [[ $input =~ ^(agtsbxfwd(0|[1-9][0-9]*))([[:blank:]]+(create|update|delete|status|list|adopt))?$ ]]; then
+if [[ $input == list || $input == detect ]]; then
+  dialog_args=("$input")
+elif [[ $input =~ ^(agtsbxfwd(0|[1-9][0-9]*))([[:blank:]]+(create|create-host|update|delete|status|list|adopt|detect|probe))?$ ]]; then
   name=${BASH_REMATCH[1]}
   operation=${BASH_REMATCH[4]}
   [[ ${#name} -le 15 ]] || usage

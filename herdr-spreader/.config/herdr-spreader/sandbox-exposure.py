@@ -3,16 +3,19 @@
 import argparse
 import contextlib
 import fcntl
+import importlib.util
 import ipaddress
 import json
 import os
 import re
 import select
+import shutil
 import signal
 import stat
 import subprocess
 import sys
 import tempfile
+import time
 import uuid
 from pathlib import Path
 from typing import Any
@@ -23,6 +26,17 @@ from sandbox_exposure_proxy import (
     normalize_proxy,
     sandbox_name,
 )
+
+
+def host_module():
+    # Load the privileged helper from this script's directory, never caller CWD.
+    spec = importlib.util.spec_from_file_location('sandbox_exposure_host', Path(__file__).resolve().with_name('sandbox_exposure_host.py'))
+    require(spec is not None and spec.loader is not None, 'Host backend is unavailable')
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
 
 PROXY_UNSET = object()
 STATE = Path('/var/lib/herdr-sandbox-exposure')
@@ -344,6 +358,10 @@ class Controller:
                 'invalid ownership record')
         require(bool(re.fullmatch(PREFIX + re.escape(name) + r':[0-9a-f]{32}', record.get('marker', ''))),
                 'invalid ownership marker')
+        if record.get('mode') == 'host-address':
+            host_module().validate_record(record)
+            return record
+        require(record.get('mode', 'dhcp') == 'dhcp', 'unknown exposure mode')
         for key in ('parent', 'network', 'project'):
             identifier(record[key])
         require(bool(re.fullmatch(r'(?:[0-9a-f]{2}:){5}[0-9a-f]{2}', record['mac'])), 'invalid recorded MAC')
@@ -611,7 +629,100 @@ class Controller:
         self.save(record)
         return self.reconcile_proxy(record)
 
-    def create(self, name, parent, network, project, target, ports):
+    def host_controller(self):
+        return host_module().HostManager(self)
+
+    def detect(self, parent=None):
+        from sandbox_exposure_detect import detect
+        links = list(self.links().values())
+        if parent:
+            identifier(parent)
+            require(any(link['ifname'] == parent for link in links), 'selected uplink is absent')
+            links = [link for link in links if link['ifname'] == parent]
+        try:
+            addresses = json.loads(self.runner.run(['ip', '-json', '-4', 'addr', 'show']))
+        except (ValueError, OSError) as exc:
+            raise ExposureError('Unable to inspect exposure addresses') from exc
+        try:
+            wsl = 'microsoft' in Path('/proc/sys/kernel/osrelease').read_text().lower()
+        except OSError:
+            wsl = False
+        healthy = self.status() if self.root.exists() else []
+        probes = {}
+        for link in links:
+            path = self.root / ('capability-' + link['ifname'] + '.json')
+            if not path.exists():
+                continue
+            self.safe_path(path)
+            try:
+                evidence = json.loads(path.read_text())
+                current = next((row for row in addresses if row['ifname'] == link['ifname']), {})
+                ips = sorted(a['local'] for a in current.get('addr_info', []) if a.get('family') == 'inet' and a.get('scope') == 'global')
+                fresh = type(evidence.get('checked_at')) is int and 0 <= time.time() - evidence['checked_at'] < 86400
+                if fresh and evidence.get('parent_mac') == link.get('address') and sorted(evidence.get('parent_addresses', [])) == ips and type(evidence.get('success')) is bool:
+                    probes[link['ifname']] = evidence
+            except (OSError, ValueError, TypeError, KeyError):
+                pass  # Invalid/stale evidence cannot prove network capability.
+        return detect(links, addresses, wsl=wsl, healthy=healthy, probes=probes)
+
+    def probe(self, name, parent, network, project, target):
+        require(shutil.which('dhclient') is not None, 'install ISC dhclient before testing DHCP capability')
+        check_dhcp_apparmor()
+        valid_name(name)
+        for value in (parent, network, project):
+            identifier(value)
+        links = self.links()
+        require(parent in links and name not in links and self.load(name) is None, 'probe needs a free exposure ID and existing parent')
+        leftover = self.root / (name + '.dhcp')
+        require(not leftover.exists() and not leftover.is_symlink(), 'orphaned DHCP directory; inspect before probing')
+        record = {'version': 1, 'name': name, 'parent': parent, 'network': network, 'project': project,
+                  'target': target, 'ports': 'tcp:1', 'stage': 'creating', 'address': None,
+                  'forward': None, 'pending': None, 'purpose': 'capability-probe'}
+        token = uuid.uuid4().hex
+        record.update(marker=PREFIX + name + ':' + token, mac='02:' + ':'.join(token[i:i + 2] for i in range(0, 10, 2)))
+        record['target'] = self.validate_target(record, target)
+        require(self.confirm(f'Temporarily test DHCP on {parent} using {name}; release the lease and remove only this probe afterwards? No sandbox forward is created.'), 'cancelled; no changes made')
+        self.save(record)
+        result = {'parent': parent, 'success': False, 'reason': 'No DHCP lease acquired', 'changes_retained': False}
+        try:
+            self.runner.run(['ip', 'link', 'add', 'link', parent, 'name', name, 'address', record['mac'], 'type', 'macvlan', 'mode', 'bridge'])
+            self.runner.run(['ip', 'link', 'set', 'dev', name, 'alias', record['marker']])
+            require(self.owned_link(record, self.links()) is not None, 'probe ownership marker missing')
+            self.runner.run(['sysctl', '-w', f'net.ipv6.conf.{name}.disable_ipv6=1'])
+            self.runner.run(['ip', 'link', 'set', 'dev', name, 'up'])
+            self.dhcp(record)
+            values = self.addresses(name)
+            if len(values) == 1:
+                result.update(success=True, reason='Extra DHCP address acquired; further pool/MAC capacity is not guaranteed')
+        except (ExposureError, OSError, ValueError) as exc:
+            result['reason'] = str(exc)
+        finally:
+            # Explicit test approval includes cleanup, not adoption of another resource.
+            directory = self.root / (name + '.dhcp')
+            if directory.exists():
+                self.dhcp(record, release=True)
+            if self.owned_link(record, self.links()) is not None:
+                self.runner.run(['ip', 'link', 'delete', 'dev', name])
+            if directory.exists():
+                self.safe_path(directory, directory=True)
+                for path in directory.iterdir():
+                    require(path.name in {'client.pid', 'client.leases', 'client.leases~', 'dhclient.conf', 'hook.py', 'ack.json'}, 'unknown probe resource; inspect retained state')
+                    self.safe_path(path)
+                    path.unlink()
+                directory.rmdir()
+            (self.root / (name + '.json')).unlink()
+        evidence = dict(result, checked_at=int(time.time()), parent_mac=links[parent].get('address'), parent_addresses=self.addresses(parent))
+        path = self.root / ('capability-' + parent + '.json')
+        if path.exists() or path.is_symlink():
+            self.safe_path(path)
+        path.write_text(json.dumps(evidence))
+        path.chmod(0o600)
+        return result
+
+    def create(self, name, parent, network, project, target, ports, mode='dhcp', address=None, clients=None):
+        if mode == 'host-address':
+            return self.host_controller().create(name, parent, network, project, target, ports, address, clients)
+        require(mode == 'dhcp' and address is None and clients is None, 'invalid DHCP mode options')
         check_dhcp_apparmor()
         valid_name(name)
         identifier(parent)
@@ -633,6 +744,7 @@ class Controller:
             self.unique_target(name, record['target'])
             self.save(record)
         else:
+            require(record.get('mode', 'dhcp') == 'dhcp', 'mode change requires explicit delete/recreate')
             require(record['stage'] != 'adopting', 'adoption is incomplete; repeat adopt before other mutations')
             require(record['stage'] != 'deleting', 'delete is incomplete; repeat delete before creating')
             require(all(record[key] == value for key, value in
@@ -682,6 +794,9 @@ class Controller:
         record = self.load(name)
         if record is None:
             raise ExposureError('exposure is unmanaged/not owned')
+        if record.get('mode') == 'host-address':
+            require(proxy is PROXY_UNSET or proxy is None, 'CONNECT proxy is not supported in shared-address mode')
+            return self.host_controller().update(record, target, ports)
         require(record['stage'] == 'ready', 'exposure is incomplete; repeat create or delete first')
         link = self.owned_link(record, self.links())
         current = self.owned_forward(record)
@@ -711,8 +826,10 @@ class Controller:
         return self.reconcile_proxy(record, proxy)
 
     def delete(self, name):
-        check_dhcp_apparmor()
         record = self.load(name)
+        if record and record.get('mode') == 'host-address':
+            return self.host_controller().delete(record)
+        check_dhcp_apparmor()
         require(record is None or record['stage'] != 'adopting', 'adoption is incomplete; repeat adopt before delete')
         links = self.links()
         if record is None:
@@ -761,6 +878,15 @@ class Controller:
         result = []
         for entry in sorted(names):
             record = self.load(entry)
+            if record and record.get('mode') == 'host-address':
+                try:
+                    row = self.host_controller().status(record)
+                except (ExposureError, ValueError, OSError) as exc:
+                    row = {'name': entry, 'mode': 'host-address', 'status': 'degraded', 'detail': str(exc),
+                           'parent': record['parent'], 'listen_address': record['address'], 'target': record['target']}
+                row.update(sandbox=record.get('sandbox'), config_id=record.get('config_id'))
+                result.append(row)
+                continue
             addresses = self.addresses(entry) if entry in links else []
             row: dict[str, Any] = {'name': entry, 'status': 'absent', 'addresses': addresses}
             if record is None:
@@ -817,9 +943,21 @@ def main():
         if verb == 'adopt':
             command.add_argument('--legacy-dhcp-pid', type=int, required=True)
             command.add_argument('--legacy-dhcp-dir', required=True, help='/run/<name> holding the legacy lease and pid')
+        if verb == 'create':
+            command.add_argument('--mode', choices=('dhcp', 'host-address'), default='dhcp')
+            command.add_argument('--address', help='Existing host/VPN IPv4 address; shared mode only')
+            command.add_argument('--clients', nargs='+', help='Allowed client IPv4 CIDRs; shared mode only')
         if verb in ('create', 'adopt', 'update'):
             command.add_argument('--target', required=verb != 'update')
             command.add_argument('--ports', required=verb != 'update', help='all or tcp:443,udp:5000-5002; update omission preserves policy')
+    probe_parser = sub.add_parser('probe', help='Confirmed temporary DHCP test; no forward is created')
+    probe_parser.add_argument('name')
+    probe_parser.add_argument('--parent', required=True)
+    probe_parser.add_argument('--network', default='agentbr0')
+    probe_parser.add_argument('--project', default='default')
+    probe_parser.add_argument('--target', required=True)
+    detection = sub.add_parser('detect', help='Read-only exposure capability recommendations; never requests DHCP')
+    detection.add_argument('--parent', help='Inspect only this uplink')
     apply_parser = sub.add_parser('apply', help='reconcile sandbox-keyed desired JSON config')
     apply_parser.add_argument('--config', required=True)
     apply_parser.add_argument('--sandbox', dest='only')
@@ -835,6 +973,9 @@ def main():
             config = read_config(args.pop('config'), parse_ports)
             with ctl.lock():
                 result = ConfigManager(ctl).apply(config, **args)
+        elif action == 'detect':
+            require(os.geteuid() == 0 or not STATE.exists(), 'use sudo to inspect root-owned exposure evidence')
+            result = ctl.detect(**args)
         elif action in ('status', 'list'):
             # State ownership is checked as root; use sudo for status when records exist.
             require(os.geteuid() == 0 or not STATE.exists(), 'run status/list with sudo to inspect root-owned state')

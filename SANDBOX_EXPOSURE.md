@@ -7,6 +7,75 @@ then creates an Incus network forward from that address to the supplied sandbox
 IPv4 address. Create never adopts pre-existing resources. A separate, confirmed
 **Adopt** operation can migrate the narrowly supported legacy setup below.
 
+## Exposure Detection and existing host/VPN addresses
+
+The dialog keeps its original six operations and adds:
+
+- **7) Exposure Detection**: read-only uplink/address and mode recommendations.
+- **8) Create single host/VPN-address TCP exposure**: one exposed sandbox per selected existing IP.
+- **9) Test extra DHCP address**: explicitly confirmed temporary macvlan/DHCP probe; no Incus forward is created.
+
+Enter `detect` in the quick action for detection directly, or use the CLI:
+
+```sh
+controller="$HOME/.config/herdr-spreader/sandbox-exposure.py"
+sudo python3 "$controller" detect
+sudo python3 "$controller" detect --parent SELECTED_UPLINK
+```
+
+Ethernet does not prove DHCP service or extra-MAC permission. Detection reports
+unverified capability unless an existing healthy lease or recent confirmed test
+provides evidence. A mirrored WSL /32 address recommends shared-address mode;
+no new VPN lease is requested. Probe evidence is valid for 24 hours only while
+the parent MAC/address inventory matches. Capacity is never claimed unlimited.
+Probe cleanup releases only its own client/lease/interface and retains diagnostic
+metadata; failed cleanup retains ownership state for inspection instead of force-removal.
+
+**DHCP remains the default:** existing records/configs without `mode` continue to
+use the original macvlan, DHCP, adoption, Incus forwarding and UDP/all behaviour.
+There is no automatic fallback or migration of existing exposures. Before rolling
+back to an older controller that does not understand host-address records, delete
+new shared exposures using this controller first; do not edit ownership records.
+
+Shared-address mode requires explicit TCP ports and non-open client CIDRs. It
+refuses wildcard/loopback listening addresses, occupied ports, overlapping ranges,
+and a second exposure on the same IP. Initial creation and target/port changes
+require confirmation. Switching mode, address or client policy requires explicit
+delete/recreate. Deleting a shared exposure removes only its owned service/files;
+it never deletes the parent NIC, releases the host's lease or changes host routes.
+
+Example only; substitute actual assigned addresses and permitted clients:
+
+```sh
+sudo python3 "$controller" create agtsbxfwd1 --mode host-address \
+  --parent SELECTED_UPLINK --address 192.0.2.10 \
+  --network agentbr0 --project default --target 203.0.113.10 \
+  --ports tcp:443,tcp:8090 --clients 198.51.100.0/24
+```
+
+Desired config keeps schema version 1; add `"mode": "host-address"`, `"address"`
+and `"clients"` to that sandbox entry. DHCP/adoption and CONNECT-proxy options
+cannot be combined with shared mode. The exposure ID still uses `agtsbxfwdN`,
+but shared mode does not create a NIC with that name.
+
+The shared backend uses a root-owned, supervised systemd service with DynamicUser,
+NoNewPrivileges and only CAP_NET_BIND_SERVICE. It binds the selected IPv4 address,
+checks that address remains on the selected uplink, and stops on address loss;
+it does not silently choose a different interface. It adds no firewall rules.
+Host/VPN firewall policy can still block inbound clients and must be checked separately.
+
+This is a TCP byte relay, not full-IP exposure: the sandbox sees the host-side
+connection address rather than the original client address. TLS is passed through,
+not terminated; device hostname/certificate requirements still apply. UDP is not
+implemented in shared mode. Test actual device callbacks before relying on it.
+The existing restricted CONNECT proxy remains a separate DHCP-mode feature.
+
+New helpers are `sandbox_exposure_detect.py`, `sandbox_exposure_host.py` and
+`sandbox_exposure_host_server.py`. Stow the Spreader package after reviewing its
+simulation, or add only missing helper links if unrelated private-file conflicts
+prevent Stow. Shared mode requires systemd; only DHCP operations require dhclient
+and its reviewed AppArmor extension.
+
 ## Interface naming and existing installations
 
 Interfaces use `agtsbxfwd0`, `agtsbxfwd1`, and so on, without leading zeroes.
@@ -133,17 +202,17 @@ sudo -- python3 "$controller" status agtsbxfwd1
 # Full exposure is deliberately explicit: --ports is mandatory for create.
 sudo -- python3 "$controller" create agtsbxfwd1 \
   --parent LAB_NIC --network agentbr0 --project default \
-  --target 10.77.10.20 --ports all
+  --target 203.0.113.20 --ports all
 
 # Retarget while preserving the previous port policy (asks for confirmation).
-sudo -- python3 "$controller" update agtsbxfwd1 --target 10.77.10.21
+sudo -- python3 "$controller" update agtsbxfwd1 --target 203.0.113.21
 
 # Restrict forwarded traffic, preserving the target (also asks for confirmation).
 sudo -- python3 "$controller" update agtsbxfwd1 --ports tcp:443,udp:5000-5002
 
 # Change target and ports together, or explicitly restore all-port forwarding.
 sudo -- python3 "$controller" update agtsbxfwd1 \
-  --target 10.77.10.21 --ports tcp:443,udp:5000-5002
+  --target 203.0.113.21 --ports tcp:443,udp:5000-5002
 sudo -- python3 "$controller" update agtsbxfwd1 --ports all
 
 # Deletes the owned forward, releases its DHCP lease, then removes the macvlan.
@@ -273,12 +342,12 @@ documentation ranges; `client_cidrs` is required when the proxy is enabled.
   "schema_version": 1,
   "id": "lab-sandbox-exposures",
   "sandboxes": {
-    "multi-11": {
+    "example-sandbox": {
       "interface": "agtsbxfwd0",
-      "parent": "enp0s31f6",
+      "parent": "LAB_NIC",
       "network": "agentbr0",
       "project": "default",
-      "target": "10.77.10.14",
+      "target": "198.51.100.14",
       "ports": "all",
       "expected_address": "203.0.113.97",
       "proxy": {
@@ -307,16 +376,16 @@ config="$HOME/.config/herdr-spreader/sandbox-exposures.json"
 
 # Create or reconcile the named sandbox, adopting its existing managed interface
 # and matching owned proxy if present. Identical repeats do not restart it.
-sudo python3 "$controller" apply --config "$config" --sandbox multi-11
-sudo python3 "$controller" status multi-11
+sudo python3 "$controller" apply --config "$config" --sandbox example-sandbox
+sudo python3 "$controller" status example-sandbox
 
 # Prefer editing target/ports/proxy settings in the desired config and reapplying.
 # Direct updates also reconcile an enabled proxy's target automatically:
-sudo python3 "$controller" update multi-11 --target NEW_PRIVATE_IPV4
+sudo python3 "$controller" update example-sandbox --target NEW_PRIVATE_IPV4
 
 # Explicit deletion removes only this sandbox's owned proxy, NAT exception,
 # Incus forward, DHCP state and interface (normal TTY yes confirmation applies).
-sudo python3 "$controller" delete multi-11
+sudo python3 "$controller" delete example-sandbox
 
 # After removing an entry from this file, explicitly prune this config id's
 # omitted sandboxes. Another config id's resources are never pruned.
@@ -333,15 +402,15 @@ project changes require explicit delete/recreate. Network target/port changes
 and removals retain their existing controlling-TTY confirmation.
 
 To add a **second** sandbox, add a second `sandboxes` member (for example
-`multi-12`) with an unused `interface: agtsbxfwd1`, the actual private target IP,
+`second-sandbox`) with an unused `interface: agtsbxfwd1`, the actual private target IP,
 `parent`, `network`, `project`, `ports` and the same proxy object. Do not copy
 `.97` as its expected address. Omit `expected_address` to accept a DHCP-assigned
 unique lab IP, or supply its known DHCP-reserved address as an assertion. It is
 not a static-IP assignment setting. Then run:
 
 ```bash
-sudo python3 "$controller" apply --config "$config" --sandbox multi-12
-sudo python3 "$controller" status multi-12
+sudo python3 "$controller" apply --config "$config" --sandbox second-sandbox
+sudo python3 "$controller" status second-sandbox
 ```
 
 The proxy binds **only that exposure's lab IPv4:3128**, never a wildcard. Its
@@ -362,16 +431,16 @@ forwarding and target-specific hairpin masquerade. This is necessary because an
 accept/return in a separate earlier chain would not stop a later DNAT hook.
 Kernel-network-namespace tests verify the precedence and two-instance isolation.
 
-For multi-11 the owned resources are:
-- `herdr-sandbox-exposure-proxy-multi-11.service` on the **host**;
+For example-sandbox the owned resources are:
+- `herdr-sandbox-exposure-proxy-example-sandbox.service` on the **host**;
 - `/var/lib/herdr-sandbox-exposure/agtsbxfwd0.proxy/{owner.json,config.json,server.py}`;
-- nft table `ip herdr_sandbox_exposure_multi_11_proxy`, with the same ownership
+- nft table `ip herdr_sandbox_exposure_example_sandbox_proxy`, with the same ownership
   marker as the macvlan and Incus forward.
 
 ```bash
-systemctl status herdr-sandbox-exposure-proxy-multi-11.service
-journalctl -u herdr-sandbox-exposure-proxy-multi-11.service
-sudo nft list table ip herdr_sandbox_exposure_multi_11_proxy
+systemctl status herdr-sandbox-exposure-proxy-example-sandbox.service
+journalctl -u herdr-sandbox-exposure-proxy-example-sandbox.service
+sudo nft list table ip herdr_sandbox_exposure_example_sandbox_proxy
 ```
 
 Omit the proxy object (or set `enabled: false`) and apply to remove only its
